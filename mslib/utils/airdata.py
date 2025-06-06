@@ -42,6 +42,7 @@ from mslib.msui.constants import MSUI_CONFIG_PATH
 AIPDIR = Path(MSUI_CONFIG_PATH) / "downloads" / "aip"
 AIPDIR.mkdir(parents=True, exist_ok=True)
 
+
 class Airspace:
     """
     This class provides airspaces/airports URLs and variables
@@ -195,7 +196,7 @@ def get_airspaces(countries=None):
     if _airspaces and len(files) == len(_airspaces_mtime):
         for file in files:
             if file not in _airspaces_mtime or \
-                    os.path.getmtime(str(AIPDIR /file)) != _airspaces_mtime[file]:
+                    os.path.getmtime(str(AIPDIR / file)) != _airspaces_mtime[file]:
                 reload = True
                 break
         if not reload:

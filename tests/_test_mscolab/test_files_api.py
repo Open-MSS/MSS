@@ -159,6 +159,7 @@ class Test_Files:
             assert self.fm.update_operation(operation.id, 'description', new_description, self.user)
             operation = Operation.query.filter_by(path=new_flight_path).first()
             assert operation.description == new_description
+
     def test_delete_operation(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="V10")

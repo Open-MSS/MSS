@@ -78,7 +78,7 @@ class TestMigration:
             # check that we have a backup file
             bak_file = f"{file_name}.bak"
             assert Path(bak_file).exists()
-            
+
             # using current configuration
             from mslib.utils.config import read_config_file, config_loader
             read_config_file()

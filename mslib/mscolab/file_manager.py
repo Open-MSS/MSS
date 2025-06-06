@@ -401,6 +401,7 @@ class FileManager:
         db.session.delete(operation)
         db.session.commit()
         return True
+
     def get_authorized_users(self, op_id):
         """
         op_id: operation-id

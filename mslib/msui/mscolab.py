@@ -2006,6 +2006,7 @@ class MSUIMscolab(QtCore.QObject):
             name = Path(file_name).name
             function(file_name, name, self.waypoints_model.waypoints)
             show_popup(self.ui, "Export Success", f"The file - {file_name}, was exported successfully!", 1)
+
     def listFlighttrack_itemDoubleClicked(self):
         logging.debug("listFlighttrack_itemDoubleClicked")
         self.ui.activeOperationDesc.setText("Select Operation to View Description.")

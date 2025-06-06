@@ -25,7 +25,7 @@
     limitations under the License.
 """
 import pytest
-from tests import constants
+
 from mslib.mscolab.models import User, Operation
 from mslib.mscolab.seed import (add_user, get_user, add_operation, add_user_to_operation,
                                 delete_user, delete_operation, add_all_users_default_operation)

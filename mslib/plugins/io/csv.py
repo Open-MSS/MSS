@@ -31,7 +31,6 @@ import os
 from pathlib import Path
 
 import mslib.msui.flighttrack as ft
-from fs import open_fs
 
 
 def save_to_csv(filename, name, waypoints):

@@ -31,7 +31,7 @@ import os
 import platformdirs
 from pathlib import Path
 
-# ToDo refactor to generic functions, keep only constants 
+# ToDo refactor to generic functions, keep only constants
 HOME = Path.home()
 MSUI_CONFIG_PATH = Path(os.getenv("MSUI_CONFIG_PATH", HOME / ".config" / "msui"))
 # Make sure that MSUI_CONFIG_PATH exists

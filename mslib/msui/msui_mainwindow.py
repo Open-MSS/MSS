@@ -316,7 +316,7 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
 
             pix_dir = constants.MSUI_CONFIG_PATH / 'tutorial_images'
             pix_dir.mkdir(exist_ok=True)
-            
+
             for item in actions:
                 if len(item[2]) > 0:
                     # These are twice defined, but only one can be used for highlighting
@@ -928,7 +928,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         )
         logging.debug("filename : '%s'", filename)
         if filename:
-            ext = "ftml"
             self.save_flight_track(filename)
             self.last_save_directory = Path(filename).parent.resolve()
             self.active_flight_track.filename = filename

@@ -28,9 +28,6 @@
 import importlib.util
 import os
 import sys
-
-from tests.constants import MSWMS_DATA_DIR, MSCOLAB_AUTH_FILE
-
 # Disable pyc files
 sys.dont_write_bytecode = True
 
@@ -206,7 +203,6 @@ def reset_config():
         else:
             if item_name.name != "mscolab.db":
                 item_name.unlink()
-
 
     generate_initial_config()
     create_msui_settings_file("{}")

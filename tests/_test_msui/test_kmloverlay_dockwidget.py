@@ -27,7 +27,7 @@
 
 import mock
 import pytest
-from pathlib import Path 
+from pathlib import Path
 from PyQt5 import QtCore, QtTest, QtGui
 from tests.constants import ROOT_DIR
 import mslib.msui.kmloverlay_dockwidget as kd
