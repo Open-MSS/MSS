@@ -33,33 +33,37 @@ from mslib.plugins.io import gpx
 
 def test_save_to_gpx():
     filename = os.path.join(ROOT_DIR, "testgpxdata.gpx")
-    wp = _example_waypoints()
-    name = "testgpxdata"
-    gpx.save_to_gpx(filename, name, wp)
-    with open(filename) as f:
-        data = f.readlines()
-    assert data == ['<?xml version="1.0" encoding="UTF-8"?>\n',
-                    '<gpx xmlns="http://www.topografix.com/GPX/1/1" '
-                    'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
-                    'xsi:schemaLocation="http://www.topografix.com/GPX/1/1 '
-                    'http://www.topografix.com/GPX/1/1/gpx.xsd" version="1.1" creator="gpx.py -- '
-                    'https://github.com/tkrajina/gpxpy">\n',
-                    '  <metadata>\n',
-                    '    <name>testgpxdata</name>\n',
-                    '    <desc>MSS flight track export</desc>\n',
-                    '  </metadata>\n',
-                    '  <trk>\n',
-                    '    <trkseg>\n',
-                    '      <trkpt lat="61.168" lon="-149.96">\n',
-                    '        <name>Anchorage</name>\n',
-                    '      </trkpt>\n',
-                    '      <trkpt lat="51.878" lon="-176.646">\n',
-                    '        <name>Adak</name>\n',
-                    '      </trkpt>\n',
-                    '    </trkseg>\n',
-                    '  </trk>\n',
-                    '</gpx>'
-                    ]
+    try:
+        wp = _example_waypoints()
+        name = "testgpxdata"
+        gpx.save_to_gpx(filename, name, wp)
+        with open(filename) as f:
+            data = f.readlines()
+        assert data == ['<?xml version="1.0" encoding="UTF-8"?>\n',
+                        '<gpx xmlns="http://www.topografix.com/GPX/1/1" '
+                        'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
+                        'xsi:schemaLocation="http://www.topografix.com/GPX/1/1 '
+                        'http://www.topografix.com/GPX/1/1/gpx.xsd" version="1.1" creator="gpx.py -- '
+                        'https://github.com/tkrajina/gpxpy">\n',
+                        '  <metadata>\n',
+                        '    <name>testgpxdata</name>\n',
+                        '    <desc>MSS flight track export</desc>\n',
+                        '  </metadata>\n',
+                        '  <trk>\n',
+                        '    <trkseg>\n',
+                        '      <trkpt lat="61.168" lon="-149.96">\n',
+                        '        <name>Anchorage</name>\n',
+                        '      </trkpt>\n',
+                        '      <trkpt lat="51.878" lon="-176.646">\n',
+                        '        <name>Adak</name>\n',
+                        '      </trkpt>\n',
+                        '    </trkseg>\n',
+                        '  </trk>\n',
+                        '</gpx>'
+                        ]
+    finally:
+        if os.path.exists(filename):
+            os.remove(filename)
 
 
 def _example_waypoints():

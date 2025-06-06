@@ -37,8 +37,7 @@ from mslib.utils.units import units
 
 def load_from_flitestar(filename):
     waypoints = []
-    path = Path(filename)
-    with path.open('r') as f:
+    with Path(filename).open('r') as f:
         firstline = f.readline()
         if not firstline.startswith("# FliteStar/FliteMap generated flight plan."):
             raise SyntaxError("The file does not seem to be a FliteStar file!")
