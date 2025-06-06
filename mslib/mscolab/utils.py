@@ -23,6 +23,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from pathlib import Path
 from mslib.mscolab.conf import mscolab_settings
 
 
@@ -64,6 +65,6 @@ def get_message_dict(message):
 
 
 def create_files():
-    mscolab_settings.OPERATIONS_DATA.mkdir(parents=True, exist_ok=True)
-    mscolab_settings.UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
-    mscolab_settings.SSO_DIR.mkdir(parents=True, exist_ok=True)
+    Path(mscolab_settings.OPERATIONS_DATA).mkdir(parents=True, exist_ok=True)
+    Path(mscolab_settings.UPLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
+    Path(mscolab_settings.SSO_DIR).mkdir(parents=True, exist_ok=True)
