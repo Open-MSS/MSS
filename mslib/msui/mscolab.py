@@ -795,7 +795,7 @@ class MSUIMscolab(QtCore.QObject):
                 "msui_settings.json to automatically fetch your gravatar",
                 icon=1, )
 
-        self.set_gravatar(gravatar_img_path)
+        self.set_gravatar(str(gravatar_img_path))
 
     def set_gravatar(self, gravatar=None):
         self.gravatar = gravatar

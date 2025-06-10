@@ -432,7 +432,7 @@ def seed_data():
 
     file_paths = ['one', 'two', 'three', 'four', 'Admin_Test', 'test_mscolab']
     for file_path in file_paths:
-        operation_dir = mscolab_settings.OPERATIONS_DATA / file_path
+        operation_dir = Path(mscolab_settings.OPERATIONS_DATA) / file_path
         operation_dir.mkdir(parents=True, exist_ok=True)
         operation_file = operation_dir / 'main.ftml'
         operation_file.write_text(XML_CONTENT_INIT)
