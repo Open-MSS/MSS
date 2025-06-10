@@ -801,27 +801,26 @@ class MSUIMscolab(QtCore.QObject):
         self.gravatar = gravatar
         pixmap = QtGui.QPixmap(self.gravatar)
         # isNull can give a segfault on MacOSX for not existing files
-        if os.path.exists(self.gravatar):
-            # check if pixmap has correct image
-            if pixmap.isNull():
-                user_name = self.user["username"]
-                try:
-                    # find the first alphabet in the user name to set appropriate gravatar
-                    first_alphabet = user_name[user_name.find(next(filter(str.isalpha, user_name)))].lower()
-                except StopIteration:
-                    # fallback to default gravatar logo if no alphabets found in the user name
-                    first_alphabet = "default"
-                pixmap = QtGui.QPixmap(f":/gravatars/default-gravatars/{first_alphabet}.png")
-                self.gravatar = None
-            icon = QtGui.QIcon()
-            icon.addPixmap(pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        # check if pixmap has correct image
+        if os.path.exists(self.gravatar) or pixmap.isNull():
+            user_name = self.user["username"]
+            try:
+                # find the first alphabet in the user name to set appropriate gravatar
+                first_alphabet = user_name[user_name.find(next(filter(str.isalpha, user_name)))].lower()
+            except StopIteration:
+                # fallback to default gravatar logo if no alphabets found in the user name
+                first_alphabet = "default"
+            pixmap = QtGui.QPixmap(f":/gravatars/default-gravatars/{first_alphabet}.png")
+            self.gravatar = None
+        icon = QtGui.QIcon()
+        icon.addPixmap(pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
 
-            # set icon for user options toolbutton
-            self.ui.userOptionsTb.setIcon(icon)
+        # set icon for user options toolbutton
+        self.ui.userOptionsTb.setIcon(icon)
 
-            # set icon for profile window
-            if self.prof_diag is not None:
-                self.profile_dialog.gravatarLabel.setPixmap(pixmap)
+        # set icon for profile window
+        if self.prof_diag is not None:
+            self.profile_dialog.gravatarLabel.setPixmap(pixmap)
 
     def remove_gravatar(self):
         if self.gravatar is None:
