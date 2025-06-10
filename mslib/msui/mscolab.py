@@ -801,7 +801,7 @@ class MSUIMscolab(QtCore.QObject):
         self.gravatar = gravatar
         pixmap = QtGui.QPixmap(self.gravatar)
         # check if pixmap has correct image
-        if pixmap.isNull():
+        if not os.path.exists(self.gravatar) or pixmap.isNull():
             user_name = self.user["username"]
             try:
                 # find the first alphabet in the user name to set appropriate gravatar
