@@ -648,8 +648,8 @@ class MSUIMscolab(QtCore.QObject):
         self.operation_archive_browser.show()
 
     def create_dir(self):
-        if not self.data_dir.exists():
-            self.data_dir.mkdir(parents=True)
+        if not Path(self.data_dir).exists():
+            Path(self.data_dir).mkdir(parents=True)
 
     def close_help_dialog(self):
         self.help_dialog = None

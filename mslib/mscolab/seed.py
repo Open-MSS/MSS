@@ -74,7 +74,7 @@ def add_all_users_default_operation(path='TEMPLATE', description="Operation to k
             operation = Operation(path, description)
             db.session.add(operation)
             db.session.commit()
-            operation_file_name = mscolab_settings.OPERATIONS_DATA / path
+            operation_file_name = Path(mscolab_settings.OPERATIONS_DATA) / path
             if not operation_file_name.exists():
                 operation_file_name.mkdir(parents=True, exist_ok=True)
                 operation_file_path = operation_file_name / "main.ftml"
@@ -82,7 +82,7 @@ def add_all_users_default_operation(path='TEMPLATE', description="Operation to k
                 <waypoints>
                 </waypoints>'''
                 operation_file_path.write_text(xml_content, encoding='utf-8')
-                git_repo_path = mscolab_settings.OPERATIONS_DATA / 'filedata' / path
+                git_repo_path = Path(mscolab_settings.OPERATIONS_DATA) / path
                 git_repo_path.mkdir(parents=True, exist_ok=True)
                 r = git.Repo.init(str(git_repo_path))
                 r.git.clear_cache()
@@ -169,22 +169,17 @@ def add_operation(operation_name, description):
             operation = Operation(operation_name, description)
             db.session.add(operation)
             db.session.commit()
-            operation_file_name = mscolab_settings.OPERATIONS_DATA / operation_name
+            operation_file_name = Path(mscolab_settings.OPERATIONS_DATA) / operation_name
             if not operation_file_name.exists():
                 operation_file_name.mkdir(parents=True, exist_ok=True)
                 operation_file_path = operation_file_name / "main.ftml"
-                # ToDo parameter required
-                xml_content = '''<?xml version="1.0" encoding="UTF-8"?>
-<waypoints>
-</waypoints>'''
-                operation_file_path.write_text(xml_content, encoding='utf-8')
-
-                git_repo_path = mscolab_settings.OPERATIONS_DATA / 'filedata' / operation_name
+                operation_file_path.write_text(XML_CONTENT_INIT, encoding='utf-8')
+                git_repo_path = Path(mscolab_settings.OPERATIONS_DATA) / operation_name
                 git_repo_path.mkdir(parents=True, exist_ok=True)
                 r = git.Repo.init(str(git_repo_path))
                 r.git.clear_cache()
                 main_file_git = git_repo_path / "main.ftml"
-                main_file_git.write_text(xml_content, encoding='utf-8')
+                main_file_git.write_text(XML_CONTENT_INIT, encoding='utf-8')
                 r.index.add(['main.ftml'])
                 r.index.commit("initial commit")
             return True
@@ -438,7 +433,7 @@ def seed_data():
         operation_file.write_text(XML_CONTENT_INIT)
 
         # initiate git in the same directory where the file is created
-        git_dir = Path(mscolab_settings.DATA_DIR) / 'filedata' / file_path
+        git_dir = Path(mscolab_settings.OPERATIONS_DATA) / file_path
         git_dir.mkdir(parents=True, exist_ok=True)
 
         # Create the main.ftml file in the git directory as well
