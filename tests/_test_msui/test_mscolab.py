@@ -37,7 +37,7 @@ import pytest
 
 from PIL import Image
 
-from tests.constants import ROOT_DIR
+from tests.constants import ROOT_DIR, MSCOLAB_DATA_DIR
 from tests import constants
 import mslib.utils.auth
 from mslib.mscolab.models import Permission, User
@@ -697,7 +697,8 @@ class Test_Mscolab:
         operation_name = "flight7"
         self._create_operation(qtbot, operation_name, "Description flight7")
         # check for operation dir is created on server
-        assert os.path.isdir(os.path.join(ROOT_DIR, 'colabTestData', 'filedata', operation_name))
+        assert os.path.isdir(os.path.join(MSCOLAB_DATA_DIR, operation_name))
+
         self._activate_operation_at_index(0)
         op_id = self.window.mscolab.get_recent_op_id()
         assert op_id is not None
@@ -713,7 +714,7 @@ class Test_Mscolab:
         op_id = self.window.mscolab.get_recent_op_id()
         assert op_id is None
         # check operation dir name removed
-        assert os.path.isdir(os.path.join(ROOT_DIR, operation_name)) is False
+        assert os.path.isdir(os.path.join(MSCOLAB_DATA_DIR, operation_name)) is False
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_handle_leave_operation(self, mockmessage, qtbot):
