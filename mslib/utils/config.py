@@ -59,7 +59,7 @@ class MSUIDefaultConfig:
     # this skips the verification of the user token on each mscolab request
     mscolab_skip_verify_user_token = True
 
-    # Default for general filepicker. Pick "default", "qt", or "fs"
+    # Default for general filepicker. Pick "default", "qt"
     filepicker_default = "default"
 
     # dir where msui output files are stored
@@ -374,7 +374,7 @@ class MSUIDefaultConfig:
     }
 
     config_descriptions = {
-        "filepicker_default": "Defines the type of file-picker to be used. Can be 'default', 'qt', or 'fs'",
+        "filepicker_default": "Defines the type of file-picker to be used. Can be 'default', 'qt'",
         "data_dir": "Directory where MSUI output files are stored",
         "predefined_map_sections": "Dictionary containing predefined map sections with their settings",
         "num_interpolation_points": "Number of interpolation points used for vertical cross section requests",
