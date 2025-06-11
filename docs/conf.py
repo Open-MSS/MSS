@@ -69,7 +69,7 @@ if os.environ.get("GALLERY", "True") != "False":
         mswms_data_dir.mkdir(parents=True)
 
     examples = DataFiles(mswms_data_dir=mswms_data_dir,
-                         mswms_server_config_dir=Path("~/mss"))
+                         mswms_server_config_dir=Path(os.path.expanduser("~"), "mss"))
     examples.create_server_config(detailed_information=True)
     examples.create_data()
 
