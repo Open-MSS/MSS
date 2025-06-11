@@ -565,7 +565,7 @@ class Test_Mscolab:
         # ToDo verify all operations disabled again without a visual check
 
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
-                return_value=(constants.MSCOLAB_DATA_DIR / 'test_export.ftml',
+                return_value=(os.path.join(constants.MSCOLAB_DATA_DIR, 'test_export.ftml'),
                               "Flight track (*.ftml)"))
     def test_handle_export(self, mockbox, qtbot):
         self._connect_to_mscolab(qtbot)
@@ -573,7 +573,7 @@ class Test_Mscolab:
         self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
         self._activate_operation_at_index(0)
         self.window.actionExportFlightTrackFTML.trigger()
-        export_file_path = str(Path(self.window.mscolab.data_dir) / 'test_export.ftml')
+        export_file_path = str(Path(self.window.mscolab.data_dir) / 'mscolab' / 'filedata' / 'test_export.ftml')
         exported_waypoints = WaypointsTableModel(filename=export_file_path)
         wp_count = len(self.window.mscolab.waypoints_model.waypoints)
         assert wp_count == 2
