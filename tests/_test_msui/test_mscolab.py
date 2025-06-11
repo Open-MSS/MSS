@@ -28,9 +28,6 @@ import os
 import io
 import sys
 from pathlib import Path
-import fs
-import fs.errors
-import fs.opener.errors
 import requests.exceptions
 import mock
 import pytest
@@ -935,24 +932,6 @@ class Test_Mscolab:
         def assert_():
             assert self.window.mscolab.help_dialog is None
         qtbot.wait_until(assert_)
-
-    @pytest.mark.xfail(reason="pathlib refactoring has to be finished first")
-    def test_create_dir_exceptions(self):
-        with mock.patch("fs.open_fs", new=ExceptionMock(fs.errors.CreateFailed).raise_exc), \
-                mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critbox, \
-                mock.patch("sys.exit") as mockexit:
-            self.window.mscolab.data_dir = "://"
-            self.window.mscolab.create_dir()
-            critbox.assert_called_once()
-            mockexit.assert_called_once()
-
-        with mock.patch("fs.open_fs", new=ExceptionMock(fs.opener.errors.UnsupportedProtocol).raise_exc), \
-                mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critbox, \
-                mock.patch("sys.exit") as mockexit:
-            self.window.mscolab.data_dir = "://"
-            self.window.mscolab.create_dir()
-            critbox.assert_called_once()
-            mockexit.assert_called_once()
 
     def test_profile_dialog(self, qtbot):
         self._connect_to_mscolab(qtbot)
