@@ -64,7 +64,7 @@ if os.environ.get("GALLERY", "True") != "False":
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
     from mslib.mswms.seed import DataFiles
 
-    mswms_data_dir = Path("~/mss/testdata")
+    mswms_data_dir = Path(os.path.expanduser("~"), "mss") / "testdata"
     if not mswms_data_dir.exists():
         mswms_data_dir.mkdir(parents=True)
 

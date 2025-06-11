@@ -1074,8 +1074,8 @@ from mslib.mswms.seed import (data, epsg_to_mpl_basemap_table,
 
         mswms_server_config_file = self.server_config_dir / self.server_config_file
         if not mswms_server_config_file.exists():
-            mswms_server_config_file.write_text(simple_server_config)
-
+            with mswms_server_config_file.open("w") as fp:
+                fp.write(simple_server_config)
         else:
             print(f'''
 /!\\ existing server config: "{self.server_config_file}" for demodata not overwritten!
