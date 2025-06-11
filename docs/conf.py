@@ -66,7 +66,7 @@ if os.environ.get("GALLERY", "True") != "False":
 
     mswms_data_dir = Path("~/mss/testdata")
     if not mswms_data_dir.exists():
-        mswms_data_dir.makedirs(parents=True)
+        mswms_data_dir.mkdir(parents=True)
 
     examples = DataFiles(mswms_data_dir=mswms_data_dir,
                          mswms_server_config_dir=Path("~/mss"))
