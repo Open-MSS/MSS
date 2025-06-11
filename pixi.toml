@@ -68,6 +68,7 @@ werkzeug = ">=2.2.3, <3.0.0"
 xstatic = "*"
 xstatic-bootstrap = "*"
 xstatic-jquery = "*"
+humanfriendly = ">=10.0,<11"
 
 [target.linux-64.dependencies]
 dbus-python = "*"
