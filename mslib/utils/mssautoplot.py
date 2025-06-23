@@ -216,10 +216,9 @@ class Plotting:
         flight = self.config["automated_plotting_flights"][0][0]
         section = self.config["automated_plotting_flights"][0][1]
         filename = self.config["automated_plotting_flights"][0][3]
-        config_dir = os.path.dirname(os.path.expanduser(cpath)) 
+        config_dir = os.path.dirname(os.path.expanduser(cpath))
         if filename and not os.path.isabs(filename):
             filename = os.path.join(config_dir, filename)
-            logging.debug("Resolved filename: %s", filename)
         if self.__class__.__name__ == "TopViewPlotting":
             try:
                 self.params = get_projection_params(self.config["predefined_map_sections"][section]["CRS"].lower())
@@ -242,7 +241,6 @@ class Plotting:
                     self.pdlg.close()
                 raise SystemExit(f"FTML file {filename} does not exist")
             self.read_ftml(filename)
-        print(filename)
 
     def setup(self):
         pass

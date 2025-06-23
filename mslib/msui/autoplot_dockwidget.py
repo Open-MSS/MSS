@@ -47,7 +47,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
     autoplot_treewidget_item_selected = QtCore.pyqtSignal(str, str)
     update_op_flight_treewidget = QtCore.pyqtSignal(str, str)
 
-    def __init__(self, parent=None, parent2=None, view=None, config_settings=None):
+    def __init__(self, parent=None, parent2=None, view=None, config_settings=None, last_save_directory=None):
         super().__init__()
         self.setupUi(self)
 
@@ -70,6 +70,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.intv = ""
 
         self.refresh_sig(config_settings)
+        self.last_save_directory = last_save_directory or os.path.expanduser("~")
 
         parent.refresh_signal_send.connect(lambda: self.refresh_sig(config_settings))
 
@@ -178,7 +179,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             view = "linear"
 
         # Create the configuration path
-        config_path = os.path.join(const.MSUI_CONFIG_PATH, "mssautoplot.json")
+        config_path = os.path.join(self.last_save_directory, "mssautoplot.json")
 
         # Save the config settings to the file
         if config_path:
@@ -268,7 +269,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         options |= QFileDialog.DontUseNativeDialog
 
         fileName, _ = QFileDialog.getOpenFileName(
-            self, "Select .json Config File", const.MSUI_CONFIG_PATH, "JSON Files (*.json)", options=options)
+            self, "Select .json Config File", self.last_save_directory, "JSON Files (*.json)", options=options)
 
         if fileName != "":
             self.cpath = fileName
@@ -302,9 +303,9 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 flight = ""
             else:
                 if filename != parent2.mscolab.active_operation_name:
-                    filename = os.path.join(const.MSUI_CONFIG_PATH, filename + ".ftml")
+                    filename = os.path.join(self.last_save_directory, filename + ".ftml") 
                 else:
-                    filename = os.path.join(const.MSUI_CONFIG_PATH, filename + ".ftml")
+                    filename = os.path.join(self.last_save_directory, filename + ".ftml")
             item = QTreeWidgetItem([flight, sections, vertical, filename, itime, vtime])
             self.autoplotTreeWidget.addTopLevelItem(item)
             self.autoplotTreeWidget.setCurrentItem(item)
@@ -338,9 +339,9 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             flight = ""
         else:
             if filename != parent2.mscolab.active_operation_name:
-                filename = os.path.join(const.MSUI_CONFIG_PATH, filename + ".ftml")
+                filename = os.path.join(self.last_save_directory, filename + ".ftml")
             else:
-                filename = os.path.join(const.MSUI_CONFIG_PATH, filename + ".ftml")
+                filename = os.path.join(self.last_save_directory, filename + ".ftml")
         if treewidget.objectName() == "autoplotTreeWidget":
             selected_item = self.autoplotTreeWidget.currentItem()
             selected_item.setText(0, flight)
@@ -505,7 +506,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             "Save JSON File",
-            const.MSUI_CONFIG_PATH,
+            self.last_save_directory,
             "JSON Files (*.json);;All Files (*)",
             options=options
         )
