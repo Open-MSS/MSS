@@ -41,7 +41,7 @@ import mslib.utils.auth
 from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
 from PyQt5 import QtCore, QtTest, QtWidgets
-from mslib.utils.config import read_config_file, config_loader, modify_config_file
+from mslib.utils.config import MSUIDefaultConfig, read_config_file, config_loader, modify_config_file
 from tests.utils import create_msui_settings_file, ExceptionMock
 from mslib.msui import msui
 from mslib.msui import mscolab
@@ -298,13 +298,42 @@ class Test_Mscolab:
         # close all hanging operation option windows
         self.window.mscolab.close_external_windows()
 
-    @pytest.mark.xfail(reason="https://github.com/Open-MSS/MSS/issues/2716", strict=True)
-    def test_modify_mscolab_timeout(self, qtbot):
-        data = {"MSCOLAB_timeout": [5, 10]}
+    @pytest.mark.parametrize("input_list, expected_list", [([5, 12], [5, 12]),
+                                                           ([5.1, 12.1], MSUIDefaultConfig.MSCOLAB_timeout),
+                                                           ([1, 2, 3, 4], MSUIDefaultConfig.MSCOLAB_timeout),
+                                                           ([4], MSUIDefaultConfig.MSCOLAB_timeout)
+                                                           ])
+    def test_modify_fixed_list_options(self, input_list, expected_list, qtbot):
+        data = {"MSCOLAB_timeout": input_list}
         modify_config_file(data)
         self.window.open_config_editor()
-        # the assert fails because last_saved returns [[2, 10], [2, 10]]
-        assert self.window.config_editor.last_saved["MSCOLAB_timeout"] == data["MSCOLAB_timeout"]
+        assert self.window.config_editor.last_saved["MSCOLAB_timeout"] == expected_list
+
+    @pytest.mark.parametrize("input_dict, expected_dict", [({"validtime_fwd": 0, "validtime_bck": 1,
+                                                             "level_up": 2, "level_down": 3},
+                                                            {"validtime_fwd": 0, "validtime_bck": 1,
+                                                             "level_up": 2, "level_down": 3}),
+                                                           ({"validtime_fwd": 0.0, "validtime_bck": 1.0,
+                                                            "level_up": 2.0, "level_down": 3.0},
+                                                           MSUIDefaultConfig.wms_prefetch),
+                                                           ({"validtime_fwd": 0, "validtime_bck": 1},
+                                                            MSUIDefaultConfig.wms_prefetch)
+                                                           ])
+    def test_modify_fixed_dict_options(self, input_dict, expected_dict, qtbot):
+        data = {"wms_prefetch": input_dict}
+        modify_config_file(data)
+        self.window.open_config_editor()
+        assert self.window.config_editor.last_saved["wms_prefetch"] == expected_dict
+
+    @pytest.mark.parametrize("input_value, expected_value", [(20, 20),
+                                                             ((1, 2), MSUIDefaultConfig.num_labels),
+                                                             (1.3435, MSUIDefaultConfig.num_labels)
+                                                             ])
+    def test_modify_value(self, input_value, expected_value, qtbot):
+        data = {"num_labels": input_value}
+        modify_config_file(data)
+        self.window.open_config_editor()
+        assert self.window.config_editor.last_saved["num_labels"] == expected_value
 
     def test_activate_operation(self, qtbot):
         self._connect_to_mscolab(qtbot)

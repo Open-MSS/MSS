@@ -309,6 +309,8 @@ class MSUIDefaultConfig:
 
     # Dictionary options with fixed key/value pairs
     fixed_dict_options = ["layout", "wms_prefetch", "topview", "sideview", "linearview"]
+    # List options with fixed length
+    fixed_list_options = ["MSCOLAB_timeout", ]
 
     # Fixed key/value pair options
     key_value_options = [
@@ -366,7 +368,7 @@ class MSUIDefaultConfig:
         "new_flighttrack_template": ["new-location"],
         "gravatar_ids": ["example@email.com"],
         "WMS_preload": ["https://wms-preload-url.com"],
-        "MSCOLAB_timeout": [[2, 10]],
+        "MSCOLAB_timeout": [0, 0],
         "automated_plotting_flights": [["", "", "", "", "", ""]],
         "automated_plotting_hsecs": [["http://www.your-wms-server.de", "", "", ""]],
         "automated_plotting_vsecs": [["http://www.your-wms-server.de", "", "", ""]],
@@ -418,6 +420,7 @@ for key in [
     "__dict__",
     "__weakref__",
     "fixed_dict_options",
+    "fixed_list_options",
     "dict_option_structure",
     "list_option_structure",
     "key_value_options",
@@ -597,7 +600,7 @@ def merge_dict(existing_dict, new_dict):
     new_dict -- Dict with new values
     """
     # Check if dictionary options with fixed key/value pairs match data types from default
-    for key in MSUIDefaultConfig.fixed_dict_options:
+    for key in MSUIDefaultConfig.fixed_dict_options + MSUIDefaultConfig.fixed_list_options:
         if key in new_dict:
             existing_dict[key] = compare_data(
                 existing_dict[key], new_dict[key]
@@ -615,6 +618,8 @@ def merge_dict(existing_dict, new_dict):
             for option_key in new_dict[key]:
                 for dos_key_key in dos[key]:
                     data, match = compare_data(dos[key][dos_key_key], new_dict[key][option_key])
+                    if key in MSUIDefaultConfig.fixed_list_options:
+                        match = len(dos[key][dos_key_key]) == len(new_dict[key][option_key])
                     if match:
                         temp_data[option_key] = new_dict[key][option_key]
                         break
@@ -626,14 +631,15 @@ def merge_dict(existing_dict, new_dict):
     for key in los:
         if key in new_dict:
             temp_data = []
-            for i in range(len(new_dict[key])):
-                for los_key_item in los[key]:
-                    data, match = compare_data(los_key_item, new_dict[key][i])
-                    if match:
-                        temp_data.append(data)
-                        break
-            if temp_data != []:
-                existing_dict[key] = temp_data
+            if key not in MSUIDefaultConfig.fixed_list_options:
+                for i in range(len(new_dict[key])):
+                    for los_key_item in los[key]:
+                        data, match = compare_data(los_key_item, new_dict[key][i])
+                        if match:
+                            temp_data.append(data)
+                            break
+                if temp_data != []:
+                    existing_dict[key] = temp_data
 
     # Check if options with fixed key/value pair structure match data types from default
     for key in MSUIDefaultConfig.key_value_options:
