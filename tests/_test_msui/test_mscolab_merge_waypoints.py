@@ -185,12 +185,8 @@ class Test_Save_Keep_Server_Points(Test_Mscolab_Merge_Waypoints):
                 mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
             self.window.serverOptionsCb.setCurrentIndex(2)
             m.assert_called_once()
-
         def assert_():
-            # get the updated waypoints model from the server
-            server_xml = self.window.mscolab.request_wps_from_server()
-            server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
-            new_local_wp = server_waypoints_model.waypoint_data(0)
+            new_local_wp = self.window.mscolab.waypoints_model.waypoint_data(0)
             assert wp_local_before.lat != new_local_wp.lat
             assert new_local_wp.lat == wp_server_before.lat
         qtbot.wait_until(assert_)
@@ -220,12 +216,11 @@ class Test_Fetch_From_Server(Test_Mscolab_Merge_Waypoints):
                 mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
             self.window.serverOptionsCb.setCurrentIndex(1)
             m.assert_called_once()
-        # get the updated waypoints model from the server
-        # ToDo understand why requesting in follow up test of self.window.waypoints_model not working
-        server_xml = self.window.mscolab.request_wps_from_server()
-        server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
-        new_local_wp = server_waypoints_model
-        assert len(new_local_wp.waypoints) == 2
-        assert new_local_wp.waypoint_data(0).lat == wp_server_before.lat
-        self.window.workLocallyCheckbox.setChecked(False)
-        assert self.window.mscolab.waypoints_model.waypoint_data(0).lat == wp_server_before.lat
+
+        def assert_():
+            new_local_wp = self.window.mscolab.waypoints_model
+            assert len(new_local_wp.waypoints) == 2
+            assert new_local_wp.waypoint_data(0).lat == wp_server_before.lat
+            self.window.workLocallyCheckbox.setChecked(False)
+            assert self.window.mscolab.waypoints_model.waypoint_data(0).lat == wp_server_before.lat
+        qtbot.wait_until(assert_)
