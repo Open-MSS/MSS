@@ -227,7 +227,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             index = self.json_model.index(r, 0, parent)
             item = self.json_model.itemFromIndex(index)
             item.setEditable(False)
-            if item.text() in mss_default.fixed_dict_options:
+            if item.text() in mss_default.fixed_dict_options + mss_default.fixed_list_options:
                 self.set_noneditable_items(index)
             if item.text() in mss_default.config_descriptions:
                 item.setData(mss_default.config_descriptions[item.text()], QtCore.Qt.ToolTipRole)
@@ -243,7 +243,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             if not index.parent().isValid():
                 move = True
             root_index = get_root_index(index)
-            if root_index.data() not in mss_default.fixed_dict_options + mss_default.key_value_options:
+            if (root_index.data() not in mss_default.fixed_dict_options + mss_default.key_value_options +
+                    mss_default.fixed_list_options):
                 add, move = True, True
 
             # display error message if key has invalid values
@@ -265,8 +266,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             restore_defaults = True
             for index in selection:
                 index = get_root_index(index)
-                if index.data() not in mss_default.fixed_dict_options + mss_default.key_value_options \
-                    and self.proxy_model.rowCount(index) > 0:
+                if index.data() not in mss_default.fixed_dict_options + mss_default.key_value_options  \
+                        + mss_default.fixed_list_options and self.proxy_model.rowCount(index) > 0:
                     remove = True
                     break
 
