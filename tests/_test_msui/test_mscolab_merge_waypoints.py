@@ -185,6 +185,7 @@ class Test_Save_Keep_Server_Points(Test_Mscolab_Merge_Waypoints):
                 mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
             self.window.serverOptionsCb.setCurrentIndex(2)
             m.assert_called_once()
+
         def assert_():
             new_local_wp = self.window.mscolab.waypoints_model.waypoint_data(0)
             assert wp_local_before.lat != new_local_wp.lat
