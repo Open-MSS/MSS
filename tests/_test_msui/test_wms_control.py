@@ -28,7 +28,6 @@
 import os
 import mock
 import shutil
-import tempfile
 import pytest
 import hashlib
 import urllib
@@ -56,15 +55,13 @@ class WMSControlWidgetSetup:
         parsed_url = urllib.parse.urlparse(self.url)
         self.scheme, self.host, self.port = parsed_url.scheme, parsed_url.hostname, parsed_url.port
 
-    def _setup(self, widget_type):
+    def _setup(self, widget_type, tmpdir):
         wc.WMS_SERVICE_CACHE = {}
         if widget_type == "hsec":
             self.view = HSecViewMockup()
         else:
             self.view = VSecViewMockup()
-        self.tempdir = tempfile.mkdtemp()
-        if not os.path.exists(self.tempdir):
-            os.mkdir(self.tempdir)
+        self.tempdir = tmpdir.strpath
         if widget_type == "hsec":
             self.window = wc.HSecWMSControlWidget(view=self.view, wms_cache=self.tempdir)
         else:

@@ -26,10 +26,8 @@
 """
 
 import mock
-import os
 import pytest
 import shutil
-import tempfile
 from PyQt5 import QtTest, QtCore
 from mslib.msui import flighttrack as ft
 import mslib.msui.linearview as tv
@@ -88,12 +86,10 @@ class Test_MSSLinearViewWindow:
 
 class Test_LinearViewWMS:
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot, mswms_server):
+    def setup(self, qtbot, mswms_server, tmpdir):
         mainwindow = MSUIMainWindow()
         self.url = mswms_server
-        self.tempdir = tempfile.mkdtemp()
-        if not os.path.exists(self.tempdir):
-            os.mkdir(self.tempdir)
+        self.tempdir = tmpdir.strpath
 
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
         waypoints_model = ft.WaypointsTableModel("")

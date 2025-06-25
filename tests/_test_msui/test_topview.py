@@ -29,7 +29,6 @@ import mock
 import os
 import pytest
 import shutil
-import tempfile
 import mslib.msui.topview as tv
 from PyQt5 import QtWidgets, QtCore, QtTest, QtGui
 from mslib.msui import flighttrack as ft
@@ -265,9 +264,9 @@ class Test_MSSTopViewWindow:
 
 class Test_TopViewWMS:
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot, mswms_server):
+    def setup(self, qtbot, mswms_server, tmpdir):
         self.url = mswms_server
-        self.tempdir = tempfile.mkdtemp()
+        self.tempdir = tmpdir.strpath
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
 

@@ -30,7 +30,6 @@ import mock
 import os
 import pytest
 import shutil
-import tempfile
 from PyQt5 import QtTest, QtCore, QtGui, QtWidgets
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
@@ -189,10 +188,10 @@ class Test_MSSSideViewWindow:
 
 class Test_SideViewWMS:
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot, mswms_server):
+    def setup(self, qtbot, mswms_server, tmpdir):
         mainwindow = MSUIMainWindow()
         self.url = mswms_server
-        self.tempdir = tempfile.mkdtemp()
+        self.tempdir = tmpdir.strpath
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
 
