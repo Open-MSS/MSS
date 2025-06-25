@@ -29,6 +29,7 @@
 import mock
 import os
 import fs
+import re
 import argparse
 import pytest
 from urllib.request import urlopen
@@ -37,9 +38,8 @@ from mslib import __version__
 from tests.constants import ROOT_DIR, MSUI_CONFIG_PATH
 from mslib.msui import msui
 from mslib.msui import msui_mainwindow as msui_mw
+from mslib.utils.config import read_config_file, modify_config_file
 from tests.utils import ExceptionMock
-from mslib.utils.config import read_config_file
-import re
 
 
 def test_main():
@@ -214,6 +214,17 @@ class Test_MSSSideViewWindow:
         self.window.actionConfiguration.trigger()
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.window.config_editor.close()
+
+    @pytest.mark.parametrize("input_value, expected_value", [("~/mssdata", "~/mssdata"),
+                                                             ("/tmp", "/tmp"),
+                                                             ("../tmp", "../tmp"),
+                                                             ("./tmp", "./tmp")
+                                                            ])
+    def test_modify_config_data_dir(self, input_value, expected_value, qtbot):
+        data = {"data_dir": input_value}
+        modify_config_file(data)
+        self.window.open_config_editor()
+        assert self.window.config_editor.last_saved["data_dir"] == expected_value
 
     def test_open_shortcut(self):
         self.window.actionShortcuts.trigger()

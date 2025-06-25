@@ -677,6 +677,9 @@ def compare_data(default, user_data):
             return user_data, True
         if isinstance(match_type(default), type(match_type(user_data))):
             return user_data, True
+        # Special handling for path strings - both absolute and relative paths should be treated as valid strings
+        elif isinstance(default, str) and isinstance(user_data, str):
+            return user_data, True
         else:
             return default, False
 
