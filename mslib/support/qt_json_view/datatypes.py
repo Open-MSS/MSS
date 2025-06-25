@@ -88,7 +88,7 @@ class NoneType(DataType):
     """None"""
 
     def matches(self, data):
-        return data is None
+        return data is None or data is ""
 
     def value_item(self, value, model, key=None):
         item = super(NoneType, self).value_item(value, model, key)
