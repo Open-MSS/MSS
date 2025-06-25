@@ -218,7 +218,8 @@ class Test_MSSSideViewWindow:
     @pytest.mark.parametrize("input_value, expected_value", [("~/mssdata", "~/mssdata"),
                                                              ("/tmp", "/tmp"),
                                                              ("../tmp", "../tmp"),
-                                                             ("./tmp", "./tmp")
+                                                             ("./tmp", "./tmp"),
+                                                             ("something",  "~/mssdata")
                                                             ])
     def test_modify_config_data_dir(self, input_value, expected_value, qtbot):
         data = {"data_dir": input_value}
