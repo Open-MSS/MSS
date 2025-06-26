@@ -623,21 +623,14 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             # Get flight track appearance settings and waypoints
             appearance_settings = self.mpl.canvas.get_settings()
             waypoints = []
-            print("DEBUG: active_flighttrack =", self.active_flighttrack)
 
             if hasattr(self, 'active_flighttrack') and self.active_flighttrack is not None:
                 if hasattr(self.active_flighttrack, 'waypoints'):
                     wps = self.active_flighttrack.waypoints
-                    print(f"DEBUG: Found {len(wps)} waypoints")
                     waypoints = [
                         {"lat": wp.lat, "lon": wp.lon, "flightlevel": wp.flightlevel}
                         for wp in wps
                     ]
-                else:
-                    print("DEBUG: active_flighttrack has no waypoints() method")
-            else:
-                print("DEBUG: active_flighttrack is not set")
-
             # Get WMS settings (if connected)
             wms_settings = {}
             if self.wms_connected:
@@ -658,7 +651,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 extent = self.mpl.canvas.ax.get_extent(crs=PlateCarree())  # [lon_min, lon_max, lat_min, lat_max]
             except AttributeError:
                 extent = [map_extent.get("llcrnrlon"), map_extent.get("urcrnrlon"),
-                        map_extent.get("llcrnrlat"), map_extent.get("urcrnrlat")]
+                          map_extent.get("llcrnrlat"), map_extent.get("urcrnrlat")]
 
             return {
                 "view_type": "topview",

@@ -38,7 +38,6 @@ import re
 import sys
 from pathlib import Path
 import fs
-import json
 
 from slugify import slugify
 from mslib import __version__
@@ -442,7 +441,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.config_editor = None
         self.local_active = True
         self.new_flight_track_counter = 0
-        self.config_for_gui = config_loader(default=False)
+        self.config_for_gui = config_loader()
 
         # Reference to the flight track that is currently displayed in the views.
         self.active_flight_track = None
