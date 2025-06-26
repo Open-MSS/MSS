@@ -30,6 +30,7 @@
 
 import functools
 import logging
+from cartopy.crs import PlateCarree
 
 from mslib.utils.config import config_loader
 from mslib.utils.get_projection_params import get_projection_params
@@ -608,3 +609,72 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
     def update_roundtrip_enabled(self):
         self.btRoundtrip.setEnabled(self.is_roundtrip_possible())
+
+    def get_settings(self):
+        """Return a dictionary of all top view settings."""
+        try:
+            # Get current map section and projection
+            current_map_key = self.cbChangeMapSection.currentText()
+            predefined_map_sections = config_loader(dataset="predefined_map_sections")
+            current_map = predefined_map_sections.get(current_map_key, {"CRS": "", "map": {}})
+            projection = current_map["CRS"]
+            map_extent = current_map["map"]
+
+            # Get flight track appearance settings and waypoints
+            appearance_settings = self.mpl.canvas.get_settings()
+            waypoints = []
+            print("DEBUG: active_flighttrack =", self.active_flighttrack)
+
+            if hasattr(self, 'active_flighttrack') and self.active_flighttrack is not None:
+                if hasattr(self.active_flighttrack, 'waypoints'):
+                    wps = self.active_flighttrack.waypoints
+                    print(f"DEBUG: Found {len(wps)} waypoints")
+                    waypoints = [
+                        {"lat": wp.lat, "lon": wp.lon, "flightlevel": wp.flightlevel}
+                        for wp in wps
+                    ]
+                else:
+                    print("DEBUG: active_flighttrack has no waypoints() method")
+            else:
+                print("DEBUG: active_flighttrack is not set")
+
+            # Get WMS settings (if connected)
+            wms_settings = {}
+            if self.wms_connected:
+                wms_settings = {
+                    "url": self.currurl,
+                    "layer": self.currlayer,
+                    "level": self.currlevel,
+                    "styles": self.currstyles,
+                    "init_time": self.curritime,
+                    "valid_time": self.currvtime,
+                }
+
+            # Get dock widget states
+            dock_states = [dock is not None for dock in self.docks]
+
+            # Get map canvas extent (if different from predefined map section)
+            try:
+                extent = self.mpl.canvas.ax.get_extent(crs=PlateCarree())  # [lon_min, lon_max, lat_min, lat_max]
+            except AttributeError:
+                extent = [map_extent.get("llcrnrlon"), map_extent.get("urcrnrlon"),
+                        map_extent.get("llcrnrlat"), map_extent.get("urcrnrlat")]
+
+            return {
+                "view_type": "topview",
+                "map_section": current_map_key,
+                "projection": projection,
+                "extent": {
+                    "lon_min": extent[0],
+                    "lon_max": extent[1],
+                    "lat_min": extent[2],
+                    "lat_max": extent[3]
+                },
+                "flight_track": appearance_settings,
+                "waypoints": waypoints,
+                "wms": wms_settings,
+                "docks_open": dock_states,
+            }
+        except Exception as e:
+            logging.error("Failed to get top view settings: %s", e)
+            return {}

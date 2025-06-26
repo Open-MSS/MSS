@@ -37,6 +37,8 @@ import os
 import re
 import sys
 from pathlib import Path
+import fs
+import json
 
 from slugify import slugify
 from mslib import __version__
@@ -52,6 +54,7 @@ from mslib.utils.qt import get_open_filenames, get_save_filename, show_popup
 from mslib.utils.config import read_config_file, config_loader
 from PyQt5 import QtGui, QtCore, QtWidgets
 from mslib.utils import release_info
+from mslib.utils import view_restoration
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
@@ -439,6 +442,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.config_editor = None
         self.local_active = True
         self.new_flight_track_counter = 0
+        self.config_for_gui = config_loader(default=False)
 
         # Reference to the flight track that is currently displayed in the views.
         self.active_flight_track = None
@@ -1172,8 +1176,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             return (f"Status : User Configuration '{constants.MSUI_SETTINGS}' loaded")
 
     def closeEvent(self, event):
-        """Ask user if he/she wants to close the application. If yes, also
-           close all views that are open.
+        """Ask user if he/she wants to close the application. If yes, save settings for open top views.
 
         Overloads QtGui.QMainWindow.closeEvent(). This method is called if
         Qt receives a window close request for our application window.
@@ -1186,16 +1189,45 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         if ret == QtWidgets.QMessageBox.Yes:
             if self.mscolab.help_dialog is not None:
                 self.mscolab.help_dialog.close()
-            # cleanup mscolab widgets
             if self.mscolab.token is not None:
                 self.mscolab.logout()
-            # Table View stick around after MainWindow closes - maybe some dangling reference?
-            # This removes them for sure!
+
+            try:
+                # Check listViews for MSUITopViewWindow instances
+                view_windows = []
+                for i in range(self.listViews.count()):
+                    item = self.listViews.item(i)
+                    if item and hasattr(item, 'window') and isinstance(item.window, topview.MSUITopViewWindow):
+                        view_windows.append(item.window)
+                print(f"Found top view windows: {len(view_windows)}")
+                if view_windows:
+                    all_settings = []
+                    for view_window in view_windows:
+                        print(f"Processing top view: {view_window}")
+                        if hasattr(view_window, 'get_settings'):
+                            settings = view_window.get_settings()
+                            print(f"Settings: {settings}")
+                            if settings and settings.get("view_type") == "topview":
+                                all_settings.append(settings)
+                    if all_settings:
+                        view_restoration.save_view_settings(all_settings)
+                        logging.info("Saved settings for all topview windows on application close")
+                    else:
+                        logging.info("No valid top view settings to save on close.")
+                else:
+                    logging.warning("No top view windows found to save settings.")
+            except Exception as e:
+                print(f"Exception occurred: {e}")
+                logging.error("Failed to save top view settings on close: %s", e)
+                QtWidgets.QMessageBox.warning(self, "Save Error", f"Failed to save top view settings: {e}")
+                event.ignore()
+                return
+
             while self.listViews.count() > 0:
                 self.listViews.item(0).window.handle_force_close()
             self.listViews.clear()
             self.listFlightTracks.clear()
-            # close configuration editor
+
             if self.config_editor is not None:
                 self.config_editor.restart_on_save = False
                 self.config_editor.close()
@@ -1203,6 +1235,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                     self.statusBar.showMessage("Save your config changes and try closing again")
                     event.ignore()
                     return
+
             event.accept()
         else:
             event.ignore()

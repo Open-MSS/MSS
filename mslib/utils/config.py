@@ -56,6 +56,8 @@ class MSUIDefaultConfig:
     Do not change any value for good reasons.
     Your values can be set in your personal msui_settings.json file
     """
+    # New setting for view restorations
+    restore_views = False
     # this skips the verification of the user token on each mscolab request
     mscolab_skip_verify_user_token = True
 
@@ -329,6 +331,7 @@ class MSUIDefaultConfig:
         'wms_cache_max_size_bytes',
         'wms_cache_max_age_seconds',
         'WMS_request_timeout',
+        'restore_views',
     ]
 
     # Dictionary options with predefined structure
