@@ -374,7 +374,7 @@ class FilepathType(DataType):
                 # Unix/Linux absolute path (/path/to/file) - has to start with a slash /
                 \/(?:[^\/\0\n\r]*\/)*[^\/\0\n\r]*
                 |
-                # Unix/Linux relative path with explicite ./ or ../
+                # Unix/Linux relative path with explicitly ./ or ../
                 \.{1,2}\/(?:[^\/\0\n\r]*\/)*[^\/\0\n\r]*
                 |
                 # Unix/Linux relative path with at least one / (path/to/file)
