@@ -29,7 +29,6 @@
 import mock
 import os
 import pytest
-import shutil
 from PyQt5 import QtTest, QtCore, QtGui, QtWidgets
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
@@ -207,7 +206,6 @@ class Test_SideViewWMS:
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
         yield
         self.window.hide()
-        shutil.rmtree(self.tempdir)
 
     def query_server(self, qtbot, url):
         QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
