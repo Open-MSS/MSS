@@ -264,9 +264,9 @@ class Test_MSSTopViewWindow:
 
 class Test_TopViewWMS:
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot, mswms_server, tmpdir):
+    def setup(self, qtbot, mswms_server, tmp_path):
         self.url = mswms_server
-        self.tempdir = tmpdir.tmp_path
+        self.tempdir = tmp_path
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
 

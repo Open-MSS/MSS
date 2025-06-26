@@ -188,10 +188,10 @@ class Test_MSSSideViewWindow:
 
 class Test_SideViewWMS:
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot, mswms_server, tmpdir):
+    def setup(self, qtbot, mswms_server, tmp_path):
         mainwindow = MSUIMainWindow()
         self.url = mswms_server
-        self.tempdir = tmpdir.tmp_path
+        self.tempdir = tmp_path
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
 

@@ -85,10 +85,10 @@ class Test_MSSLinearViewWindow:
 
 class Test_LinearViewWMS:
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot, mswms_server, tmpdir):
+    def setup(self, qtbot, mswms_server, tmp_path):
         mainwindow = MSUIMainWindow()
         self.url = mswms_server
-        self.tempdir = tmpdir.tmp_path
+        self.tempdir = tmp_path
 
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
         waypoints_model = ft.WaypointsTableModel("")

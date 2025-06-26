@@ -54,13 +54,13 @@ class WMSControlWidgetSetup:
         parsed_url = urllib.parse.urlparse(self.url)
         self.scheme, self.host, self.port = parsed_url.scheme, parsed_url.hostname, parsed_url.port
 
-    def _setup(self, widget_type, tmpdir):
+    def _setup(self, widget_type, tmp_path):
         wc.WMS_SERVICE_CACHE = {}
         if widget_type == "hsec":
             self.view = HSecViewMockup()
         else:
             self.view = VSecViewMockup()
-        self.tempdir = tmpdir.tmp_path
+        self.tempdir = tmp_path
         if widget_type == "hsec":
             self.window = wc.HSecWMSControlWidget(view=self.view, wms_cache=self.tempdir)
         else:
@@ -92,8 +92,8 @@ class WMSControlWidgetSetup:
 
 class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot, tmpdir):
-        self._setup("hsec", tmpdir)
+    def setup(self, qtbot, tmp_path):
+        self._setup("hsec", tmp_path)
         yield
         self._teardown()
 
@@ -404,8 +404,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
 class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot, tmpdir):
-        self._setup("vsec", tmpdir)
+    def setup(self, qtbot, tmp_path):
+        self._setup("vsec", tmp_path)
         yield
         self._teardown()
 
