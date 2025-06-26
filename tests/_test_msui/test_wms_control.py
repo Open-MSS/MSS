@@ -27,7 +27,6 @@
 
 import os
 import mock
-import shutil
 import pytest
 import hashlib
 import urllib

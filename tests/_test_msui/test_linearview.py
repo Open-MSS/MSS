@@ -27,7 +27,6 @@
 
 import mock
 import pytest
-import shutil
 from PyQt5 import QtTest, QtCore
 from mslib.msui import flighttrack as ft
 import mslib.msui.linearview as tv
