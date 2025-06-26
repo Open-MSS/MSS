@@ -61,7 +61,7 @@ class WMSControlWidgetSetup:
             self.view = HSecViewMockup()
         else:
             self.view = VSecViewMockup()
-        self.tempdir = tmpdir.strpath
+        self.tempdir = tmpdir.tmp_path
         if widget_type == "hsec":
             self.window = wc.HSecWMSControlWidget(view=self.view, wms_cache=self.tempdir)
         else:
@@ -82,7 +82,6 @@ class WMSControlWidgetSetup:
 
     def _teardown(self):
         self.window.hide()
-        shutil.rmtree(self.tempdir)
 
     def query_server(self, qtbot, url):
         while len(self.window.multilayers.cbWMS_URL.currentText()) > 0:
@@ -94,8 +93,8 @@ class WMSControlWidgetSetup:
 
 class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot):
-        self._setup("hsec")
+    def setup(self, qtbot, tmpdir):
+        self._setup("hsec", tmpdir)
         yield
         self._teardown()
 
@@ -406,8 +405,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
 class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot):
-        self._setup("vsec")
+    def setup(self, qtbot, tmpdir):
+        self._setup("vsec", tmpdir)
         yield
         self._teardown()
 

@@ -89,7 +89,7 @@ class Test_LinearViewWMS:
     def setup(self, qtbot, mswms_server, tmpdir):
         mainwindow = MSUIMainWindow()
         self.url = mswms_server
-        self.tempdir = tmpdir.strpath
+        self.tempdir = tmpdir.tmp_path
 
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
         waypoints_model = ft.WaypointsTableModel("")
@@ -103,7 +103,6 @@ class Test_LinearViewWMS:
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
         yield
         self.window.hide()
-        shutil.rmtree(self.tempdir)
 
     def query_server(self, qtbot, url):
         QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)

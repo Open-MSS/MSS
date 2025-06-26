@@ -191,7 +191,7 @@ class Test_SideViewWMS:
     def setup(self, qtbot, mswms_server, tmpdir):
         mainwindow = MSUIMainWindow()
         self.url = mswms_server
-        self.tempdir = tmpdir.strpath
+        self.tempdir = tmpdir.tmp_path
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
 
