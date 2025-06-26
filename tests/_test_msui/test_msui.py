@@ -219,10 +219,11 @@ class Test_MSSSideViewWindow:
                                                              ("/tmp", "/tmp"),
                                                              ("../tmp", "../tmp"),
                                                              ("./tmp", "./tmp"),
-                                                             ("something",  "~/mssdata"),
+                                                             ("name_no_path", "~/mssdata"),
                                                              ("", "~/mssdata"),
                                                              ("data/subdir", "data/subdir"),
                                                              ("C:/temp", "C:/temp"),
+                                                             (r"\\server\share\folder", r"\\server\share\folder"),
                                                              ])
     def test_modify_config_data_dir(self, input_value, expected_value, qtbot):
         data = {"data_dir": input_value}

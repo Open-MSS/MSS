@@ -88,7 +88,7 @@ class NoneType(DataType):
     """None"""
 
     def matches(self, data):
-        return data is None or data is ""
+        return data is None
 
     def value_item(self, value, model, key=None):
         item = super(NoneType, self).value_item(value, model, key)
@@ -366,7 +366,24 @@ class UrlType(DataType):
 class FilepathType(DataType):
     """Files and paths can be opened."""
 
-    REGEX = re.compile(r'(\/.*)|([A-Z]:\\.*)')
+    REGEX = re.compile(r'''
+            ^(?:
+                # Windows-path (C:\path\to\file) - at least one separator and a drive letter
+                [A-Za-z]:[\\\/](?:[^<>:"|?*\n\r]*[\\\/])*[^<>:"|?*\n\r]*
+                |
+                # Unix/Linux absolute path (/path/to/file) - has to start with a slash /
+                \/(?:[^\/\0\n\r]*\/)*[^\/\0\n\r]*
+                |
+                # Unix/Linux relative path with explicite ./ or ../
+                \.{1,2}\/(?:[^\/\0\n\r]*\/)*[^\/\0\n\r]*
+                |
+                # Unix/Linux relative path with at least one / (path/to/file)
+                [^\/\0\n\r]+\/(?:[^\/\0\n\r]*\/)*[^\/\0\n\r]*
+                |
+                # UNC-Path (\\server\share\path)
+                \\\\[^\\\/\n\r]+\\[^\\\/\n\r]+(?:\\[^\\\/\n\r]*)*
+            )$
+        ''', re.VERBOSE | re.IGNORECASE)
 
     def matches(self, data):
         # (mss)
