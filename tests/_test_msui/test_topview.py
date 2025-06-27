@@ -28,8 +28,6 @@
 import mock
 import os
 import pytest
-import shutil
-import tempfile
 import mslib.msui.topview as tv
 from PyQt5 import QtWidgets, QtCore, QtTest, QtGui
 from mslib.msui import flighttrack as ft
@@ -265,9 +263,9 @@ class Test_MSSTopViewWindow:
 
 class Test_TopViewWMS:
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot, mswms_server):
+    def setup(self, qtbot, mswms_server, tmp_path):
         self.url = mswms_server
-        self.tempdir = tempfile.mkdtemp()
+        self.tempdir = tmp_path
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
 
@@ -285,7 +283,6 @@ class Test_TopViewWMS:
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
         yield
         self.window.hide()
-        shutil.rmtree(self.tempdir)
 
     def query_server(self, qtbot, url):
         QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
