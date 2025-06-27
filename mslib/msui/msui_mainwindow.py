@@ -441,7 +441,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.config_editor = None
         self.local_active = True
         self.new_flight_track_counter = 0
-        self.config_for_gui = config_loader()
 
         # Reference to the flight track that is currently displayed in the views.
         self.active_flight_track = None
@@ -1198,14 +1197,12 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                     item = self.listViews.item(i)
                     if item and hasattr(item, 'window') and isinstance(item.window, topview.MSUITopViewWindow):
                         view_windows.append(item.window)
-                print(f"Found top view windows: {len(view_windows)}")
+
                 if view_windows:
                     all_settings = []
                     for view_window in view_windows:
-                        print(f"Processing top view: {view_window}")
                         if hasattr(view_window, 'get_settings'):
                             settings = view_window.get_settings()
-                            print(f"Settings: {settings}")
                             if settings and settings.get("view_type") == "topview":
                                 all_settings.append(settings)
                     if all_settings:
@@ -1216,7 +1213,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 else:
                     logging.warning("No top view windows found to save settings.")
             except Exception as e:
-                print(f"Exception occurred: {e}")
                 logging.error("Failed to save top view settings on close: %s", e)
                 QtWidgets.QMessageBox.warning(self, "Save Error", f"Failed to save top view settings: {e}")
                 event.ignore()

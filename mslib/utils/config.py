@@ -412,6 +412,7 @@ class MSUIDefaultConfig:
         "topview": "Dictionary to make title, label, and ticklabel sizes for topview configurable",
         "sideview": "Dictionary to make title, label, and ticklabel sizes for sideview configurable",
         "linearview": "Dictionary to make title, label, and ticklabel sizes for linearview configurable",
+        "restore_views": "Enable restoration of view settings (e.g. top view) on startup",
     }
 
 
