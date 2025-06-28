@@ -6,7 +6,7 @@
 
     This file is part of MSS.
 
-    :copyright: Copyright 2017-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2025 Annapurna Gupta.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");

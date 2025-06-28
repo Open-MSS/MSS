@@ -30,7 +30,6 @@
 
 import functools
 import logging
-from cartopy.crs import PlateCarree
 
 from mslib.utils.config import config_loader
 from mslib.utils.get_projection_params import get_projection_params
@@ -618,7 +617,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             predefined_map_sections = config_loader(dataset="predefined_map_sections")
             current_map = predefined_map_sections.get(current_map_key, {"CRS": "", "map": {}})
             projection = current_map["CRS"]
-            map_extent = current_map["map"]
 
             # Get flight track appearance settings and waypoints
             appearance_settings = self.mpl.canvas.get_settings()
@@ -646,12 +644,13 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             # Get dock widget states
             dock_states = [dock is not None for dock in self.docks]
 
-            # Get map canvas extent (if different from predefined map section)
-            try:
-                extent = self.mpl.canvas.ax.get_extent(crs=PlateCarree())  # [lon_min, lon_max, lat_min, lat_max]
-            except AttributeError:
-                extent = [map_extent.get("llcrnrlon"), map_extent.get("urcrnrlon"),
-                          map_extent.get("llcrnrlat"), map_extent.get("urcrnrlat")]
+            # Get current extent from Basemap (may differ from predefined)
+            extent = [
+                self.mpl.canvas.map.llcrnrlon,
+                self.mpl.canvas.map.urcrnrlon,
+                self.mpl.canvas.map.llcrnrlat,
+                self.mpl.canvas.map.urcrnrlat
+            ]
 
             return {
                 "view_type": "topview",

@@ -1174,8 +1174,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             return (f"Status : User Configuration '{constants.MSUI_SETTINGS}' loaded")
 
     def closeEvent(self, event):
-        """Ask user if he/she wants to close the application. If yes, save settings for open top views.
-
+        """
+        Ask the user to confirm closing the application. If confirmed, save settings for open top views.
         Overloads QtGui.QMainWindow.closeEvent(). This method is called if
         Qt receives a window close request for our application window.
         """
