@@ -42,6 +42,7 @@ from mslib.utils.qt import dropEvent, dragEnterEvent
 from mslib.msui import flighttrack as ft
 from mslib.msui.viewwindows import MSUIViewWindow
 from mslib.msui.icons import icons
+from PyQt5 import QtCore
 
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
@@ -291,3 +292,53 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         self.btAddWayPointToFlightTrack.setEnabled(True)
         self.btDeleteWayPoint.setEnabled(True)
         self.resizeColumns()
+
+    def get_settings(self):
+        """Return a dictionary of all table view settings."""
+
+        # Get performance settings from waypoints_model and convert to serializable format
+        performance_settings = {}
+        if hasattr(self, 'waypoints_model') and self.waypoints_model is not None:
+            raw_performance = self.waypoints_model.performance_settings or {}
+            # Convert SimpleAircraft or other non-serializable objects to dictionaries
+            for key, value in raw_performance.items():
+                if hasattr(value, '__dict__'):
+                    performance_settings[key] = {
+                        attr: getattr(value, attr)
+                        for attr in dir(value)
+                        if not attr.startswith('_') and isinstance(getattr(value, attr),
+                                                                   (str, int, float, bool, list, dict, type(None)))
+                    }
+                else:
+                    performance_settings[key] = value
+
+        # Get flight track waypoints
+        waypoints = []
+        if hasattr(self, 'waypoints_model') and self.waypoints_model is not None:
+            wps = self.waypoints_model.waypoints
+            waypoints = [
+                {"lat": wp.lat, "lon": wp.lon, "flightlevel": wp.flightlevel}
+                for wp in wps
+            ]
+
+        # Get dock widget states
+        dock_states = [dock is not None for dock in self.docks]
+
+        # Get column widths for table layout
+        column_widths = {}
+        model = self.tableWayPoints.model()
+        if model is not None:
+            for col in range(model.columnCount()):
+                header_text = model.headerData(col, QtCore.Qt.Horizontal, QtCore.Qt.DisplayRole)
+                if header_text is not None:
+                    column_widths[str(header_text)] = self.tableWayPoints.columnWidth(col)
+                else:
+                    column_widths[f"Column_{col}"] = self.tableWayPoints.columnWidth(col)
+
+        return {
+            "view_type": "tableview",
+            "performance_settings": performance_settings,
+            "waypoints": waypoints,
+            "docks_open": dock_states,
+            "column_widths": column_widths,
+        }

@@ -28,13 +28,27 @@ from pathlib import Path
 from mslib.msui import constants
 
 
-def save_view_settings(settings: dict):
-    try:
-        config_path = Path(constants.MSUI_CONFIG_PATH)
-        config_path.mkdir(parents=True, exist_ok=True)
-        save_path = config_path / "view_settings.json"
-        with open(save_path, "w") as f:
-            json.dump(settings, f, indent=4)
-        logging.info("Saved top view settings to %s", save_path)
-    except Exception as e:
-        logging.error("Failed to save top view settings: %s", e)
+def save_view_settings(settings):
+    """
+    Save view settings (for top, side, linear, and table views) to a JSON file.
+
+    Args:
+        settings: A list of dictionaries containing settings for view windows.
+                 Each dictionary must have a 'view_type' key ('topview', 'sideview', 'linearview', 'tableview').
+
+    Returns:
+        bool: True if settings were saved successfully, False otherwise.
+    """
+    if not isinstance(settings, list):
+        raise TypeError("Settings must be a list of dictionaries")
+    for setting in settings:
+        if not isinstance(setting, dict) or "view_type" not in setting:
+            raise ValueError("Each setting must be a dictionary with a 'view_type' key")
+
+    config_path = Path(constants.MSUI_CONFIG_PATH)
+    config_path.mkdir(parents=True, exist_ok=True)
+    save_path = config_path / "view_settings.json"
+    with open(save_path, "w") as f:
+        json.dump(settings, f, indent=4)
+    logging.info("Saved view settings to %s", save_path)
+    return True

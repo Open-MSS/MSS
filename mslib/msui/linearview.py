@@ -232,3 +232,41 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
             settings = dlg.get_settings()
             self.getView().plotter.set_settings(settings, save=True)
         dlg.destroy()
+
+    def get_settings(self):
+        """Return a dictionary of all linear view settings."""
+        # Get settings from the view (matplotlib canvas)
+        view_settings = self.getView().get_settings()
+
+        # Get flight track waypoints
+        waypoints = []
+        if hasattr(self, 'waypoints_model') and self.waypoints_model is not None:
+            wps = self.waypoints_model.waypoints
+            waypoints = [
+                {"lat": wp.lat, "lon": wp.lon, "flightlevel": wp.flightlevel}
+                for wp in wps
+            ]
+
+        # Get WMS settings
+        wms_settings = {}
+        if self.docks and self.docks[0] is not None:
+            wms_settings = {
+                "url": self.currurl,
+                "layer": self.currlayer,
+                "level": self.currlevel,
+                "styles": self.currstyles,
+                "init_time": self.curritime,
+                "valid_time": self.currvtime,
+            }
+
+        # Get dock widget states
+        dock_states = [dock is not None for dock in self.docks]
+
+        return {
+            "view_type": "linearview",
+            "plot_title_size": view_settings.get("plot_title_size", "12pt"),
+            "axes_label_size": view_settings.get("axes_label_size", "10pt"),
+            "waypoints": waypoints,
+            "wms": wms_settings,
+            "docks_open": dock_states,
+        }

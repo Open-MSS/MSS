@@ -459,3 +459,60 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
     def set_line_transparency(self, transparency):
         """Set the line transparency of the flight track"""
         self.mpl.canvas.waypoints_interactor.set_line_transparency(transparency)
+
+    def get_settings(self):
+        """Return a dictionary of all side view settings."""
+
+        # Get settings from the view (matplotlib canvas)
+        view_settings = self.getView().get_settings()
+
+        # Get flight track waypoints
+        waypoints = []
+        if hasattr(self, 'waypoints_model') and self.waypoints_model is not None:
+            wps = self.waypoints_model.waypoints
+            waypoints = [
+                {"lat": wp.lat, "lon": wp.lon, "flightlevel": wp.flightlevel}
+                for wp in wps
+            ]
+
+        # Get WMS settings (if connected)
+        wms_settings = {}
+        if self.docks[0] is not None:
+            wms_settings = {
+                "url": self.currurl,
+                "layer": self.currlayer,
+                "level": self.currlevel,
+                "styles": self.currstyles,
+                "init_time": self.curritime,
+                "valid_time": self.currvtime,
+            }
+
+        # Get dock widget states
+        dock_states = [dock is not None for dock in self.docks]
+
+        return {
+            "view_type": "sideview",
+            "vertical_axis": view_settings.get("vertical_axis"),
+            "vertical_extent": view_settings.get("vertical_extent"),
+            "secondary_axis": view_settings.get("secondary_axis"),
+            "plot_title_size": view_settings.get("plot_title_size"),
+            "axes_label_size": view_settings.get("axes_label_size"),
+            "flightlevels": view_settings.get("flightlevels"),
+            "draw_ceiling": view_settings.get("draw_ceiling"),
+            "draw_verticals": view_settings.get("draw_verticals"),
+            "draw_marker": view_settings.get("draw_marker"),
+            "draw_flightlevels": view_settings.get("draw_flightlevels"),
+            "draw_flighttrack": view_settings.get("draw_flighttrack"),
+            "fill_flighttrack": view_settings.get("fill_flighttrack"),
+            "label_flighttrack": view_settings.get("label_flighttrack"),
+            "line_thickness": view_settings.get("line_thickness"),
+            "line_style": view_settings.get("line_style"),
+            "line_transparency": view_settings.get("line_transparency"),
+            "colour_ft_vertices": view_settings.get("colour_ft_vertices"),
+            "colour_ft_waypoints": view_settings.get("colour_ft_waypoints"),
+            "colour_ft_fill": view_settings.get("colour_ft_fill"),
+            "colour_ceiling": view_settings.get("colour_ceiling"),
+            "waypoints": waypoints,
+            "wms": wms_settings,
+            "docks_open": dock_states,
+        }

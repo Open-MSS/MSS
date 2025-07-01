@@ -1175,9 +1175,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
     def closeEvent(self, event):
         """
-        Ask the user to confirm closing the application. If confirmed, save settings for open top views.
-        Overloads QtGui.QMainWindow.closeEvent(). This method is called if
-        Qt receives a window close request for our application window.
+        Ask the user to confirm closing the application.
+        If confirmed, save settings for open top, side, linear, and table views.
+        Overloads QtGui.QMainWindow.closeEvent().
         """
         ret = QtWidgets.QMessageBox.warning(
             self, self.tr("Mission Support System"),
@@ -1190,33 +1190,37 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             if self.mscolab.token is not None:
                 self.mscolab.logout()
 
-            try:
-                # Check listViews for MSUITopViewWindow instances
-                view_windows = []
-                for i in range(self.listViews.count()):
-                    item = self.listViews.item(i)
-                    if item and hasattr(item, 'window') and isinstance(item.window, topview.MSUITopViewWindow):
-                        view_windows.append(item.window)
+            # Collect settings for top, side, linear, and table view windows
+            view_windows = []
+            for i in range(self.listViews.count()):
+                item = self.listViews.item(i)
+                if (
+                    isinstance(item.window, topview.MSUITopViewWindow) or
+                    isinstance(item.window, sideview.MSUISideViewWindow) or
+                    isinstance(item.window, linearview.MSUILinearViewWindow) or
+                    isinstance(item.window, tableview.MSUITableViewWindow)
+                ):
+                    view_windows.append(item.window)
 
-                if view_windows:
-                    all_settings = []
-                    for view_window in view_windows:
-                        if hasattr(view_window, 'get_settings'):
-                            settings = view_window.get_settings()
-                            if settings and settings.get("view_type") == "topview":
-                                all_settings.append(settings)
-                    if all_settings:
-                        view_restoration.save_view_settings(all_settings)
-                        logging.info("Saved settings for all topview windows on application close")
+            if view_windows:
+                all_settings = []
+                for view_window in view_windows:
+                    if hasattr(view_window, 'get_settings'):
+                        settings = view_window.get_settings()
+                        if settings and settings.get("view_type") in ["topview", "sideview", "linearview", "tableview"]:
+                            all_settings.append(settings)
+                if all_settings:
+                    if view_restoration.save_view_settings(all_settings):
+                        logging.info("Saved settings for all view windows on application close")
                     else:
-                        logging.info("No valid top view settings to save on close.")
+                        logging.warning("Failed to save view settings")
+                        QtWidgets.QMessageBox.warning(self, "Save Error", "Failed to save view settings")
+                        event.ignore()
+                        return
                 else:
-                    logging.warning("No top view windows found to save settings.")
-            except Exception as e:
-                logging.error("Failed to save top view settings on close: %s", e)
-                QtWidgets.QMessageBox.warning(self, "Save Error", f"Failed to save top view settings: {e}")
-                event.ignore()
-                return
+                    logging.info("No valid view settings to save on close.")
+            else:
+                logging.warning("No view windows found to save settings.")
 
             while self.listViews.count() > 0:
                 self.listViews.item(0).window.handle_force_close()
