@@ -29,7 +29,6 @@ import logging
 from fastkml import kml
 from pygeoif.geometry import (Point, LineString, LinearRing, Polygon,
                               MultiPoint, MultiLineString, MultiPolygon)
-
 from fastkml.styles import Style, LineStyle, PolyStyle
 from lxml import etree as et, objectify
 import os
