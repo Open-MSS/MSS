@@ -27,9 +27,8 @@
 import copy
 import logging
 from fastkml import kml
-from fastkml.styles import LineStyle, PolyStyle
-from fastkml.geometry import Point, LineString, LinearRing, Polygon, MultiPoint, MultiLineString, \
-                MultiPolygon, GeometryCollection
+from fastkml.geometry import (Point, LineString, LinearRing, Polygon, MultiPoint, MultiLineString,
+                              MultiPolygon, GeometryCollection)
 from fastkml.styles import Style, LineStyle, PolyStyle
 from lxml import etree as et, objectify
 import os
