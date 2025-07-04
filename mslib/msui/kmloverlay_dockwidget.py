@@ -26,7 +26,11 @@
 """
 import copy
 import logging
-from fastkml import kml, geometry, styles
+from fastkml import kml
+from fastkml.styles import LineStyle, PolyStyle
+from fastkml.geometry import Point, LineString, LinearRing, Polygon, MultiPoint, MultiLineString, \
+                MultiPolygon, GeometryCollection
+from fastkml.styles import Style, LineStyle, PolyStyle
 from lxml import etree as et, objectify
 import os
 from pathlib import Path
@@ -143,23 +147,23 @@ class KMLPatch:
             styleurl = styleurl[1:]
         style = self.parse_local_styles(placemark, self.styles.get(styleurl, {}))
         if hasattr(placemark, "geometry"):
-            if isinstance(placemark.geometry, geometry.Point):
+            if isinstance(placemark.geometry, Point):
                 self.add_point(placemark, style, name)
-            elif isinstance(placemark.geometry, geometry.LineString):
+            elif isinstance(placemark.geometry, LineString):
                 self.add_line(placemark, style, name)
-            elif isinstance(placemark.geometry, geometry.LinearRing):
+            elif isinstance(placemark.geometry, LinearRing):
                 self.add_line(placemark, style, name)  # LinearRing can be plotted through LineString
-            elif isinstance(placemark.geometry, geometry.Polygon):
+            elif isinstance(placemark.geometry, Polygon):
                 self.add_polygon(placemark, style, name)
-            elif isinstance(placemark.geometry, geometry.MultiPoint):
+            elif isinstance(placemark.geometry, MultiPoint):
                 self.add_multipoint(placemark.geometry.geoms, style, name)
-            elif isinstance(placemark.geometry, geometry.MultiLineString):
+            elif isinstance(placemark.geometry, MultiLineString):
                 for geom in placemark.geometry.geoms:
                     self.add_multiline(geom, style, name)
-            elif isinstance(placemark.geometry, geometry.MultiPolygon):
+            elif isinstance(placemark.geometry, MultiPolygon):
                 for geom in placemark.geometry.geoms:
                     self.add_multipolygon(geom, style, name)
-            elif isinstance(placemark.geometry, geometry.GeometryCollection):
+            elif isinstance(placemark.geometry, GeometryCollection):
                 for geom in placemark.geometry.geoms:
                     if geom.geom_type == "Point":
                         self.add_multipoint([geom], style, name)
@@ -204,16 +208,16 @@ class KMLPatch:
         # exterior_style : <Style> OUTSIDE placemarks
         # interior_style : within <Style>
         for exterior_style in kml_doc.styles():
-            if isinstance(exterior_style, styles.Style):
+            if isinstance(exterior_style, Style):
                 name = exterior_style.id
                 if name is None:
                     continue
                 self.styles[name] = {}
                 interior_style = exterior_style.styles()
                 for style in interior_style:
-                    if isinstance(style, styles.LineStyle):
+                    if isinstance(style, LineStyle):
                         self.styles[name]["LineStyle"] = self.get_style_params(style)
-                    elif isinstance(style, styles.PolyStyle):
+                    elif isinstance(style, PolyStyle):
                         self.styles[name]["PolyStyle"] = self.get_style_params(style)
 
     def parse_local_styles(self, placemark, default_styles):
@@ -224,7 +228,7 @@ class KMLPatch:
         for exterior_style in placemark.styles():
             interior_style = exterior_style.styles()
             for style in interior_style:
-                for supported, supported_type in (('LineStyle', styles.LineStyle), ('PolyStyle', styles.PolyStyle)):
+                for supported, supported_type in (('LineStyle', LineStyle), ('PolyStyle', PolyStyle)):
                     if isinstance(style, supported_type) and supported in local_styles:
                         local_styles[supported] = self.get_style_params(
                             style,
