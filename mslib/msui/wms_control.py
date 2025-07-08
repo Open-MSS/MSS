@@ -1742,6 +1742,18 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if max_height < result.height:
                 result.thumbnail((result.width, max_height), Image.LANCZOS)
             return result
+        
+    def find_layer_item_by_name(self, layer_name):
+        """
+        Search multilayers.listLayers tree for a child with matching name.
+        """
+        for i in range(self.multilayers.listLayers.topLevelItemCount()):
+            top_item = self.multilayers.listLayers.topLevelItem(i)
+            for j in range(top_item.childCount()):
+                child = top_item.child(j)
+                if child.text(0).strip() == layer_name.strip():
+                    return child
+        return None
 
 
 class VSecWMSControlWidget(WMSControlWidget):
@@ -1821,18 +1833,6 @@ class VSecWMSControlWidget(WMSControlWidget):
     def is_layer_aligned(self, layer):
         crss = getattr(layer, "crsOptions", None)
         return crss is not None and any(crs.startswith("VERT") for crs in crss)
-    
-    def find_layer_item_by_name(self, layer_name):
-        """
-        Search multilayers.listLayers tree for a child with matching name.
-        """
-        for i in range(self.multilayers.listLayers.topLevelItemCount()):
-            top_item = self.multilayers.listLayers.topLevelItem(i)
-            for j in range(top_item.childCount()):
-                child = top_item.child(j)
-                if child.text(0).strip() == layer_name.strip():
-                    return child
-        return None
 
 
 
@@ -1895,18 +1895,6 @@ class HSecWMSControlWidget(WMSControlWidget):
         crss = getattr(layer, "crsOptions", None)
         return crss is not None and not any(crs.startswith("VERT") for crs in crss) \
             and not any(crs.startswith("LINE") for crs in crss)
-
-    def find_layer_item_by_name(self, layer_name):
-        """
-        Search multilayers.listLayers tree for a child with matching name.
-        """
-        for i in range(self.multilayers.listLayers.topLevelItemCount()):
-            top_item = self.multilayers.listLayers.topLevelItem(i)
-            for j in range(top_item.childCount()):
-                child = top_item.child(j)
-                if child.text(0).strip() == layer_name.strip():
-                    return child
-        return None
 
 
 class LSecWMSControlWidget(WMSControlWidget):

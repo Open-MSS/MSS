@@ -25,6 +25,8 @@
     limitations under the License.
 """
 
+import logging
+import traceback
 from mslib.utils.config import config_loader
 from PyQt5 import QtGui, QtWidgets, QtCore
 from mslib.msui.qt5 import ui_linearview_window as ui
@@ -33,6 +35,7 @@ from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
 from mslib.msui import autoplot_dockwidget as apd
+from mslib.msui import flighttrack as ft
 
 # Dock window indices.
 WMS = 0
@@ -264,9 +267,219 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
 
         return {
             "view_type": "linearview",
-            "plot_title_size": view_settings.get("plot_title_size", "12pt"),
+            "plot_title_size": view_settings.get("plot_title_size", "10pt"),
             "axes_label_size": view_settings.get("axes_label_size", "10pt"),
             "waypoints": waypoints,
             "wms": wms_settings,
             "docks_open": dock_states,
         }
+    
+    def set_settings(self, view):
+        """
+        Restore Linear View settings from a dictionary.
+        """
+        try:
+            logging.debug("Entering set_settings for Linear View at %s", QtCore.QDateTime.currentDateTimeUtc().toString())
+            view_settings = None
+            if isinstance(view, list):
+                for v in view:
+                    if v.get("view_type") == "linearview":
+                        view_settings = v
+                        break
+                if view_settings is None:
+                    logging.warning("No linearview settings found; using defaults")
+                    view_settings = {}
+            else:
+                view_settings = view
+
+            if not hasattr(self, 'docks') or not self.docks:
+                self.docks = [None, None]
+
+            # Restore plot settings
+            plot_settings = {
+                "plot_title_size": str(view_settings.get("plot_title_size", "10pt")),
+                "axes_label_size": str(view_settings.get("axes_label_size", "10pt")),
+                "x_axis": view_settings.get("x_axis", "distance"),
+                "y_axis": view_settings.get("y_axis", "pressure"),
+                "y_extent": view_settings.get("y_extent", [1000.0, 100.0]),
+                "line_thickness": view_settings.get("line_thickness", 2.0),
+                "line_style": view_settings.get("line_style", "Solid"),
+                "line_transparency": view_settings.get("line_transparency", 1.0),
+                "colour_waypoints": view_settings.get("colour_waypoints", [0, 0, 0, 1]),
+                "colour_path": view_settings.get("colour_path", [0.5, 0.5, 0.5, 0.5]),
+                "draw_markers": view_settings.get("draw_markers", True),
+                "label_waypoints": view_settings.get("label_waypoints", True)
+            }
+            if hasattr(self, 'mpl') and self.mpl.canvas:
+                self.mpl.canvas.plotter.set_settings(plot_settings, save=True)
+                logging.debug("Restored plot settings: %s", plot_settings)
+
+            # Restore waypoints
+            waypoints = view_settings.get("waypoints", [])
+            if waypoints and hasattr(self, 'waypoints_model') and self.waypoints_model:
+                valid_waypoints = []
+                for wp in waypoints:
+                    lat, lon = wp.get("lat"), wp.get("lon")
+                    flightlevel = wp.get("flightlevel", 0)
+                    if (isinstance(lat, (int, float)) and isinstance(lon, (int, float)) and
+                            -90 <= lat <= 90 and -180 <= lon <= 180 and
+                            isinstance(flightlevel, (int, float)) and flightlevel >= 50):
+                        valid_waypoints.append(ft.Waypoint(
+                            lat=lat,
+                            lon=lon,
+                            flightlevel=flightlevel,
+                            location=wp.get("location", ""),
+                            comments=wp.get("comments", "")
+                        ))
+                    else:
+                        logging.warning("Invalid waypoint skipped: %s", wp)
+                
+                if len(valid_waypoints) < 2:
+                    valid_waypoints = [
+                        ft.Waypoint(lat=48.137, lon=11.575, flightlevel=300, location="Munich"),
+                        ft.Waypoint(lat=52.520, lon=13.405, flightlevel=300, location="Berlin")
+                    ]
+                    logging.info("Inserted default waypoints: %s", [
+                        {"lat": wp.lat, "lon": wp.lon, "flightlevel": wp.flightlevel}
+                        for wp in valid_waypoints
+                    ])
+                
+                row_count = self.waypoints_model.rowCount()
+                if row_count > 0:
+                    self.waypoints_model.removeRows(0, row_count)
+                self.waypoints_model.insertRows(0, rows=len(valid_waypoints), waypoints=valid_waypoints)
+                
+                if hasattr(self, 'mpl') and self.mpl.canvas and hasattr(self.mpl.canvas, 'waypoints_interactor'):
+                    try:
+                        self.mpl.canvas.waypoints_interactor.plotter.update_from_waypoints(
+                            self.waypoints_model.all_waypoint_data())
+                        logging.debug("Updated Linear View with waypoints")
+                    except Exception as e:
+                        logging.error("Error updating waypoints in plotter: %s", str(e))
+                else:
+                    logging.warning("waypoints_interactor not initialized; skipping waypoint plot")
+            else:
+                logging.warning("No waypoints to restore or waypoints_model not initialized")
+
+            # Restore WMS settings
+            wms_settings = view_settings.get("wms", {})
+            if wms_settings:
+                if len(self.docks) < 1 or self.docks[0] is None:
+                    self.openTool(WMS + 1)
+                if len(self.docks) > 0 and self.docks[0] is not None:
+                    self.wms_control = self.docks[0].widget()
+                    if self.wms_control and isinstance(self.wms_control, wms.LSecWMSControlWidget):
+                        self.restore_wms_settings(wms_settings)
+                    else:
+                        logging.warning("WMS control widget not available; got %s", type(self.wms_control))
+                else:
+                    logging.warning("WMS dock not initialized")
+            else:
+                logging.debug("No WMS settings provided; skipping WMS restoration")
+
+            # Restore dock states
+            docks_open = view_settings.get("docks_open", [False, False])
+            if hasattr(self, 'docks') and self.docks:
+                for idx, state in enumerate(docks_open):
+                    if idx < len(self.docks):
+                        if state and self.docks[idx] is None:
+                            self.openTool(idx + 1)
+                        elif self.docks[idx]:
+                            self.docks[idx].setVisible(state)
+
+            # Redraw canvas
+            if hasattr(self, 'mpl') and self.mpl.canvas:
+                self.mpl.canvas.draw()
+                logging.debug("Redrew Linear View canvas")
+        except Exception as e:
+            logging.error("Error in set_settings: %s\n%s", str(e), traceback.format_exc())
+
+    def restore_wms_settings(self, wms):
+        """
+        Restore WMS settings for Linear View.
+        """
+        if self.wms_control is None:
+            logging.warning("Cannot restore WMS settings for %s: wms_control does not exist", self.__class__.__name__)
+            return
+
+        try:
+            url = wms.get("url", config_loader(dataset="default_LSEC_WMS"))
+            layer = wms.get("layer", "")
+            level = wms.get("level", "")
+            styles = wms.get("styles", "default")
+            init_time = wms.get("init_time", "")
+            valid_time = wms.get("valid_time", "")
+
+            waypoints = self.waypoints_model.all_waypoint_data() if hasattr(self, 'waypoints_model') else []
+            if not waypoints or len(waypoints) < 2:
+                default_waypoints = [
+                    ft.Waypoint(lat=48.137, lon=11.575, flightlevel=300, location="Munich"),
+                    ft.Waypoint(lat=52.520, lon=13.405, flightlevel=300, location="Berlin")
+                ]
+                if hasattr(self, 'waypoints_model') and self.waypoints_model:
+                    row_count = self.waypoints_model.rowCount()
+                    if row_count > 0:
+                        self.waypoints_model.removeRows(0, row_count)
+                    self.waypoints_model.insertRows(0, rows=len(default_waypoints), waypoints=default_waypoints)
+                    waypoints = self.waypoints_model.all_waypoint_data()
+                    logging.info("Inserted default waypoints for WMS: %s", waypoints)
+
+            for wp in waypoints:
+                if not (isinstance(wp.lat, (int, float)) and isinstance(wp.lon, (int, float)) and
+                        -90 <= wp.lat <= 90 and -180 <= wp.lon <= 180 and
+                        isinstance(wp.flightlevel, (int, float)) and wp.flightlevel >= 50):
+                    logging.warning("Invalid waypoint coordinates or flightlevel: %s", wp)
+                    return
+
+            wms_url_combo = getattr(self.wms_control.multilayers, 'cbWMS_URL', None)
+            if wms_url_combo is None:
+                logging.error("WMS URL combobox 'cbWMS_URL' not found in multilayers")
+                return
+            if url:
+                self.wms_control.initialise_wms(url, level=level)
+                wms_url_combo.setCurrentText(url)
+                wms_url_combo.currentTextChanged.emit(url)
+
+            available_layers = [self.wms_control.multilayers.listLayers.topLevelItem(i).text(0)
+                                for i in range(self.wms_control.multilayers.listLayers.topLevelItemCount())]
+            selected_layer = layer if layer in available_layers else available_layers[0] if available_layers else None
+            if selected_layer:
+                self.wms_control.multilayers.current_layer = self.wms_control.find_layer_item_by_name(selected_layer)
+                if self.wms_control.multilayers.current_layer:
+                    self.wms_control.select_layer_and_style(self.wms_control.multilayers.listLayers, selected_layer, styles)
+                    self.wms_control.row_is_selected(url, selected_layer, styles, level, "linear")
+                else:
+                    logging.warning("Layer '%s' not found in WMS service; skipping WMS plot", layer)
+                    return
+            else:
+                logging.warning("No valid layers available; skipping WMS plot")
+                return
+
+            available_init_times = [self.wms_control.cbInitTime.itemText(i)
+                                    for i in range(self.wms_control.cbInitTime.count())]
+            if init_time and init_time in available_init_times:
+                self.wms_control.cbInitTime.setCurrentText(init_time)
+            elif self.wms_control.cbInitTime.count() > 0:
+                self.wms_control.cbInitTime.setCurrentIndex(0)
+
+            available_valid_times = [self.wms_control.cbValidTime.itemText(i)
+                                    for i in range(self.wms_control.cbValidTime.count())]
+            if valid_time and valid_time in available_valid_times:
+                self.wms_control.cbValidTime.setCurrentText(valid_time)
+                self.wms_control.leftrow_is_selected(valid_time)
+            elif self.wms_control.cbValidTime.count() > 0:
+                self.wms_control.cbValidTime.setCurrentIndex(0)
+                self.wms_control.leftrow_is_selected(self.wms_control.cbValidTime.currentText())
+
+            if self.wms_control.multilayers.current_layer:
+                try:
+                    self.wms_control.get_map()
+                    if hasattr(self, 'mpl') and self.mpl.canvas:
+                        self.mpl.canvas.redraw_map()
+                    logging.debug("Successfully restored WMS settings")
+                except Exception as e:
+                    logging.error("WMS error during get_map: %s", str(e))
+            else:
+                logging.warning("No valid layer selected; skipping get_map")
+        except Exception as e:
+            logging.error("Error restoring WMS settings: %s\n%s", str(e), traceback.format_exc())

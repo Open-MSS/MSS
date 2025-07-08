@@ -759,9 +759,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 })
 
                 self.cbChangeMapSection.setCurrentText(map_section)
-                # Optional: trigger change if needed:
-                # self.cbChangeMapSection.currentIndexChanged.emit(self.cbChangeMapSection.currentIndex())
-
                 if not getattr(self.mpl.canvas, "map", None):
                     self.mpl.canvas.init_map(model=self.active_flighttrack, **map_settings)
                 else:

@@ -1252,7 +1252,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 self.listViews.item(0).window.handle_force_close()
             self.listViews.clear()
             self.listFlightTracks.clear()
-
+            # close configuration editor
             if self.config_editor is not None:
                 self.config_editor.restart_on_save = False
                 self.config_editor.close()
