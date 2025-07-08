@@ -1012,6 +1012,23 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
         layout = config_loader(dataset="layout")
         view_window = None
+
+        # Check if restore_views is enabled
+        restore_views = config_loader(dataset="restore_views", default=False)
+        settings_list = []
+        if restore_views:
+            settings_list = view_restoration.restore_view_settings()
+
+        # Find settings for the requested view type
+        view_settings = None
+        if restore_views:
+            for settings in settings_list:
+                if settings.get("view_type") == _type:
+                    view_settings = settings
+                    break
+
+        layout = config_loader(dataset="layout")
+        view_window = None
         if _type == "topview":
             # Top view.
             view_window = topview.MSUITopViewWindow(mainwindow=self, model=model,
@@ -1023,6 +1040,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
+            if view_settings:
+                view_window.set_settings(view_settings)
+                logging.debug("applied top view setting")
         elif _type == "sideview":
             # Side view.
             view_window = sideview.MSUISideViewWindow(mainwindow=self, model=model, tutorial_mode=self.tutorial_mode,
@@ -1031,10 +1051,14 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             view_window.mpl.resize(layout['sideview'][0], layout['sideview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['sideview'][0], layout['sideview'][1])
+            if view_settings:
+                view_window.set_settings(view_settings)
         elif _type == "tableview":
             # Table view.
             view_window = tableview.MSUITableViewWindow(model=model, tutorial_mode=self.tutorial_mode)
             view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
+            if view_settings:
+                view_window.set_settings(view_settings)
         elif _type == "linearview":
             # Linear view.
             view_window = linearview.MSUILinearViewWindow(mainwindow=self, model=model,
@@ -1044,6 +1068,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['linearview'][0], layout['linearview'][1])
+            if view_settings:
+                view_window.set_settings(view_settings)
 
         if view_window is not None:
             # Set view type to window

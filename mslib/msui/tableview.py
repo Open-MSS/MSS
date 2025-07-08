@@ -33,7 +33,9 @@
 """
 
 import types
-
+import traceback
+import logging
+from mslib.msui import aircraft
 from mslib.msui import hexagon_dockwidget as hex_dock
 from mslib.msui import performance_settings as perfset
 from PyQt5 import QtWidgets, QtGui
@@ -300,40 +302,48 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         performance_settings = {}
         if hasattr(self, 'waypoints_model') and self.waypoints_model is not None:
             raw_performance = self.waypoints_model.performance_settings or {}
-            # Convert SimpleAircraft or other non-serializable objects to dictionaries
             for key, value in raw_performance.items():
+                # Serialize objects like SimpleAircraft
                 if hasattr(value, '__dict__'):
                     performance_settings[key] = {
                         attr: getattr(value, attr)
                         for attr in dir(value)
-                        if not attr.startswith('_') and isinstance(getattr(value, attr),
-                                                                   (str, int, float, bool, list, dict, type(None)))
+                        if not attr.startswith('_') and isinstance(
+                            getattr(value, attr),
+                            (str, int, float, bool, list, dict, type(None))
+                        )
                     }
                 else:
                     performance_settings[key] = value
 
-        # Get flight track waypoints
+        # Get waypoints
         waypoints = []
         if hasattr(self, 'waypoints_model') and self.waypoints_model is not None:
-            wps = self.waypoints_model.waypoints
-            waypoints = [
-                {"lat": wp.lat, "lon": wp.lon, "flightlevel": wp.flightlevel}
-                for wp in wps
-            ]
+            for wp in self.waypoints_model.waypoints:
+                waypoints.append({
+                    "lat": wp.lat,
+                    "lon": wp.lon,
+                    "flightlevel": wp.flightlevel,
+                    "location": wp.location,
+                    "comments": wp.comments
+                })
 
         # Get dock widget states
-        dock_states = [dock is not None for dock in self.docks]
+        dock_states = []
+        if hasattr(self, 'docks'):
+            dock_states = [dock is not None and dock.isVisible() for dock in self.docks]
 
         # Get column widths for table layout
         column_widths = {}
-        model = self.tableWayPoints.model()
-        if model is not None:
-            for col in range(model.columnCount()):
-                header_text = model.headerData(col, QtCore.Qt.Horizontal, QtCore.Qt.DisplayRole)
-                if header_text is not None:
-                    column_widths[str(header_text)] = self.tableWayPoints.columnWidth(col)
-                else:
-                    column_widths[f"Column_{col}"] = self.tableWayPoints.columnWidth(col)
+        if hasattr(self, 'tableWayPoints') and self.tableWayPoints:
+            model = self.tableWayPoints.model()
+            if model:
+                for col in range(model.columnCount()):
+                    header_text = model.headerData(col, QtCore.Qt.Horizontal, QtCore.Qt.DisplayRole)
+                    if header_text:
+                        column_widths[str(header_text)] = self.tableWayPoints.columnWidth(col)
+                    else:
+                        column_widths[f"Column_{col}"] = self.tableWayPoints.columnWidth(col)
 
         return {
             "view_type": "tableview",
@@ -342,3 +352,100 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
             "docks_open": dock_states,
             "column_widths": column_widths,
         }
+
+    def set_settings(self, view):
+        """
+        Restore Table View settings from view_settings.json.
+        """
+        try:
+            # Extract settings dict
+            view_settings = None
+            if isinstance(view, list):
+                view_settings = next((v for v in view if v.get("view_type") == "tableview"), {})
+                if not view_settings:
+                    logging.warning("No tableview settings found; using defaults")
+            else:
+                view_settings = view or {}
+
+            # Restore hexagon params
+            hexagon_params = view_settings.get("hexagon_parameters")
+            if hexagon_params and hasattr(self, 'docks'):
+                if self.docks[0] is None:
+                    self.openTool(1)
+                if self.docks[0]:
+                    hex_control = self.docks[0].widget()
+                    if isinstance(hex_control, hex_dock.HexagonControlWidget):
+                        hex_control.dsbHexagonLongitude.setValue(float(hexagon_params.get("center_lon", 0.0)))
+                        hex_control.dsbHexagonLatitude.setValue(float(hexagon_params.get("center_lat", 0.0)))
+                        hex_control.dsbHexgaonRadius.setValue(float(hexagon_params.get("radius", 200.0)))
+                        hex_control.dsbHexagonAngle.setValue(float(hexagon_params.get("angle", 0.0)))
+                        dir_text = str(hexagon_params.get("direction", "clockwise"))
+                        hex_control.cbClock.setCurrentText(dir_text if dir_text in ["clockwise", "counterclockwise"] else "clockwise")
+
+            # Restore performance settings
+            perf = view_settings.get("performance_settings", {})
+            if hasattr(self, 'docks'):
+                if self.docks[1] is None:
+                    self.openTool(2)
+                if self.docks[1]:
+                    perf_ctrl = self.docks[1].widget()
+                    if perf_ctrl:
+                        aircraft_data = perf.get("aircraft", {})
+                        try:
+                            perf_ctrl.aircraft = aircraft.SimpleAircraft(aircraft_data)
+                        except Exception:
+                            perf_ctrl.aircraft = aircraft.SimpleAircraft(aircraft.AIRCRAFT_DUMMY)
+                        perf_ctrl.lbAircraftName.setText(perf_ctrl.aircraft.name)
+                        perf_ctrl.cbShowPerformance.setChecked(perf.get("visible", False))
+                        perf_ctrl.dsbTakeoffWeight.setValue(float(perf.get("takeoff_weight", 0.0)))
+                        perf_ctrl.dsbEmptyWeight.setValue(float(perf.get("empty_weight", 0.0)))
+                        takeoff_time = perf.get("takeoff_time") or QtCore.QDateTime.currentDateTimeUtc()
+                        perf_ctrl.dteTakeoffTime.setDateTime(takeoff_time)
+                        perf_ctrl.update_parent_performance()
+
+            # Restore waypoints
+            waypoints = view_settings.get("waypoints", [])
+            if waypoints and hasattr(self, 'waypoints_model'):
+                valid = []
+                for wp in waypoints:
+                    if all(isinstance(wp.get(k), (int, float)) for k in ("lat", "lon")):
+                        valid.append(ft.Waypoint(
+                            lat=wp["lat"], lon=wp["lon"],
+                            flightlevel=wp.get("flightlevel", 0),
+                            location=wp.get("location", ""), comments=wp.get("comments", "")
+                        ))
+                if valid:
+                    self.waypoints_model.removeRows(0, self.waypoints_model.rowCount())
+                    self.waypoints_model.insertRows(0, rows=len(valid), waypoints=valid)
+                    if hasattr(self, 'tableWayPoints') and self.tableWayPoints:
+                        self.tableWayPoints.setModel(self.waypoints_model)
+                        self.resizeColumns()
+
+            # Restore column widths
+            column_widths = view_settings.get("column_widths", {})
+            if hasattr(self, 'tableWayPoints') and self.tableWayPoints and column_widths:
+                model = self.tableWayPoints.model()
+                if model:
+                    headers = {
+                            str(model.headerData(c, QtCore.Qt.Horizontal, QtCore.Qt.DisplayRole)): c
+                            for c in range(model.columnCount())
+                            }
+
+                    for col_name, width in column_widths.items():
+                        col_idx = headers.get(col_name)
+                        if col_idx is not None:
+                            self.tableWayPoints.setColumnWidth(col_idx, width)
+
+            # Restore dock visibility
+            docks_open = view_settings.get("docks_open", [])
+            if hasattr(self, 'docks'):
+                for idx, open_ in enumerate(docks_open):
+                    if idx < len(self.docks):
+                        if open_ and self.docks[idx] is None:
+                            self.openTool(idx + 1)
+                        elif self.docks[idx]:
+                            self.docks[idx].setVisible(open_)
+
+            logging.debug("Finished restoring Table View settings")
+        except Exception as e:
+            logging.error("Error in set_settings: %s\n%s", str(e), traceback.format_exc())

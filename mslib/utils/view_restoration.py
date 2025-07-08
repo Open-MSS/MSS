@@ -52,3 +52,16 @@ def save_view_settings(settings):
         json.dump(settings, f, indent=4)
     logging.info("Saved view settings to %s", save_path)
     return True
+
+
+def restore_view_settings():
+    config_path = Path(constants.MSUI_CONFIG_PATH)
+    save_path = config_path / "view_settings.json"
+
+    if not save_path.exists():
+        logging.info("No view setting file found at %s", save_path)
+
+    with open(save_path, "r") as f:
+        settings = json.load(f)
+
+    return settings
