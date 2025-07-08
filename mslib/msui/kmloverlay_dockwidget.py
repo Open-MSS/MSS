@@ -243,10 +243,20 @@ class KMLPatch:
         """
         # Plot satellite track.
         self.styles = {}
-        kml_doc = list(self.kml.features())  # All kml files are enclosed in a single root < > and </ >
-        kml_style = kml_doc[0]
-        self.parse_styles(kml_style)
-        self.parse_placemarks(kml_doc)
+        if isinstance(self.kml, list):
+            kml_doc = self.kml
+        else:
+            # Check if kml has features method and if it's callable
+            if hasattr(self.kml, 'features') and callable(getattr(self.kml, 'features')):
+                kml_doc = list(self.kml.features())  # All kml files are enclosed in a single root < > and </ >
+            else:
+                # If kml doesn't have features method, treat it as a single item list
+                kml_doc = [self.kml] if self.kml else []
+
+        if kml_doc:
+            kml_style = kml_doc[0]
+            self.parse_styles(kml_style)
+            self.parse_placemarks(kml_doc)
 
         self.map.ax.figure.canvas.draw()
 
