@@ -624,7 +624,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
                     logging.debug(et.tostring(super_root, encoding='utf-8').decode('UTF-8'))
                     newkml = et.Element("kml")  # create new <kml> element
-                    newkml.attrib['xmlns'] = 'http://earth.google.com/kml/2.0'  # add xmlns attribute
+                    newkml.attrib['xmlns'] = 'http://www.opengis.net/kml/2.2'  # add xmlns attribute
                     newkml.insert(0, super_root)
                     logging.debug(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
                     with filepath.open('w') as output:  # write file
