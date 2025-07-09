@@ -26,7 +26,7 @@
 """
 import copy
 import logging
-from fastkml import kml
+from fastkml import KML, kml
 from pygeoif.geometry import (Point, LineString, LinearRing, Polygon, GeometryCollection,
                               MultiPoint, MultiLineString, MultiPolygon)
 from fastkml.styles import Style, LineStyle, PolyStyle
@@ -40,6 +40,7 @@ from mslib.msui.qt5 import ui_kmloverlay_dockwidget as ui
 from PyQt5 import QtGui, QtWidgets, QtCore
 from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
 from mslib.utils.coordinate import normalize_longitude
+
 
 
 class KMLPatch:
@@ -139,7 +140,7 @@ class KMLPatch:
 
     def parse_geometries(self, placemark):
         name = placemark.name
-        styleurl = placemark.styleUrl
+        styleurl = placemark.style_url
         if styleurl and len(styleurl) > 0 and styleurl[0] == "#":
             # Remove # at beginning of style marking a locally defined style.
             # general urls for styles are not supported
@@ -180,9 +181,9 @@ class KMLPatch:
                 self.parse_geometries(placemark)
         for feature in document:
             if isinstance(feature, kml.Folder):
-                self.parse_placemarks(list(feature.features()))
+                self.parse_placemarks(list(feature.features))
             if isinstance(feature, kml.Document):  # Document present somewhere inside another doc, not consecutively
-                self.parse_placemarks(list(feature.features()))
+                self.parse_placemarks(list(feature.features))
 
     def get_style_params(self, style, color=None, linewidth=None):
         if color is None:
@@ -206,25 +207,27 @@ class KMLPatch:
     def parse_styles(self, kml_doc):
         # exterior_style : <Style> OUTSIDE placemarks
         # interior_style : within <Style>
-        for exterior_style in kml_doc.styles():
-            if isinstance(exterior_style, Style):
-                name = exterior_style.id
-                if name is None:
-                    continue
-                self.styles[name] = {}
-                interior_style = exterior_style.styles()
-                for style in interior_style:
-                    if isinstance(style, LineStyle):
-                        self.styles[name]["LineStyle"] = self.get_style_params(style)
-                    elif isinstance(style, PolyStyle):
-                        self.styles[name]["PolyStyle"] = self.get_style_params(style)
+        # Check if the object has a styles method before calling it
+        if hasattr(kml_doc, 'styles') and callable(getattr(kml_doc, 'styles')):
+            for exterior_style in kml_doc.styles():
+                if isinstance(exterior_style, Style):
+                    name = exterior_style.id
+                    if name is None:
+                        continue
+                    self.styles[name] = {}
+                    interior_style = exterior_style.styles()
+                    for style in interior_style:
+                        if isinstance(style, LineStyle):
+                            self.styles[name]["LineStyle"] = self.get_style_params(style)
+                        elif isinstance(style, PolyStyle):
+                            self.styles[name]["PolyStyle"] = self.get_style_params(style)
 
     def parse_local_styles(self, placemark, default_styles):
         # exterior_style : <Style> INSIDE placemarks
         # interior_style : within <Style>
         logging.debug("styles before %s", default_styles)
         local_styles = copy.deepcopy(default_styles)
-        for exterior_style in placemark.styles():
+        for exterior_style in placemark.styles:
             interior_style = exterior_style.styles()
             for style in interior_style:
                 for supported, supported_type in (('LineStyle', LineStyle), ('PolyStyle', PolyStyle)):
@@ -241,24 +244,13 @@ class KMLPatch:
         """
         Do the actual plotting of the patch.
         """
-        # Plot satellite track.
         self.styles = {}
-        if isinstance(self.kml, list):
-            kml_doc = self.kml
-        else:
-            # Check if kml has features method and if it's callable
-            if hasattr(self.kml, 'features') and callable(getattr(self.kml, 'features')):
-                kml_doc = list(self.kml.features())  # All kml files are enclosed in a single root < > and </ >
-            else:
-                # If kml doesn't have features method, treat it as a single item list
-                kml_doc = [self.kml] if self.kml else []
-
-        if kml_doc:
+        if hasattr(self.kml, 'features') and len(self.kml.features) > 0:
+            kml_doc = list(self.kml.features)  # All kml files are enclosed in a single root < > and </ >
             kml_style = kml_doc[0]
             self.parse_styles(kml_style)
             self.parse_placemarks(kml_doc)
-
-        self.map.ax.figure.canvas.draw()
+            self.map.ax.figure.canvas.draw()
 
     def update(self, color=None, linewidth=None):
         """
@@ -563,22 +555,21 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         for index in range(self.listWidget.count()):
             if hasattr(self.listWidget.item(index), "checkState") and (
                     self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
-                filepath = Path(self.listWidget.item(index).text())
+                kmlfile = self.listWidget.item(index).text()
                 try:
-                    with filepath.open('r') as kmlf:
-                        self.kml = kml.KML()  # creates fastkml object
-                        self.kml.from_string(kmlf.read().encode('utf-8'))
-                        if self.listWidget.item(index).text() in self.dict_files:  # just a precautionary check
-                            if self.dict_files[self.listWidget.item(index).text()]["patch"] is not None:  # added before
-                                patch = KMLPatch(self.view.map, self.kml,
-                                                 self.set_color(self.listWidget.item(index).text()),
-                                                 self.set_linewidth(self.listWidget.item(index).text()))
-                            else:  # if new file is being added
-                                patch = KMLPatch(self.view.map, self.kml,
-                                                 self.dict_files[self.listWidget.item(index).text()]["color"],
-                                                 self.dict_files[self.listWidget.item(index).text()]["linewidth"])
-                            self.dict_files[self.listWidget.item(index).text()]["patch"] = patch
+                    self.kml = KML.parse(kmlfile, strict=False)
+                    if self.listWidget.item(index).text() in self.dict_files:  # just a precautionary check
+                        if self.dict_files[self.listWidget.item(index).text()]["patch"] is not None:  # added before
+                            patch = KMLPatch(self.view.map, self.kml,
+                                             self.set_color(self.listWidget.item(index).text()),
+                                             self.set_linewidth(self.listWidget.item(index).text()))
+                        else:  # if new file is being added
+                            patch = KMLPatch(self.view.map, self.kml,
+                                             self.dict_files[self.listWidget.item(index).text()]["color"],
+                                             self.dict_files[self.listWidget.item(index).text()]["linewidth"])
+                        self.dict_files[self.listWidget.item(index).text()]["patch"] = patch
 
+                # ToDo verify exceptions if they are needed
                 except (AttributeError, IOError, TypeError, ValueError, et.XMLSyntaxError, et.XMLSchemaError,
                         et.XMLSchemaParseError, et.XMLSchemaValidateError) as ex:  # catches KML Syntax Errors
                     logging.error("KML Overlay - %s: %s", type(ex), ex)
