@@ -42,7 +42,6 @@ from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
 from mslib.utils.coordinate import normalize_longitude
 
 
-
 class KMLPatch:
     """
     Represents a KML overlay.
@@ -140,12 +139,13 @@ class KMLPatch:
 
     def parse_geometries(self, placemark):
         name = placemark.name
+        style = {}
         styleurl = placemark.style_url
-        if styleurl and len(styleurl) > 0 and styleurl[0] == "#":
+        if styleurl is not None and len(str(styleurl)) > 0 and str(styleurl)[0] == "#":
             # Remove # at beginning of style marking a locally defined style.
             # general urls for styles are not supported
-            styleurl = styleurl[1:]
-        style = self.parse_local_styles(placemark, self.styles.get(styleurl, {}))
+            styleurl = str(styleurl)[1:]
+            style = self.parse_local_styles(placemark, self.styles.get(styleurl, {}))
         if hasattr(placemark, "geometry"):
             if isinstance(placemark.geometry, Point):
                 self.add_point(placemark, style, name)
@@ -570,7 +570,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                         self.dict_files[self.listWidget.item(index).text()]["patch"] = patch
 
                 # ToDo verify exceptions if they are needed
-                except (AttributeError, IOError, TypeError, ValueError, et.XMLSyntaxError, et.XMLSchemaError,
+                except (AttributeError, IOError, ValueError, et.XMLSyntaxError, et.XMLSchemaError,
                         et.XMLSchemaParseError, et.XMLSchemaValidateError) as ex:  # catches KML Syntax Errors
                     logging.error("KML Overlay - %s: %s", type(ex), ex)
                     self.labelStatusBar.setText(str(self.listWidget.item(index).text()) +
