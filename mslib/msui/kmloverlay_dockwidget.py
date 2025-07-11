@@ -26,7 +26,7 @@
 """
 import copy
 import logging
-from fastkml import KML, kml
+from fastkml import KML, kml, styles
 from pygeoif.geometry import (Point, LineString, LinearRing, Polygon, GeometryCollection,
                               MultiPoint, MultiLineString, MultiPolygon)
 from fastkml.styles import Style, LineStyle, PolyStyle
@@ -207,6 +207,19 @@ class KMLPatch:
     def parse_styles(self, kml_doc):
         # exterior_style : <Style> OUTSIDE placemarks
         # interior_style : within <Style>
+        for exterior_style in kml_doc.styles:
+            if isinstance(exterior_style, styles.Style):
+                name = exterior_style.id
+                if name is None:
+                    continue
+                self.styles[name] = {}
+                interior_style = exterior_style.styles
+                for style in interior_style:
+                    if isinstance(style, styles.LineStyle):
+                        self.styles[name]["LineStyle"] = self.get_style_params(style)
+                    elif isinstance(style, styles.PolyStyle):
+                        self.styles[name]["PolyStyle"] = self.get_style_params(style)
+
         # Check if the object has a styles method before calling it
         if hasattr(kml_doc, 'styles') and callable(getattr(kml_doc, 'styles')):
             for exterior_style in kml_doc.styles():
