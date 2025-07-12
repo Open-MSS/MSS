@@ -45,6 +45,7 @@ from mslib.msui import flighttrack as ft
 from mslib.msui.viewwindows import MSUIViewWindow
 from mslib.msui.icons import icons
 from PyQt5 import QtCore
+from mslib.utils import view_restoration
 
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
@@ -80,6 +81,12 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
 
         # Dock windows [Hexagon].
         self.docks = [None, None]
+
+        self.hexagon_center_lon = 0.0
+        self.hexagon_center_lat = 0.0
+        self.hexagon_radius = 200.0
+        self.hexagon_angle = 0.0
+        self.hexagon_direction = "clockwise"
 
         # Connect slots and signals.
         self.btAddWayPointToFlightTrack.clicked.connect(self.addWayPoint)
@@ -298,154 +305,237 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
     def get_settings(self):
         """Return a dictionary of all table view settings."""
 
-        # Get performance settings from waypoints_model and convert to serializable format
         performance_settings = {}
-        if hasattr(self, 'waypoints_model') and self.waypoints_model is not None:
-            raw_performance = self.waypoints_model.performance_settings or {}
-            for key, value in raw_performance.items():
-                # Serialize objects like SimpleAircraft
-                if hasattr(value, '__dict__'):
-                    performance_settings[key] = {
-                        attr: getattr(value, attr)
-                        for attr in dir(value)
-                        if not attr.startswith('_') and isinstance(
-                            getattr(value, attr),
-                            (str, int, float, bool, list, dict, type(None))
-                        )
-                    }
-                else:
-                    performance_settings[key] = value
+        dock_states = [False, False]
+        column_widths = {}
 
-        # Get waypoints
-        waypoints = []
-        if hasattr(self, 'waypoints_model') and self.waypoints_model is not None:
-            for wp in self.waypoints_model.waypoints:
-                waypoints.append({
-                    "lat": wp.lat,
-                    "lon": wp.lon,
-                    "flightlevel": wp.flightlevel,
-                    "location": wp.location,
-                    "comments": wp.comments
-                })
+        performance_settings = {}
+        if hasattr(self, 'waypoints_model') and self.waypoints_model:
+            raw_performance = self.waypoints_model.performance_settings or {}
+            performance_settings = view_restoration.serialize_settings(raw_performance)
+            for key, value in raw_performance.items():
+                if isinstance(value, QtCore.QDateTime):
+                    performance_settings[key] = value.toString(QtCore.Qt.ISODate)
 
         # Get dock widget states
-        dock_states = []
         if hasattr(self, 'docks'):
             dock_states = [dock is not None and dock.isVisible() for dock in self.docks]
 
-        # Get column widths for table layout
-        column_widths = {}
+        # Get column widths based on actual header names
         if hasattr(self, 'tableWayPoints') and self.tableWayPoints:
             model = self.tableWayPoints.model()
             if model:
                 for col in range(model.columnCount()):
-                    header_text = model.headerData(col, QtCore.Qt.Horizontal, QtCore.Qt.DisplayRole)
-                    if header_text:
-                        column_widths[str(header_text)] = self.tableWayPoints.columnWidth(col)
+                    header_data = model.headerData(col, QtCore.Qt.Horizontal, QtCore.Qt.DisplayRole)
+                    if isinstance(header_data, QtCore.QVariant):
+                        header_str = str(header_data.value())
                     else:
-                        column_widths[f"Column_{col}"] = self.tableWayPoints.columnWidth(col)
+                        header_str = str(header_data) if header_data is not None else f"Column_{col}"
+
+                    column_widths[header_str] = self.tableWayPoints.columnWidth(col)
+
+        hexagon_settings = {
+            "center_lon": getattr(self, 'hexagon_center_lon'),
+            "center_lat": getattr(self, 'hexagon_center_lat'),
+            "radius": getattr(self, 'hexagon_radius'),
+            "angle": getattr(self, 'hexagon_angle'),
+            "direction": getattr(self, 'hexagon_direction')
+        }
+        if self.docks[0] and self.docks[0].widget():
+            hex_control = self.docks[0].widget()
+            if isinstance(hex_control, hex_dock.HexagonControlWidget):
+                try:
+                    hexagon_settings = hex_control._get_parameters()
+                    self.hexagon_center_lon = hexagon_settings["center_lon"]
+                    self.hexagon_center_lat = hexagon_settings["center_lat"]
+                    self.hexagon_radius = hexagon_settings["radius"]
+                    self.hexagon_angle = hexagon_settings["angle"]
+                    self.hexagon_direction = hexagon_settings["direction"]
+                except Exception as e:
+                    logging.warning("Failed to collect hexagon settings from UI: %s", str(e))
 
         return {
             "view_type": "tableview",
             "performance_settings": performance_settings,
-            "waypoints": waypoints,
             "docks_open": dock_states,
             "column_widths": column_widths,
+            "hexagon": hexagon_settings
         }
 
     def set_settings(self, view):
-        """
-        Restore Table View settings from view_settings.json.
-        """
+        """Restore Table View settings from view_settings.json."""
         try:
-            # Extract settings dict
-            view_settings = None
-            if isinstance(view, list):
-                view_settings = next((v for v in view if v.get("view_type") == "tableview"), {})
-                if not view_settings:
-                    logging.warning("No tableview settings found; using defaults")
-            else:
-                view_settings = view or {}
+            self.docks = getattr(self, 'docks', [None, None])
 
-            # Restore hexagon params
-            hexagon_params = view_settings.get("hexagon_parameters")
-            if hexagon_params and hasattr(self, 'docks'):
+            # Restore waypoints_model data
+            if hasattr(self, 'waypoints_model') and self.waypoints_model:
+                try:
+                    for row in range(self.waypoints_model.rowCount()):
+                        index = self.waypoints_model.index(
+                            row, self.waypoints_model.column_index("flightlevel")
+                        )
+                        value = self.waypoints_model.data(index, QtCore.Qt.DisplayRole)
+                        if isinstance(value, QtCore.QVariant):
+                            value = value.value()
+                        try:
+                            flightlevel = float(value)
+                        except (TypeError, ValueError):
+                            logging.warning("Invalid flightlevel at row %d: %s", row, value)
+                            flightlevel = 300.0
+                        if flightlevel < 300:
+                            self.waypoints_model.setData(index, 300.0, QtCore.Qt.EditRole)
+                    self.tableWayPoints.setModel(self.waypoints_model)
+                    self.resizeColumns()
+                except Exception as e:
+                    logging.error(
+                        "Error updating waypoints in Table View: %s\n%s", str(e), traceback.format_exc()
+                    )
+            else:
+                logging.warning("waypoints_model not initialized; skipping waypoint update")
+
+            # Restore hexagon settings
+            hexagon_settings = view.get("hexagon", {})
+            if hexagon_settings:
                 if self.docks[0] is None:
                     self.openTool(1)
                 if self.docks[0]:
-                    hex_control = self.docks[0].widget()
-                    if isinstance(hex_control, hex_dock.HexagonControlWidget):
-                        hex_control.dsbHexagonLongitude.setValue(float(hexagon_params.get("center_lon", 0.0)))
-                        hex_control.dsbHexagonLatitude.setValue(float(hexagon_params.get("center_lat", 0.0)))
-                        hex_control.dsbHexgaonRadius.setValue(float(hexagon_params.get("radius", 200.0)))
-                        hex_control.dsbHexagonAngle.setValue(float(hexagon_params.get("angle", 0.0)))
-                        dir_text = str(hexagon_params.get("direction", "clockwise"))
-                        hex_control.cbClock.setCurrentText(dir_text if dir_text in ["clockwise", "counterclockwise"] else "clockwise")
+                    self.hexagon_control = self.docks[0].widget()
+                    if isinstance(self.hexagon_control, hex_dock.HexagonControlWidget):
+                        self.restore_hexagon_settings(hexagon_settings)
+                    else:
+                        logging.warning(
+                            "Hexagon control widget not available; got %s", type(self.hexagon_control)
+                        )
+                else:
+                    logging.warning("Hexagon control dock not initialized")
 
             # Restore performance settings
-            perf = view_settings.get("performance_settings", {})
-            if hasattr(self, 'docks'):
-                if self.docks[1] is None:
-                    self.openTool(2)
-                if self.docks[1]:
-                    perf_ctrl = self.docks[1].widget()
-                    if perf_ctrl:
-                        aircraft_data = perf.get("aircraft", {})
-                        try:
-                            perf_ctrl.aircraft = aircraft.SimpleAircraft(aircraft_data)
-                        except Exception:
-                            perf_ctrl.aircraft = aircraft.SimpleAircraft(aircraft.AIRCRAFT_DUMMY)
+            perf = view.get("performance_settings", {})
+            if self.docks[1] is None:
+                self.openTool(2)
+            if self.docks[1]:
+                perf_ctrl = self.docks[1].widget()
+                if isinstance(perf_ctrl, perfset.MSUI_PerformanceSettingsWidget):
+                    try:
+                        aircraft_data = perf.get(
+                            "aircraft", {"name": "DUMMY", "empty_weight": 0.0, "takeoff_weight": 0.0}
+                        )
+                        perf_ctrl.aircraft = aircraft.SimpleAircraft(aircraft_data)
                         perf_ctrl.lbAircraftName.setText(perf_ctrl.aircraft.name)
                         perf_ctrl.cbShowPerformance.setChecked(perf.get("visible", False))
-                        perf_ctrl.dsbTakeoffWeight.setValue(float(perf.get("takeoff_weight", 0.0)))
-                        perf_ctrl.dsbEmptyWeight.setValue(float(perf.get("empty_weight", 0.0)))
-                        takeoff_time = perf.get("takeoff_time") or QtCore.QDateTime.currentDateTimeUtc()
-                        perf_ctrl.dteTakeoffTime.setDateTime(takeoff_time)
+                        takeoff_weight = perf.get(
+                            "takeoff_weight", aircraft_data.get("takeoff_weight", 0.0)
+                        )
+                        empty_weight = perf.get(
+                            "empty_weight", aircraft_data.get("empty_weight", 0.0)
+                        )
+                        perf_ctrl.dsbTakeoffWeight.setValue(float(takeoff_weight))
+                        perf_ctrl.dsbEmptyWeight.setValue(float(empty_weight))
+                        takeoff_time = perf.get(
+                            "takeoff_time",
+                            QtCore.QDateTime.currentDateTimeUtc().toString(QtCore.Qt.ISODate)
+                        )
+                        if isinstance(takeoff_time, str):
+                            takeoff_time = QtCore.QDateTime.fromString(takeoff_time, QtCore.Qt.ISODate)
+                        perf_ctrl.dteTakeoffTime.setDateTime(
+                            takeoff_time or QtCore.QDateTime.currentDateTimeUtc()
+                        )
                         perf_ctrl.update_parent_performance()
-
-            # Restore waypoints
-            waypoints = view_settings.get("waypoints", [])
-            if waypoints and hasattr(self, 'waypoints_model'):
-                valid = []
-                for wp in waypoints:
-                    if all(isinstance(wp.get(k), (int, float)) for k in ("lat", "lon")):
-                        valid.append(ft.Waypoint(
-                            lat=wp["lat"], lon=wp["lon"],
-                            flightlevel=wp.get("flightlevel", 0),
-                            location=wp.get("location", ""), comments=wp.get("comments", "")
-                        ))
-                if valid:
-                    self.waypoints_model.removeRows(0, self.waypoints_model.rowCount())
-                    self.waypoints_model.insertRows(0, rows=len(valid), waypoints=valid)
-                    if hasattr(self, 'tableWayPoints') and self.tableWayPoints:
-                        self.tableWayPoints.setModel(self.waypoints_model)
-                        self.resizeColumns()
+                    except Exception as e:
+                        logging.warning("Failed to restore performance settings: %s", str(e))
+                else:
+                    logging.warning("Performance settings widget not available; got %s", type(perf_ctrl))
+            else:
+                logging.warning("Performance settings dock not initialized")
 
             # Restore column widths
-            column_widths = view_settings.get("column_widths", {})
-            if hasattr(self, 'tableWayPoints') and self.tableWayPoints and column_widths:
+            column_widths = view.get("column_widths", {})
+            if self.tableWayPoints and column_widths:
                 model = self.tableWayPoints.model()
                 if model:
-                    headers = {
-                            str(model.headerData(c, QtCore.Qt.Horizontal, QtCore.Qt.DisplayRole)): c
-                            for c in range(model.columnCount())
-                            }
-
+                    headers = {}
+                    for col in range(model.columnCount()):
+                        header = model.headerData(col, QtCore.Qt.Horizontal, QtCore.Qt.DisplayRole)
+                        header_str = str(header) if header is not None else f"Column_{col}"
+                        headers[header_str] = col
                     for col_name, width in column_widths.items():
-                        col_idx = headers.get(col_name)
+                        col_idx = headers.get(str(col_name))
                         if col_idx is not None:
-                            self.tableWayPoints.setColumnWidth(col_idx, width)
+                            try:
+                                self.tableWayPoints.setColumnWidth(col_idx, int(width))
+                            except Exception as e:
+                                logging.warning(
+                                    "Failed to set column width for %s: %s", col_name, str(e)
+                                )
+                        else:
+                            logging.warning(
+                                "Column '%s' not found in table headers: %s",
+                                col_name, list(headers.keys())
+                            )
 
             # Restore dock visibility
-            docks_open = view_settings.get("docks_open", [])
-            if hasattr(self, 'docks'):
-                for idx, open_ in enumerate(docks_open):
-                    if idx < len(self.docks):
-                        if open_ and self.docks[idx] is None:
-                            self.openTool(idx + 1)
-                        elif self.docks[idx]:
-                            self.docks[idx].setVisible(open_)
+            docks_open = view.get("docks_open", [False, False])
+            for idx, open_ in enumerate(docks_open):
+                if idx < len(self.docks):
+                    if open_ and self.docks[idx] is None:
+                        self.openTool(idx + 1)
+                    elif self.docks[idx]:
+                        self.docks[idx].setVisible(open_)
 
-            logging.debug("Finished restoring Table View settings")
+            # Repaint table
+            if self.tableWayPoints:
+                self.tableWayPoints.viewport().repaint()
+
         except Exception as e:
             logging.error("Error in set_settings: %s\n%s", str(e), traceback.format_exc())
+
+    def restore_hexagon_settings(self, hexagon_settings):
+        """Restore hexagon settings into the existing HexagonControlWidget."""
+        try:
+            center_lon = float(hexagon_settings.get("center_lon", 0.0))
+            center_lat = float(hexagon_settings.get("center_lat", 0.0))
+            radius = float(hexagon_settings.get("radius", 200.0))
+            angle = float(hexagon_settings.get("angle", 0.0))
+            direction = str(hexagon_settings.get("direction", "clockwise"))
+
+            self.hexagon_center_lon = center_lon
+            self.hexagon_center_lat = center_lat
+            self.hexagon_radius = radius
+            self.hexagon_angle = angle
+            self.hexagon_direction = direction
+
+            if self.hexagon_control and isinstance(self.hexagon_control, hex_dock.HexagonControlWidget):
+                if hasattr(self.hexagon_control, 'dsbHexagonLongitude'):
+                    self.hexagon_control.dsbHexagonLongitude.setValue(center_lon)
+                else:
+                    logging.warning("Hexagon longitude spinbox 'dsbHexagonLongitude' not found")
+
+                if hasattr(self.hexagon_control, 'dsbHexagonLatitude'):
+                    self.hexagon_control.dsbHexagonLatitude.setValue(center_lat)
+                else:
+                    logging.warning("Hexagon latitude spinbox 'dsbHexagonLatitude' not found")
+
+                if hasattr(self.hexagon_control, 'dsbHexgaonRadius'):
+                    self.hexagon_control.dsbHexgaonRadius.setValue(radius)
+                else:
+                    logging.warning("Hexagon radius spinbox 'dsbHexgaonRadius' not found")
+
+                if hasattr(self.hexagon_control, 'dsbHexagonAngle'):
+                    self.hexagon_control.dsbHexagonAngle.setValue(angle)
+                else:
+                    logging.warning("Hexagon angle spinbox 'dsbHexagonAngle' not found")
+
+                if hasattr(self.hexagon_control, 'cbClock'):
+                    dir_text = direction if direction in ["clockwise", "counterclockwise"] else "clockwise"
+                    self.hexagon_control.cbClock.setCurrentText(dir_text)
+                else:
+                    logging.warning("Hexagon direction combobox 'cbClock' not found")
+
+                QtCore.QCoreApplication.processEvents()
+            else:
+                logging.warning(
+                    "Hexagon control widget not available or incorrect type: %s",
+                    type(self.hexagon_control) if self.hexagon_control else "None"
+                )
+        except Exception as e:
+            logging.error("Error restoring hexagon settings: %s\n%s", str(e), traceback.format_exc())

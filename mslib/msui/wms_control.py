@@ -1742,7 +1742,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if max_height < result.height:
                 result.thumbnail((result.width, max_height), Image.LANCZOS)
             return result
-        
+
     def find_layer_item_by_name(self, layer_name):
         """
         Search multilayers.listLayers tree for a child with matching name.
@@ -1833,7 +1833,6 @@ class VSecWMSControlWidget(WMSControlWidget):
     def is_layer_aligned(self, layer):
         crss = getattr(layer, "crsOptions", None)
         return crss is not None and any(crs.startswith("VERT") for crs in crss)
-
 
 
 class HSecWMSControlWidget(WMSControlWidget):

@@ -308,12 +308,12 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         # Return the names of the table columns.
         if orientation == QtCore.Qt.Horizontal:
             if self.performance_settings["visible"]:
-                return QtCore.QVariant(TABLE_FULL[section][0])
+                return TABLE_FULL[section][0]
             else:
-                return QtCore.QVariant(TABLE_SHORT[section][0])
+                return TABLE_FULL[section][0]
         # Table rows (waypoints) are labelled with their number (= number of
         # waypoint).
-        return QtCore.QVariant(int(section))
+        return str(section)
 
     def rowCount(self, index=QtCore.QModelIndex()):
         """
@@ -675,6 +675,13 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     def get_filename(self):
         return self.filename
 
+    def column_index(self, column_name):
+        """Return the column index for a given column name."""
+        for col in range(self.columnCount()):
+            header = self.headerData(col, QtCore.Qt.Horizontal, QtCore.Qt.DisplayRole)
+            if str(header).lower() == column_name.lower():
+                return col
+        raise ValueError(f"Column '{column_name}' not found")
 
 #
 # CLASS  WaypointDelegate

@@ -38,7 +38,7 @@ import re
 import sys
 from pathlib import Path
 import fs
-
+import traceback
 from slugify import slugify
 from mslib import __version__
 from mslib.msui.qt5 import ui_mainwindow as ui
@@ -1017,15 +1017,12 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         restore_views = config_loader(dataset="restore_views", default=False)
         settings_list = []
         if restore_views:
-            settings_list = view_restoration.restore_view_settings()
+            restored_data = view_restoration.restore_view_settings()
+            settings_list = restored_data.get("views", {})
+            global_list = restored_data.get("global")
 
         # Find settings for the requested view type
-        view_settings = None
-        if restore_views:
-            for settings in settings_list:
-                if settings.get("view_type") == _type:
-                    view_settings = settings
-                    break
+        view_settings = settings_list.get(_type)
 
         layout = config_loader(dataset="layout")
         view_window = None
@@ -1041,7 +1038,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
             if view_settings:
-                view_window.set_settings(view_settings)
+                view_window.set_settings(view_settings, global_list)
                 logging.debug("applied top view setting")
         elif _type == "sideview":
             # Side view.
@@ -1228,26 +1225,56 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 ):
                     view_windows.append(item.window)
 
+            # Collect settings for top, side, linear, and table view windows
+            view_windows = []
+            topview_instance = None
+            for i in range(self.listViews.count()):
+                item = self.listViews.item(i)
+                if item and hasattr(item, 'window') and item.window and (
+                    isinstance(item.window, topview.MSUITopViewWindow) or
+                    isinstance(item.window, sideview.MSUISideViewWindow) or
+                    isinstance(item.window, linearview.MSUILinearViewWindow) or
+                    isinstance(item.window, tableview.MSUITableViewWindow)
+                ):
+                    view_windows.append(item.window)
+                    if isinstance(item.window, topview.MSUITopViewWindow):
+                        topview_instance = item.window
+            logging.debug("Found %d view windows: %s", len(view_windows),
+                          [type(vw).__name__ for vw in view_windows])
+
+            # Save view settings
             if view_windows:
                 all_settings = []
                 for view_window in view_windows:
-                    if hasattr(view_window, 'get_settings'):
-                        settings = view_window.get_settings()
-                        if settings and settings.get("view_type") in ["topview", "sideview", "linearview", "tableview"]:
-                            all_settings.append(settings)
-                if all_settings:
-                    if view_restoration.save_view_settings(all_settings):
-                        logging.info("Saved settings for all view windows on application close")
-                    else:
-                        logging.warning("Failed to save view settings")
-                        QtWidgets.QMessageBox.warning(self, "Save Error", "Failed to save view settings")
-                        event.ignore()
-                        return
-                else:
-                    logging.info("No valid view settings to save on close.")
-            else:
-                logging.warning("No view windows found to save settings.")
+                    try:
+                        if hasattr(view_window, 'get_settings'):
+                            settings = view_window.get_settings()
+                            if settings and settings.get("view_type") in ["topview",
+                                                                          "sideview", "linearview", "tableview"]:
+                                all_settings.append(settings)
+                                logging.debug("Collected settings for %s: %s", type(view_window).__name__, settings)
+                    except Exception as e:
+                        logging.warning("Failed to get settings for view %s: %s\n%s",
+                                        type(view_window).__name__, str(e), traceback.format_exc())
 
+                if all_settings:
+                    try:
+                        global_data = view_restoration.set_global_data(topview_instance)
+                        if view_restoration.save_view_settings(all_settings, global_data):
+                            logging.info("Saved settings for all view windows on application close")
+                        else:
+                            logging.warning("Failed to save view settings")
+                            QtWidgets.QMessageBox.warning(self, "Warning",
+                                                          "Failed to save view settings. Continuing with closure.")
+                    except Exception as e:
+                        logging.warning("Error saving view settings: %s\n%s", str(e), traceback.format_exc())
+                else:
+                    logging.info("No valid view settings to save on close")
+            else:
+                logging.warning("No view windows found to save settings")
+
+            # Table View stick around after MainWindow closes - maybe some dangling reference?
+            # This removes them for sure!
             while self.listViews.count() > 0:
                 self.listViews.item(0).window.handle_force_close()
             self.listViews.clear()

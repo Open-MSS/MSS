@@ -40,7 +40,6 @@ from mslib.utils.config import config_loader
 from mslib.utils.units import units, convert_to
 from mslib.msui import autoplot_dockwidget as apd
 from mslib.utils.colordialog import CustomColorDialog
-from mslib.msui.flighttrack import Waypoint
 
 # Dock window indices.
 WMS = 0
@@ -332,9 +331,6 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(
             index=ind, parent=mainwindow, config_settings=config_settings))
         self.openTool(WMS + 1)
-        if self.docks[WMS]:
-            self.wms_control = self.docks[WMS].widget()
-            self.docks[WMS].setVisible(True)
 
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
@@ -471,15 +467,6 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         # Get settings from the view (matplotlib canvas)
         view_settings = self.getView().get_settings()
 
-        # Get flight track waypoints
-        waypoints = []
-        if hasattr(self, 'waypoints_model') and self.waypoints_model is not None:
-            wps = self.waypoints_model.waypoints
-            waypoints = [
-                {"lat": wp.lat, "lon": wp.lon, "flightlevel": wp.flightlevel}
-                for wp in wps
-            ]
-
         # Get WMS settings (if connected)
         wms_settings = {}
         if self.docks[0] is not None:
@@ -517,117 +504,21 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
             "colour_ft_waypoints": view_settings.get("colour_ft_waypoints"),
             "colour_ft_fill": view_settings.get("colour_ft_fill"),
             "colour_ceiling": view_settings.get("colour_ceiling"),
-            "waypoints": waypoints,
             "wms": wms_settings,
             "docks_open": dock_states,
         }
 
-    def restore_wms_settings(self, wms):
-        """
-        Restore WMS settings into the Side View WMS control, with waypoint validation.
-        """
-        logging.debug("Called restore_wms_settings for %s", self.__class__.__name__)
-
-        if not self.wms_control:
-            logging.warning("wms_control missing for %s", self.__class__.__name__)
-            return
-
-        try:
-            url = wms.get("url")
-            layer = wms.get("layer")
-            level = wms.get("level")
-            styles = wms.get("styles", "default")
-            init_time = wms.get("init_time")
-            valid_time = wms.get("valid_time")
-
-            # Validate waypoints
-            waypoints = getattr(self.waypoints_model, 'all_waypoint_data', lambda: [])()
-            if len(waypoints) < 2:
-                logging.warning("Need at least 2 waypoints, got: %s", waypoints)
-                return
-
-            # Initialize WMS service
-            combo = getattr(self.wms_control.multilayers, 'cbWMS_URL', None)
-            if combo and url:
-                self.wms_control.initialise_wms(url, level=level or "")
-                combo.setCurrentText(url)
-                combo.currentTextChanged.emit(url)
-            else:
-                logging.warning("cbWMS_URL combobox missing or no URL provided")
-                return
-
-            # Get available layers
-            available_layers = [
-                self.wms_control.multilayers.listLayers.topLevelItem(i).text(0)
-                for i in range(self.wms_control.multilayers.listLayers.topLevelItemCount())
-            ]
-
-            if layer in available_layers:
-                selected_layer = layer
-                logging.debug("Applying saved layer: %s", layer)
-            else:
-                logging.warning("Saved layer '%s' is not in available layers: %s",
-                                layer, available_layers)
-                return
-
-            # Find and set current layer
-            item = getattr(self.wms_control, 'find_layer_item_by_name', lambda _: None)(selected_layer)
-            if not item:
-                logging.warning("Layer '%s' not found in tree", selected_layer)
-                return
-
-            self.wms_control.multilayers.current_layer = item
-            self.wms_control.select_layer_and_style(
-                self.wms_control.multilayers.listLayers, selected_layer, styles)
-            self.wms_control.row_is_selected(url, selected_layer, styles, level or "", "side")
-
-            # Set init/valid times
-            if init_time:
-                idx = self.wms_control.cbInitTime.findText(init_time)
-                if idx >= 0:
-                    self.wms_control.cbInitTime.setCurrentIndex(idx)
-                else:
-                    logging.warning("Init time '%s' not found", init_time)
-            if valid_time:
-                idx = self.wms_control.cbValidTime.findText(valid_time)
-                if idx >= 0:
-                    self.wms_control.cbValidTime.setCurrentIndex(idx)
-                    self.wms_control.leftrow_is_selected(valid_time)
-                elif self.wms_control.cbValidTime.count() > 0:
-                    self.wms_control.cbValidTime.setCurrentIndex(0)
-                    self.wms_control.leftrow_is_selected(self.wms_control.cbValidTime.currentText())
-                else:
-                    logging.warning("No valid times available")
-                    return
-
-            # Fetch and draw
-            if self.wms_control.multilayers.current_layer:
-                self.wms_control.get_map()
-                self.wms_connected = True
-                self.mpl.canvas.redraw_map()
-                logging.debug("WMS settings successfully restored for %s", self.__class__.__name__)
-            else:
-                logging.warning("current_layer is None; cannot get_map")
-
-        except Exception as e:
-            logging.error("restore_wms_settings failed: %s\n%s", e, traceback.format_exc())
-
     def set_settings(self, view):
-        """
-        Restore Side View settings:
-        - vertical cross-section plot settings
-        - flight track appearance
-        - waypoints
-        - dock visibility
-        - WMS settings
-        """
         try:
+            if not hasattr(self, 'docks') or not self.docks:
+                self.docks = [None, None]
+
             plot_settings = {
                 "vertical_axis": view.get("vertical_axis", "pressure"),
                 "vertical_extent": view.get("vertical_extent", [1000.0, 100.0]),
                 "secondary_axis": view.get("secondary_axis", "no secondary axis"),
-                "plot_title_size": view.get("plot_title_size", "default"),
-                "axes_label_size": view.get("axes_label_size", "default"),
+                "plot_title_size": view.get("plot_title_size", "10pt"),
+                "axes_label_size": view.get("axes_label_size", "10pt"),
                 "flightlevels": view.get("flightlevels", [0]),
                 "draw_ceiling": view.get("draw_ceiling", True),
                 "draw_verticals": view.get("draw_verticals", True),
@@ -642,75 +533,122 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
                 "colour_ft_vertices": view.get("colour_ft_vertices", [0, 0, 0, 1]),
                 "colour_ft_waypoints": view.get("colour_ft_waypoints", [0, 0, 0, 1]),
                 "colour_ft_fill": view.get("colour_ft_fill", [0.5, 0.5, 0.5, 0.5]),
-                "colour_ceiling": view.get("colour_ceiling", [0, 0, 1, 0.5]),
+                "colour_ceiling": view.get("colour_ceiling", [0, 0, 1, 0.5])
             }
+            if hasattr(self, 'mpl') and self.mpl.canvas:
+                try:
+                    self.mpl.canvas.plotter.set_settings(plot_settings, save=True)
+                except Exception as e:
+                    logging.warning("Failed to restore plot settings: %s", str(e))
 
-            self.mpl.canvas.set_settings(plot_settings, save=True)
+            # Update view with shared waypoints_model
+            if hasattr(self, 'waypoints_model') and self.waypoints_model:
+                try:
+                    self.setFlightTrackModel(self.waypoints_model)
+                except Exception as e:
+                    logging.error("Error updating plotter from shared waypoints: %s\n%s",
+                                  str(e), traceback.format_exc())
+            else:
+                logging.warning("waypoints_model not initialized; skipping waypoint redraw")
 
-            # Restore waypoints
-            waypoints = view.get("waypoints", [])
-            if waypoints and getattr(self, 'waypoints_model', None):
-                logging.debug("Restoring waypoints for Side View: %s", waypoints)
-
-                # Validate waypoints
-                valid_waypoints = []
-                for wp in waypoints:
-                    lat, lon = wp.get("lat"), wp.get("lon")
-                    if (isinstance(lat, (int, float)) and isinstance(lon, (int, float)) and
-                            -90 <= lat <= 90 and -180 <= lon <= 180):
-                        valid_waypoints.append(wp)
+            wms_settings = view.get("wms", {})
+            if wms_settings:
+                if len(self.docks) < 1 or self.docks[WMS] is None:
+                    self.openTool(WMS + 1)
+                if self.docks[WMS]:
+                    self.wms_control = self.docks[WMS].widget()
+                    if self.wms_control and isinstance(self.wms_control, wms.VSecWMSControlWidget):
+                        self.restore_wms_settings(wms_settings)
                     else:
-                        logging.warning("Invalid waypoint skipped: %s", wp)
-
-                if len(valid_waypoints) < 2:
-                    logging.warning("Insufficient valid waypoints for Side View; need at least 2: %s", valid_waypoints)
+                        logging.warning("WMS control widget not available; got %s", type(self.wms_control))
                 else:
-                    # Clear existing waypoints
-                    row_count = self.waypoints_model.rowCount()
-                    if row_count > 0:
-                        self.waypoints_model.removeRows(0, row_count)
-
-                    # Create new Waypoint objects
-                    waypoints_list = [
-                        Waypoint(lat=wp.get("lat", 0), lon=wp.get("lon", 0), flightlevel=wp.get("flightlevel", 0))
-                        for wp in valid_waypoints
-                    ]
-
-                    # Insert new waypoints
-                    self.waypoints_model.insertRows(0, rows=len(waypoints_list), waypoints=waypoints_list)
-
-                    # Update plot
-                    if getattr(self.mpl.canvas, 'waypoints_interactor', None):
-                        self.mpl.canvas.waypoints_interactor.plotter.update_from_waypoints(
-                            self.waypoints_model.all_waypoint_data())
-                        # Removed redraw_path() to fix AttributeError
-                    else:
-                        logging.warning("waypoints_interactor not initialized; skipping waypoint plot")
+                    logging.warning("WMS dock not initialized")
             else:
-                logging.warning("No waypoints to restore or waypoints_model not initialized")
+                logging.debug("No WMS settings provided; skipping WMS restoration")
 
-            # Restore dock visibility
-            docks_open = view.get("docks_open", [False, False])
-            if hasattr(self, 'docks') and self.docks:
+            docks_open = view.get("docks_open", [False] * len(getattr(self, 'docks', [])))
+            if hasattr(self, 'docks'):
                 for idx, state in enumerate(docks_open):
-                    if idx < len(self.docks) and self.docks[idx]:
-                        self.docks[idx].setVisible(state)
-                    elif state and idx < len(self.docks) and self.docks[idx] is None:
-                        self.openTool(idx + 1)
-            else:
-                logging.warning("Docks not initialized; skipping dock visibility restore")
+                    if idx < len(self.docks):
+                        if state and self.docks[idx] is None:
+                            self.openTool(idx + 1)
+                        elif self.docks[idx]:
+                            self.docks[idx].setVisible(state)
 
-            # Restore WMS settings
-            wms = view.get("wms", {})
-            if wms and self.docks[WMS]:
-                self.wms_control = self.docks[WMS].widget()
-                self.restore_wms_settings(wms)
-            else:
-                logging.warning("WMS dock not initialized or no WMS settings provided; skipping WMS restoration")
-
-            self.currvertical = ', '.join(map(str, plot_settings["vertical_extent"]))
-            self.currlevel = plot_settings["vertical_axis"]
-            self.mpl.canvas.draw()
-            logging.debug("Finished restoring Side View settings")
+            if hasattr(self, 'mpl') and self.mpl.canvas:
+                self.mpl.canvas.draw()
         except Exception as e:
-            logging.error("Error restoring Side View settings: %s\n%s", str(e), traceback.format_exc())
+            logging.error("Error in set_settings: %s\n%s", str(e), traceback.format_exc())
+
+    def restore_wms_settings(self, wms):
+        """
+        Restore WMS settings into the existing WMS control widget.
+        """
+        if not self.wms_control:
+            logging.warning("Cannot restore WMS settings: wms_control does not exist")
+            return
+
+        try:
+            url = wms.get("url", "")
+            layer = wms.get("layer", "")
+            level = wms.get("level", "")
+            styles = wms.get("styles", "")
+            init_time = wms.get("init_time", "")
+            valid_time = wms.get("valid_time", "")
+
+            if not url:
+                logging.warning("No WMS URL provided; skipping WMS restoration")
+                return
+
+            self.wms_control.initialise_wms(url, level=level or "")
+            self.wms_url, self.wms_layer, self.wms_level, self.wms_styles = url, layer, level, styles
+            self.current_init_time = (
+                QtCore.QDateTime.fromString(init_time, QtCore.Qt.ISODate)
+                if init_time else QtCore.QDateTime.currentDateTimeUtc()
+            )
+            self.current_valid_time = (
+                QtCore.QDateTime.fromString(valid_time, QtCore.Qt.ISODate)
+                if valid_time else QtCore.QDateTime.currentDateTimeUtc()
+            )
+
+            cb_url = getattr(self.wms_control.multilayers, 'cbWMS_URL', None)
+            if cb_url:
+                cb_url.setCurrentText(url)
+                cb_url.currentTextChanged.emit(url)
+                QtCore.QCoreApplication.processEvents()
+            else:
+                logging.error("WMS URL combobox 'cbWMS_URL' not found")
+                return
+
+            self.wms_control.select_layer_and_style(
+                self.wms_control.multilayers.listLayers, layer, styles
+            )
+            self.wms_control.row_is_selected(url, layer, styles, level, "side")
+
+            if init_time:
+                idx = self.wms_control.cbInitTime.findText(init_time)
+                if idx >= 0:
+                    self.wms_control.cbInitTime.setCurrentIndex(idx)
+                else:
+                    logging.warning("Init time %s not found in combo box", init_time)
+
+            if valid_time:
+                idx = self.wms_control.cbValidTime.findText(valid_time)
+                if idx >= 0:
+                    self.wms_control.cbValidTime.setCurrentIndex(idx)
+                    self.wms_control.leftrow_is_selected(valid_time)
+                else:
+                    logging.warning("Valid time %s not found in combo box", valid_time)
+
+            target_layer_item = self.wms_control.find_layer_item_by_name(layer)
+            if target_layer_item:
+                self.wms_control.multilayers.current_layer = target_layer_item
+                self.wms_control.call_get_vsec()
+                self.wms_connected = True
+                if hasattr(self, 'mpl') and self.mpl.canvas:
+                    self.mpl.canvas.redraw_map()
+            else:
+                logging.warning("Layer '%s' not found; skipping call_get_vsec to avoid crash", layer)
+
+        except Exception as e:
+            logging.error("Error restoring WMS settings: %s\n%s", str(e), traceback.format_exc())
