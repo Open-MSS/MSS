@@ -1015,14 +1015,13 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
         # Check if restore_views is enabled
         restore_views = config_loader(dataset="restore_views", default=False)
-        settings_list = []
+        view_settings = {}
+        global_settings = {}
         if restore_views:
             restored_data = view_restoration.restore_view_settings()
-            settings_list = restored_data.get("views", {})
-            global_list = restored_data.get("global")
-
-        # Find settings for the requested view type
-        view_settings = settings_list.get(_type)
+            logging.debug("Settings from restore_view_settings: %s", restored_data)
+            view_settings = restored_data.get("views", {}).get(_type, {})
+            global_settings = restored_data.get("global", {})
 
         layout = config_loader(dataset="layout")
         view_window = None
@@ -1038,7 +1037,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
             if view_settings:
-                view_window.set_settings(view_settings, global_list)
+                view_window.set_settings(view_settings, global_settings)
                 logging.debug("applied top view setting")
         elif _type == "sideview":
             # Side view.
