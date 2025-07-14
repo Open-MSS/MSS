@@ -28,13 +28,12 @@ import os
 import pytest
 import json
 
-from fs.tempfs import TempFS
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Operation, Message, MessageType, User
 from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.utils import (get_recent_op_id, get_session_id,
                                  get_message_dict, create_files,
-                                 os_fs_create_dir, get_user_id)
+                                 get_user_id)
 from mslib.mscolab.seed import XML_CONTENT_INIT
 
 
@@ -76,15 +75,8 @@ class Test_Utils:
         result = get_message_dict(message)
         assert result["message_type"] == MessageType.TEXT
 
-    def test_os_fs_create_dir(self):
-        _fs = TempFS(identifier="msui")
-        _dir = _fs.getsyspath("")
-        os_fs_create_dir(_dir)
-        assert os.path.exists(_dir)
-
     def test_create_file(self):
         create_files()
-        # ToDo refactor to fs
         assert os.path.exists(mscolab_settings.OPERATIONS_DATA)
         assert os.path.exists(mscolab_settings.UPLOAD_FOLDER)
 

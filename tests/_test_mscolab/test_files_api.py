@@ -24,8 +24,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import fs
 import pytest
+from pathlib import Path
 
 from mslib.mscolab.models import Operation
 from mslib.mscolab.seed import add_user, get_user
@@ -154,8 +154,7 @@ class Test_Files:
             assert self.fm.update_operation(operation.id, 'path', new_flight_path, self.user)
             operation = Operation.query.filter_by(path=new_flight_path).first()
             assert operation.path == new_flight_path
-            data = fs.open_fs(self.fm.data_dir)
-            assert data.exists(new_flight_path)
+            assert Path(self.fm.data_dir, new_flight_path).exists()
             new_description = "my new description"
             assert self.fm.update_operation(operation.id, 'description', new_description, self.user)
             operation = Operation.query.filter_by(path=new_flight_path).first()

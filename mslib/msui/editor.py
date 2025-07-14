@@ -26,9 +26,9 @@
 """
 import collections.abc
 import copy
-import fs
 import logging
 import json
+from pathlib import Path
 
 from mslib.utils.qt import get_open_filename, get_save_filename, show_popup
 from mslib.msui.qt5 import ui_configuration_editor_window as ui_conf
@@ -332,6 +332,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     duplicate = True
                     color = QtCore.Qt.red
             elif key == 'filepicker_default':
+                # ToDo remove filepicker_default
                 if data[key] not in ['default', 'qt', 'fs']:
                     invalid = True
                     color = QtCore.Qt.red
@@ -548,21 +549,19 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         if not file_path:
             return
 
-        # load data from selected file
-        dir_name, file_name = fs.path.split(file_path)
-        with fs.open_fs(dir_name) as _fs:
-            if _fs.exists(file_name):
-                file_content = _fs.readtext(file_name)
-                try:
-                    json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
-                except json.JSONDecodeError as e:
-                    show_popup(self, "Error while loading file", e)
-                    logging.error("Error while loading json file %s", e)
-                    return
-                except ValueError as e:
-                    show_popup(self, "Invalid keys detected", e)
-                    logging.error("Error while loading json file %s", e)
-                    return
+        if Path(file_path).exists():
+            self.statusbar.showMessage("Importing config from path")
+            file_content = Path(file_path).read_text(encoding="utf8")
+            try:
+                json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
+            except json.JSONDecodeError as e:
+                show_popup(self, "Error while loading file", e)
+                logging.error("Error while loading json file %s", e)
+                return
+            except ValueError as e:
+                show_popup(self, "Invalid keys detected", e)
+                logging.error("Error while loading json file %s", e)
+                return
 
         if json_file_data:
             json_model_data = self.json_model.serialize()
@@ -590,10 +589,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             if json_data[key] == default_options[key] or json_data[key] == {} or json_data[key] == []:
                 del save_data[key]
 
-        filename = filename.replace('\\', '/')
-        dir_name, file_name = fs.path.split(filename)
-        with fs.open_fs(dir_name) as _fs:
-            _fs.writetext(file_name, json.dumps(save_data, indent=4))
+        # ToDo check errors keyword
+        Path(filename).write_text(json.dumps(save_data, indent=4), encoding="utf8", errors="ignore")
 
     def validate_data(self):
         epsg_check, dummy = self.problem_in_map_sections()

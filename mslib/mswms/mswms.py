@@ -28,12 +28,12 @@
 import argparse
 import logging
 import sys
+from pathlib import Path
 
 from mslib import __version__
 from mslib.utils import setup_logging
 from mslib.mswms.wms import app as application
 from mslib.mswms.seed import DataFiles
-import fs
 
 
 def main():
@@ -90,12 +90,12 @@ def main():
 
     setup_logging(args)
     if args.seed:
-        root_fs = fs.open_fs("~/")
-        if not root_fs.exists("mss/testdata"):
-            root_fs.makedirs("mss/testdata")
+        test_data = Path("~/"), "mss/testdata"
+        if not test_data.exists("mss/testdata"):
+            test_data.makedirs(parents=True)
 
-        examples = DataFiles(data_fs=fs.open_fs("~/mss/testdata"),
-                             server_config_fs=fs.open_fs("~/mss"))
+        examples = DataFiles(mswms_data_dir=test_data,
+                             mswms_server_config_dir=Path("~/mss"))
         examples.create_server_config(detailed_information=True)
         examples.create_data()
         print("\nTo use this setup you need the mswms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")

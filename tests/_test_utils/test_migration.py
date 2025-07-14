@@ -25,7 +25,7 @@
     limitations under the License.
 """
 import pytest
-import fs
+from pathlib import Path
 from packaging import version
 
 from mslib.utils import auth
@@ -74,12 +74,11 @@ class TestMigration:
             new_version = JsonConversion()
             # converting and storing
             new_version.change_parameters()
-            filename = MSUI_SETTINGS.replace('\\', '/')
-            dir_name, file_name = fs.path.split(filename)
+            dir_name = Path(MSUI_SETTINGS).parent
+            file_name = Path(MSUI_SETTINGS).name
             # check that we have a backup file
-            bak_file = f"{file_name}.bak"
-            _fs = fs.open_fs(dir_name)
-            assert _fs.exists(bak_file)
+            bak_file = dir_name / f"{file_name}.bak"
+            assert bak_file.exists()
 
             # using current configuration
             from mslib.utils.config import read_config_file, config_loader
@@ -141,12 +140,11 @@ class TestMigration:
             new_version = JsonConversion()
             # converting and storing
             new_version.change_parameters()
-            filename = MSUI_SETTINGS.replace('\\', '/')
-            dir_name, file_name = fs.path.split(filename)
+            dir_name = Path(MSUI_SETTINGS).parent
+            file_name = Path(MSUI_SETTINGS).name
             # check that we have a backup file
-            bak_file = f"{file_name}.bak"
-            _fs = fs.open_fs(dir_name)
-            assert _fs.exists(bak_file)
+            bak_file = dir_name / f"{file_name}.bak"
+            assert bak_file.exists()
 
             # using current configuration
             from mslib.utils.config import read_config_file, config_loader

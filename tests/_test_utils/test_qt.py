@@ -110,7 +110,6 @@ def test_get_pickertype():
     assert mqt.get_pickertype() == config_loader(dataset="filepicker_default")
     assert mqt.get_pickertype("default") == config_loader(dataset="filepicker_default")
     assert mqt.get_pickertype("qt") == "qt"
-    assert mqt.get_pickertype("fs") == "fs"
     with pytest.raises(FatalUserError) as exc_info:
         mqt.get_pickertype("undefined")
         assert type(exc_info.value.__cause__) is FatalUserError
@@ -120,9 +119,6 @@ def test_get_open_filename():
     filename = "example.csv"
     with mock.patch("mslib.utils.qt.get_open_filename_qt", return_value="example.csv"):
         _filename = mqt.get_open_filename(None, "", "", "csv", pickertype="qt")
-        assert _filename == filename
-    with mock.patch("mslib.utils.qt.getOpenFileName", return_value="example.csv"):
-        _filename = mqt.get_open_filename(None, "", "", "csv", pickertype="fs")
         assert _filename == filename
     with mock.patch("mslib.utils.qt.get_open_filename_qt", return_value=""):
         _filename = mqt.get_open_filename(None, "", "", "csv", pickertype="qt")
@@ -147,9 +143,6 @@ def test_get_open_filenames():
 
 def test_save_filename():
     filename = "example.csv"
-    with mock.patch("mslib.utils.qt.getSaveFileName", return_value="example.csv"):
-        _filename = mqt.get_save_filename(None, "", "", filename, pickertype="fs")
-        assert _filename == filename
     with mock.patch("mslib.utils.qt.get_save_filename_qt", return_value="example.csv"):
         _filename = mqt.get_save_filename(None, "", "", filename, pickertype="qt")
         assert _filename == filename

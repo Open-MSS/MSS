@@ -27,16 +27,17 @@
 """
 
 import numpy as np
-from tests.constants import SERVER_CONFIG_FS, DATA_FS, ROOT_FS, SERVER_CONFIG_FILE
+from tests import constants
 import mslib.mswms.seed as seed
 
 
 class Testseed:
     def test_data_creation(self):
-        assert ROOT_FS.exists(u'.')
-        assert DATA_FS.exists(u'.')
-        assert SERVER_CONFIG_FS.exists(SERVER_CONFIG_FILE)
-        assert len(DATA_FS.listdir(u'.')) == 23
+        assert constants.MSWMS_SERVER_CONFIG_DIR.exists()
+        assert constants.MSWMS_DATA_DIR.exists()
+        assert constants.MSWMS_SERVER_CONFIG_FILE_PATH.exists()
+        _files = [f for f in constants.MSWMS_DATA_DIR.iterdir() if f.is_file()]
+        assert len(_files) == 23
 
     def test_get_profile(self):
         mean, std = seed.get_profile("air_pressure", [1000, 10000, 50000], "air_temperature")

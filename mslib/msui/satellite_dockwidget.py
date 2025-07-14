@@ -28,7 +28,7 @@
 
 import logging
 import os
-import fs
+from pathlib import Path
 from datetime import datetime, timedelta
 import numpy as np
 
@@ -36,7 +36,6 @@ from mslib.utils.qt import get_open_filename
 from mslib.msui.qt5 import ui_satellite_dockwidget as ui
 from PyQt5 import QtWidgets
 from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
-from fs import open_fs
 
 
 def read_nasa_satellite_prediction(fname):
@@ -60,11 +59,7 @@ def read_nasa_satellite_prediction(fname):
                  multiplied by -1. ******
     """
     # Read the file into a list of strings.
-    _dirname, _name = os.path.split(fname)
-    _fs = open_fs(_dirname)
-    satfile = _fs.open(_name, 'r')
-    satlines = satfile.readlines()
-    satfile.close()
+    satlines = Path(fname).read_text().splitlines()
 
     # Determine the date from the first line.
     date = datetime.strptime(satlines[0].split()[0], "%Y/%m/%d")
@@ -154,7 +149,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
 
         try:
             overpass_segments = read_nasa_satellite_prediction(filename)
-        except (IOError, OSError, ValueError, fs.errors.FileExpected) as ex:
+        except (IOError, OSError, ValueError) as ex:
             logging.error("Problem accessing '%s' file", filename)
             QtWidgets.QMessageBox.critical(self, self.tr("Satellite Overpass Tool"),
                                            self.tr(f"ERROR:\n{type(ex)}\n{ex}"))

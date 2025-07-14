@@ -32,12 +32,8 @@
 from datetime import datetime
 import enum
 import os
-import six
 import logging
 import numpy as np
-import matplotlib
-from fs import open_fs
-from fslib.fs_filepicker import getSaveFileNameAndFilter
 from matplotlib import cbook, figure
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT, FigureCanvasQTAgg
 import matplotlib.backend_bases
@@ -847,14 +843,6 @@ class MplCanvas(FigureCanvasQTAgg):
         self.plotter.set_settings(settings, save)
 
 
-def _getSaveFileName(parent, title="Choose a filename to save to", filename="test.png",
-                     filters=" Images (*.png)"):
-    _dirname, _name = os.path.split(filename)
-    _dirname = os.path.join(_dirname, "")
-    return getSaveFileNameAndFilter(parent, fs_url=_dirname, file_pattern=filters,
-                                    title=title, default_filename=_name, show_save_action=True)
-
-
 save_figure_original = NavigationToolbar2QT.save_figure
 
 
@@ -862,43 +850,10 @@ def save_figure(self, *args):
     """
     saves the figure dependent to the filepicker_default
     """
+    # ToDo remove picker_type
     picker_type = config_loader(dataset="filepicker_default")
     if picker_type in ["default", "qt"]:
         save_figure_original(self, *args)
-    elif picker_type == "fs":
-        filetypes = self.canvas.get_supported_filetypes_grouped()
-        sorted_filetypes = sorted(six.iteritems(filetypes))
-        startpath = matplotlib.rcParams.get('savefig.directory', LAST_SAVE_DIRECTORY)
-        startpath = os.path.expanduser(startpath)
-        start = os.path.join(startpath, self.canvas.get_default_filename())
-        filters = []
-        for name, exts in sorted_filetypes:
-            exts_list = " ".join(['*.%s' % ext for ext in exts])
-            filter_value = '%s (%s)' % (name, exts_list)
-            filters.append(filter_value)
-
-        fname, filter_value = _getSaveFileName(self.parent,
-                                               title="Choose a filename to save to",
-                                               filename=start, filters=filters)
-        if fname is not None:
-            if not fname.endswith(filter[1:]):
-                fname = filter.replace('*', fname)
-            if startpath == '':
-                # explicitly missing key or empty str signals to use cwd
-                matplotlib.rcParams['savefig.directory'] = startpath
-            else:
-                # save dir for next time
-                savefig_dir = os.path.dirname(six.text_type(fname))
-                matplotlib.rcParams['savefig.directory'] = savefig_dir
-            try:
-                _dirname, _name = os.path.split(fname)
-                _fs = open_fs(_dirname)
-                with _fs.open(_name, 'wb') as source:
-                    self.canvas.print_figure(source, format=filter.replace('*.', ''))
-            except Exception as e:
-                QtWidgets.QMessageBox.critical(
-                    self, "Error saving file", six.text_type(e),
-                    QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.NoButton)
     else:
         raise FatalUserError(f"Unknown file picker type '{picker_type}'")
 

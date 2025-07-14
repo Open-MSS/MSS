@@ -34,7 +34,6 @@ import logging
 import os
 import platform
 import sys
-import fs
 
 from packaging import version
 from mslib import __version__
@@ -83,7 +82,7 @@ def main(tutorial_mode=False):
     logging.info("Command line arguments: %s", sys.argv)
     try:
         read_config_file()
-    except (FileNotFoundError, fs.errors.CreateFailed, fs.errors.FileExpected) as ex:
+    except (FileNotFoundError) as ex:
         message = f'\n\nFix the setup of your "MSUI_SETTINGS" configuration.\n{ex}'
         logging.error(message)
         sys.exit()

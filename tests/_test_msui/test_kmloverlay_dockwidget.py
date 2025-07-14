@@ -25,16 +25,15 @@
     limitations under the License.
 """
 
-import os
-import fs
 import mock
 import pytest
+from pathlib import Path
 from PyQt5 import QtCore, QtTest, QtGui
 from tests.constants import ROOT_DIR
 import mslib.msui.kmloverlay_dockwidget as kd
 
-sample_path = os.path.join(os.path.dirname(__file__), "..", "data")
-save_kml = os.path.join(ROOT_DIR, "merged_file123.kml")
+sample_path = Path(__file__).parent.parent / "data"
+save_kml = ROOT_DIR / "merged_file123.kml"
 
 
 # ToDo refactoring, extract helper methods into functions
@@ -56,27 +55,27 @@ class Test_KmlOverlayDockWidget:
         self.window.remove_file()
         yield
         self.window.close()
-        if os.path.exists(save_kml):
-            os.remove(save_kml)
+        if save_kml.exists() and save_kml.is_file() and save_kml.stat().st_size > 0:
+            save_kml.unlink()
 
     def count_patches(self):
         return sum([len(_x["patch"].patches) for _x in self.window.dict_files.values() if _x["patch"] is not None])
 
     def select_file(self, file):  # Utility function for single file
-        path = fs.path.join(sample_path, file)
-        filename = (path,)  # converted to tuple
+        path = sample_path / file
+        filename = (str(path),)  # converted to tuple
         self.window.select_file(filename)
         self.window.load_file()
         return path
 
     def select_files(self):  # Utility function for multiple files
         for sample in ["folder.kml", "line.kml", "color.kml", "style.kml", "features.kml"]:
-            path = fs.path.join(sample_path, sample)
-            filename = (path,)  # converted to tuple
+            path = sample_path / sample
+            filename = (str(path),)  # converted to tuple
             self.window.select_file(filename)
 
     @mock.patch("mslib.msui.kmloverlay_dockwidget.get_open_filenames",
-                return_value=[fs.path.join(sample_path, "line.kml")])
+                return_value=[str(sample_path / "line.kml")])
     def test_get_file(self, mockopen):  # Tests opening of QFileDialog
         QtTest.QTest.mouseClick(self.window.btSelectFile, QtCore.Qt.LeftButton)
         assert mockopen.call_count == 1
@@ -91,7 +90,7 @@ class Test_KmlOverlayDockWidget:
             path = self.select_file(sample)
             assert self.window.listWidget.item(index).checkState() == QtCore.Qt.Checked
             index = index + 1
-        assert self.window.directory_location == path
+        assert self.window.directory_location == str(path)
         assert self.window.listWidget.count() == index
         assert len(self.window.dict_files) == index
         assert self.count_patches() == 9
@@ -106,8 +105,8 @@ class Test_KmlOverlayDockWidget:
             # load a non existing path
             self.window.select_all()
             self.window.remove_file()
-            path = fs.path.join(sample_path, "satellite_predictor.txt")
-            filename = (path,)  # converted to tuple
+            path = sample_path / "satellite_predictor.txt"
+            filename = (str(path),)  # converted to tuple
             self.window.select_file(filename)
             self.window.load_file()
             critbox.assert_called_once()
@@ -145,7 +144,7 @@ class Test_KmlOverlayDockWidget:
         self.select_files()
         QtTest.QTest.mouseClick(self.window.pushButton_merge, QtCore.Qt.LeftButton)
         assert mocksave.call_count == 1
-        assert os.path.exists(save_kml)
+        assert save_kml.exists()
 
     @mock.patch("PyQt5.QtWidgets.QColorDialog.getColor", return_value=QtGui.QColor())
     def test_customize_kml(self, mock_colour_button):
@@ -171,8 +170,8 @@ class Test_KmlOverlayDockWidget:
         assert self.window.dsbx_linewidth.value() == 3
 
         # Testing the dictionary of files for color and linewidth
-        assert self.window.dict_files[path]["color"] == (0, 0, 0, 1)
-        assert self.window.dict_files[path]["linewidth"] == 3
+        assert self.window.dict_files[str(path)]["color"] == (0, 0, 0, 1)
+        assert self.window.dict_files[str(path)]["linewidth"] == 3
 
         self.window.remove_file()
         assert self.window.listWidget.count() == 0
@@ -230,7 +229,7 @@ class Test_KmlOverlayDockWidget:
     # this fails with dependencies given by python 3.10 and MSS before 7.0.1
     # because we have not verified to pass always int to QtGui.QColor
     def test_show_color_icon(self):
-        filename = self.select_file("fir.kml")  # selects file and returns path
+        filename = str(self.select_file("fir.kml"))  # selects file and returns path
         assert filename.endswith('kml')
         clr = [0.6666666, 0.6666666, 0.6666666]
         assert self.window.show_color_icon(filename, clr) is not None

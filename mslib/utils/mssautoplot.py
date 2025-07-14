@@ -30,6 +30,7 @@ import io
 import re
 import json
 import logging
+from pathlib import Path
 from datetime import datetime, timedelta
 from urllib.parse import urljoin
 
@@ -41,7 +42,6 @@ import defusedxml.ElementTree as etree
 import PIL.Image
 import matplotlib
 from slugify import slugify
-from fs import open_fs
 
 import mslib
 import mslib.utils
@@ -74,9 +74,7 @@ mpl_logger = configure_mpl_logger()
 def load_from_ftml(filename):
     """Load a flight track from an XML file at <filename>.
     """
-    _dirname, _name = os.path.split(filename)
-    _fs = open_fs(_dirname)
-    datasource = _fs.readtext(_name)
+    datasource = Path(filename).read_text()
     wp_list = ft.load_from_xml_data(datasource)
     now = datetime.now()
     for wp in wp_list:

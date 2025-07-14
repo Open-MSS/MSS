@@ -119,6 +119,9 @@ class Test_Seed:
                                 'op_id': 7, 'path': 'UVXYZ'}]
             user = User.query.filter_by(emailid=self.userdata_1[0]).first()
             result = self.fm.list_operations(user)
+            # Check if result is not empty before accessing index
+            assert len(result) > 0, f"Expected at least one operation for user {self.userdata_1[0]}, but got empty list"
+
             # we don't care here for op_id
             expected_result[0]['op_id'] = result[0]['op_id']
             assert result == expected_result

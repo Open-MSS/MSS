@@ -25,7 +25,7 @@
     limitations under the License.
 """
 import datetime
-import fs
+from pathlib import Path
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import db, Message, MessageType
@@ -87,8 +87,8 @@ class ChatManager:
     def delete_message(self, message_id):
         message = Message.query.filter(Message.id == message_id).first()
         if message.message_type == MessageType.IMAGE or message.message_type == MessageType.DOCUMENT:
-            file_name = fs.path.basename(message.text)
-            with fs.open_fs(mscolab_settings.UPLOAD_FOLDER) as upload_dir:
-                upload_dir.remove(fs.path.join(str(message.op_id), file_name))
+            file_name = Path(message.text).name
+            upload_path = Path(mscolab_settings.UPLOAD_FOLDER) / str(message.op_id) / file_name
+            upload_path.unlink()
         db.session.delete(message)
         db.session.commit()

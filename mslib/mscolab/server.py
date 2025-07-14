@@ -24,7 +24,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import fs
+from pathlib import Path
 import sys
 import functools
 import json
@@ -475,11 +475,8 @@ def fetch_profile_image():
     user = User.query.get(user_id)
     if user and user.profile_image_path:
         base_path = mscolab_settings.UPLOAD_FOLDER
-        if sys.platform.startswith('win'):
-            base_path = base_path.replace('\\', '/')
         filename = user.profile_image_path
-        with fs.open_fs(base_path) as _fs:
-            return send_from_directory(_fs.getsyspath(""), filename)
+        return send_from_directory(Path(base_path), filename)
     else:
         abort(404)
 

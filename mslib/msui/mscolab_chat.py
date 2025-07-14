@@ -27,7 +27,7 @@
 import datetime
 import json
 
-import fs
+from pathlib import Path
 import requests
 from markdown import Markdown
 from markdown.extensions import Extension
@@ -564,7 +564,7 @@ class MessageItem(QtWidgets.QWidget):
     def setup_text_message_box(self):
         if self.message_type == MessageType.DOCUMENT:
             doc_url = urljoin(self.chat_window.mscolab_server_url, self.attachment_path)
-            file_name = fs.path.basename(self.attachment_path)
+            file_name = Path(self.attachment_path).name
             self.message_text = f"Document: [{file_name}]({doc_url})"
         self.messageBox = self.get_text_browser(self.message_text)
 
@@ -704,9 +704,8 @@ class MessageItem(QtWidgets.QWidget):
         QtWidgets.QApplication.clipboard().setText(self.message_text)
 
     def handle_download_action(self):
-        file_name = fs.path.basename(self.attachment_path)
-        file_name, file_ext = fs.path.splitext(file_name)
-        # fs.file_picker cannot take filenames that contain dots
+        file_name = Path(self.attachment_path).name
+        file_name, file_ext = Path(file_name).stem, Path(file_name).suffix
         default_filename = file_name.replace('.', '_') + file_ext
         if self.message_type == MessageType.DOCUMENT:
             file_path = get_save_filename(self, "Save Document", default_filename, f"Document (*{file_ext})")

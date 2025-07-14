@@ -27,10 +27,9 @@
 import pytest
 import mock
 import os
-import fs
 from PyQt5 import QtWidgets
 from mslib.msui import editor
-from tests.constants import ROOT_DIR
+from tests import constants
 
 
 @pytest.mark.skip("To be done for new UI")
@@ -38,7 +37,7 @@ class Test_Editor:
     sample_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "msui_settings.json"))
     sample_file = sample_file.replace('\\', '/')
 
-    save_file_name = fs.path.join(ROOT_DIR, "testeditor_save.json")
+    save_file_name = constants.MSUI_CONFIG_PATH / "testeditor_save.json"
 
     @pytest.fixture(autouse=True)
     def setup(self, qtbot):

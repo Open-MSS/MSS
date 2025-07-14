@@ -847,12 +847,11 @@ class DataFiles:
         "time": ("time", "hours since 2012-10-17T12:00:00.000Z", "")
     }
 
-    def __init__(self, data_fs=None, server_config_fs=None):
-        self.data_fs = data_fs
-        self.server_config_fs = server_config_fs
+    def __init__(self, mswms_data_dir=None, mswms_server_config_dir=None):
+        self.data_dir = mswms_data_dir
+        self.server_config_dir = mswms_server_config_dir
         self.server_config_file = "mswms_settings.py"
         self.server_auth_config_file = "mswms_auth.py"
-        # define file dimension / geographical  range
 
     def create_server_config(self, detailed_information=False):
         simple_auth_config = '''# -*- coding: utf-8 -*-
@@ -984,8 +983,8 @@ import mslib.mswms
 #base_dir = os.path.abspath(os.path.dirname(mslib.mswms.__file__))
 #xml_template_location = os.path.join(base_dir, "xml_templates")
 
-_gallerypath = r"{os.path.abspath(os.path.join(self.data_fs.root_path, "..", "gallery"))}"
-_datapath = r"{self.data_fs.root_path}"
+_gallerypath = r"{os.path.abspath(os.path.join(self.data_dir, "..", "gallery"))}"
+_datapath = r"{self.data_dir}"
 
 data = {{
     "ecmwf_EUR_LL015": mslib.mswms.dataaccess.DefaultDataAccess(_datapath, "EUR_LL015"),
@@ -1073,18 +1072,17 @@ from mslib.mswms.seed import (data, epsg_to_mpl_basemap_table,
                                   register_horizontal_layers, register_vertical_layers, register_linear_layers)
 '''
 
-        if not self.server_config_fs.exists(self.server_config_file):
-            fid = self.server_config_fs.open(self.server_config_file, 'w')
-            fid.write(simple_server_config)
-            fid.close()
+        mswms_server_config_file = self.server_config_dir / self.server_config_file
+        if not mswms_server_config_file.exists():
+            with mswms_server_config_file.open("w") as fp:
+                fp.write(simple_server_config)
         else:
             print(f'''
 /!\\ existing server config: "{self.server_config_file}" for demodata not overwritten!
             ''')
-        if not self.server_config_fs.exists(self.server_auth_config_file):
-            fid = self.server_config_fs.open(self.server_auth_config_file, 'w')
-            fid.write(simple_auth_config)
-            fid.close()
+        mswms_auth_config_file = self.server_config_dir / self.server_auth_config_file
+        if not mswms_auth_config_file.exists():
+            mswms_auth_config_file.write_text(simple_auth_config)
         else:
             print(f'''
 /!\\ existing server auth config: "{self.server_auth_config_file}" for demodata not overwritten!
@@ -1101,9 +1099,7 @@ from mslib.mswms.seed import (data, epsg_to_mpl_basemap_table,
         :param variables: list of standard_names of variables to write into file
         """
         # ToDo nc.Dataset needs fileobject like access
-
-        filename_out = os.path.join(
-            self.data_fs.root_path, f"20121017_12_ecmwf_forecast.{label}.EUR_LL015.036.{leveltype}.nc")
+        filename_out = self.data_dir / f"20121017_12_ecmwf_forecast.{label}.EUR_LL015.036.{leveltype}.nc"
         ecmwf = nc.Dataset(filename_out, 'w', format='NETCDF4_CLASSIC')
 
         for dim, values in dimvals:
