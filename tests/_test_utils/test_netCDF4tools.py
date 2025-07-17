@@ -119,8 +119,9 @@ class Test_netCDF4tools:
         assert time_name == "time"
         assert time_var.size == 7
 
+    @pytest.mark.skip(reason="no demodata available yet")
     def test_identify_CF_ensemble(self):
-        pytest.skip("no demodata available yet")
+        pass
 
     def test_get_latlon_data(self):
         lat_data, lon_data, lat_order = get_latlon_data(self.ncfile_pl)
