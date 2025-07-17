@@ -26,12 +26,12 @@
 """
 import copy
 import logging
-from fastkml import KML, kml, styles
-from pygeoif.geometry import (Point, LineString, LinearRing, Polygon, GeometryCollection,
-                              MultiPoint, MultiLineString, MultiPolygon)
-from fastkml.styles import Style, LineStyle, PolyStyle
-from lxml import etree as et, objectify
 import os
+
+import pygeoif.geometry as pggeo
+from fastkml import KML, kml, styles
+from fastkml.styles import LineStyle, PolyStyle
+from lxml import etree as et, objectify
 from pathlib import Path
 from matplotlib import patheffects
 
@@ -147,23 +147,23 @@ class KMLPatch:
             styleurl = str(styleurl)[1:]
             style = self.parse_local_styles(placemark, self.styles.get(styleurl, {}))
         if hasattr(placemark, "geometry"):
-            if isinstance(placemark.geometry, Point):
+            if isinstance(placemark.geometry, pggeo.Point):
                 self.add_point(placemark, style, name)
-            elif isinstance(placemark.geometry, LineString):
+            elif isinstance(placemark.geometry, pggeo.LineString):
                 self.add_line(placemark, style, name)
-            elif isinstance(placemark.geometry, LinearRing):
+            elif isinstance(placemark.geometry, pggeo.LinearRing):
                 self.add_line(placemark, style, name)  # LinearRing can be plotted through LineString
-            elif isinstance(placemark.geometry, Polygon):
+            elif isinstance(placemark.geometry, pggeo.Polygon):
                 self.add_polygon(placemark, style, name)
-            elif isinstance(placemark.geometry, MultiPoint):
+            elif isinstance(placemark.geometry, pggeo.MultiPoint):
                 self.add_multipoint(placemark.geometry.geoms, style, name)
-            elif isinstance(placemark.geometry, MultiLineString):
+            elif isinstance(placemark.geometry, pggeo.MultiLineString):
                 for geom in placemark.geometry.geoms:
                     self.add_multiline(geom, style, name)
-            elif isinstance(placemark.geometry, MultiPolygon):
+            elif isinstance(placemark.geometry, pggeo.MultiPolygon):
                 for geom in placemark.geometry.geoms:
                     self.add_multipolygon(geom, style, name)
-            elif isinstance(placemark.geometry, GeometryCollection):
+            elif isinstance(placemark.geometry, pggeo.GeometryCollection):
                 for geom in placemark.geometry.geoms:
                     if geom.geom_type == "Point":
                         self.add_multipoint([geom], style, name)
@@ -219,21 +219,6 @@ class KMLPatch:
                         self.styles[name]["LineStyle"] = self.get_style_params(style)
                     elif isinstance(style, styles.PolyStyle):
                         self.styles[name]["PolyStyle"] = self.get_style_params(style)
-
-        # Check if the object has a styles method before calling it
-        if hasattr(kml_doc, 'styles') and callable(getattr(kml_doc, 'styles')):
-            for exterior_style in kml_doc.styles():
-                if isinstance(exterior_style, Style):
-                    name = exterior_style.id
-                    if name is None:
-                        continue
-                    self.styles[name] = {}
-                    interior_style = exterior_style.styles()
-                    for style in interior_style:
-                        if isinstance(style, LineStyle):
-                            self.styles[name]["LineStyle"] = self.get_style_params(style)
-                        elif isinstance(style, PolyStyle):
-                            self.styles[name]["PolyStyle"] = self.get_style_params(style)
 
     def parse_local_styles(self, placemark, default_styles):
         # exterior_style : <Style> INSIDE placemarks
@@ -583,7 +568,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                         self.dict_files[self.listWidget.item(index).text()]["patch"] = patch
 
                 # ToDo verify exceptions if they are needed
-                except (AttributeError, IOError, ValueError, et.XMLSyntaxError, et.XMLSchemaError,
+                except (AttributeError, IOError, TypeError, ValueError, et.XMLSyntaxError, et.XMLSchemaError,
                         et.XMLSchemaParseError, et.XMLSchemaValidateError) as ex:  # catches KML Syntax Errors
                     logging.error("KML Overlay - %s: %s", type(ex), ex)
                     self.labelStatusBar.setText(str(self.listWidget.item(index).text()) +
