@@ -35,7 +35,6 @@
 import logging
 import copy
 import numpy as np
-from shapely.geometry import Polygon
 import matplotlib
 from matplotlib.cm import get_cmap
 import matplotlib.path as mpath
@@ -397,11 +396,8 @@ class MapCanvas(basemap.Basemap):
 
             for i, airspace in enumerate(airspaces):
                 airspaces[i]["polygon"] = list(zip(*self.projtran(*list(zip(*airspace["polygon"])))))
-            map_polygon = Polygon([(self.llcrnrx, self.llcrnry), (self.urcrnrx, self.llcrnry),
-                                  (self.urcrnrx, self.urcrnry), (self.llcrnrx, self.urcrnry)])
             airspaces = [airspace for airspace in airspaces if
-                         (not range_km or range_km[0] <= airspace["bottom"] <= range_km[1]) and
-                         Polygon(airspace["polygon"]).intersects(map_polygon)]
+                         (not range_km or range_km[0] <= airspace["bottom"] <= range_km[1])]
             if not airspaces:
                 return
 

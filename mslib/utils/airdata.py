@@ -30,7 +30,6 @@ import csv
 import humanfriendly
 import os
 import requests
-import re as regex
 from pathlib import Path
 from PyQt5 import QtWidgets
 import logging
@@ -55,7 +54,7 @@ class Airspace:
 
     data_mtime = {}
 
-    data_url = "https://storage.googleapis.com/29f98e10-a489-4c82-ae5e-489dbcd4912f"
+    data_url = "https://storage.googleapis.com/storage/v1/b/29f98e10-a489-4c82-ae5e-489dbcd4912f/o"
 
     data_download_url = "https://storage.googleapis.com/storage/v1/b/29f98e10-a489-4c82-ae5e-489dbcd4912f/o/" \
                         "{}_asp.xml?alt=media"
@@ -137,13 +136,23 @@ def get_available_airspaces():
     Gets and returns all available airspaces and their sizes from openaip
     """
     try:
-        directory = requests.get(Airspace.data_url, timeout=5)
-        if directory.status_code == 404:
-            return Airspace.data_cache
-        airspaces = regex.findall(r">(.._asp\.xml)<", directory.text)
-        sizes = regex.findall(r".._asp.xml.*?<Size>([0-9]+)<\/Size", directory.text)
-        airspaces = [airspace for airspace in zip(airspaces, sizes) if airspace[-1] != "0"]
-        return airspaces
+        next_page_token = None
+        all_airspaces = []
+        while True:
+            params = {}
+            if next_page_token:
+                params["pageToken"] = next_page_token
+            response = requests.get(Airspace.data_url, params=params, timeout=5)
+            if response.status_code != 200:
+                return Airspace.data_cache
+            data = response.json()
+            for item in data.get("items", []):
+                if "_asp.xml" in item["name"] and item["size"] != "0":
+                    all_airspaces.append((item["name"], item["size"]))
+            next_page_token = response.json().get("nextPageToken")
+            if not next_page_token:
+                break
+        return all_airspaces
     except requests.exceptions.RequestException:
         return Airspace.data_cache
 
