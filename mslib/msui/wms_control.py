@@ -52,13 +52,10 @@ from mslib.msui.qt5 import ui_wms_password_dialog as ui_pw
 from mslib.utils.qt import Worker
 from mslib.msui.multilayers import Multilayers, Layer
 import mslib.utils.ogcwms as ogcwms
+from mslib.utils.service_manager import WMSServiceManager
 from mslib.utils.time import parse_iso_datetime, parse_iso_duration
 from mslib.utils.auth import save_password_to_keyring, get_auth_from_url_and_name
 from mslib.utils.config import modify_config_file
-
-
-WMS_SERVICE_CACHE = {}
-WMS_URL_LIST = QtGui.QStandardItemModel()
 
 
 def add_wms_urls(combo_box, url_list):
@@ -422,6 +419,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         super().__init__(parent)
         self.setupUi(self)
 
+        self.wms_cache = wms_cache
+        self.service_manager = WMSServiceManager()
+
         self.view = view
         self.layer_name = None
         self.style_name = None
@@ -434,7 +434,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             lambda text: self.multilayers.pbViewCapabilities.setEnabled(text in self.multilayers.layers))
 
         # Initial list of WMS servers.
-        self.multilayers.cbWMS_URL.setModel(WMS_URL_LIST)
+        self.multilayers.cbWMS_URL.setModel(QtGui.QStandardItemModel())
         if default_WMS is not None:
             add_wms_urls(self.multilayers.cbWMS_URL, default_WMS)
         # set last connected url to editable
@@ -546,6 +546,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if self.multilayers.cbWMS_URL.count() > 0:
             self.multilayers.cbWMS_URL.setCurrentIndex(0)
             self.wms_url_changed(self.multilayers.cbWMS_URL.currentText())
+
+    def wms_url_changed(self, text):
+        wms = self.service_manager.get_service(text)
+        if wms is not None:
+            self.activate_wms(wms, cache=True)
 
     def row_is_selected(self, url, layer, styles, level, view_name):
         if url not in self.multilayers.layers:
@@ -779,7 +784,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     save_settings_qsettings('wms', {'recent_wms_url': base_url})
 
                 self.activate_wms(wms, level=level)
-                WMS_SERVICE_CACHE[wms.url] = wms
+                self.service_manager.cache_service(base_url, wms)
                 self.cpdlg.close()
 
         def on_failure(e):
@@ -853,11 +858,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         Worker.create(lambda: MSUIWebMapService(base_url, version=version,
                                                 username=auth_username, password=auth_password),
                       on_success, on_failure)
-
-    def wms_url_changed(self, text):
-        wms = WMS_SERVICE_CACHE.get(text)
-        if wms is not None:
-            self.activate_wms(wms, cache=True)
 
     @QtCore.pyqtSlot(Exception)
     def display_exception(self, ex):
