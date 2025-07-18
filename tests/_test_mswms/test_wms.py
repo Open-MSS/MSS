@@ -377,8 +377,8 @@ class Test_WMS:
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_ok_xml(result.status, result.headers)
 
+    @pytest.mark.skip(reason="disabled because of reload")
     def test_import_error(self):
-        pytest.skip("disabled because of reload")
         with mock.patch.dict("sys.modules", {"mswms_settings": None, "mswms_auth": None}):
             reload(mslib.mswms.wms)
             assert mslib.mswms.wms.mswms_settings.__file__ is None
