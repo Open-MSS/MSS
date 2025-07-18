@@ -30,7 +30,6 @@ import csv
 import humanfriendly
 import os
 import requests
-import re as regex
 from pathlib import Path
 from PyQt5 import QtWidgets
 import logging

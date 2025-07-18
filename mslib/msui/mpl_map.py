@@ -35,7 +35,6 @@
 import logging
 import copy
 import numpy as np
-from pygeoif.geometry import Polygon
 import matplotlib
 from matplotlib.cm import get_cmap
 import matplotlib.path as mpath
