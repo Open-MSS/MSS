@@ -547,11 +547,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.multilayers.cbWMS_URL.setCurrentIndex(0)
             self.wms_url_changed(self.multilayers.cbWMS_URL.currentText())
 
-    def wms_url_changed(self, text):
-        wms = self.service_manager.get_service(text)
-        if wms is not None:
-            self.activate_wms(wms, cache=True)
-
     def row_is_selected(self, url, layer, styles, level, view_name):
         if url not in self.multilayers.layers:
             self.layer_name = layer
@@ -858,6 +853,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         Worker.create(lambda: MSUIWebMapService(base_url, version=version,
                                                 username=auth_username, password=auth_password),
                       on_success, on_failure)
+
+    def wms_url_changed(self, text):
+        wms = self.service_manager.get_service(text)
+        if wms is not None:
+            self.activate_wms(wms, cache=True)
 
     @QtCore.pyqtSlot(Exception)
     def display_exception(self, ex):
