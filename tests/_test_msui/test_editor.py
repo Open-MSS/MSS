@@ -56,9 +56,9 @@ class Test_Editor:
         self.window.file_open()
         assert "location" in self.window.file_content
 
+    @pytest.mark.skip("needs to be run isolated! With the restart of MSS the config for all other tests is changed")
     @mock.patch("mslib.msui.editor.get_open_filename", return_value=sample_file)
     def test_file_save_and_quit(self, mockfile):
-        pytest.skip('needs to be run isolated! With the restart of MSS the config for all other tests is changed')
         self.window.file_open()
         self.window.path = self.save_file_name
         self.window.editor.setPlainText(self.window.editor.toPlainText() + " ")

@@ -127,8 +127,8 @@ class Test_Socket_Manager:
         assert updated_message_args["op_id"] == self.operation.id
         assert updated_message_args["count"] == 2
 
+    @pytest.mark.skip(reason="unknown how to verify")
     def test_handle_start_event(self):
-        pytest.skip("unknown how to verify")
         sio = self._connect()
         json_config = {"token": self.token}
         assert User.verify_auth_token(self.token) is not False
