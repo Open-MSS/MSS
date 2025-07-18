@@ -40,6 +40,9 @@ class WMSServiceManager:
             self._cache = cache or self._shared_cache
             self._initialized = True
 
+    def clear_cache(self):
+        self._cache.clear()
+
     def get_service(self, url):
         return self._cache.get(url)
 
