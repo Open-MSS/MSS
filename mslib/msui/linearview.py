@@ -266,13 +266,16 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
     def set_settings(self, view):
         """Restore Linear View settings from view_settings.json."""
         try:
+            if isinstance(view, list):
+                view = next((v for v in view if v.get("view_type") == "linearview"), {})
+
             if not hasattr(self, 'docks') or not self.docks:
                 self.docks = [None, None]
 
             # Restore plot settings
             plot_settings = {
-                "plot_title_size": str(view.get("plot_title_size", "12pt")),
-                "axes_label_size": str(view.get("axes_label_size", "10pt")),
+                "plot_title_size": str(view.get("plot_title_size", "10")),
+                "axes_label_size": str(view.get("axes_label_size", "10")),
                 "x_axis": view.get("x_axis", "distance"),
                 "y_axis": view.get("y_axis", "pressure"),
                 "y_extent": view.get("y_extent", [1000.0, 100.0]),

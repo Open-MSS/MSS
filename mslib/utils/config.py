@@ -56,8 +56,10 @@ class MSUIDefaultConfig:
     Do not change any value for good reasons.
     Your values can be set in your personal msui_settings.json file
     """
+
     # New setting for view restorations
-    restore_views = False
+    restore_views = True
+
     # this skips the verification of the user token on each mscolab request
     mscolab_skip_verify_user_token = True
 

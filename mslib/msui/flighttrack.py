@@ -683,6 +683,17 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 return col
         raise ValueError(f"Column '{column_name}' not found")
 
+    def get_waypoints_data(self):
+        """
+        Return waypoints as a JSON-serializable list of dictionaries.
+        """
+        return [{
+            "location": wp.location,
+            "lat": float(wp.lat),
+            "lon": float(wp.lon),
+            "flightlevel": float(wp.flightlevel),
+            "comments": wp.comments
+        } for wp in self.waypoints]
 #
 # CLASS  WaypointDelegate
 #

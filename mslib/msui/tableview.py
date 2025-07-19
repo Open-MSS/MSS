@@ -46,6 +46,7 @@ from mslib.msui.viewwindows import MSUIViewWindow
 from mslib.msui.icons import icons
 from PyQt5 import QtCore
 from mslib.utils import view_restoration
+from mslib.utils.config import config_loader
 
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
@@ -302,69 +303,105 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         self.btDeleteWayPoint.setEnabled(True)
         self.resizeColumns()
 
+    
     def get_settings(self):
-        """Return a dictionary of all table view settings."""
+        """Return a dictionary of all Table View settings."""
+        try:
+            performance_settings = {}
+            dock_states = [False, False]
+            column_widths = {}
+            hexagon_settings = {
+                "center_lon": getattr(self, 'hexagon_center_lon', 0.0),
+                "center_lat": getattr(self, 'hexagon_center_lat', 0.0),
+                "radius": getattr(self, 'hexagon_radius', 200.0),
+                "angle": getattr(self, 'hexagon_angle', 0.0),
+                "direction": getattr(self, 'hexagon_direction', "clockwise")
+            }
 
-        performance_settings = {}
-        dock_states = [False, False]
-        column_widths = {}
+            # Performance settings
+            if hasattr(self, 'waypoints_model') and self.waypoints_model:
+                raw_perf = getattr(self.waypoints_model, 'performance_settings', {})
+                if isinstance(raw_perf, dict):
+                    try:
+                        performance_settings = view_restoration.serialize_settings(raw_perf)
+                        for key, value in raw_perf.items():
+                            if isinstance(value, QtCore.QDateTime):
+                                performance_settings[key] = value.toString(QtCore.Qt.ISODate)
+                    except Exception as ex:
+                        logging.error("Failed to serialize performance_settings: %s", ex)
+                else:
+                    logging.warning("performance_settings is not a dict: %s", type(raw_perf))
 
-        performance_settings = {}
-        if hasattr(self, 'waypoints_model') and self.waypoints_model:
-            raw_performance = self.waypoints_model.performance_settings or {}
-            performance_settings = view_restoration.serialize_settings(raw_performance)
-            for key, value in raw_performance.items():
-                if isinstance(value, QtCore.QDateTime):
-                    performance_settings[key] = value.toString(QtCore.Qt.ISODate)
+            # Dock states
+            if hasattr(self, 'docks') and isinstance(self.docks, list):
+                dock_states = [dock.isVisible() if dock else False for dock in self.docks]
 
-        # Get dock widget states
-        if hasattr(self, 'docks'):
-            dock_states = [dock is not None and dock.isVisible() for dock in self.docks]
+            # Column widths
+            sort_column = None
+            sort_order = None
+            if hasattr(self, 'tableWayPoints') and self.tableWayPoints:
+                model = self.tableWayPoints.model()
+                if model:
+                    for col in range(model.columnCount()):
+                        header_data = model.headerData(col, QtCore.Qt.Horizontal, QtCore.Qt.DisplayRole)
+                        header = str(header_data) if header_data else f"Column_{col}"
+                        column_widths[header] = self.tableWayPoints.columnWidth(col)
 
-        # Get column widths based on actual header names
-        if hasattr(self, 'tableWayPoints') and self.tableWayPoints:
-            model = self.tableWayPoints.model()
-            if model:
-                for col in range(model.columnCount()):
-                    header_data = model.headerData(col, QtCore.Qt.Horizontal, QtCore.Qt.DisplayRole)
-                    if isinstance(header_data, QtCore.QVariant):
-                        header_str = str(header_data.value())
-                    else:
-                        header_str = str(header_data) if header_data is not None else f"Column_{col}"
+                    # Sorting info (safe access)
+                    try:
+                        sort_col = self.tableWayPoints.horizontalHeader().sortIndicatorSection()
+                        sort_order = self.tableWayPoints.horizontalHeader().sortIndicatorOrder()
+                        if sort_col >= 0:
+                            sort_column = model.headerData(sort_col, QtCore.Qt.Horizontal, QtCore.Qt.DisplayRole)
+                    except Exception as ex:
+                        logging.warning("Could not get sort column info: %s", ex)
 
-                    column_widths[header_str] = self.tableWayPoints.columnWidth(col)
+            # Hexagon settings from widget
+            try:
+                if self.docks and len(self.docks) > 0 and self.docks[0] and self.docks[0].widget():
+                    hex_control = self.docks[0].widget()
+                    if isinstance(hex_control, hex_dock.HexagonControlWidget):
+                        hexagon_settings = hex_control._get_parameters()
+            except Exception as ex:
+                logging.warning("Failed to collect hexagon settings: %s", ex)
 
-        hexagon_settings = {
-            "center_lon": getattr(self, 'hexagon_center_lon'),
-            "center_lat": getattr(self, 'hexagon_center_lat'),
-            "radius": getattr(self, 'hexagon_radius'),
-            "angle": getattr(self, 'hexagon_angle'),
-            "direction": getattr(self, 'hexagon_direction')
-        }
-        if self.docks[0] and self.docks[0].widget():
-            hex_control = self.docks[0].widget()
-            if isinstance(hex_control, hex_dock.HexagonControlWidget):
-                try:
-                    hexagon_settings = hex_control._get_parameters()
-                    self.hexagon_center_lon = hexagon_settings["center_lon"]
-                    self.hexagon_center_lat = hexagon_settings["center_lat"]
-                    self.hexagon_radius = hexagon_settings["radius"]
-                    self.hexagon_angle = hexagon_settings["angle"]
-                    self.hexagon_direction = hexagon_settings["direction"]
-                except Exception as e:
-                    logging.warning("Failed to collect hexagon settings from UI: %s", str(e))
+            # Final settings dictionary
+            settings = {
+                "view_type": "tableview",
+                "performance_settings": performance_settings,
+                "docks_open": dock_states,
+                "column_widths": column_widths,
+                "hexagon": hexagon_settings,
+            }
+            if sort_column:
+                settings["sort_column"] = str(sort_column)
+                settings["sort_order"] = "ascending" if sort_order == QtCore.Qt.AscendingOrder else "descending"
 
-        return {
-            "view_type": "tableview",
-            "performance_settings": performance_settings,
-            "docks_open": dock_states,
-            "column_widths": column_widths,
-            "hexagon": hexagon_settings
-        }
+            logging.debug("Collected Table View settings: %s", settings)
+            return settings
+
+        except Exception as ex:
+            logging.error("Failed to get TableView settings: %s", ex)
+            return {
+                "view_type": "tableview",
+                "performance_settings": {},
+                "docks_open": [False, False],
+                "column_widths": config_loader(dataset="default_table_column_widths", default={}),
+                "hexagon": {
+                    "center_lon": 0.0,
+                    "center_lat": 0.0,
+                    "radius": 200.0,
+                    "angle": 0.0,
+                    "direction": "clockwise"
+                }
+            }
 
     def set_settings(self, view):
         """Restore Table View settings from view_settings.json."""
         try:
+            if isinstance(view, list):
+                view = next((v for v in view if v.get("view_type") == "tableview"), {})
+
             self.docks = getattr(self, 'docks', [None, None])
 
             # Restore waypoints_model data

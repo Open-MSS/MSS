@@ -510,6 +510,9 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
 
     def set_settings(self, view):
         try:
+            if isinstance(view, list):
+                view = next((v for v in view if v.get("view_type") == "sideview"), {})
+
             if not hasattr(self, 'docks') or not self.docks:
                 self.docks = [None, None]
 

@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
@@ -39,6 +40,7 @@ import sys
 from pathlib import Path
 import fs
 import traceback
+
 from slugify import slugify
 from mslib import __version__
 from mslib.msui.qt5 import ui_mainwindow as ui
@@ -53,7 +55,7 @@ from mslib.utils.qt import get_open_filenames, get_save_filename, show_popup
 from mslib.utils.config import read_config_file, config_loader
 from PyQt5 import QtGui, QtCore, QtWidgets
 from mslib.utils import release_info
-from mslib.utils import view_restoration
+from mslib.utils import release_info, view_restoration
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
@@ -865,10 +867,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 self.activate_flight_track(listitem)
 
     def activate_flight_track(self, item):
-        """Set the currently selected flight track to be the active one, i.e.
-           the one that is displayed in the views (only one flight track can be
-           displayed at a time).
-        """
+        
         self.mscolab.switch_to_local()
         # self.setWindowModality(QtCore.Qt.NonModal)
         self.active_flight_track = item.flighttrack_model
@@ -881,6 +880,15 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.userCountLabel.hide()
         self.menu_handler()
         self.signal_activate_flighttrack.emit(self.active_flight_track)
+
+        restore_views = config_loader(dataset="restore_views", default=False)
+        if restore_views:
+            logging.debug("Initializing view restoration for active flight track: %s", self.active_flight_track.name)
+            self.restore_views_for_active_flighttrack()
+        else:
+            logging.debug("View restoration skipped: restore_views=%s, active_flight_track=%s",
+                         restore_views, self.active_flight_track.name if self.active_flight_track else "None")
+
 
     def update_active_flight_track(self, old_flight_track_name=None):
         logging.debug("update_active_flight_track")
@@ -991,7 +999,46 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 # can happen, when the servers secret was changed
                 show_popup(self.mscolab.ui, "Error", "Session expired, new login required")
 
-    def create_view(self, _type, model):
+    def restore_views_for_active_flighttrack(self):
+        if not self.active_flight_track:
+            return
+
+        restored_data = view_restoration.restore_view_settings(self.active_flight_track.name)
+        if not isinstance(restored_data, dict):
+            logging.error("Invalid restore data for flight track %s", self.active_flight_track.name)
+            return
+
+        # Extract views to restore
+        views_to_restore = restored_data.get("views", [])
+        global_data = restored_data.get("global")
+        existing_views = {}
+        for i in range(self.listViews.count()):
+            view_item = self.listViews.item(i)
+            view_window = view_item.window
+            if hasattr(view_window, 'view_type'):
+                existing_views[view_window.view_type] = view_window
+
+        for view_setting in views_to_restore:
+            view_type = view_setting.get("view_type")
+            view_id = view_setting.get("view_id", f"view_{view_type}")
+            if not view_type:
+                logging.warning("Skipping view with missing view_type: %s", view_setting)
+                continue
+
+                # Check if a view of this type already exists
+            existing_view = existing_views.get(view_type)
+            if existing_view:
+                    # Update existing view's flight track and settings
+                logging.debug("Reusing existing %s view for flight track %s", view_type, self.active_flight_track.name)
+                existing_view.setFlightTrackModel(self.active_flight_track)
+                existing_view.set_settings([view_setting], global_data)
+                existing_view.setWindowTitle(f"({existing_view.identifier.split(') ')[0]}) {view_type.capitalize()} - {self.active_flight_track.name}")
+            else:
+                    # Create a new view if none exists
+                logging.debug("Creating new %s view for flight track %s", view_type, self.active_flight_track.name)
+                self.create_view(view_type, self.active_flight_track, restore_settings=[view_setting], global_data=global_data)
+                                 
+    def create_view(self, _type, model, restore_settings=None, global_data=None):
         """Method called when the user selects a new view to be opened. Creates
            a new instance of the view and adds a QActiveViewsListWidgetItem to
            the list of open views (self.listViews).
@@ -1012,19 +1059,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
         layout = config_loader(dataset="layout")
         view_window = None
-
-        # Check if restore_views is enabled
-        restore_views = config_loader(dataset="restore_views", default=False)
-        view_settings = {}
-        global_settings = {}
-        if restore_views:
-            restored_data = view_restoration.restore_view_settings()
-            logging.debug("Settings from restore_view_settings: %s", restored_data)
-            view_settings = restored_data.get("views", {}).get(_type, {})
-            global_settings = restored_data.get("global", {})
-
-        layout = config_loader(dataset="layout")
-        view_window = None
         if _type == "topview":
             # Top view.
             view_window = topview.MSUITopViewWindow(mainwindow=self, model=model,
@@ -1036,9 +1070,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
-            if view_settings:
-                view_window.set_settings(view_settings, global_settings)
-                logging.debug("applied top view setting")
+            if restore_settings:
+                view_window.set_settings(restore_settings, global_data)
+
         elif _type == "sideview":
             # Side view.
             view_window = sideview.MSUISideViewWindow(mainwindow=self, model=model, tutorial_mode=self.tutorial_mode,
@@ -1047,14 +1081,16 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             view_window.mpl.resize(layout['sideview'][0], layout['sideview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['sideview'][0], layout['sideview'][1])
-            if view_settings:
-                view_window.set_settings(view_settings)
+            if restore_settings:
+                view_window.set_settings(restore_settings)
+            else:
+                logging.error("cannot restore settings")
         elif _type == "tableview":
             # Table view.
             view_window = tableview.MSUITableViewWindow(model=model, tutorial_mode=self.tutorial_mode)
             view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
-            if view_settings:
-                view_window.set_settings(view_settings)
+            if restore_settings:
+                view_window.set_settings(restore_settings)
         elif _type == "linearview":
             # Linear view.
             view_window = linearview.MSUILinearViewWindow(mainwindow=self, model=model,
@@ -1064,8 +1100,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['linearview'][0], layout['linearview'][1])
-            if view_settings:
-                view_window.set_settings(view_settings)
+            if restore_settings:
+                view_window.set_settings(restore_settings)
 
         if view_window is not None:
             # Set view type to window
@@ -1092,7 +1128,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             # On X11, a window does not have a frame until the window manager decorates it.
             view_window.showMaximized()
             view_window.showNormal()
-
+   
     def get_active_views(self):
         active_view_windows = []
         for i in range(self.listViews.count()):
@@ -1196,10 +1232,11 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             return (f"Status : User Configuration '{constants.MSUI_SETTINGS}' loaded")
 
     def closeEvent(self, event):
-        """
-        Ask the user to confirm closing the application.
-        If confirmed, save settings for open top, side, linear, and table views.
-        Overloads QtGui.QMainWindow.closeEvent().
+        """Ask user if he/she wants to close the application. If yes, also
+           close all views that are open.
+
+        Overloads QtGui.QMainWindow.closeEvent(). This method is called if
+        Qt receives a window close request for our application window.
         """
         ret = QtWidgets.QMessageBox.warning(
             self, self.tr("Mission Support System"),
@@ -1209,71 +1246,60 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         if ret == QtWidgets.QMessageBox.Yes:
             if self.mscolab.help_dialog is not None:
                 self.mscolab.help_dialog.close()
+            # cleanup mscolab widgets
             if self.mscolab.token is not None:
                 self.mscolab.logout()
-
-            # Collect settings for top, side, linear, and table view windows
-            view_windows = []
-            for i in range(self.listViews.count()):
-                item = self.listViews.item(i)
-                if (
-                    isinstance(item.window, topview.MSUITopViewWindow) or
-                    isinstance(item.window, sideview.MSUISideViewWindow) or
-                    isinstance(item.window, linearview.MSUILinearViewWindow) or
-                    isinstance(item.window, tableview.MSUITableViewWindow)
-                ):
-                    view_windows.append(item.window)
-
-            # Collect settings for top, side, linear, and table view windows
-            view_windows = []
-            topview_instance = None
-            for i in range(self.listViews.count()):
-                item = self.listViews.item(i)
-                if item and hasattr(item, 'window') and item.window and (
-                    isinstance(item.window, topview.MSUITopViewWindow) or
-                    isinstance(item.window, sideview.MSUISideViewWindow) or
-                    isinstance(item.window, linearview.MSUILinearViewWindow) or
-                    isinstance(item.window, tableview.MSUITableViewWindow)
-                ):
-                    view_windows.append(item.window)
-                    if isinstance(item.window, topview.MSUITopViewWindow):
-                        topview_instance = item.window
-            logging.debug("Found %d view windows: %s", len(view_windows),
-                          [type(vw).__name__ for vw in view_windows])
-
-            # Save view settings
-            if view_windows:
-                all_settings = []
-                for view_window in view_windows:
-                    try:
-                        if hasattr(view_window, 'get_settings'):
-                            settings = view_window.get_settings()
-                            if settings and settings.get("view_type") in ["topview",
-                                                                          "sideview", "linearview", "tableview"]:
-                                all_settings.append(settings)
-                                logging.debug("Collected settings for %s: %s", type(view_window).__name__, settings)
-                    except Exception as e:
-                        logging.warning("Failed to get settings for view %s: %s\n%s",
-                                        type(view_window).__name__, str(e), traceback.format_exc())
-
-                if all_settings:
-                    try:
-                        global_data = view_restoration.set_global_data(topview_instance)
-                        if view_restoration.save_view_settings(all_settings, global_data):
-                            logging.info("Saved settings for all view windows on application close")
-                        else:
-                            logging.warning("Failed to save view settings")
-                            QtWidgets.QMessageBox.warning(self, "Warning",
-                                                          "Failed to save view settings. Continuing with closure.")
-                    except Exception as e:
-                        logging.warning("Error saving view settings: %s\n%s", str(e), traceback.format_exc())
-                else:
-                    logging.info("No valid view settings to save on close")
-            else:
-                logging.warning("No view windows found to save settings")
-
             # Table View stick around after MainWindow closes - maybe some dangling reference?
             # This removes them for sure!
+            # Save settings for the last active flight track
+            for i in range(self.listFlightTracks.count()):
+                flight_track_item = self.listFlightTracks.item(i)
+                flight_track = flight_track_item.flighttrack_model
+                if not flight_track:
+                    continue
+                json_key = flight_track.name
+                view_settings = []
+                topview_window = None
+                for j in range(self.listViews.count()):
+                    view = self.listViews.item(j).window
+                    original_flighttrack = getattr(view, 'active_flighttrack', None)
+                    view.active_flighttrack = flight_track
+                    if hasattr(view, 'setFlightTrackModel'):
+                        try:
+                            view.setFlightTrackModel(flight_track)
+                        except Exception as ex:
+                            logging.error("Failed to set flight track model for view %s: %s",
+                                        type(view).__name__, str(ex))
+                    if isinstance(view, topview.MSUITopViewWindow):
+                        topview_window = view
+                    try:
+                        settings = view.get_settings()
+                        if not isinstance(settings, dict):
+                            logging.warning("Invalid settings from view %s (type: %s, id: %s), skipping: %s",
+                                            getattr(view, 'name', 'unknown'), type(view).__name__,
+                                            getattr(view, 'view_id', 'unknown'), settings)
+                            continue
+                        settings["view_type"] = getattr(view, 'view_type', type(view).__name__).lower().replace(" ", "")
+                        settings["view_id"] = getattr(view, 'view_id', f"view_{j}")
+                        view_settings.append(settings)
+                    except Exception as ex:
+                        logging.error("Failed to collect settings for view %s (type: %s, id: %s): %s",
+                                    getattr(view, 'name', 'unknown'), type(view).__name__,
+                                    getattr(view, 'view_id', 'unknown'), str(ex))
+                        continue
+                    finally:
+                        view.active_flighttrack = original_flighttrack
+                        if original_flighttrack and hasattr(view, 'setFlightTrackModel'):
+                            try:
+                                view.setFlightTrackModel(original_flighttrack)
+                            except Exception as ex:
+                                logging.error("Failed to restore flight track model for view %s: %s",
+                                            type(view).__name__, str(ex))
+                global_settings = view_restoration.set_global_data(topview_window, flight_track)
+                if not view_settings and not global_settings.get("waypoints"):
+                    global_settings["waypoints"] = flight_track.get_waypoints_data()
+                view_restoration.save_view_settings(view_settings, global_settings, json_key)
+
             while self.listViews.count() > 0:
                 self.listViews.item(0).window.handle_force_close()
             self.listViews.clear()
@@ -1286,7 +1312,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                     self.statusBar.showMessage("Save your config changes and try closing again")
                     event.ignore()
                     return
-
             event.accept()
         else:
             event.ignore()

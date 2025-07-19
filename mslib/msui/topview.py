@@ -640,68 +640,74 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 logging.debug("Retrieved %d waypoints from flight track '%s'", len(waypoints), source_name)
         else:
             logging.warning("Top view has no active flighttrack")
-
         return waypoints, source_name
 
     def get_settings(self):
         """Return a dictionary of all top view settings."""
+        try:
+            # Get current map section and projection
+            current_map_key = self.cbChangeMapSection.currentText()
+            predefined_map_sections = config_loader(dataset="predefined_map_sections")
+            current_map = predefined_map_sections.get(current_map_key, {"CRS": "EPSG:4326", "map": {}})
+            projection = current_map.get("CRS", "EPSG:4326")
 
-        # Get current map section and projection
-        current_map_key = self.cbChangeMapSection.currentText()
-        predefined_map_sections = config_loader(dataset="predefined_map_sections")
-        current_map = predefined_map_sections.get(current_map_key, {"CRS": "EPSG:4326", "map": {}})
-        projection = current_map.get("CRS", "EPSG:4326")
+            # Validate projection
+            supported_projections = ['cyl', 'merc', 'mill', 'lcc', 'laea', 'EPSG:4326', 'EPSG:3857']
+            if projection not in supported_projections:
+                logging.warning(f"Unsupported projection '{projection}', falling back to 'EPSG:4326'")
+                projection = "EPSG:4326"
 
-        # Validate projection
-        supported_projections = ['cyl', 'merc', 'mill', 'lcc', 'laea', 'EPSG:4326', 'EPSG:3857']
-        if projection not in supported_projections:
-            logging.warning(f"Unsupported projection '{projection}', falling back to 'EPSG:4326'")
-            projection = "EPSG:4326"
+            # Get flight track appearance settings and waypoints
+            appearance_settings = self.mpl.canvas.get_settings()
+            if not isinstance(appearance_settings, dict):
+                logging.warning("Invalid appearance settings from mpl.canvas, expected dict, got %s: %s",
+                                type(appearance_settings).__name__, appearance_settings)
+                appearance_settings = {}
 
-        # Get flight track appearance settings and waypoints
-        appearance_settings = self.mpl.canvas.get_settings()
+            # Get WMS settings (if connected)
+            wms_settings = {}
+            if self.wms_connected:
+                wms_settings = {
+                    "url": self.currurl,
+                    "layer": self.currlayer,
+                    "level": self.currlevel,
+                    "styles": self.currstyles,
+                    "init_time": self.curritime,
+                    "valid_time": self.currvtime,
+                }
 
-        # Get WMS settings (if connected)
-        wms_settings = {}
-        if self.wms_connected:
-            wms_settings = {
-                "url": self.currurl,
-                "layer": self.currlayer,
-                "level": self.currlevel,
-                "styles": self.currstyles,
-                "init_time": self.curritime,
-                "valid_time": self.currvtime,
+            # Get dock widget states
+            dock_states = [dock is not None for dock in self.docks]
+
+            # Get current extent from Basemap (may differ from predefined)
+            lon_min = self.mpl.canvas.map.llcrnrlon
+            lon_max = self.mpl.canvas.map.urcrnrlon
+            lat_min = self.mpl.canvas.map.llcrnrlat
+            lat_max = self.mpl.canvas.map.urcrnrlat
+
+            # Validate: if lat_min == lat_max or lon_min == lon_max, use defaults
+            if lat_min == lat_max or lon_min == lon_max:
+                logging.warning("Invalid extent read from map, using defaults")
+                lon_min, lon_max = -120.0, 120.0
+                lat_min, lat_max = -60.0, 60.0
+
+            return {
+                "view_type": "topview",
+                "map_section": current_map_key,
+                "projection": projection,
+                "extent": {
+                    "lon_min": lon_min,
+                    "lon_max": lon_max,
+                    "lat_min": lat_min,
+                    "lat_max": lat_max
+                },
+                "flight_track": appearance_settings,
+                "wms": wms_settings,
+                "docks_open": dock_states,
             }
-
-        # Get dock widget states
-        dock_states = [dock is not None for dock in self.docks]
-
-        # Get current extent from Basemap (may differ from predefined)
-        lon_min = self.mpl.canvas.map.llcrnrlon
-        lon_max = self.mpl.canvas.map.urcrnrlon
-        lat_min = self.mpl.canvas.map.llcrnrlat
-        lat_max = self.mpl.canvas.map.urcrnrlat
-
-        # Validate: if lat_min == lat_max or lon_min == lon_max, use defaults
-        if lat_min == lat_max or lon_min == lon_max:
-            logging.warning("Invalid extent read from map, using defaults")
-            lon_min, lon_max = -120.0, 120.0
-            lat_min, lat_max = -60.0, 60.0
-
-        return {
-            "view_type": "topview",
-            "map_section": current_map_key,
-            "projection": projection,
-            "extent": {
-                "lon_min": lon_min,
-                "lon_max": lon_max,
-                "lat_min": lat_min,
-                "lat_max": lat_max
-            },
-            "flight_track": appearance_settings,
-            "wms": wms_settings,
-            "docks_open": dock_states,
-        }
+        except Exception as e:
+            logging.error("Failed to get settings for topview (id: %s): %s", getattr(self, 'view_id', 'unknown'), str(e))
+            return {}
 
     def restore_wms_settings(self, wms):
         """
@@ -759,6 +765,9 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         Calls restore_wms_settings if WMS is included.
         """
         try:
+            if isinstance(view, list):
+                view = next((v for v in view if v.get("view_type") == "topview"), {})
+        
             map_section = view.get("map_section", "Europe")
             projection = view.get("projection", "EPSG:4326")
             extent = view.get("extent", {})
