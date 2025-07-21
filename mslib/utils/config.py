@@ -58,7 +58,7 @@ class MSUIDefaultConfig:
     """
 
     # New setting for view restorations
-    restore_views = True
+    restore_views = False
 
     # this skips the verification of the user token on each mscolab request
     mscolab_skip_verify_user_token = True
@@ -318,6 +318,7 @@ class MSUIDefaultConfig:
 
     # Fixed key/value pair options
     key_value_options = [
+        'restore_views',
         'mscolab_skip_verify_user_token',
         'filepicker_default',
         'mss_dir',
@@ -333,7 +334,6 @@ class MSUIDefaultConfig:
         'wms_cache_max_size_bytes',
         'wms_cache_max_age_seconds',
         'WMS_request_timeout',
-        'restore_views',
     ]
 
     # Dictionary options with predefined structure

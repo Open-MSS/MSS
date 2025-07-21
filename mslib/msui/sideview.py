@@ -40,6 +40,7 @@ from mslib.utils.config import config_loader
 from mslib.utils.units import units, convert_to
 from mslib.msui import autoplot_dockwidget as apd
 from mslib.utils.colordialog import CustomColorDialog
+from mslib.msui import flighttrack as ft
 
 # Dock window indices.
 WMS = 0
@@ -423,6 +424,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         Set the QAbstractItemModel instance that the view displays.
         """
         super().setFlightTrackModel(model)
+        self.active_flighttrack = model
         if self.docks[WMS] is not None:
             self.docks[WMS].widget().setFlightTrackModel(model)
 
@@ -538,21 +540,25 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
                 "colour_ft_fill": view.get("colour_ft_fill", [0.5, 0.5, 0.5, 0.5]),
                 "colour_ceiling": view.get("colour_ceiling", [0, 0, 1, 0.5])
             }
+
+            waypoints_model = getattr(self, 'waypoints_model', None)
+            if waypoints_model is None and hasattr(self, 'mainwindow') and self.mainwindow.active_flight_track:
+                waypoints_model = self.mainwindow.active_flight_track
+                logging.warning("waypoints_model not initialized; using mainwindow.active_flight_track")
+            if waypoints_model:
+                try:
+                    self.setFlightTrackModel(waypoints_model)
+                except Exception as e:
+                    logging.error("Error updating plotter from shared waypoints: %s\n%s",
+                                str(e), traceback.format_exc())
+            else:
+                logging.error("No waypoints_model available; cannot update waypoints")
+
             if hasattr(self, 'mpl') and self.mpl.canvas:
                 try:
                     self.mpl.canvas.plotter.set_settings(plot_settings, save=True)
                 except Exception as e:
                     logging.warning("Failed to restore plot settings: %s", str(e))
-
-            # Update view with shared waypoints_model
-            if hasattr(self, 'waypoints_model') and self.waypoints_model:
-                try:
-                    self.setFlightTrackModel(self.waypoints_model)
-                except Exception as e:
-                    logging.error("Error updating plotter from shared waypoints: %s\n%s",
-                                  str(e), traceback.format_exc())
-            else:
-                logging.warning("waypoints_model not initialized; skipping waypoint redraw")
 
             wms_settings = view.get("wms", {})
             if wms_settings:

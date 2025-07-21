@@ -718,6 +718,9 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             return
 
         try:
+            self.wms_control.reset_wms()
+            self.wms_connected = False
+
             url, layer, level = wms.get("url"), wms.get("layer"), wms.get("level")
             styles, init_time, valid_time = wms.get("styles"), wms.get("init_time"), wms.get("valid_time")
 
@@ -726,7 +729,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
             self.wms_control.multilayers.cbWMS_URL.setCurrentText(url)
             self.wms_control.select_layer_and_style(self.wms_control.multilayers.listLayers, layer, styles)
-            self.wms_control.row_is_selected(url, layer, styles, level, "side")
+            self.wms_control.row_is_selected(url, layer, styles, level, "top")
 
             if init_time:
                 idx = self.wms_control.cbInitTime.findText(init_time)
@@ -744,7 +747,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
             if target_layer_item:
                 self.wms_control.multilayers.current_layer = target_layer_item
-                self.wms_control.call_get_vsec()
+                self.wms_control.get_map()
             else:
                 logging.warning("Layer '%s' not found; skipping get_map to avoid crash", layer)
 
@@ -767,10 +770,15 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         try:
             if isinstance(view, list):
                 view = next((v for v in view if v.get("view_type") == "topview"), {})
+
+            # Clear existing WMS state
+            if self.wms_control:
+                self.wms_control.reset_wms()
+                self.wms_connected = False
         
-            map_section = view.get("map_section", "Europe")
-            projection = view.get("projection", "EPSG:4326")
-            extent = view.get("extent", {})
+            map_section = view.get("map_section")
+            projection = view.get("projection")
+            extent = view.get("extent")
 
             predefined = config_loader(dataset="predefined_map_sections")
             if map_section in predefined:

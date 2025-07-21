@@ -35,6 +35,7 @@ from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
 from mslib.msui import autoplot_dockwidget as apd
+from mslib.msui import flighttrack as ft
 
 # Dock window indices.
 WMS = 0
@@ -223,6 +224,7 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
         Set the QAbstractItemModel instance that the view displays.
         """
         super().setFlightTrackModel(model)
+        self.active_flighttrack = model
         if self.docks[WMS] is not None:
             self.docks[WMS].widget().setFlightTrackModel(model)
 
@@ -413,7 +415,7 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
             target_layer_item = self.wms_control.find_layer_item_by_name(layer)
             if target_layer_item:
                 self.wms_control.multilayers.current_layer = target_layer_item
-                self.wms_control.call_get_vsec()
+                self.wms_control.call_get_lsec()
                 self.wms_connected = True
                 if hasattr(self, 'mpl') and self.mpl.canvas:
                     self.mpl.canvas.redraw_map()

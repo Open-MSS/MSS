@@ -47,6 +47,7 @@ from mslib.msui.icons import icons
 from PyQt5 import QtCore
 from mslib.utils import view_restoration
 from mslib.utils.config import config_loader
+from mslib.msui import flighttrack as ft
 
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
@@ -285,6 +286,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         Set the QAbstractItemModel instance that the table displays.
         """
         super().setFlightTrackModel(model)
+        self.active_flighttrack = model
         self.tableWayPoints.setModel(self.waypoints_model)
 
         # Automatically enable or disable roundtrip when data changes

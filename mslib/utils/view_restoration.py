@@ -50,6 +50,7 @@ def save_view_settings(settings, global_data, flight_track_name):
         config_path = Path(constants.MSUI_CONFIG_PATH)
         config_path.mkdir(parents=True, exist_ok=True)
         settings_file = config_path / "view_settings.json"
+        logging.info(settings_file)
         settings_data = {}
         if settings_file.exists():
                 try:

@@ -1754,6 +1754,23 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 if child.text(0).strip() == layer_name.strip():
                     return child
         return None
+    
+    def reset_wms(self):
+        """
+        Reset WMS control to a clean state.
+        """
+        try:
+            self.multilayers.cbWMS_URL.setCurrentIndex(-1)
+            self.multilayers.listLayers.clearSelection()
+            self.cbInitTime.setCurrentIndex(-1)
+            self.cbValidTime.setCurrentIndex(-1)
+            self.multilayers.current_layer = None
+            # Clear any cached WMS data
+            if hasattr(self, 'wms_client'):
+                self.wms_client = None
+            logging.debug("WMS control reset")
+        except Exception as e:
+            logging.error("Error resetting WMS control: %s", str(e))
 
 
 class VSecWMSControlWidget(WMSControlWidget):
