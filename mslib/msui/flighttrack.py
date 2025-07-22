@@ -308,12 +308,12 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         # Return the names of the table columns.
         if orientation == QtCore.Qt.Horizontal:
             if self.performance_settings["visible"]:
-                return TABLE_FULL[section][0]
+                return QtCore.QVariant(TABLE_FULL[section][0])
             else:
-                return TABLE_FULL[section][0]
+                return QtCore.QVariant(TABLE_SHORT[section][0])
         # Table rows (waypoints) are labelled with their number (= number of
         # waypoint).
-        return str(section)
+        return QtCore.QVariant(int(section))
 
     def rowCount(self, index=QtCore.QModelIndex()):
         """

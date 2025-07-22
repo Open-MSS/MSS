@@ -40,7 +40,6 @@ from mslib.utils.config import config_loader
 from mslib.utils.units import units, convert_to
 from mslib.msui import autoplot_dockwidget as apd
 from mslib.utils.colordialog import CustomColorDialog
-from mslib.msui import flighttrack as ft
 
 # Dock window indices.
 WMS = 0
@@ -550,7 +549,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
                     self.setFlightTrackModel(waypoints_model)
                 except Exception as e:
                     logging.error("Error updating plotter from shared waypoints: %s\n%s",
-                                str(e), traceback.format_exc())
+                                  str(e), traceback.format_exc())
             else:
                 logging.error("No waypoints_model available; cannot update waypoints")
 

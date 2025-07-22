@@ -1754,7 +1754,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 if child.text(0).strip() == layer_name.strip():
                     return child
         return None
-    
+
     def reset_wms(self):
         """
         Reset WMS control to a clean state.

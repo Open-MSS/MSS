@@ -35,7 +35,6 @@ from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
 from mslib.msui import autoplot_dockwidget as apd
-from mslib.msui import flighttrack as ft
 
 # Dock window indices.
 WMS = 0
@@ -276,8 +275,8 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
 
             # Restore plot settings
             plot_settings = {
-                "plot_title_size": str(view.get("plot_title_size", "10")),
-                "axes_label_size": str(view.get("axes_label_size", "10")),
+                "plot_title_size": str(view.get("plot_title_size", "10pt")),
+                "axes_label_size": str(view.get("axes_label_size", "10pt")),
                 "x_axis": view.get("x_axis", "distance"),
                 "y_axis": view.get("y_axis", "pressure"),
                 "y_extent": view.get("y_extent", [1000.0, 100.0]),

@@ -637,7 +637,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                     for wp in self.active_flighttrack.waypoints
                 ]
                 source_name = getattr(self.active_flighttrack, "name", "UserDefined")
-                logging.debug("Retrieved %d waypoints from flight track '%s'", len(waypoints), source_name)
         else:
             logging.warning("Top view has no active flighttrack")
         return waypoints, source_name
@@ -706,7 +705,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 "docks_open": dock_states,
             }
         except Exception as e:
-            logging.error("Failed to get settings for topview (id: %s): %s", getattr(self, 'view_id', 'unknown'), str(e))
+            logging.error("Failed to get settings for topview (id: %s): %s",
+                          getattr(self, 'view_id', 'unknown'), str(e))
             return {}
 
     def restore_wms_settings(self, wms):
@@ -754,7 +754,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             self.wms_connected = True
             self.mpl.canvas.redraw_map()
 
-            logging.debug("Successfully restored WMS settings for Side View")
         except Exception as e:
             logging.error("Error restoring WMS settings: %s\n%s", str(e), traceback.format_exc())
 
@@ -775,7 +774,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             if self.wms_control:
                 self.wms_control.reset_wms()
                 self.wms_connected = False
-        
+
             map_section = view.get("map_section")
             projection = view.get("projection")
             extent = view.get("extent")

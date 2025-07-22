@@ -47,7 +47,6 @@ from mslib.msui.icons import icons
 from PyQt5 import QtCore
 from mslib.utils import view_restoration
 from mslib.utils.config import config_loader
-from mslib.msui import flighttrack as ft
 
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
@@ -305,7 +304,6 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         self.btDeleteWayPoint.setEnabled(True)
         self.resizeColumns()
 
-    
     def get_settings(self):
         """Return a dictionary of all Table View settings."""
         try:

@@ -36,7 +36,10 @@ import logging
 import os
 import re
 import sys
+import fs
 from pathlib import Path
+import fs
+import traceback
 
 from slugify import slugify
 from mslib import __version__
@@ -315,9 +318,19 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                                 "Search for interactive text in the UI", "Search for interactive text in the UI",
                                 "Ctrl+F", None))
 
-            pix_dir = constants.MSUI_CONFIG_PATH / 'tutorial_images'
-            pix_dir.mkdir(exist_ok=True)
-
+            if "://" in constants.MSUI_CONFIG_PATH:
+                # Todo remove all os.path dependencies, when needed use getsyspath
+                pix_dir = fs.path.combine(constants.MSUI_CONFIG_PATH, 'tutorial_images')
+                try:
+                    _fs = fs.open_fs(pix_dir)
+                except fs.errors.CreateFailed:
+                    dir_path, name = fs.path.split(pix_dir)
+                    _fs = fs.open_fs(dir_path)
+                    _fs.makedir(name)
+            else:
+                pix_dir = os.path.join(constants.MSUI_CONFIG_PATH, 'tutorial_images')
+                if not os.path.exists(pix_dir):
+                    os.makedirs(pix_dir)
             for item in actions:
                 if len(item[2]) > 0:
                     # These are twice defined, but only one can be used for highlighting
@@ -340,8 +353,9 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                             pix_name = slugify(f"{prefix}-{attr}")
                             if pix_name.startswith("Search") is False:
                                 pix_file = f"{pix_name}.png"
-                                pix_file = pix_dir / pix_file
-                                pixmap.save(str(pix_file.resolve()), 'png')
+                                _fs = fs.open_fs(pix_dir)
+                                pix_file = os.path.join(_fs.getsyspath("."), pix_file)
+                                pixmap.save(pix_file, 'png')
                         except AttributeError:
                             pass
         return shortcuts
@@ -689,7 +703,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 activate = False
             for name in filenames:
                 self.create_new_flight_track(filename=name, function=function, activate=activate)
-            self.last_save_directory = str(Path(name).parent)
+            self.last_save_directory = fs.path.dirname(name)
         else:
             for name in filenames:
                 self.mscolab.handle_import_msc(name, extension, function, pickertype)
@@ -957,10 +971,11 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         )
         logging.debug("filename : '%s'", filename)
         if filename:
+            ext = "ftml"
             self.save_flight_track(filename)
-            self.last_save_directory = Path(filename).parent.resolve()
+            self.last_save_directory = fs.path.dirname(filename)
             self.active_flight_track.filename = filename
-            self.active_flight_track.name = Path(filename).stem
+            self.active_flight_track.name = fs.path.basename(filename.replace(f"{ext}", "").strip())
 
     def save_flight_track(self, file_name):
         ext = ".ftml"
