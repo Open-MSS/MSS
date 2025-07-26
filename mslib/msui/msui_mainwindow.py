@@ -880,16 +880,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             if hasattr(view_window, 'active_flighttrack') and view_window.active_flighttrack:
                 self.update_flight_track_settings(view_window.active_flighttrack, view_window)
 
-        while self.listViews.count() > 0:
-            view_item = self.listViews.item(0)
-            view_window = view_item.window
-            try:
-                view_window.handle_force_close()  # Close the view window
-            except Exception as ex:
-                logging.error("Error closing view window %s: %s", view_window.identifier, ex)
-            self.listViews.takeItem(0)  # Remove the item from the list
-        self.viewsChanged.emit()
-
         # self.setWindowModality(QtCore.Qt.NonModal)
         self.active_flight_track = item.flighttrack_model
         self.activated_flight_tracks.add(self.active_flight_track.name)
@@ -905,6 +895,12 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
         restore_views = config_loader(dataset="restore_views", default=False)
         if restore_views:
+            while self.listViews.count() > 0:
+                self.listViews.item(0).window.handle_force_close()
+            self.listViews.clear()
+            # Remove the item from the list
+            self.viewsChanged.emit()
+            QActiveViewsListWidgetItem.opened_views = 0
             self.restore_views_for_active_flighttrack()
 
     def update_active_flight_track(self, old_flight_track_name=None):
@@ -1028,10 +1024,17 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         if not isinstance(restored_data, dict):
             logging.error("Invalid restore data for flight track %s", self.active_flight_track.name)
             return
+        
+        global_data = restored_data.get("global")
+        saved_flighttrack_name = global_data.get("flight_track_name")
+        if saved_flighttrack_name and saved_flighttrack_name != self.active_flight_track.name:
+            logging.warning(
+                "Flight track name mismatch: JSON (%s) vs active (%s). Using active flight track's waypoints.",
+                saved_flighttrack_name, self.active_flight_track.name
+            )
 
         # Extract views to restore
         views_to_restore = restored_data.get("views", [])
-        global_data = restored_data.get("global", {})
         existing_views = {}
         for i in range(self.listViews.count()):
             view_item = self.listViews.item(i)
@@ -1092,7 +1095,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
             if restore_settings:
-                view_window.set_settings(restore_settings, global_data)
+                view_window.set_settings(restore_settings)
 
         elif _type == "sideview":
             # Side view.
@@ -1264,8 +1267,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             return
 
         if json_key not in self.flight_track_settings:
-            self.flight_track_settings[json_key] = {"views": [],
-                                                    "global": {"waypoints": flight_track.get_waypoints_data()}}
+            self.flight_track_settings[json_key] = {"views": [], "global": {}}
             self.activated_flight_tracks.add(json_key)
 
         if view:
@@ -1290,18 +1292,14 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                         break
                 else:
                     self.flight_track_settings[json_key]["views"].append(settings)
-
-                if isinstance(view, topview.MSUITopViewWindow):
-                    global_data = view_restoration.set_global_data(view, flight_track)
-                    self.flight_track_settings[json_key]["global"] = global_data
+                
+                global_data = view_restoration.set_global_data(flight_track)
+                self.flight_track_settings[json_key]["global"] = global_data
 
             except Exception as ex:
                 logging.error("Failed to update settings for view %s (type: %s, id: %s): %s",
                               getattr(view, 'name', 'unknown'), type(view).__name__,
                               getattr(view, 'view_id', 'unknown'), str(ex))
-
-        if update_global:
-            self.flight_track_settings[json_key]["global"]["waypoints"] = flight_track.get_waypoints_data()
 
     def closeEvent(self, event):
         """Ask user if he/she wants to close the application. If yes, also
@@ -1323,7 +1321,13 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 self.mscolab.logout()
             # Table View stick around after MainWindow closes - maybe some dangling reference?
             # This removes them for sure!
-            # Save settings for activated flight tracks only
+            self.update_flight_track_settings(self.active_flight_track)
+
+            # Save view settings for active flight track
+            for i in range(self.listViews.count()):
+                view = self.listViews.item(i).window
+                if hasattr(view, 'active_flighttrack') and view.active_flighttrack == self.active_flight_track:
+                    self.update_flight_track_settings(self.active_flight_track, view=view)
             for json_key in self.activated_flight_tracks:
                 settings = self.flight_track_settings.get(json_key)
                 if settings:

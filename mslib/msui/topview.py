@@ -613,34 +613,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     def update_roundtrip_enabled(self):
         self.btRoundtrip.setEnabled(self.is_roundtrip_possible())
 
-    def get_waypoints(self):
-        """
-        Return list of waypoint dicts and source for the global section.
-
-        Returns:
-            tuple: (waypoints, source_name) where waypoints is a list of waypoint dictionaries
-                and source_name is the name of the active flight track or 'Default'.
-        """
-        waypoints = []
-        source_name = "Default"
-
-        if hasattr(self, 'active_flighttrack') and self.active_flighttrack:
-            if hasattr(self.active_flighttrack, 'waypoints'):
-                waypoints = [
-                    {
-                        "lat": float(wp.lat),
-                        "lon": float(wp.lon),
-                        "flightlevel": float(wp.flightlevel),
-                        "location": str(getattr(wp, "location", "")),
-                        "comments": str(getattr(wp, "comments", ""))
-                    }
-                    for wp in self.active_flighttrack.waypoints
-                ]
-                source_name = getattr(self.active_flighttrack, "name", "UserDefined")
-        else:
-            logging.warning("Top view has no active flighttrack")
-        return waypoints, source_name
-
     def get_settings(self):
         """Return a dictionary of all top view settings."""
         try:
@@ -757,7 +729,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         except Exception as e:
             logging.error("Error restoring WMS settings: %s\n%s", str(e), traceback.format_exc())
 
-    def set_settings(self, view, global_data):
+    def set_settings(self, view):
         """
         Restore non-WMS Top View settings:
         - map section, projection, extent
@@ -800,26 +772,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             flight_track = view.get("flight_track", {})
             if flight_track:
                 self.mpl.canvas.set_settings(flight_track)
-
-            waypoints = global_data.get("waypoints", [])
-
-            # Clear existing waypoints
-            row_count = self.active_flighttrack.rowCount()
-            if row_count > 0:
-                self.active_flighttrack.removeRows(0, row_count)
-
-            # Create new Waypoint objects and insert
-            waypoints_list = [
-                Waypoint(
-                    lat=wp.get("lat"),
-                    lon=wp.get("lon"),
-                    flightlevel=wp.get("flightlevel"),
-                    location=wp.get("location", ""),
-                    comments=wp.get("comments", "")
-                )
-                for wp in waypoints
-            ]
-            self.active_flighttrack.insertRows(0, rows=len(waypoints_list), waypoints=waypoints_list)
 
             # Update plot
             self.mpl.canvas.waypoints_interactor.plotter.update_from_waypoints(
