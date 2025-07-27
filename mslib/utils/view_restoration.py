@@ -70,39 +70,18 @@ def save_view_settings(settings, global_data, flight_track_name):
         return False
 
 
-def set_global_data(topview, flight_track=None):
+def set_global_data(flight_track=None):
     """
     Create the global section for view settings using waypoints from flight_track or topview.
     """
     if flight_track:
-        waypoints = flight_track.get_waypoints_data()
-        source_name = flight_track.name
+        flight_track_name = flight_track.name
     else:
-        waypoints, source_name = topview.get_waypoints() if topview else ([], "Default")
-        logging.warning("Using topview waypoints or default; flight_track not provided")
-
-    adjusted_waypoints = []
-    for wp in waypoints:
-        lat = wp.get("lat", 0)
-        lon = wp.get("lon", 0)
-        flightlevel = wp.get("flightlevel", 0)
-        if (isinstance(lat, (int, float)) and isinstance(lon, (int, float)) and
-                -90 <= lat <= 90 and -180 <= lon <= 180 and
-                isinstance(flightlevel, (int, float))):
-            adjusted_waypoints.append({
-                "lat": float(lat),
-                "lon": float(lon),
-                "flightlevel": float(flightlevel),
-                "location": wp.get("location", ""),
-                "comments": wp.get("comments", "")
-            })
-        else:
-            logging.warning("Invalid waypoint skipped in set_global_data: %s", wp)
+        logging.warning("No flight track provided; using default flight track name")
 
     return {
         "mss_version": str(mss_version),
-        "waypoints_source": str(source_name),
-        "waypoints": adjusted_waypoints
+        "flight_track_name": str(flight_track_name)
     }
 
 
@@ -146,7 +125,7 @@ def restore_view_settings(flight_track_name):
     Restore view settings from the JSON file and adjust waypoints' flightlevel.
     """
     default_settings = {
-        "global": {"mss_version": str(mss_version), "waypoints_source": "Default", "waypoints": []},
+        "global": {"mss_version": str(mss_version), "flight_track_name": "Unknown"},
         "views": []
     }
 
@@ -169,28 +148,8 @@ def restore_view_settings(flight_track_name):
             logging.warning("Invalid settings data for %s; returning default", flight_track_name)
             return default_settings
 
-        global_settings = setting_data["global"]
-        waypoints = global_settings.get("waypoints", [])
-        adjusted_waypoints = []
-        for wp in waypoints:
-            lat = wp.get("lat")
-            lon = wp.get("lon")
-            flightlevel = wp.get("flightlevel", 0)
-            if (isinstance(lat, (int, float)) and isinstance(lon, (int, float)) and
-                    -90 <= lat <= 90 and -180 <= lon <= 180 and
-                    isinstance(flightlevel, (int, float))):
-                adjusted_waypoints.append({
-                    "lat": float(lat),
-                    "lon": float(lon),
-                    "flightlevel": float(flightlevel),
-                    "location": wp.get("location", ""),
-                    "comments": wp.get("comments", "")
-                })
-            else:
-                logging.warning("Invalid waypoint skipped in restore_view_settings: %s", wp)
-        setting_data["global"]["waypoints"] = adjusted_waypoints
-
-        views_data = setting_data.get("views")
+        global_settings = setting_data.get("global", default_settings["global"])
+        views_data = setting_data.get("views", [])
 
         if isinstance(views_data, dict):
             setting_data["views"] = [views_data]
