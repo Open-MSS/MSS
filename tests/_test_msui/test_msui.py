@@ -349,7 +349,7 @@ class Test_MSUIMainWindow:
             "new_flighttrack_template": ["point1", "point2"],
             "new_flighttrack_flightlevel": 0,
             "filepicker_default": "qt",
-            "restore_views": False,  # Default for storing test
+            "restore_views": True,  # Default for storing test
             "layout": {
                 "topview": [800, 600],
                 "sideview": [800, 600],
@@ -453,6 +453,7 @@ class Test_MSUIMainWindow:
         mock_topview.active_flighttrack = mock_flight_track
         mock_topview.waypoints_model = mock_flight_track
         mock_topview.get_settings = Mock(return_value={
+            "view_type": "topview",
             "map_section": "00 global (cyl)",
             "projection": "EPSG:4326",
             "wms": {
@@ -482,6 +483,7 @@ class Test_MSUIMainWindow:
         assert window.listViews.item(0).window == mock_topview
 
         mock_topview.get_settings = Mock(return_value={
+            "view_type": "topview",
             "map_section": "00 global (cyl)",
             "projection": "EPSG:4326",
             "wms": {
