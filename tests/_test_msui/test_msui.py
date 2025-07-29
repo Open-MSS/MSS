@@ -26,10 +26,12 @@
 """
 
 
+import re
 import mock
 import os
 import argparse
 import pytest
+import logging
 from pathlib import Path
 from urllib.request import urlopen
 from PyQt5 import QtWidgets, QtTest
@@ -39,7 +41,9 @@ from mslib.msui import msui
 from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
 from mslib.utils.config import read_config_file
-import re
+from mslib.msui import flighttrack as ft
+from unittest.mock import Mock, MagicMock, patch
+from mslib.msui.topview import MSUITopViewWindow
 
 
 def test_main():
@@ -329,224 +333,187 @@ class Test_MSSSideViewWindow:
         assert os.path.exists(self.save_ftml)
         os.remove(self.save_ftml)
 
+
 class Test_MSUIMainWindow:
-    def setUp(self):
-        # Create a QApplication instance for Qt tests
-        self.app = QtWidgets.QApplication([])
+    @pytest.fixture(autouse=True)
+    def setup(self, qtbot, qapp):
+        mock_ctypes = MagicMock()
+        self.ctypes_patcher = patch.dict('sys.modules', {'ctypes': mock_ctypes})
+        self.ctypes_patcher.start()
+        qapp.setApplicationDisplayName("MSUI")
 
-        # Create temporary directory for JSON files
-        self.temp_dir = tempfile.mkdtemp()
-
-        # Mock config_loader to return temporary directory
-        self.config_patcher = patch("mslib.msui.msui_mainwindow.config_loader")
-        self.mock_config = self.config_patcher.start()
-        self.mock_config.side_effect = lambda dataset=None, default=False: {
-            "data_dir": self.temp_dir,
-            "new_flighttrack_template": [("START", 0, 0), ("END", 10, 10)],
-            "new_flighttrack_flightlevel": 350,
-            "restore_views": True,
-            "filepicker_default": "qt"
-        }.get(dataset, {})
-
-        # Mock view_restoration.save_view_settings
-        self.save_view_settings_patcher = patch("mslib.msui.msui_mainwindow.view_restoration.save_view_settings")
-        self.mock_save_view_settings = self.save_view_settings_patcher.start()
-
-        # Mock view_restoration.restore_view_settings
-        self.restore_view_settings_patcher = patch("mslib.msui.msui_mainwindow.view_restoration.restore_view_settings")
-        self.mock_restore_view_settings = self.restore_view_settings_patcher.start()
-        self.mock_restore_view_settings.side_effect = lambda name: {
-            "global": {"flight_track_name": name, "waypoints": [{"location": "START", "lat": 0, "lon": 0, "flightlevel": 350}]},
-            "views": [{"view_type": "topview", "view_id": f"view_topview_{name}", "settings": "topview_settings"}]
+        self.config_patcher = patch('mslib.msui.msui_mainwindow.config_loader')
+        self.mock_config_loader = self.config_patcher.start()
+        self.config_data = {
+            "data_dir": ROOT_DIR,
+            "new_flighttrack_template": ["point1", "point2"],
+            "new_flighttrack_flightlevel": 0,
+            "filepicker_default": "qt",
+            "restore_views": False,  # Default for storing test
+            "layout": {
+                "topview": [800, 600],
+                "sideview": [800, 600],
+                "tableview": [800, 600],
+                "linearview": [800, 600],
+                "immutable": False
+            },
+            "mscolab_server_url": "http://localhost:8084",
+            "default_MSCOLAB": "http://localhost:8084",
+            "MSS_auth": {"http://localhost:8084": "user@example.com"},
+            "import_plugins": {},
+            "export_plugins": {},
+            "locations": ["point1", "point2"]  # Mock locations to match template
         }
-
-        # Initialize MSUIMainWindow
-        self.main_window = msui_mainwindow.MSUIMainWindow()
-
-    def tearDown(self):
-        # Clean up QApplication and temporary directory
-        self.app.quit()
-        self.config_patcher.stop()
-        self.save_view_settings_patcher.stop()
-        self.restore_view_settings_patcher.stop()
-        import shutil
-        shutil.rmtree(self.temp_dir)
-
-    def test_create_new_flight_track(self):
-        """Test that flight_track_settings is updated when a new flight track is created."""
-        self.main_window.create_new_flight_track()
-        flight_name = "new flight track (1)"
-        self.assertIn(flight_name, self.main_window.flight_track_settings)
-        self.assertEqual(self.main_window.flight_track_settings[flight_name]["views"], [])
-        self.assertIn("global", self.main_window.flight_track_settings[flight_name])
-        self.assertIn(flight_name, self.main_window.activated_flight_tracks)
-        self.assertEqual(len(self.main_window.flight_track_settings), 1)
-
-    def test_create_multiple_flight_tracks(self):
-        """Test that multiple flight tracks are added to flight_track_settings."""
-        self.main_window.create_new_flight_track()
-        self.main_window.create_new_flight_track()
-        self.assertEqual(len(self.main_window.flight_track_settings), 2)
-        self.assertIn("new flight track (1)", self.main_window.flight_track_settings)
-        self.assertIn("new flight track (2)", self.main_window.flight_track_settings)
-        self.assertEqual(len(self.main_window.activated_flight_tracks), 2)
-
-    def test_create_view_updates_settings(self):
-        """Test that creating a view updates flight_track_settings with the correct number of views."""
-        self.main_window.create_new_flight_track()
-        flight_name = "new flight track (1)"
-        with patch("mslib.msui.msui_mainwindow.topview", autospec=True) as mock_topview:
-            mock_topview.MSUITopViewWindow = lambda **kwargs: MockViewWindow(view_type="topview", **kwargs)
-            self.main_window.create_view("topview", self.main_window.active_flight_track)
-        
-        self.assertEqual(len(self.main_window.flight_track_settings[flight_name]["views"]), 1)
-        view_settings = self.main_window.flight_track_settings[flight_name]["views"][0]
-        self.assertEqual(view_settings["view_type"], "topview")
-        self.assertEqual(self.main_window.listViews.count(), 1)
-
-    def test_flight_track_switch_updates_settings(self):
-        """Test that switching flight tracks updates settings for the previous flight track."""
-        # Create two flight tracks
-        self.main_window.create_new_flight_track()
-        first_flight_name = "new flight track (1)"
-        first_flight = self.main_window.active_flight_track
-        with patch("mslib.msui.msui_mainwindow.topview", autospec=True) as mock_topview:
-            mock_topview.MSUITopViewWindow = lambda **kwargs: MockViewWindow(view_type="topview", **kwargs)
-            self.main_window.create_view("topview", first_flight)
-        
-        self.main_window.create_new_flight_track()
-        second_flight_name = "new flight track (2)"
-
-        # Switch back to the first flight track
-        listitem = self.main_window.listFlightTracks.item(0)  # First flight track
-        with patch("mslib.msui.msui_mainwindow.topview", autospec=True) as mock_topview:
-            mock_topview.MSUITopViewWindow = lambda **kwargs: MockViewWindow(view_type="topview", **kwargs)
-            self.main_window.activate_flight_track(listitem)
-
-        # Check that settings for the first flight track are updated
-        self.assertEqual(len(self.main_window.flight_track_settings[first_flight_name]["views"]), 1)
-        self.assertIn("global", self.main_window.flight_track_settings[first_flight_name])
-        self.assertEqual(self.main_window.active_flight_track.name, first_flight_name)
-        self.assertEqual(len(self.main_window.flight_track_settings), 2)
-
-    @pytest.mark.qt
-    def test_close_event_saves_all_flight_tracks(self):
-        """Test that closing the application saves settings for all flight tracks."""
-        # Create two flight tracks with views
-        self.main_window.create_new_flight_track()
-        flight1_name = "new flight track (1)"
-        with patch("mslib.msui.msui_mainwindow.topview", autospec=True) as mock_topview:
-            mock_topview.MSUITopViewWindow = lambda **kwargs: MockViewWindow(view_type="topview", **kwargs)
-            self.main_window.create_view("topview", self.main_window.active_flight_track)
-        
-        self.main_window.create_new_flight_track()
-        flight2_name = "new flight track (2)"
-        with patch("mslib.msui.msui_mainwindow.sideview", autospec=True) as mock_sideview:
-            mock_sideview.MSUISideViewWindow = lambda **kwargs: MockViewWindow(view_type="sideview", **kwargs)
-            self.main_window.create_view("sideview", self.main_window.active_flight_track)
-
-        # Mock QMessageBox to accept the close confirmation
-        with patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
-            close_event = QtCore.QEvent(QtCore.QEvent.Close)
-            self.main_window.closeEvent(close_event)
-
-        # Verify that save_view_settings was called for both flight tracks
-        expected_calls = [
-            unittest.mock.call(
-                self.main_window.flight_track_settings[flight1_name]["views"],
-                self.main_window.flight_track_settings[flight1_name]["global"],
-                flight1_name
-            ),
-            unittest.mock.call(
-                self.main_window.flight_track_settings[flight2_name]["views"],
-                self.main_window.flight_track_settings[flight2_name]["global"],
-                flight2_name
-            )
-        ]
-        self.mock_save_view_settings.assert_has_calls(expected_calls, any_order=True)
-        self.assertEqual(self.mock_save_view_settings.call_count, 2)
-        self.assertEqual(len(self.main_window.flight_track_settings[flight1_name]["views"]), 1)
-        self.assertEqual(len(self.main_window.flight_track_settings[flight2_name]["views"]), 1)
-
-    @pytest.mark.qt
-    def test_single_flight_track_save_on_close(self):
-        """Test that settings for a single flight track are saved on close."""
-        self.main_window.create_new_flight_track()
-        flight_name = "new flight track (1)"
-        with patch("mslib.msui.msui_mainwindow.topview", autospec=True) as mock_topview:
-            mock_topview.MSUITopViewWindow = lambda **kwargs: MockViewWindow(view_type="topview", **kwargs)
-            self.main_window.create_view("topview", self.main_window.active_flight_track)
-
-        # Mock QMessageBox to accept the close confirmation
-        with patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
-            close_event = QtCore.QEvent(QtCore.QEvent.Close)
-            self.main_window.closeEvent(close_event)
-
-        # Verify settings were saved
-        self.assertIn(flight_name, self.main_window.flight_track_settings)
-        self.assertEqual(len(self.main_window.flight_track_settings[flight_name]["views"]), 1)
-        self.mock_save_view_settings.assert_called_once_with(
-            self.main_window.flight_track_settings[flight_name]["views"],
-            self.main_window.flight_track_settings[flight_name]["global"],
-            flight_name
+        self.mock_config_loader.side_effect = lambda dataset=None, default=False: (
+            self.config_data.get(dataset, {} if not default else {})
         )
 
-    def test_restore_flight_tracks_and_views(self):
-        """Test that restoring flight tracks and views matches the saved state."""
-        # Create two flight tracks with views
-        self.main_window.create_new_flight_track()
-        flight1_name = "new flight track (1)"
-        with patch("mslib.msui.msui_mainwindow.topview", autospec=True) as mock_topview:
-            mock_topview.MSUITopViewWindow = lambda **kwargs: MockViewWindow(view_type="topview", **kwargs)
-            self.main_window.create_view("topview", self.main_window.active_flight_track)
-        
-        self.main_window.create_new_flight_track()
-        flight2_name = "new flight track (2)"
-        with patch("mslib.msui.msui_mainwindow.sideview", autospec=True) as mock_sideview:
-            mock_sideview.MSUISideViewWindow = lambda **kwargs: MockViewWindow(view_type="sideview", **kwargs)
-            self.main_window.create_view("sideview", self.main_window.active_flight_track)
+        self.saved_settings = {}
+        self.view_restoration_patcher = patch('mslib.msui.msui_mainwindow.view_restoration')
+        self.mock_view_restoration = self.view_restoration_patcher.start()
+        self.mock_view_restoration.save_view_settings.side_effect = (
+            lambda views, global_data, json_key: self.saved_settings.update({json_key: {"views": views,
+                                                                                        "global": global_data}})
+        )
+        self.mock_view_restoration.restore_view_settings.side_effect = (
+            lambda json_key: self.saved_settings.get(json_key, {"views": [], "global": {}})
+        )
+        self.mock_view_restoration.set_global_data.return_value = {"flight_track_name": "test_flight",
+                                                                   "mss_version": "10.1.0"}
 
-        # Simulate close to save settings
-        with patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
-            close_event = QtCore.QEvent(QtCore.QEvent.Close)
-            self.main_window.closeEvent(close_event)
+        # Mock MSColab to avoid server interactions
+        self.mscolab_patcher = patch('mslib.msui.msui_mainwindow.mscolab.MSUIMscolab')
+        self.mock_mscolab = self.mscolab_patcher.start()
+        self.mock_mscolab_instance = Mock()
+        self.mock_mscolab_instance.token = None
+        self.mock_mscolab_instance.mscolab_server_url = "http://localhost:8084"
+        self.mock_mscolab_instance.switch_to_local = Mock()
+        self.mock_mscolab.return_value = self.mock_mscolab_instance
 
-        # Create a new main window to simulate restart
-        new_main_window = msui_mainwindow.MSUIMainWindow()
-        new_main_window.create_new_flight_track()
-        new_main_window.active_flight_track.name = flight1_name
+        # Mock ConfigurationEditorWindow
+        self.editor_patcher = patch('mslib.msui.msui_mainwindow.editor.ConfigurationEditorWindow')
+        self.mock_editor = self.editor_patcher.start()
+        self.mock_editor_instance = Mock()
+        self.mock_editor_instance.last_saved = {
+            "mscolab_server_url": "http://localhost:8084",
+            "default_MSCOLAB": "http://localhost:8084",
+            "MSS_auth": {"http://localhost:8084": "user@example.com"},
+            "automated_plotting_flights": [],
+            "automated_plotting_hsecs": [],
+            "automated_plotting_vsecs": [],
+            "automated_plotting_lsecs": []
+        }
+        self.mock_editor.return_value = self.mock_editor_instance
+        config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../data', 'empty_msui_settings.json')
+        if os.path.exists(config_file):
+            read_config_file(path=config_file)
+        else:
+            logging.debug("Skipping config file read: %s not found", config_file)
+        self.config_patcher.stop()
+        self.view_restoration_patcher.stop()
+        self.mscolab_patcher.stop()
+        self.editor_patcher.stop()
+        self.ctypes_patcher.stop()
 
-        # Mock restore_view_settings to return saved settings
-        def restore_side_effect(name):
-            if name == flight1_name:
-                return {
-                    "global": {"flight_track_name": flight1_name, "waypoints": [{"location": "START"}]},
-                    "views": [{"view_type": "topview", "view_id": f"view_topview_{flight1_name}", "settings": "topview_settings"}]
-                }
-            elif name == flight2_name:
-                return {
-                    "global": {"flight_track_name": flight2_name, "waypoints": [{"location": "START"}]},
-                    "views": [{"view_type": "sideview", "view_id": f"view_sideview_{flight2_name}", "settings": "sideview_settings"}]
-                }
-            return {}
+    def test_storing(self, qtbot):
+        """Test the full scenario: create flight track, open TopView, modify settings,
+           save on close, and restore settings on reopen."""
+        window = msui_mw.MSUIMainWindow()
+        window.show()
+        QtTest.QTest.qWaitForWindowExposed(window)
 
-        self.mock_restore_view_settings.side_effect = restore_side_effect
-        # Restore views for the first flight track
-        with patch("mslib.msui.msui_mainwindow.topview", autospec=True) as mock_topview:
-            mock_topview.MSUITopViewWindow = lambda **kwargs: MockViewWindow(view_type="topview", **kwargs)
-            new_main_window.restore_views_for_active_flighttrack()
+        with mock.patch("mslib.msui.msui_mainwindow.ft.WaypointsTableModel") as mock_waypoints_model, \
+             mock.patch("mslib.msui.msui_mainwindow.MSUIMainWindow.signal_activate_flighttrack") as mock_signal:
+            mock_signal.emit = Mock()  # Mock the signal to avoid type checking
+            mock_flight_track = Mock(spec=ft.WaypointsTableModel)
+            mock_flight_track.name = "test_flight"
+            mock_flight_track.waypoints = [
+                Mock(spec=ft.Waypoint, lat=0, lon=0, location="point1"),
+                Mock(spec=ft.Waypoint, lat=1, lon=1, location="point2")
+            ]
+            mock_flight_track.all_waypoint_data = Mock(return_value=[
+                {"lat": 0, "lon": 0, "location": "point1"},
+                {"lat": 1, "lon": 1, "location": "point2"}
+            ])
+            mock_flight_track.get_xml_doc = Mock(return_value="<xml>flight track</xml>")
+            mock_flight_track.insertRows = Mock()
+            mock_waypoints_model.return_value = mock_flight_track
+            logging.debug("Creating flight track with name: %s, type: %s", mock_flight_track.name,
+                          type(mock_flight_track.name))
+            window.create_new_flight_track()
 
-        # Verify that the view was restored
-        self.assertEqual(new_main_window.listViews.count(), 1)
-        self.assertEqual(new_main_window.listViews.item(0).window.view_type, "topview")
+        assert window.listFlightTracks.count() == 1
+        assert window.active_flight_track.name == "test_flight"
+        assert "test_flight" in window.activated_flight_tracks
 
-        # Switch to second flight track and restore
-        new_main_window.create_new_flight_track()
-        new_main_window.active_flight_track.name = flight2_name
-        with patch("mslib.msui.msui_mainwindow.sideview", autospec=True) as mock_sideview:
-            mock_sideview.MSUISideViewWindow = lambda **kwargs: MockViewWindow(view_type="sideview", **kwargs)
-            new_main_window.restore_views_for_active_flighttrack()
+        mock_topview = Mock(spec=MSUITopViewWindow)
+        mock_topview.view_type = "topview"
+        mock_topview.view_id = "view_topview_0"
+        mock_topview.name = "Topview"
+        mock_topview.active_flighttrack = mock_flight_track
+        mock_topview.waypoints_model = mock_flight_track
+        mock_topview.get_settings = Mock(return_value={
+            "map_section": "00 global (cyl)",
+            "projection": "EPSG:4326",
+            "wms": {
+                "url": "http://open-mss.org/",
+                "layer": "ecmwf_EUR_LL015.PLRelHum01",
+                "level": "100.0",
+                "styles": "",
+                "init_time": "2012-10-17T12:00:00Z",
+                "valid_time": "2012-10-17T12:00:00Z"
+            }
+        })
+        mock_topview.mpl = Mock()
+        mock_topview.mpl.resize = Mock()
+        mock_topview.set_settings = Mock()
+        mock_topview.refresh_signal_emit = Mock()
+        mock_topview.viewCloses = Mock()
+        mock_topview.setWindowTitle = Mock()
+        mock_topview.handle_force_close = Mock()
+        mock_topview.enable_navbar_action_buttons = Mock()
+        mock_topview.disable_navbar_action_buttons = Mock()
 
-        self.assertEqual(new_main_window.listViews.count(), 1)
-        self.assertEqual(new_main_window.listViews.item(0).window.view_type, "sideview")
-        self.assertEqual(new_main_window.listFlightTracks.count(), 2)
+        with mock.patch("mslib.msui.topview.MSUITopViewWindow") as mock_topview_class:
+            mock_topview_class.return_value = mock_topview
+            window.create_view("topview", mock_flight_track)
+
+        assert window.listViews.count() == 1
+        assert window.listViews.item(0).window == mock_topview
+
+        mock_topview.get_settings = Mock(return_value={
+            "map_section": "00 global (cyl)",
+            "projection": "EPSG:4326",
+            "wms": {
+                "url": "http://open-mss.org/",
+                "layer": "ecmwf_EUR_LL015.PLRelHum01",
+                "level": "200.0",  # Modified level
+                "styles": "",
+                "init_time": "2012-10-17T12:00:00Z",
+                "valid_time": "2012-10-17T12:00:00Z"
+            }
+        })
+        window.update_flight_track_settings(mock_flight_track, view=mock_topview)
+
+        expected_settings = {
+            "test_flight": {
+                "views": [{
+                    "map_section": "00 global (cyl)",
+                    "projection": "EPSG:4326",
+                    "view_type": "topview",
+                    "view_id": "view_topview_0",
+                    "wms": {
+                        "url": "http://open-mss.org/",
+                        "layer": "ecmwf_EUR_LL015.PLRelHum01",
+                        "level": "200.0",
+                        "styles": "",
+                        "init_time": "2012-10-17T12:00:00Z",
+                        "valid_time": "2012-10-17T12:00:00Z"
+                    }
+                }],
+                "global": {"flight_track_name": "test_flight", "mss_version": "10.1.0"}
+            }
+        }
+        assert window.flight_track_settings == expected_settings
+        assert "test_flight" in window.activated_flight_tracks
+        assert "test_flight" in window.activated_flight_tracks

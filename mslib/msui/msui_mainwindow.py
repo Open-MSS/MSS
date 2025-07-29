@@ -1024,7 +1024,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         if not isinstance(restored_data, dict):
             logging.error("Invalid restore data for flight track %s", self.active_flight_track.name)
             return
-        
+
         global_data = restored_data.get("global")
         saved_flighttrack_name = global_data.get("flight_track_name")
         if saved_flighttrack_name and saved_flighttrack_name != self.active_flight_track.name:
@@ -1292,7 +1292,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                         break
                 else:
                     self.flight_track_settings[json_key]["views"].append(settings)
-                
+
                 global_data = view_restoration.set_global_data(flight_track)
                 self.flight_track_settings[json_key]["global"] = global_data
 

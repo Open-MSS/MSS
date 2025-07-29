@@ -148,7 +148,6 @@ def restore_view_settings(flight_track_name):
             logging.warning("Invalid settings data for %s; returning default", flight_track_name)
             return default_settings
 
-        global_settings = setting_data.get("global", default_settings["global"])
         views_data = setting_data.get("views", [])
 
         if isinstance(views_data, dict):
