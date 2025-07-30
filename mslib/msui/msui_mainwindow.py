@@ -1062,7 +1062,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 self.create_view(view_type, self.active_flight_track,
                                  restore_settings=[view_setting], global_data=global_data)
 
-    def create_view(self, _type, model, restore_settings=None, global_data=None):
+    def create_view(self, _type, model, restore_settings=None):
         """Method called when the user selects a new view to be opened. Creates
            a new instance of the view and adds a QActiveViewsListWidgetItem to
            the list of open views (self.listViews).

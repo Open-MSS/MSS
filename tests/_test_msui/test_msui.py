@@ -31,7 +31,8 @@ import mock
 import os
 import argparse
 import pytest
-import logging
+import json
+from mslib.msui import constants
 from pathlib import Path
 from urllib.request import urlopen
 from PyQt5 import QtWidgets, QtTest
@@ -42,7 +43,7 @@ from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
 from mslib.utils.config import read_config_file
 from mslib.msui import flighttrack as ft
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import patch
 from mslib.msui.topview import MSUITopViewWindow
 
 
@@ -335,187 +336,98 @@ class Test_MSSSideViewWindow:
 
 
 class Test_MSUIMainWindow:
-    @pytest.fixture(autouse=True)
-    def setup(self, qtbot, qapp):
-        mock_ctypes = MagicMock()
-        self.ctypes_patcher = patch.dict('sys.modules', {'ctypes': mock_ctypes})
-        self.ctypes_patcher.start()
-        qapp.setApplicationDisplayName("MSUI")
-
-        self.config_patcher = patch('mslib.msui.msui_mainwindow.config_loader')
-        self.mock_config_loader = self.config_patcher.start()
-        self.config_data = {
-            "data_dir": ROOT_DIR,
-            "new_flighttrack_template": ["point1", "point2"],
-            "new_flighttrack_flightlevel": 0,
-            "filepicker_default": "qt",
-            "restore_views": True,  # Default for storing test
-            "layout": {
-                "topview": [800, 600],
-                "sideview": [800, 600],
-                "tableview": [800, 600],
-                "linearview": [800, 600],
-                "immutable": False
-            },
-            "mscolab_server_url": "http://localhost:8084",
-            "default_MSCOLAB": "http://localhost:8084",
-            "MSS_auth": {"http://localhost:8084": "user@example.com"},
-            "import_plugins": {},
-            "export_plugins": {},
-            "locations": ["point1", "point2"]  # Mock locations to match template
-        }
-        self.mock_config_loader.side_effect = lambda dataset=None, default=False: (
-            self.config_data.get(dataset, {} if not default else {})
-        )
-
-        self.saved_settings = {}
-        self.view_restoration_patcher = patch('mslib.msui.msui_mainwindow.view_restoration')
-        self.mock_view_restoration = self.view_restoration_patcher.start()
-        self.mock_view_restoration.save_view_settings.side_effect = (
-            lambda views, global_data, json_key: self.saved_settings.update({json_key: {"views": views,
-                                                                                        "global": global_data}})
-        )
-        self.mock_view_restoration.restore_view_settings.side_effect = (
-            lambda json_key: self.saved_settings.get(json_key, {"views": [], "global": {}})
-        )
-        self.mock_view_restoration.set_global_data.return_value = {"flight_track_name": "test_flight",
-                                                                   "mss_version": "10.1.0"}
-
-        # Mock MSColab to avoid server interactions
-        self.mscolab_patcher = patch('mslib.msui.msui_mainwindow.mscolab.MSUIMscolab')
-        self.mock_mscolab = self.mscolab_patcher.start()
-        self.mock_mscolab_instance = Mock()
-        self.mock_mscolab_instance.token = None
-        self.mock_mscolab_instance.mscolab_server_url = "http://localhost:8084"
-        self.mock_mscolab_instance.switch_to_local = Mock()
-        self.mock_mscolab.return_value = self.mock_mscolab_instance
-
-        # Mock ConfigurationEditorWindow
-        self.editor_patcher = patch('mslib.msui.msui_mainwindow.editor.ConfigurationEditorWindow')
-        self.mock_editor = self.editor_patcher.start()
-        self.mock_editor_instance = Mock()
-        self.mock_editor_instance.last_saved = {
-            "mscolab_server_url": "http://localhost:8084",
-            "default_MSCOLAB": "http://localhost:8084",
-            "MSS_auth": {"http://localhost:8084": "user@example.com"},
-            "automated_plotting_flights": [],
-            "automated_plotting_hsecs": [],
-            "automated_plotting_vsecs": [],
-            "automated_plotting_lsecs": []
-        }
-        self.mock_editor.return_value = self.mock_editor_instance
-        config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../data', 'empty_msui_settings.json')
-        if os.path.exists(config_file):
-            read_config_file(path=config_file)
-        else:
-            logging.debug("Skipping config file read: %s not found", config_file)
-        self.config_patcher.stop()
-        self.view_restoration_patcher.stop()
-        self.mscolab_patcher.stop()
-        self.editor_patcher.stop()
-        self.ctypes_patcher.stop()
-
     def test_storing(self, qtbot):
         """Test the full scenario: create flight track, open TopView, modify settings,
            save on close, and restore settings on reopen."""
         window = msui_mw.MSUIMainWindow()
         window.show()
-        QtTest.QTest.qWaitForWindowExposed(window)
+        qtbot.wait_exposed
 
-        with mock.patch("mslib.msui.msui_mainwindow.ft.WaypointsTableModel") as mock_waypoints_model, \
-             mock.patch("mslib.msui.msui_mainwindow.MSUIMainWindow.signal_activate_flighttrack") as mock_signal:
-            mock_signal.emit = Mock()  # Mock the signal to avoid type checking
-            mock_flight_track = Mock(spec=ft.WaypointsTableModel)
-            mock_flight_track.name = "test_flight"
-            mock_flight_track.waypoints = [
-                Mock(spec=ft.Waypoint, lat=0, lon=0, location="point1"),
-                Mock(spec=ft.Waypoint, lat=1, lon=1, location="point2")
-            ]
-            mock_flight_track.all_waypoint_data = Mock(return_value=[
-                {"lat": 0, "lon": 0, "location": "point1"},
-                {"lat": 1, "lon": 1, "location": "point2"}
-            ])
-            mock_flight_track.get_xml_doc = Mock(return_value="<xml>flight track</xml>")
-            mock_flight_track.insertRows = Mock()
-            mock_waypoints_model.return_value = mock_flight_track
-            logging.debug("Creating flight track with name: %s, type: %s", mock_flight_track.name,
-                          type(mock_flight_track.name))
-            window.create_new_flight_track()
-
+        window.create_new_flight_track()
         assert window.listFlightTracks.count() == 1
-        assert window.active_flight_track.name == "test_flight"
-        assert "test_flight" in window.activated_flight_tracks
+        flight_track = window.active_flight_track
+        assert "new flight track (1)" in window.activated_flight_tracks
 
-        mock_topview = Mock(spec=MSUITopViewWindow)
-        mock_topview.view_type = "topview"
-        mock_topview.view_id = "view_topview_0"
-        mock_topview.name = "Topview"
-        mock_topview.active_flighttrack = mock_flight_track
-        mock_topview.waypoints_model = mock_flight_track
-        mock_topview.get_settings = Mock(return_value={
-            "view_type": "topview",
-            "map_section": "00 global (cyl)",
-            "projection": "EPSG:4326",
-            "wms": {
-                "url": "http://open-mss.org/",
-                "layer": "ecmwf_EUR_LL015.PLRelHum01",
-                "level": "100.0",
-                "styles": "",
-                "init_time": "2012-10-17T12:00:00Z",
-                "valid_time": "2012-10-17T12:00:00Z"
-            }
-        })
-        mock_topview.mpl = Mock()
-        mock_topview.mpl.resize = Mock()
-        mock_topview.set_settings = Mock()
-        mock_topview.refresh_signal_emit = Mock()
-        mock_topview.viewCloses = Mock()
-        mock_topview.setWindowTitle = Mock()
-        mock_topview.handle_force_close = Mock()
-        mock_topview.enable_navbar_action_buttons = Mock()
-        mock_topview.disable_navbar_action_buttons = Mock()
+        waypoint_model = flight_track
+        waypoint_model.insertRows(0, 2, waypoints=[
+            ft.Waypoint(lat=34.44, lon=56.67, location="point1"),
+            ft.Waypoint(lat=77.77, lon=98.67, location="point2")
+        ])
 
-        with mock.patch("mslib.msui.topview.MSUITopViewWindow") as mock_topview_class:
-            mock_topview_class.return_value = mock_topview
-            window.create_view("topview", mock_flight_track)
-
+        window.create_view("topview", flight_track)
         assert window.listViews.count() == 1
-        assert window.listViews.item(0).window == mock_topview
-
-        mock_topview.get_settings = Mock(return_value={
-            "view_type": "topview",
-            "map_section": "00 global (cyl)",
-            "projection": "EPSG:4326",
-            "wms": {
-                "url": "http://open-mss.org/",
-                "layer": "ecmwf_EUR_LL015.PLRelHum01",
-                "level": "200.0",  # Modified level
-                "styles": "",
-                "init_time": "2012-10-17T12:00:00Z",
-                "valid_time": "2012-10-17T12:00:00Z"
-            }
-        })
-        window.update_flight_track_settings(mock_flight_track, view=mock_topview)
-
-        expected_settings = {
-            "test_flight": {
-                "views": [{
-                    "map_section": "00 global (cyl)",
-                    "projection": "EPSG:4326",
-                    "view_type": "topview",
-                    "view_id": "view_topview_0",
-                    "wms": {
-                        "url": "http://open-mss.org/",
-                        "layer": "ecmwf_EUR_LL015.PLRelHum01",
-                        "level": "200.0",
-                        "styles": "",
-                        "init_time": "2012-10-17T12:00:00Z",
-                        "valid_time": "2012-10-17T12:00:00Z"
-                    }
-                }],
-                "global": {"flight_track_name": "test_flight", "mss_version": "10.1.0"}
-            }
+        top_view1 = window.listViews.item(0).window
+        assert isinstance(top_view1, MSUITopViewWindow)
+        assert top_view1.view_type == "Top View"
+        top_view1.cbChangeMapSection.setCurrentText("00 global (cyl)")
+        wms_settings1 = {
+            "url": "http://open-mss.org/",
+            "layer": "ecmwf_EUR_LL015.PLRelHum01",
+            "level": "200.0",
+            "styles": "",
+            "init_time": "2012-10-17T12:00:00Z",
+            "valid_time": "2012-10-17T12:00:00Z"
         }
-        assert window.flight_track_settings == expected_settings
-        assert "test_flight" in window.activated_flight_tracks
-        assert "test_flight" in window.activated_flight_tracks
+        qtbot.wait(500)
+        top_view1.restore_wms_settings(wms_settings1)
+
+        window.create_new_flight_track()
+        assert window.listFlightTracks.count() == 2
+        flight_track2 = window.active_flight_track
+        assert flight_track2.name == "new flight track (2)"
+        assert "new flight track (2)" in window.activated_flight_tracks
+
+        waypoint_model2 = flight_track2
+        waypoint_model2.insertRows(0, 2, waypoints=[
+            ft.Waypoint(lat=22.44, lon=86.67, location="point1"),
+            ft.Waypoint(lat=67.77, lon=48.67, location="point2")
+        ])
+
+        # Open top view for second flight track
+        window.create_view("topview", flight_track2)
+        assert window.listViews.count() == 2
+        top_view2 = window.listViews.item(1).window
+        assert isinstance(top_view2, MSUITopViewWindow)
+        assert top_view2.view_type == "Top View"
+
+        top_view2.cbChangeMapSection.setCurrentText("00 global (cyl)")
+        wms_settings2 = {
+            "url": "http://open-mss.org/",
+            "layer": "ecmwf_EUR_LL015.PLW01",
+            "level": "250.0",
+            "styles": "",
+            "init_time": "2012-10-17T12:00:00Z",
+            "valid_time": "2012-10-17T12:00:00Z"
+        }
+        qtbot.wait(500)
+        top_view2.restore_wms_settings(wms_settings2)
+
+        assert "new flight track (1)" in window.flight_track_settings
+        settings1 = window.flight_track_settings["new flight track (1)"]
+        assert len(settings1["views"]) == 1
+        view_settings1 = settings1["views"][0]
+        assert view_settings1["view_type"] == "topview"
+        assert view_settings1["map_section"] == "00 global (cyl)"
+        assert view_settings1["wms"]["url"] == wms_settings1["url"]
+        assert view_settings1["wms"]["layer"] == wms_settings1["layer"]
+        assert view_settings1["wms"]["level"] == wms_settings1["level"]
+        assert view_settings1["wms"]["styles"] == wms_settings1["styles"]
+        assert view_settings1["wms"]["init_time"] == wms_settings1["init_time"]
+        assert view_settings1["wms"]["valid_time"] == wms_settings1["valid_time"]
+        assert settings1["global"]["flight_track_name"] == "new flight track (1)"
+        assert "mss_version" in settings1["global"]
+
+        with patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            window.close()
+
+        # Assert: Verify view_settings.json after closing
+        config_path = Path(constants.MSUI_CONFIG_PATH)
+        config_path.mkdir(parents=True, exist_ok=True)
+        settings_file = config_path / "view_settings.json"
+        assert settings_file.exists(), f"view_settings.json not found at {settings_file}"
+        with settings_file.open("r") as f:
+            saved_data = json.load(f)
+        assert "new flight track (1)" in saved_data
+        assert len(saved_data["new flight track (1)"]["views"]) == 1
+        assert "new flight track (2)" in saved_data
+        assert len(saved_data["new flight track (2)"]["views"]) == 2
