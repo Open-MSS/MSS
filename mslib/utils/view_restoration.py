@@ -85,39 +85,39 @@ def set_global_data(flight_track=None):
     }
 
 
-def serialize_settings(settings_list):
+def serializer(obj):
     """
     Recursively serialize a list of settings dictionaries to make them JSON-serializable.
     """
+    if hasattr(obj, '__dict__'):
+        return {
+            attr: getattr(obj, attr)
+            for attr in dir(obj)
+            if not attr.startswith('_') and isinstance(
+                getattr(obj, attr), (str, int, float, bool, list, dict, type(None))
+            )
+        }
+    elif isinstance(obj, QtCore.QDateTime):
+        return obj.toString(QtCore.Qt.ISODate)
+    elif isinstance(obj, QtGui.QColor):
+        return list(obj.getRgb())
+    elif isinstance(obj, tuple):
+        return list(obj)
+    else:
+        raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+
+
+def serialize_settings(settings_list):
+    """
+    Serialize settings to JSON string using a custom default serializer.
+    """
     if isinstance(settings_list, dict):
-        settings_list = [settings_list]  # Handle single dict case
-    serialized_list = []
-    for settings in settings_list:
-        if not isinstance(settings, dict):
-            logging.warning("Invalid settings entry skipped: %s", settings)
-            continue
-        serialized = {}
-        for key, value in settings.items():
-            if hasattr(value, '__dict__'):
-                serialized[key] = {
-                    attr: getattr(value, attr)
-                    for attr in dir(value)
-                    if not attr.startswith('_') and isinstance(
-                        getattr(value, attr), (str, int, float, bool, list, dict, type(None))
-                    )
-                }
-            elif isinstance(value, QtCore.QDateTime):
-                serialized[key] = value.toString(QtCore.Qt.ISODate)
-            elif isinstance(value, dict):
-                serialized[key] = serialize_settings([value])[0]
-            elif isinstance(value, list):
-                serialized[key] = serialize_settings(value)
-            elif isinstance(value, (tuple, QtGui.QColor)):
-                serialized[key] = list(value)
-            else:
-                serialized[key] = value
-        serialized_list.append(serialized)
-    return serialized_list if isinstance(settings_list, list) else serialized_list[0]
+        settings_list = [settings_list]
+    try:
+        return json.dumps(settings_list, default=serializer)
+    except TypeError as e:
+        logging.error("Serialization failed: %s", e)
+        raise
 
 
 def restore_view_settings(flight_track_name):
@@ -128,10 +128,6 @@ def restore_view_settings(flight_track_name):
         "global": {"mss_version": str(mss_version), "flight_track_name": "Unknown"},
         "views": []
     }
-
-    if not isinstance(flight_track_name, str):
-        logging.warning("Invalid flight_track_name '%s'; converting to string", flight_track_name)
-        flight_track_name = str(flight_track_name)
 
     config_path = Path(constants.MSUI_CONFIG_PATH)
     save_path = config_path / "view_settings.json"

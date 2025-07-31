@@ -1060,7 +1060,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 existing_view.setWindowTitle(title)
             else:
                 self.create_view(view_type, self.active_flight_track,
-                                 restore_settings=[view_setting], global_data=global_data)
+                                 restore_settings=[view_setting])
 
     def create_view(self, _type, model, restore_settings=None):
         """Method called when the user selects a new view to be opened. Creates

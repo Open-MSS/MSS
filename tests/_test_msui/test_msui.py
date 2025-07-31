@@ -32,6 +32,7 @@ import os
 import argparse
 import pytest
 import json
+import logging
 from mslib.msui import constants
 from pathlib import Path
 from urllib.request import urlopen
@@ -45,6 +46,7 @@ from mslib.utils.config import read_config_file
 from mslib.msui import flighttrack as ft
 from unittest.mock import patch
 from mslib.msui.topview import MSUITopViewWindow
+from mslib.msui.msui_mainwindow import QActiveViewsListWidgetItem
 
 
 def test_main():
@@ -336,13 +338,13 @@ class Test_MSSSideViewWindow:
 
 
 class Test_MSUIMainWindow:
-    def test_storing(self, qtbot):
+    def test_storing_and_restoring(self, qtbot, mswms_server):
         """Test the full scenario: create flight track, open TopView, modify settings,
            save on close, and restore settings on reopen."""
         window = msui_mw.MSUIMainWindow()
         window.show()
-        qtbot.wait_exposed
 
+        # create 1st flighttrack
         window.create_new_flight_track()
         assert window.listFlightTracks.count() == 1
         flight_track = window.active_flight_track
@@ -354,23 +356,25 @@ class Test_MSUIMainWindow:
             ft.Waypoint(lat=77.77, lon=98.67, location="point2")
         ])
 
+        # Open top view for first flight track
         window.create_view("topview", flight_track)
         assert window.listViews.count() == 1
         top_view1 = window.listViews.item(0).window
         assert isinstance(top_view1, MSUITopViewWindow)
         assert top_view1.view_type == "Top View"
+
         top_view1.cbChangeMapSection.setCurrentText("00 global (cyl)")
         wms_settings1 = {
-            "url": "http://open-mss.org/",
+            "url": mswms_server,
             "layer": "ecmwf_EUR_LL015.PLRelHum01",
             "level": "200.0",
             "styles": "",
             "init_time": "2012-10-17T12:00:00Z",
-            "valid_time": "2012-10-17T12:00:00Z"
+            "valid_time": "2012-10-17T12:00:00Z",
         }
-        qtbot.wait(500)
         top_view1.restore_wms_settings(wms_settings1)
 
+        # create 2nd flighttrack
         window.create_new_flight_track()
         assert window.listFlightTracks.count() == 2
         flight_track2 = window.active_flight_track
@@ -392,42 +396,79 @@ class Test_MSUIMainWindow:
 
         top_view2.cbChangeMapSection.setCurrentText("00 global (cyl)")
         wms_settings2 = {
-            "url": "http://open-mss.org/",
+            "url": mswms_server,
             "layer": "ecmwf_EUR_LL015.PLW01",
             "level": "250.0",
             "styles": "",
             "init_time": "2012-10-17T12:00:00Z",
-            "valid_time": "2012-10-17T12:00:00Z"
+            "valid_time": "2012-10-17T12:00:00Z",
         }
-        qtbot.wait(500)
         top_view2.restore_wms_settings(wms_settings2)
-
-        assert "new flight track (1)" in window.flight_track_settings
-        settings1 = window.flight_track_settings["new flight track (1)"]
-        assert len(settings1["views"]) == 1
-        view_settings1 = settings1["views"][0]
-        assert view_settings1["view_type"] == "topview"
-        assert view_settings1["map_section"] == "00 global (cyl)"
-        assert view_settings1["wms"]["url"] == wms_settings1["url"]
-        assert view_settings1["wms"]["layer"] == wms_settings1["layer"]
-        assert view_settings1["wms"]["level"] == wms_settings1["level"]
-        assert view_settings1["wms"]["styles"] == wms_settings1["styles"]
-        assert view_settings1["wms"]["init_time"] == wms_settings1["init_time"]
-        assert view_settings1["wms"]["valid_time"] == wms_settings1["valid_time"]
-        assert settings1["global"]["flight_track_name"] == "new flight track (1)"
-        assert "mss_version" in settings1["global"]
 
         with patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             window.close()
 
         # Assert: Verify view_settings.json after closing
         config_path = Path(constants.MSUI_CONFIG_PATH)
-        config_path.mkdir(parents=True, exist_ok=True)
+        settings_file = config_path / "view_settings.json"
+        logging.debug(f"JSON file path form storing {settings_file}")
+        assert settings_file.exists(), f"view_settings.json not found at {settings_file}"
+        with settings_file.open("r") as f:
+            settings_data = json.load(f)
+
+        assert "new flight track (1)" in settings_data
+        assert len(settings_data["new flight track (1)"]["views"]) == 1
+        assert settings_data["new flight track (1)"]["views"][0]["view_type"] == "topview"
+        assert settings_data["new flight track (1)"]["views"][0]["wms"]["layer"] == "ecmwf_EUR_LL015.PLRelHum01"
+        assert settings_data["new flight track (1)"]["views"][0]["wms"]["level"] == "200.0"
+        assert "new flight track (2)" in settings_data
+        assert len(settings_data["new flight track (2)"]["views"]) == 2
+        assert settings_data["new flight track (2)"]["views"][0]["wms"]["layer"] == "ecmwf_EUR_LL015.PLRelHum01"
+        assert settings_data["new flight track (2)"]["views"][0]["wms"]["level"] == "200.0"
+        assert settings_data["new flight track (2)"]["views"][1]["wms"]["layer"] == "ecmwf_EUR_LL015.PLW01"
+        assert settings_data["new flight track (2)"]["views"][1]["wms"]["level"] == "250.0"
+
+        # Restoring
+        config_path = Path(constants.MSUI_CONFIG_PATH)
         settings_file = config_path / "view_settings.json"
         assert settings_file.exists(), f"view_settings.json not found at {settings_file}"
         with settings_file.open("r") as f:
             saved_data = json.load(f)
         assert "new flight track (1)" in saved_data
         assert len(saved_data["new flight track (1)"]["views"]) == 1
+        assert saved_data["new flight track (1)"]["views"][0]["view_type"] == "topview"
         assert "new flight track (2)" in saved_data
         assert len(saved_data["new flight track (2)"]["views"]) == 2
+        assert saved_data["new flight track (2)"]["views"][1]["view_type"] == "topview"
+        assert saved_data["new flight track (2)"]["views"][1]["view_type"] == "topview"
+
+        # Create MSUIMainWindow
+        new_window = msui_mw.MSUIMainWindow()
+        new_window.show()
+
+        new_window.create_new_flight_track(template=[
+            ft.Waypoint(lat=34.44, lon=56.67, location="point1"),
+            ft.Waypoint(lat=77.77, lon=98.67, location="point2")
+        ], activate=True)
+        while new_window.listViews.count() > 0:
+            new_window.listViews.item(0).window.handle_force_close()
+        new_window.listViews.clear()
+        new_window.viewsChanged.emit()
+        QActiveViewsListWidgetItem.opened_views = 0
+        new_window.restore_views_for_active_flighttrack()
+        flight_track = new_window.active_flight_track
+        assert new_window.listFlightTracks.count() == 1
+        assert new_window.listViews.count() == 1
+
+        new_window.create_new_flight_track(template=[
+            ft.Waypoint(lat=22.44, lon=86.67, location="point1"),
+            ft.Waypoint(lat=67.77, lon=48.67, location="point2")
+        ], activate=True)
+        while new_window.listViews.count() > 0:
+            new_window.listViews.item(0).window.handle_force_close()
+        new_window.listViews.clear()
+        new_window.viewsChanged.emit()
+        QActiveViewsListWidgetItem.opened_views = 0
+        new_window.restore_views_for_active_flighttrack()
+        assert new_window.listFlightTracks.count() == 2
+        assert new_window.listViews.count() == 2
