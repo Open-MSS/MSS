@@ -32,7 +32,7 @@ import os
 import argparse
 import pytest
 import json
-import logging
+import urllib.parse
 from mslib.msui import constants
 from pathlib import Path
 from urllib.request import urlopen
@@ -340,7 +340,12 @@ class Test_MSSSideViewWindow:
 class Test_MSUIMainWindow:
     def test_storing_and_restoring(self, qtbot, mswms_server):
         """Test the full scenario: create flight track, open TopView, modify settings,
-           save on close, and restore settings on reopen."""
+        save on close, and restore settings on reopen."""
+
+        parsed_url = urllib.parse.urlparse(mswms_server)
+        scheme, host, port = parsed_url.scheme, parsed_url.hostname, parsed_url.port
+        server_url = f"{scheme}://{host}:{port}"
+
         window = msui_mw.MSUIMainWindow()
         window.show()
 
@@ -365,7 +370,7 @@ class Test_MSUIMainWindow:
 
         top_view1.cbChangeMapSection.setCurrentText("00 global (cyl)")
         wms_settings1 = {
-            "url": mswms_server,
+            "url": server_url,
             "layer": "ecmwf_EUR_LL015.PLRelHum01",
             "level": "200.0",
             "styles": "",
@@ -387,31 +392,32 @@ class Test_MSUIMainWindow:
             ft.Waypoint(lat=67.77, lon=48.67, location="point2")
         ])
 
-        # Open top view for second flight track
+        assert window.listViews.count() == 1
+        top_view2_1 = window.listViews.item(0).window
+        assert top_view2_1.view_type == "Top View"
+
         window.create_view("topview", flight_track2)
         assert window.listViews.count() == 2
-        top_view2 = window.listViews.item(1).window
-        assert isinstance(top_view2, MSUITopViewWindow)
-        assert top_view2.view_type == "Top View"
+        top_view2_2 = window.listViews.item(1).window
+        assert top_view2_2.view_type == "Top View"
 
-        top_view2.cbChangeMapSection.setCurrentText("00 global (cyl)")
+        top_view2_2.cbChangeMapSection.setCurrentText("00 global (cyl)")
         wms_settings2 = {
-            "url": mswms_server,
+            "url": server_url,
             "layer": "ecmwf_EUR_LL015.PLW01",
             "level": "250.0",
             "styles": "",
             "init_time": "2012-10-17T12:00:00Z",
             "valid_time": "2012-10-17T12:00:00Z",
         }
-        top_view2.restore_wms_settings(wms_settings2)
+        top_view2_2.restore_wms_settings(wms_settings2)
 
         with patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             window.close()
 
-        # Assert: Verify view_settings.json after closing
+            # Assert: Verify view_settings.json after closing
         config_path = Path(constants.MSUI_CONFIG_PATH)
         settings_file = config_path / "view_settings.json"
-        logging.debug(f"JSON file path form storing {settings_file}")
         assert settings_file.exists(), f"view_settings.json not found at {settings_file}"
         with settings_file.open("r") as f:
             settings_data = json.load(f)
@@ -419,28 +425,19 @@ class Test_MSUIMainWindow:
         assert "new flight track (1)" in settings_data
         assert len(settings_data["new flight track (1)"]["views"]) == 1
         assert settings_data["new flight track (1)"]["views"][0]["view_type"] == "topview"
+        assert settings_data["new flight track (1)"]["views"][0]["wms"]["url"] == "http://127.0.0.1"
         assert settings_data["new flight track (1)"]["views"][0]["wms"]["layer"] == "ecmwf_EUR_LL015.PLRelHum01"
         assert settings_data["new flight track (1)"]["views"][0]["wms"]["level"] == "200.0"
         assert "new flight track (2)" in settings_data
         assert len(settings_data["new flight track (2)"]["views"]) == 2
+        assert settings_data["new flight track (2)"]["views"][0]["view_type"] == "topview"
+        assert settings_data["new flight track (2)"]["views"][0]["wms"]["url"] == "http://127.0.0.1"
         assert settings_data["new flight track (2)"]["views"][0]["wms"]["layer"] == "ecmwf_EUR_LL015.PLRelHum01"
         assert settings_data["new flight track (2)"]["views"][0]["wms"]["level"] == "200.0"
+        assert settings_data["new flight track (2)"]["views"][1]["view_type"] == "topview"
+        assert settings_data["new flight track (2)"]["views"][0]["wms"]["url"] == "http://127.0.0.1"
         assert settings_data["new flight track (2)"]["views"][1]["wms"]["layer"] == "ecmwf_EUR_LL015.PLW01"
         assert settings_data["new flight track (2)"]["views"][1]["wms"]["level"] == "250.0"
-
-        # Restoring
-        config_path = Path(constants.MSUI_CONFIG_PATH)
-        settings_file = config_path / "view_settings.json"
-        assert settings_file.exists(), f"view_settings.json not found at {settings_file}"
-        with settings_file.open("r") as f:
-            saved_data = json.load(f)
-        assert "new flight track (1)" in saved_data
-        assert len(saved_data["new flight track (1)"]["views"]) == 1
-        assert saved_data["new flight track (1)"]["views"][0]["view_type"] == "topview"
-        assert "new flight track (2)" in saved_data
-        assert len(saved_data["new flight track (2)"]["views"]) == 2
-        assert saved_data["new flight track (2)"]["views"][1]["view_type"] == "topview"
-        assert saved_data["new flight track (2)"]["views"][1]["view_type"] == "topview"
 
         # Create MSUIMainWindow
         new_window = msui_mw.MSUIMainWindow()
@@ -450,25 +447,55 @@ class Test_MSUIMainWindow:
             ft.Waypoint(lat=34.44, lon=56.67, location="point1"),
             ft.Waypoint(lat=77.77, lon=98.67, location="point2")
         ], activate=True)
+
+        new_window.active_flight_track.name == "new flight track (1)"
+        assert new_window.active_flight_track.name == "new flight track (1)"
+
         while new_window.listViews.count() > 0:
             new_window.listViews.item(0).window.handle_force_close()
         new_window.listViews.clear()
         new_window.viewsChanged.emit()
         QActiveViewsListWidgetItem.opened_views = 0
         new_window.restore_views_for_active_flighttrack()
-        flight_track = new_window.active_flight_track
-        assert new_window.listFlightTracks.count() == 1
-        assert new_window.listViews.count() == 1
+        qtbot.waitUntil(lambda: new_window.listViews.count() == 1, timeout=5000)
+
+        # Access restored view
+        restored_top_view1 = new_window.listViews.item(0)
+        assert restored_top_view1 is not None, "No view restored"
+        restored_top_view1 = restored_top_view1.window
+        assert isinstance(restored_top_view1, MSUITopViewWindow)
+
+        # Verify WMS settings
+        wms_control1 = restored_top_view1.wms_control
+        wms_control1.get_capabilities()
+        assert wms_control1.multilayers.cbWMS_URL.currentText() == "http://127.0.0.1"
 
         new_window.create_new_flight_track(template=[
             ft.Waypoint(lat=22.44, lon=86.67, location="point1"),
             ft.Waypoint(lat=67.77, lon=48.67, location="point2")
         ], activate=True)
+        new_window.active_flight_track.name == "new flight track (2)"
+
         while new_window.listViews.count() > 0:
             new_window.listViews.item(0).window.handle_force_close()
         new_window.listViews.clear()
         new_window.viewsChanged.emit()
         QActiveViewsListWidgetItem.opened_views = 0
         new_window.restore_views_for_active_flighttrack()
+
         assert new_window.listFlightTracks.count() == 2
         assert new_window.listViews.count() == 2
+
+        restored_top_view2_1 = new_window.listViews.item(0).window
+        assert isinstance(top_view2_1, MSUITopViewWindow)
+        wms_control2_1 = restored_top_view2_1.wms_control
+        wms_control2_1.get_capabilities()
+        assert wms_control2_1.multilayers.cbWMS_URL.currentText().rstrip("/") == "http://127.0.0.1", \
+            f"Expected URL {server_url}, got {wms_control2_1.multilayers.cbWMS_URL.currentText()}"
+
+        restored_top_view2_2 = new_window.listViews.item(1).window
+        assert isinstance(top_view2_2, MSUITopViewWindow)
+        wms_control2_2 = restored_top_view2_2.wms_control
+        wms_control2_2.get_capabilities()
+        assert wms_control2_2.multilayers.cbWMS_URL.currentText().rstrip("/") == "http://127.0.0.1", \
+            f"Expected URL {server_url}, got {wms_control2_2.multilayers.cbWMS_URL.currentText()}"
