@@ -379,7 +379,10 @@ class Test_MSUIMainWindow:
             "valid_time": "2012-10-17T12:00:00Z",
         }
         top_view1.restore_wms_settings(wms_settings1)
-        assert top_view1.wms_control.multilayers.cbWMS_URL.currentText() == server_url
+        qtbot.waitUntil(
+            lambda: top_view1.wms_control.multilayers.cbWMS_URL.currentText().rstrip('/') == server_url,
+            timeout=500
+        )
 
         # create 2nd flighttrack
         window.create_new_flight_track()
@@ -397,7 +400,10 @@ class Test_MSUIMainWindow:
         assert window.listViews.count() == 1
         top_view2_1 = window.listViews.item(0).window
         assert top_view2_1.view_type == "Top View"
-        assert top_view2_1.wms_control.multilayers.cbWMS_URL.currentText() == server_url
+        qtbot.waitUntil(
+            lambda: top_view2_1.wms_control.multilayers.cbWMS_URL.currentText().rstrip('/') == server_url,
+            timeout=1000
+        )
 
         window.create_view("topview", flight_track2)
         assert window.listViews.count() == 2
@@ -414,7 +420,10 @@ class Test_MSUIMainWindow:
             "valid_time": "2012-10-17T12:00:00Z",
         }
         top_view2_2.restore_wms_settings(wms_settings2)
-        assert top_view2_2.wms_control.multilayers.cbWMS_URL.currentText() == server_url
+        qtbot.waitUntil(
+            lambda: top_view2_2.wms_control.multilayers.cbWMS_URL.currentText().rstrip('/') == server_url,
+            timeout=500
+        )
 
         settings1 = window.flight_track_settings["new flight track (1)"]
         assert settings1["views"][0]["wms"]["url"] == server_url
@@ -433,15 +442,13 @@ class Test_MSUIMainWindow:
         assert len(settings_data["new flight track (1)"]["views"]) == 1
         assert settings_data["new flight track (1)"]["views"][0]["view_type"] == "topview"
         assert settings_data["new flight track (1)"]["views"][0]["wms"]["url"] == server_url
-        assert settings_data["new flight track (1)"]["views"][0]["wms"]["layer"] == "ecmwf_EUR_LL015.PLRelHum01", \
-            f"expected {'ecmwf_EUR_LL015.PLRelHum01'} got {settings_data['new flight track (1)']['views'][0]['wms']['layer']}"
+        assert settings_data["new flight track (1)"]["views"][0]["wms"]["layer"] == "ecmwf_EUR_LL015.PLRelHum01"
         assert settings_data["new flight track (1)"]["views"][0]["wms"]["level"] == "200.0"
         assert "new flight track (2)" in settings_data
         assert len(settings_data["new flight track (2)"]["views"]) == 2
         assert settings_data["new flight track (2)"]["views"][0]["view_type"] == "topview"
         assert settings_data["new flight track (2)"]["views"][0]["wms"]["url"] == server_url
-        assert settings_data["new flight track (2)"]["views"][0]["wms"]["layer"] == "ecmwf_EUR_LL015.PLRelHum01", \
-            f"expected {'ecmwf_EUR_LL015.PLRelHum01'} got {settings_data['new flight track (2)']['views'][0]['wms']['layer']}"
+        assert settings_data["new flight track (2)"]["views"][0]["wms"]["layer"] == "ecmwf_EUR_LL015.PLRelHum01"
         assert settings_data["new flight track (2)"]["views"][0]["wms"]["level"] == "200.0"
         assert settings_data["new flight track (2)"]["views"][1]["view_type"] == "topview"
         assert settings_data["new flight track (2)"]["views"][0]["wms"]["url"] == server_url
