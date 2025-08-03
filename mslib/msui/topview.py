@@ -486,8 +486,10 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     def layer_val_changed(self, strr):
         self.currlayerobj = strr
         layerstring = str(strr)
-        second_colon_index = layerstring.find(':', layerstring.find(':') + 1)
-        self.currurl = layerstring[:second_colon_index].strip() if second_colon_index != -1 else layerstring.strip()
+        first_colon = layerstring.find(':')
+        second_colon = layerstring.find(':', first_colon + 1)
+        third_colon = layerstring.find(':', second_colon + 1)
+        self.currurl = layerstring[:third_colon].strip() if third_colon != -1 else layerstring.strip()
         self.currlayer = layerstring.split('|')[1].strip() if '|' in layerstring else None
 
     @QtCore.pyqtSlot()
@@ -646,6 +648,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                     "init_time": self.curritime,
                     "valid_time": self.currvtime,
                 }
+            logging.debug(f"from get_settings url is {wms_settings['url']}")
 
             # Get dock widget states
             dock_states = [dock is not None for dock in self.docks]
