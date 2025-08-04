@@ -179,13 +179,11 @@ class Test_TableView:
         wps2 = self.window.waypoints_model.waypoints
         assert all([_x == _y for _x, _y in zip(wps[::-1], wps2)])
 
+    @pytest.mark.skipif(reason="drag/drop does not work on QT5")
     def test_drag_point(self):
         """
         Check insertion of points
         """
-
-        pytest.skip("drag/drop testing does not seem to work o qt5.")
-
         assert len(self.window.waypoints_model.waypoints) == 5
         wps_before = list(self.window.waypoints_model.waypoints)
         item1 = self.window.tableWayPoints.visualRect(
