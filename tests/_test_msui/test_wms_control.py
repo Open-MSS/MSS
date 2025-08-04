@@ -55,7 +55,7 @@ class WMSControlWidgetSetup:
         parsed_url = urllib.parse.urlparse(self.url)
         self.scheme, self.host, self.port = parsed_url.scheme, parsed_url.hostname, parsed_url.port
 
-    def _setup(self, widget_type):
+    def _setup(self, widget_type, tmp_path):
         self.service_manager = WMSServiceManager()
         self.service_manager.clear_cache()
         if widget_type == "hsec":
