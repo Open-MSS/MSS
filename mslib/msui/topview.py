@@ -486,10 +486,15 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     def layer_val_changed(self, strr):
         self.currlayerobj = strr
         layerstring = str(strr)
-        first_colon = layerstring.find(':')
-        second_colon = layerstring.find(':', first_colon + 1)
-        third_colon = layerstring.find(':', second_colon + 1)
-        self.currurl = layerstring[:third_colon].strip() if third_colon != -1 else layerstring.strip()
+        first_colon_index = layerstring.find(':')
+        second_colon_index = layerstring.find(':', first_colon_index + 1)
+        third_colon_index = layerstring.find(':', second_colon_index + 1)
+        if third_colon_index != -1:
+            self.currurl = layerstring[:third_colon_index].strip()
+        elif second_colon_index != -1:
+            self.currurl = layerstring[:second_colon_index].strip()
+        else:
+            layerstring.strip()
         self.currlayer = layerstring.split('|')[1].strip() if '|' in layerstring else None
 
     @QtCore.pyqtSlot()

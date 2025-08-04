@@ -34,7 +34,7 @@ import pytest
 import json
 import logging
 import urllib.parse
-from mslib.msui import constants
+from tests import constants
 from pathlib import Path
 from urllib.request import urlopen
 from PyQt5 import QtWidgets, QtTest
@@ -45,7 +45,6 @@ from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
 from mslib.utils.config import read_config_file
 from mslib.msui import flighttrack as ft
-from unittest.mock import patch
 from mslib.msui.topview import MSUITopViewWindow
 from mslib.msui.msui_mainwindow import QActiveViewsListWidgetItem
 
@@ -428,7 +427,7 @@ class Test_MSUIMainWindow:
         settings1 = window.flight_track_settings["new flight track (1)"]
         assert settings1["views"][0]["wms"]["url"] == server_url
 
-        with patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             window.close()
 
         # Assert: Verify view_settings.json after closing
@@ -469,8 +468,6 @@ class Test_MSUIMainWindow:
 
         while new_window.listViews.count() > 0:
             new_window.listViews.item(0).window.handle_force_close()
-        new_window.listViews.clear()
-        new_window.viewsChanged.emit()
         QActiveViewsListWidgetItem.opened_views = 0
         new_window.restore_views_for_active_flighttrack()
 
@@ -493,8 +490,6 @@ class Test_MSUIMainWindow:
 
         while new_window.listViews.count() > 0:
             new_window.listViews.item(0).window.handle_force_close()
-        new_window.listViews.clear()
-        new_window.viewsChanged.emit()
         QActiveViewsListWidgetItem.opened_views = 0
         new_window.restore_views_for_active_flighttrack()
 
