@@ -32,8 +32,6 @@ import os
 import argparse
 import pytest
 import json
-import logging
-import urllib.parse
 from tests import constants
 from pathlib import Path
 from urllib.request import urlopen
@@ -342,11 +340,6 @@ class Test_MSUIMainWindow:
         """Test the full scenario: create flight track, open TopView, modify settings,
         save on close, and restore settings on reopen."""
 
-        parsed_url = urllib.parse.urlparse(mswms_server)
-        scheme, host, port = parsed_url.scheme, parsed_url.hostname, parsed_url.port
-        server_url = f"{scheme}://{host}:{port}"
-        logging.debug(server_url)
-
         window = msui_mw.MSUIMainWindow()
         window.show()
 
@@ -370,7 +363,7 @@ class Test_MSUIMainWindow:
 
         top_view1.cbChangeMapSection.setCurrentText("00 global (cyl)")
         wms_settings1 = {
-            "url": server_url,
+            "url": mswms_server,
             "layer": "ecmwf_EUR_LL015.PLRelHum01",
             "level": "200.0",
             "styles": "",
@@ -379,7 +372,7 @@ class Test_MSUIMainWindow:
         }
         top_view1.restore_wms_settings(wms_settings1)
         qtbot.waitUntil(
-            lambda: top_view1.wms_control.multilayers.cbWMS_URL.currentText().rstrip('/') == server_url,
+            lambda: top_view1.wms_control.multilayers.cbWMS_URL.currentText().rstrip('/') == mswms_server,
             timeout=500
         )
 
@@ -400,7 +393,7 @@ class Test_MSUIMainWindow:
         top_view2_1 = window.listViews.item(0).window
         assert top_view2_1.view_type == "Top View"
         qtbot.waitUntil(
-            lambda: top_view2_1.wms_control.multilayers.cbWMS_URL.currentText().rstrip('/') == server_url,
+            lambda: top_view2_1.wms_control.multilayers.cbWMS_URL.currentText().rstrip('/') == mswms_server,
             timeout=1000
         )
 
@@ -411,7 +404,7 @@ class Test_MSUIMainWindow:
 
         top_view2_2.cbChangeMapSection.setCurrentText("00 global (cyl)")
         wms_settings2 = {
-            "url": server_url,
+            "url": mswms_server,
             "layer": "ecmwf_EUR_LL015.PLW01",
             "level": "250.0",
             "styles": "",
@@ -420,12 +413,12 @@ class Test_MSUIMainWindow:
         }
         top_view2_2.restore_wms_settings(wms_settings2)
         qtbot.waitUntil(
-            lambda: top_view2_2.wms_control.multilayers.cbWMS_URL.currentText().rstrip('/') == server_url,
+            lambda: top_view2_2.wms_control.multilayers.cbWMS_URL.currentText().rstrip('/') == mswms_server,
             timeout=500
         )
 
         settings1 = window.flight_track_settings["new flight track (1)"]
-        assert settings1["views"][0]["wms"]["url"] == server_url
+        assert settings1["views"][0]["wms"]["url"] == mswms_server
 
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             window.close()
@@ -440,17 +433,17 @@ class Test_MSUIMainWindow:
         assert "new flight track (1)" in settings_data
         assert len(settings_data["new flight track (1)"]["views"]) == 1
         assert settings_data["new flight track (1)"]["views"][0]["view_type"] == "topview"
-        assert settings_data["new flight track (1)"]["views"][0]["wms"]["url"] == server_url
+        assert settings_data["new flight track (1)"]["views"][0]["wms"]["url"] == mswms_server
         assert settings_data["new flight track (1)"]["views"][0]["wms"]["layer"] == "ecmwf_EUR_LL015.PLRelHum01"
         assert settings_data["new flight track (1)"]["views"][0]["wms"]["level"] == "200.0"
         assert "new flight track (2)" in settings_data
         assert len(settings_data["new flight track (2)"]["views"]) == 2
         assert settings_data["new flight track (2)"]["views"][0]["view_type"] == "topview"
-        assert settings_data["new flight track (2)"]["views"][0]["wms"]["url"] == server_url
+        assert settings_data["new flight track (2)"]["views"][0]["wms"]["url"] == mswms_server
         assert settings_data["new flight track (2)"]["views"][0]["wms"]["layer"] == "ecmwf_EUR_LL015.PLRelHum01"
         assert settings_data["new flight track (2)"]["views"][0]["wms"]["level"] == "200.0"
         assert settings_data["new flight track (2)"]["views"][1]["view_type"] == "topview"
-        assert settings_data["new flight track (2)"]["views"][0]["wms"]["url"] == server_url
+        assert settings_data["new flight track (2)"]["views"][0]["wms"]["url"] == mswms_server
         assert settings_data["new flight track (2)"]["views"][1]["wms"]["layer"] == "ecmwf_EUR_LL015.PLW01"
         assert settings_data["new flight track (2)"]["views"][1]["wms"]["level"] == "250.0"
 
@@ -480,7 +473,7 @@ class Test_MSUIMainWindow:
         # Verify WMS settings
         wms_control1 = restored_top_view1.wms_control
         wms_control1.get_capabilities()
-        assert wms_control1.multilayers.cbWMS_URL.currentText() == server_url
+        assert wms_control1.multilayers.cbWMS_URL.currentText() == mswms_server
 
         new_window.create_new_flight_track(template=[
             ft.Waypoint(lat=22.44, lon=86.67, location="point1"),
@@ -500,12 +493,12 @@ class Test_MSUIMainWindow:
         assert isinstance(restored_top_view2_1, MSUITopViewWindow)
         wms_control2_1 = restored_top_view2_1.wms_control
         wms_control2_1.get_capabilities()
-        assert wms_control2_1.multilayers.cbWMS_URL.currentText().rstrip("/") == server_url, \
-            f"Expected URL {server_url}, got {wms_control2_1.multilayers.cbWMS_URL.currentText()}"
+        assert wms_control2_1.multilayers.cbWMS_URL.currentText().rstrip("/") == mswms_server, \
+            f"Expected URL {mswms_server}, got {wms_control2_1.multilayers.cbWMS_URL.currentText()}"
 
         restored_top_view2_2 = new_window.listViews.item(1).window
         assert isinstance(restored_top_view2_2, MSUITopViewWindow)
         wms_control2_2 = restored_top_view2_2.wms_control
         wms_control2_2.get_capabilities()
-        assert wms_control2_2.multilayers.cbWMS_URL.currentText().rstrip("/") == server_url, \
-            f"Expected URL {server_url}, got {wms_control2_2.multilayers.cbWMS_URL.currentText()}"
+        assert wms_control2_2.multilayers.cbWMS_URL.currentText().rstrip("/") == mswms_server, \
+            f"Expected URL {mswms_server}, got {wms_control2_2.multilayers.cbWMS_URL.currentText()}"
