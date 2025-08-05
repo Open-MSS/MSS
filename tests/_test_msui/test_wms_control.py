@@ -32,6 +32,7 @@ import hashlib
 import urllib
 from PyQt5 import QtCore, QtTest
 from mslib.msui import flighttrack as ft
+from mslib.utils.service_manager import WMSServiceManager
 import mslib.msui.wms_control as wc
 
 
@@ -55,7 +56,8 @@ class WMSControlWidgetSetup:
         self.scheme, self.host, self.port = parsed_url.scheme, parsed_url.hostname, parsed_url.port
 
     def _setup(self, widget_type, tmp_path):
-        wc.WMS_SERVICE_CACHE = {}
+        self.service_manager = WMSServiceManager()
+        self.service_manager.clear_cache()
         if widget_type == "hsec":
             self.view = HSecViewMockup()
         else:
@@ -491,7 +493,8 @@ class TestWMSControlWidgetSetupSimple:
 
     @pytest.fixture(autouse=True)
     def setup(self, tmp_path, qtbot):
-        wc.WMS_SERVICE_CACHE = {}
+        self.service_manager = WMSServiceManager()
+        self.service_manager.clear_cache()
         self.view = HSecViewMockup()
         self.tempdir = tmp_path
         self.window = wc.HSecWMSControlWidget(view=self.view, wms_cache=self.tempdir)
