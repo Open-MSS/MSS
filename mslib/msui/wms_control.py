@@ -1743,6 +1743,35 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 result.thumbnail((result.width, max_height), Image.LANCZOS)
             return result
 
+    def find_layer_item_by_name(self, layer_name):
+        """
+        Search multilayers.listLayers tree for a child with matching name.
+        """
+        for i in range(self.multilayers.listLayers.topLevelItemCount()):
+            top_item = self.multilayers.listLayers.topLevelItem(i)
+            for j in range(top_item.childCount()):
+                child = top_item.child(j)
+                if child.text(0).strip() == layer_name.strip():
+                    return child
+        return None
+
+    def reset_wms(self):
+        """
+        Reset WMS control to a clean state.
+        """
+        try:
+            self.multilayers.cbWMS_URL.setCurrentIndex(-1)
+            self.multilayers.listLayers.clearSelection()
+            self.cbInitTime.setCurrentIndex(-1)
+            self.cbValidTime.setCurrentIndex(-1)
+            self.multilayers.current_layer = None
+            # Clear any cached WMS data
+            if hasattr(self, 'wms_client'):
+                self.wms_client = None
+            logging.debug("WMS control reset")
+        except Exception as e:
+            logging.error("Error resetting WMS control: %s", str(e))
+
 
 class VSecWMSControlWidget(WMSControlWidget):
     """Subclass of WMSControlWidget that extends the WMS client to

@@ -680,7 +680,25 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     def get_filename(self):
         return self.filename
 
+    def column_index(self, column_name):
+        """Return the column index for a given column name."""
+        for col in range(self.columnCount()):
+            header = self.headerData(col, QtCore.Qt.Horizontal, QtCore.Qt.DisplayRole)
+            if str(header).lower() == column_name.lower():
+                return col
+        raise ValueError(f"Column '{column_name}' not found")
 
+    def get_waypoints_data(self):
+        """
+        Return waypoints as a JSON-serializable list of dictionaries.
+        """
+        return [{
+            "location": wp.location,
+            "lat": float(wp.lat),
+            "lon": float(wp.lon),
+            "flightlevel": float(wp.flightlevel),
+            "comments": wp.comments
+        } for wp in self.waypoints]
 #
 # CLASS  WaypointDelegate
 #
