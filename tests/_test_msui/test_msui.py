@@ -430,17 +430,17 @@ class Test_MSUIMainWindow:
         assert "new flight track (1)" in settings_data
         assert len(settings_data["new flight track (1)"]["views"]) == 1
         assert settings_data["new flight track (1)"]["views"][0]["view_type"] == "topview"
-        assert settings_data["new flight track (1)"]["views"][0]["wms"]["url"] == mswms_server
+        assert settings_data["new flight track (1)"]["views"][0]["wms"]["url"].rstrip('/') == mswms_server
         assert settings_data["new flight track (1)"]["views"][0]["wms"]["layer"] == "ecmwf_EUR_LL015.PLRelHum01"
         assert settings_data["new flight track (1)"]["views"][0]["wms"]["level"] == "200.0"
         assert "new flight track (2)" in settings_data
         assert len(settings_data["new flight track (2)"]["views"]) == 2
         assert settings_data["new flight track (2)"]["views"][0]["view_type"] == "topview"
-        assert settings_data["new flight track (2)"]["views"][0]["wms"]["url"] == mswms_server
+        assert settings_data["new flight track (2)"]["views"][0]["wms"]["url"].rstrip('/') == mswms_server
         assert settings_data["new flight track (2)"]["views"][0]["wms"]["layer"] == "ecmwf_EUR_LL015.PLRelHum01"
         assert settings_data["new flight track (2)"]["views"][0]["wms"]["level"] == "200.0"
         assert settings_data["new flight track (2)"]["views"][1]["view_type"] == "topview"
-        assert settings_data["new flight track (2)"]["views"][0]["wms"]["url"] == mswms_server
+        assert settings_data["new flight track (2)"]["views"][0]["wms"]["url"].rstrip('/') == mswms_server
         assert settings_data["new flight track (2)"]["views"][1]["wms"]["layer"] == "ecmwf_EUR_LL015.PLW01"
         assert settings_data["new flight track (2)"]["views"][1]["wms"]["level"] == "250.0"
 
