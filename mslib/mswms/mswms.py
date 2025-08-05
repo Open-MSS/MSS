@@ -90,12 +90,12 @@ def main():
 
     setup_logging(args)
     if args.seed:
-        test_data = Path("~/"), "mss/testdata"
-        if not test_data.exists("mss/testdata"):
-            test_data.makedirs(parents=True)
+        test_data = Path.home() / "mss/testdata"
+        if not test_data.exists():
+            test_data.mkdir(parents=True)
 
         examples = DataFiles(mswms_data_dir=test_data,
-                             mswms_server_config_dir=Path("~/mss"))
+                             mswms_server_config_dir=Path("~/mss").expanduser())
         examples.create_server_config(detailed_information=True)
         examples.create_data()
         print("\nTo use this setup you need the mswms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")
