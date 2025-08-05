@@ -504,11 +504,11 @@ class SideViewPlotter(ViewPlotter):
         # Sets fontsize value for x axis ticklabel.
         axes_label_size = (self.sideview_size_settings["axes_label_size"]
                            if self.settings["axes_label_size"] == "default"
-                           else int(self.settings["axes_label_size"]))
+                           else int(self.settings["axes_label_size"].replace("pt", "").strip()))
         # Sets fontsize value for plot title and axes title/label
         plot_title_size = (self.sideview_size_settings["plot_title_size"]
                            if self.settings["plot_title_size"] == "default"
-                           else int(self.settings["plot_title_size"]))
+                           else int(self.settings["plot_title_size"].replace("pt", "").strip()))
         # Updates the fontsize of the x-axis ticklabels of sideview.
         self.ax.tick_params(axis='x', labelsize=axes_label_size)
         # Updates the fontsize of plot title and x-axis title of sideview.
@@ -784,9 +784,9 @@ class LinearViewPlotter(ViewPlotter):
         super().set_settings(settings, save)
 
         pts = (self.linearview_size_settings["plot_title_size"] if self.settings["plot_title_size"] == "default"
-               else int(self.settings["plot_title_size"]))
+               else int(self.settings["plot_title_size"].replace("pt", "").strip()))
         label_size = (self.linearview_size_settings["axes_label_size"] if self.settings["axes_label_size"] == "default"
-                      else int(self.settings["axes_label_size"]))
+                      else int(self.settings["axes_label_size"].replace("pt", "").strip()))
         self.ax.tick_params(axis='both', labelsize=label_size)
         self.ax.set_title("Linear flight profile", fontsize=pts, horizontalalignment='left', x=0)
         self.ax.figure.canvas.draw()
