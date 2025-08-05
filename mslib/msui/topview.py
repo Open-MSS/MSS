@@ -48,6 +48,7 @@ from mslib.msui import autoplot_dockwidget as apd
 from mslib.msui.icons import icons
 from mslib.msui.flighttrack import Waypoint
 from mslib.utils.colordialog import CustomColorDialog
+import traceback
 
 # Dock window indices.
 WMS = 0
@@ -365,6 +366,9 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.mpl.navbar.push_current()
 
         self.openTool(WMS + 1)
+        if self.docks[WMS]:
+            self.wms_control = self.docks[WMS].widget()
+            self.docks[WMS].setVisible(True)
 
     def update_predefined_maps(self, extra=None):
         current_map_key = self.cbChangeMapSection.currentText()
@@ -482,8 +486,15 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     def layer_val_changed(self, strr):
         self.currlayerobj = strr
         layerstring = str(strr)
-        second_colon_index = layerstring.find(':', layerstring.find(':') + 1)
-        self.currurl = layerstring[:second_colon_index].strip() if second_colon_index != -1 else layerstring.strip()
+        first_colon_index = layerstring.find(':')
+        second_colon_index = layerstring.find(':', first_colon_index + 1)
+        third_colon_index = layerstring.find(':', second_colon_index + 1)
+        if third_colon_index != -1:
+            self.currurl = layerstring[:third_colon_index].strip()
+        elif second_colon_index != -1:
+            self.currurl = layerstring[:second_colon_index].strip()
+        else:
+            layerstring.strip()
         self.currlayer = layerstring.split('|')[1].strip() if '|' in layerstring else None
 
     @QtCore.pyqtSlot()
@@ -608,3 +619,186 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
     def update_roundtrip_enabled(self):
         self.btRoundtrip.setEnabled(self.is_roundtrip_possible())
+
+    def get_settings(self):
+        """Return a dictionary of all top view settings."""
+        try:
+            # Get current map section and projection
+            current_map_key = self.cbChangeMapSection.currentText()
+            predefined_map_sections = config_loader(dataset="predefined_map_sections")
+            current_map = predefined_map_sections.get(current_map_key, {"CRS": "EPSG:4326", "map": {}})
+            projection = current_map.get("CRS", "EPSG:4326")
+
+            # Validate projection
+            supported_projections = ['cyl', 'merc', 'mill', 'lcc', 'laea', 'EPSG:4326', 'EPSG:3857']
+            if projection not in supported_projections:
+                logging.warning(f"Unsupported projection '{projection}', falling back to 'EPSG:4326'")
+                projection = "EPSG:4326"
+
+            # Get flight track appearance settings and waypoints
+            appearance_settings = self.mpl.canvas.get_settings()
+            if not isinstance(appearance_settings, dict):
+                logging.warning("Invalid appearance settings from mpl.canvas, expected dict, got %s: %s",
+                                type(appearance_settings).__name__, appearance_settings)
+                appearance_settings = {}
+
+            # Get WMS settings (if connected)
+            wms_settings = {}
+            if self.wms_connected:
+                wms_settings = {
+                    "url": self.currurl,
+                    "layer": self.currlayer,
+                    "level": self.currlevel,
+                    "styles": self.currstyles,
+                    "init_time": self.curritime,
+                    "valid_time": self.currvtime,
+                }
+            logging.debug(f"from get_settings url is {wms_settings['url']}")
+
+            # Get dock widget states
+            dock_states = [dock is not None for dock in self.docks]
+
+            # Get current extent from Basemap (may differ from predefined)
+            lon_min = self.mpl.canvas.map.llcrnrlon
+            lon_max = self.mpl.canvas.map.urcrnrlon
+            lat_min = self.mpl.canvas.map.llcrnrlat
+            lat_max = self.mpl.canvas.map.urcrnrlat
+
+            # Validate: if lat_min == lat_max or lon_min == lon_max, use defaults
+            if lat_min == lat_max or lon_min == lon_max:
+                logging.warning("Invalid extent read from map, using defaults")
+                lon_min, lon_max = -120.0, 120.0
+                lat_min, lat_max = -60.0, 60.0
+
+            return {
+                "view_type": "topview",
+                "map_section": current_map_key,
+                "projection": projection,
+                "extent": {
+                    "lon_min": lon_min,
+                    "lon_max": lon_max,
+                    "lat_min": lat_min,
+                    "lat_max": lat_max
+                },
+                "flight_track": appearance_settings,
+                "wms": wms_settings,
+                "docks_open": dock_states,
+            }
+        except Exception as e:
+            logging.error("Failed to get settings for topview (id: %s): %s",
+                          getattr(self, 'view_id', 'unknown'), str(e))
+            return {}
+
+    def restore_wms_settings(self, wms):
+        """
+        Restore WMS settings into the existing WMS control widget (Side View).
+        """
+        if self.wms_control is None:
+            logging.warning("Cannot restore WMS settings: wms_control does not exist")
+            return
+
+        try:
+            self.wms_control.reset_wms()
+            self.wms_connected = False
+
+            url, layer, level = wms.get("url"), wms.get("layer"), wms.get("level")
+            styles, init_time, valid_time = wms.get("styles"), wms.get("init_time"), wms.get("valid_time")
+
+            # Optionally initialise
+            self.wms_control.initialise_wms(url, level=level or "")
+
+            self.wms_control.multilayers.cbWMS_URL.setCurrentText(url)
+            self.wms_control.select_layer_and_style(self.wms_control.multilayers.listLayers, layer, styles)
+            self.wms_control.row_is_selected(url, layer, styles, level, "top")
+
+            if init_time:
+                idx = self.wms_control.cbInitTime.findText(init_time)
+                if idx >= 0:
+                    self.wms_control.cbInitTime.setCurrentIndex(idx)
+
+            idx = self.wms_control.cbValidTime.findText(valid_time)
+            if idx >= 0:
+                self.wms_control.cbValidTime.setCurrentIndex(idx)
+                self.wms_control.leftrow_is_selected(valid_time)
+            else:
+                logging.warning("Valid time %s not found in combo box", valid_time)
+
+            target_layer_item = self.wms_control.find_layer_item_by_name(layer)
+
+            if target_layer_item:
+                self.wms_control.multilayers.current_layer = target_layer_item
+                self.wms_control.get_map()
+            else:
+                logging.warning("Layer '%s' not found; skipping get_map to avoid crash", layer)
+
+            self.wms_connected = True
+            self.mpl.canvas.redraw_map()
+
+        except Exception as e:
+            logging.error("Error restoring WMS settings: %s\n%s", str(e), traceback.format_exc())
+
+    def set_settings(self, view):
+        """
+        Restore non-WMS Top View settings:
+        - map section, projection, extent
+        - flight track appearance
+        - waypoints
+        - dock visibility
+        Calls restore_wms_settings if WMS is included.
+        """
+        try:
+            if isinstance(view, list):
+                view = next((v for v in view if v.get("view_type") == "topview"), {})
+
+            # Clear existing WMS state
+            if self.wms_control:
+                self.wms_control.reset_wms()
+                self.wms_connected = False
+
+            map_section = view.get("map_section")
+            projection = view.get("projection")
+            extent = view.get("extent")
+
+            predefined = config_loader(dataset="predefined_map_sections")
+            if map_section in predefined:
+                map_settings = predefined[map_section].get("map", {}).copy()
+                map_settings.update({"CRS": projection})
+                map_settings.update({
+                    "llcrnrlon": extent.get("lon_min", -120.0),
+                    "urcrnrlon": extent.get("lon_max", 120.0),
+                    "llcrnrlat": extent.get("lat_min", -60.0),
+                    "urcrnrlat": extent.get("lat_max", 60.0),
+                })
+
+                self.cbChangeMapSection.setCurrentText(map_section)
+                if not getattr(self.mpl.canvas, "map", None):
+                    self.mpl.canvas.init_map(model=self.active_flighttrack, **map_settings)
+                else:
+                    self.mpl.canvas.redraw_map(kwargs_update=map_settings)
+
+            # Restore flight track appearance
+            flight_track = view.get("flight_track", {})
+            if flight_track:
+                self.mpl.canvas.set_settings(flight_track)
+
+            # Update plot
+            self.mpl.canvas.waypoints_interactor.plotter.update_from_waypoints(
+                self.active_flighttrack.all_waypoint_data())
+            self.mpl.canvas.waypoints_interactor.redraw_path()
+
+            # Restore docks
+            docks_open = view.get("docks_open", [])
+            if hasattr(self, 'docks') and self.docks:
+                for idx, state in enumerate(docks_open):
+                    if idx < len(self.docks) and self.docks[idx]:
+                        self.docks[idx].setVisible(state)
+            else:
+                logging.warning("Docks not initialized; skipping dock visibility restore")
+
+            wms = view.get("wms", {})
+            if wms:
+                self.restore_wms_settings(wms)
+
+            self.mpl.canvas.draw()
+        except Exception as e:
+            logging.error("Error restoring non-WMS Top View settings: %s\n%s", str(e), traceback.format_exc())
