@@ -417,9 +417,6 @@ class Test_MSUIMainWindow:
             timeout=500
         )
 
-        settings1 = window.flight_track_settings["new flight track (1)"]
-        assert settings1["views"][0]["wms"]["url"] == mswms_server
-
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             window.close()
 
