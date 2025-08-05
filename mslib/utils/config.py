@@ -56,6 +56,10 @@ class MSUIDefaultConfig:
     Do not change any value for good reasons.
     Your values can be set in your personal msui_settings.json file
     """
+
+    # New setting for view restorations
+    restore_views = False
+
     # this skips the verification of the user token on each mscolab request
     mscolab_skip_verify_user_token = True
 
@@ -314,6 +318,7 @@ class MSUIDefaultConfig:
 
     # Fixed key/value pair options
     key_value_options = [
+        'restore_views',
         'mscolab_skip_verify_user_token',
         'filepicker_default',
         'mss_dir',
@@ -409,6 +414,7 @@ class MSUIDefaultConfig:
         "topview": "Dictionary to make title, label, and ticklabel sizes for topview configurable",
         "sideview": "Dictionary to make title, label, and ticklabel sizes for sideview configurable",
         "linearview": "Dictionary to make title, label, and ticklabel sizes for linearview configurable",
+        "restore_views": "Enable restoration of view settings (e.g. top view) on startup",
     }
 
 
