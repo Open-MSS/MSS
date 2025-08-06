@@ -187,7 +187,11 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             view = "linear"
 
         # Create the configuration path
-        config_path = os.path.join(const.MSUI_CONFIG_PATH, "mssautoplot.json")
+        config_path = const.MSS_AUTOPLOT.as_posix()
+        if not os.path.exists(const.MSUI_CONFIG_PATH.as_posix()):
+            const.MSS_AUTOPLOT.parent.mkdir(parents=True, exist_ok=True)
+        if not os.path.exists(config_path):
+            const.MSS_AUTOPLOT.write_text("{}")
 
         # Save the config settings to the file
         if config_path:

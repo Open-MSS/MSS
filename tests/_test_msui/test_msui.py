@@ -34,7 +34,7 @@ from pathlib import Path
 from urllib.request import urlopen
 from PyQt5 import QtWidgets, QtTest
 from mslib import __version__
-from tests.constants import ROOT_DIR, MSUI_CONFIG_PATH
+from tests.constants import ROOT_DIR, MSUI_CONFIG_PATH, MSUI_CONFIG_FILE_PATH
 from mslib.msui import msui
 from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
@@ -48,6 +48,23 @@ def test_main():
                         return_value=argparse.Namespace(version=True)):
             msui.main()
         assert pytest_wrapped_e.typename == "SystemExit"
+
+
+def test_keep_config_file(qtbot):
+    # in conftest we reset always the config file to an empty dict
+    _config = MSUI_CONFIG_FILE_PATH.read_text()
+    assert _config == "{}"
+    config = """{
+            "MSCOLAB_skip_archived_operations": true
+}"""
+    MSUI_CONFIG_FILE_PATH.write_text(config)
+    assert MSUI_CONFIG_FILE_PATH.exists()
+    msui = msui_mw.MSUIMainWindow()
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+        msui.close()
+    # after closing the window the config file should be the same as before
+    _config = MSUI_CONFIG_FILE_PATH.read_text()
+    assert _config == config
 
 
 class Test_MSS_TutorialMode:

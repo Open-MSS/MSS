@@ -425,6 +425,17 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     def __init__(self, local_operations_data=None, tutorial_mode=False, *args):
         super().__init__(*args)
         self.tutorial_mode = tutorial_mode
+        if not constants.MSUI_CONFIG_PATH.exists():
+            constants.MSUI_CONFIG_PATH.mkdir(parents=True)
+        if not constants.MSUI_SETTINGS.exists():
+            constants.MSUI_SETTINGS.parent.mkdir(parents=True, exist_ok=True)
+            constants.MSUI_SETTINGS.write_text("{}")
+        try:
+            read_config_file()
+        except (FileNotFoundError) as ex:
+            message = f'\n\nFix the setup of your "MSUI_SETTINGS" configuration.\n{ex}'
+            logging.error(message)
+            sys.exit()
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('32x32')))
         # This code is required in Windows 7 to use the icon set by setWindowIcon in taskbar

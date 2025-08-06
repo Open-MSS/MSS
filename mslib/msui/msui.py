@@ -80,12 +80,6 @@ def main(tutorial_mode=False):
     logging.info("Started from : %s", os.getcwd())
     logging.info("Executable location: %s", os.path.abspath(sys.argv[0]))
     logging.info("Command line arguments: %s", sys.argv)
-    try:
-        read_config_file()
-    except (FileNotFoundError) as ex:
-        message = f'\n\nFix the setup of your "MSUI_SETTINGS" configuration.\n{ex}'
-        logging.error(message)
-        sys.exit()
 
     application = QtWidgets.QApplication(sys.argv)
     mainwindow = None
