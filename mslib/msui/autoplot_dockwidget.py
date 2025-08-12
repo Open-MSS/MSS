@@ -188,7 +188,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
         # Create the configuration path
         config_path = const.MSS_AUTOPLOT.as_posix()
-        if not os.path.exists(const.MSUI_CONFIG_PATH.as_posix()):
+        if not os.path.exists(config_path):
             const.MSS_AUTOPLOT.parent.mkdir(parents=True, exist_ok=True)
         if not os.path.exists(config_path):
             const.MSS_AUTOPLOT.write_text("{}")
