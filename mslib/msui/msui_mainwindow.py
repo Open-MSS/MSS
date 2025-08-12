@@ -36,6 +36,9 @@ import logging
 import os
 import re
 import sys
+import fs
+import json
+import requests
 from pathlib import Path
 
 from slugify import slugify
@@ -603,6 +606,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 if flight == item.operation_path:
                     item = self.listOperationsMSC.item(index)
                     self.mscolab.set_active_op_id(item)
+                    self.send_view_settings_to_server()
                     break
         else:
             for index in range(self.listFlightTracks.count()):
@@ -1022,6 +1026,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             try:
                 self.mscolab.waypoints_model.name = self.mscolab.active_operation_name
                 self.create_view(_type, self.mscolab.waypoints_model)
+                self.send_view_settings_to_server()
             except AttributeError:
                 # can happen, when the servers secret was changed
                 show_popup(self.mscolab.ui, "Error", "Session expired, new login required")
@@ -1311,6 +1316,117 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 logging.error("Failed to update settings for view %s (type: %s, id: %s): %s",
                               getattr(view, 'name', 'unknown'), type(view).__name__,
                               getattr(view, 'view_id', 'unknown'), str(ex))
+    
+    def get_operation_view_settings(self):
+        """Collect settings for all views associated with the active operation."""
+        logging.info("get_operation_view_settings: local_active=%s, token=%s, active_op_id=%s",
+                    self.local_active, self.mscolab.token, self.mscolab.active_op_id)
+        
+        settings = {
+            "global": {
+                "op_id": self.mscolab.active_op_id,
+                "user_id": self.mscolab.user.get("id") if self.mscolab.user else None,
+                "operation_name": self.mscolab.active_operation_name
+            },
+            "views": []
+        }
+        
+        if not self.mscolab.active_op_id:
+            logging.warning("No active operation selected, returning empty settings")
+            return settings
+
+        for i in range(self.listViews.count()):
+            view = self.listViews.item(i).window
+            try:
+                if hasattr(view, 'get_settings'):
+                    view_settings = view.get_settings()
+                    if not isinstance(view_settings, dict):
+                        logging.warning("Invalid settings from view %s: %s", getattr(view, 'name', 'unknown'), view_settings)
+                        continue
+                    view_type = getattr(view, 'view_type', type(view).__name__).lower().replace(" ", "")
+                    view_id = getattr(view, 'view_id', f"view_{view_type}_{self.mscolab.active_op_id}_{i}")
+                    view_settings["view_type"] = view_type
+                    view_settings["view_id"] = view_id
+                    settings["views"].append(view_settings)
+                    logging.debug("Collected settings for view %s: %s", view_id, json.dumps(view_settings, indent=2))
+                else:
+                    logging.warning("View %s has no get_settings method", getattr(view, 'name', 'unknown'))
+            except Exception as ex:
+                logging.error("Failed to collect settings for view %s: %s", getattr(view, 'name', 'unknown'), ex)
+
+        logging.info("Collected settings for %d views: %s", len(settings["views"]), json.dumps(settings, indent=2))
+        return settings
+
+    def save_operation_view_settings(self, settings):
+        """Save collected settings for the active operation to the server."""
+        logging.info("save_operation_view_settings: op_id=%s, server_url=%s",
+                    settings.get("global", {}).get("op_id"), self.mscolab.mscolab_server_url)
+        
+        try:
+            api_endpoint = f"{self.mscolab.mscolab_server_url}/save_operation_view_settings"
+            logging.info("Sending request to %s", api_endpoint)
+            headers = {
+                "Authorization": f"Bearer {self.mscolab.token}",
+                "Content-Type": "application/json"
+            }
+            logging.info("Request headers: %s", headers)
+            payload = {
+                "operation_name": self.mscolab.active_operation_name,
+                "settings": settings
+            }
+
+            response = requests.post(api_endpoint, json=payload, headers=headers, timeout=10)
+            logging.info("Response received: status=%s, text=%s", response.status_code, response.text)
+
+            try:
+                response_data = response.json()
+                logging.debug("Parsed response: %s", response_data)
+                if response.status_code == 200 and response_data.get("success"):
+                    logging.info("Settings saved successfully for op_id=%s", settings.get("global", {}).get("op_id"))
+                else:
+                    logging.error("Server error: status=%s, message=%s", response.status_code, response_data.get("message", "Unknown error"))
+            except ValueError as ex:
+                logging.error("Invalid JSON response from server: %s, response_text=%s", ex, response.text)
+
+        except requests.exceptions.ConnectionError as ex:
+            logging.error("Connection error: %s", ex)
+        except requests.exceptions.Timeout as ex:
+            logging.error("Request timeout: %s", ex)
+        except requests.exceptions.RequestException as ex:
+            logging.error("Request error: %s", ex)
+
+    def save_view_settings(self):
+        # Save view settings for active flight track
+        if self.local_active:
+            for i in range(self.listViews.count()):
+                view = self.listViews.item(i).window
+                if hasattr(view, 'active_flighttrack') and view.active_flighttrack == self.active_flight_track:
+                    self.update_flight_track_settings(self.active_flight_track, view=view)
+            for json_key in self.activated_flight_tracks:
+                settings = self.flight_track_settings.get(json_key)
+                if settings:
+                    view_restoration.save_view_settings(settings["views"], settings["global"], json_key)
+                else:
+                    logging.debug("No setting available for %s", json_key)
+            self.activated_flight_tracks.clear()
+    
+    def send_view_settings_to_server(self):
+        """Send view settings to the server if MSColab context is valid."""
+        logging.debug("send_view_settings_to_server: local_active=%s, token=%s, active_op_id=%s, server_url=%s",
+                    self.local_active, self.mscolab.token, self.mscolab.active_op_id, self.mscolab.mscolab_server_url)
+        
+        if self.local_active or not self.mscolab.mscolab_server_url or not self.mscolab.token or not self.mscolab.active_op_id:
+            logging.warning("Skipping send_view_settings_to_server: Invalid MSColab context (server_url=%s, token=%s, op_id=%s)",
+                        self.mscolab.mscolab_server_url, self.mscolab.token, self.mscolab.active_op_id)
+            return
+
+        settings = self.get_operation_view_settings()
+        logging.debug("Settings to send: %s", json.dumps(settings, indent=2))
+        if not settings["views"]:
+            logging.warning("No view settings to send for op_id=%s", self.mscolab.active_op_id)
+            return
+
+        self.save_operation_view_settings(settings)
 
     def closeEvent(self, event):
         """Ask user if he/she wants to close the application. If yes, also
@@ -1328,8 +1444,12 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             if self.mscolab.help_dialog is not None:
                 self.mscolab.help_dialog.close()
             # cleanup mscolab widgets
-            if self.mscolab.token is not None:
+            # Save MSColab view settings
+            if self.mscolab.token is not None and not self.local_active:
+                logging.debug("closeEvent: Triggering send_view_settings_to_server")
+                self.send_view_settings_to_server()
                 self.mscolab.logout()
+
             # Table View stick around after MainWindow closes - maybe some dangling reference?
             # This removes them for sure!
             self.update_flight_track_settings(self.active_flight_track)
@@ -1346,6 +1466,10 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 else:
                     logging.debug("No setting available")
             self.activated_flight_tracks.clear()
+
+            self.update_flight_track_settings(self.active_flight_track)
+            self.save_view_settings()
+
             while self.listViews.count() > 0:
                 self.listViews.item(0).window.handle_force_close()
             self.listViews.clear()

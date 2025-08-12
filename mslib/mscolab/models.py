@@ -222,3 +222,23 @@ class Change(db.Model):
             self.version_name = str(version_name)
         if comment is not None:
             self.comment = str(comment)
+
+class ViewSettings(db.Model):
+
+    __tablename__ = "ViewSettings"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    op_id = db.Column(db.Integer, db.ForeignKey('operations.id'))
+    u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    settings = db.Column(db.Text, nullable=False)
+    created_at = db.Column(AwareDateTime, default=lambda: datetime.datetime.now(tz=datetime.timezone.utc))
+    updated_at = db.Column(AwareDateTime, default=lambda: datetime.datetime.now(tz=datetime.timezone.utc),
+                           onupdate=lambda: datetime.datetime.now(tz=datetime.timezone.utc))
+
+    user = db.relationship('User', backref='view_settings')
+    operation = db.relationship('Operation', backref='view_settings')
+    __table_args__ = (db.UniqueConstraint('u_id', 'op_id', name='u_id_op_id'),)
+
+    def __init__(self, op_id, u_id, settings):
+        self.op_id = int(op_id)
+        self.u_id = int(u_id)
+        self.settings = settings
