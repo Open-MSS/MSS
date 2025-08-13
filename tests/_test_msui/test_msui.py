@@ -67,6 +67,25 @@ def test_keep_config_file(qtbot):
     assert _config == config
 
 
+def test_multiple_times_save_filename(qtbot, tmp_path):
+    msui = msui_mw.MSUIMainWindow()
+    msui.show()
+    msui.create_new_flight_track()
+    filename = os.path.join(tmp_path, "example.ftml")
+    assert os.path.exists(filename) is False
+    # verify that we can save the file multiple times
+    msui.save_flight_track(filename)
+    assert os.path.exists(filename)
+    first_timestamp = os.path.getmtime(filename)
+    msui.save_handler()
+    second_timestamp = os.path.getmtime(filename)
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+        msui.close()
+    # check that the second save is newer than the first one
+    assert second_timestamp > first_timestamp
+    assert os.path.exists(filename)
+
+
 class Test_MSS_TutorialMode:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot, qapp):
