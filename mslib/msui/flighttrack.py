@@ -36,6 +36,7 @@
 
 import datetime
 import logging
+import os
 from pathlib import Path
 
 import xml.dom.minidom
@@ -626,11 +627,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         if not filename:
             raise ValueError("filename to save flight track cannot be None or empty")
 
-        self.filename = Path(filename)
+        self.filename = filename
         doc = self.get_xml_doc()
-        with self.filename.open("w") as file_object:
+        with open(filename, "w") as file_object:
             doc.writexml(file_object, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
-        self.name = self.filename.stem.replace(".ftml", "").strip()
+        self.name = os.path.basename(self.filename).replace(".ftml", "").strip()
 
     def get_xml_doc(self):
         doc = xml.dom.minidom.Document()  # nosec, we take care of writing correct XML
