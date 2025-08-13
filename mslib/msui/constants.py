@@ -31,11 +31,9 @@ import os
 import platformdirs
 from pathlib import Path
 
-# ToDo refactor to generic functions, keep only constants
 HOME = Path.home()
 MSUI_CONFIG_PATH = Path(os.getenv("MSUI_CONFIG_PATH", HOME / ".config" / "msui"))
-# Make sure that MSUI_CONFIG_PATH exists
-MSUI_CONFIG_PATH.mkdir(parents=True, exist_ok=True)
+
 MSUI_CONFIG_SYSPATH = str(MSUI_CONFIG_PATH.resolve())
 
 MSUI_CACHE_PATH = platformdirs.user_cache_path("msui", "mss")
@@ -44,10 +42,6 @@ GRAVATAR_DIR_PATH = MSUI_CONFIG_PATH / "gravatars"
 
 MSUI_SETTINGS = Path(os.getenv('MSUI_SETTINGS', MSUI_CONFIG_PATH / "msui_settings.json"))
 
-MSUI_SETTINGS.parent.mkdir(parents=True, exist_ok=True)
-MSUI_SETTINGS.write_text("{}")
-
 MSS_AUTOPLOT = Path(os.getenv('MSS_AUTOPLOT', MSUI_CONFIG_PATH / "mssautoplot.json"))
-MSS_AUTOPLOT.write_text("{}")
 
 AUTH_LOGIN_CACHE = {}
