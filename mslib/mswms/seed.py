@@ -838,7 +838,7 @@ class DataFiles:
 
     dimensions = {
         "latitude": ("lat", "degrees_north", ""),
-        "longitude": ("lon", "degrees_north", ""),
+        "longitude": ("lon", "degrees_east", ""),
         "hybrid": ("hybrid", None, None),
         "atmosphere_pressure_coordinate": ("isobaric", "hPa", "down"),
         "atmosphere_potential_temperature_coordinate": ("isentropic", "K", ""),
