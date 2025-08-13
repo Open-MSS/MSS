@@ -17,8 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-    - uses: prefix-dev/setup-pixi@273e4808c831936a3ce1a3080c829d9e153143d3 # v0.8.11
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4
+    - uses: prefix-dev/setup-pixi@8ca4608ef7f4daeb54f5205b20d0b7cb42f11143 # v0.8.14
       with:
         pixi-version: latest
         cache: true
@@ -30,8 +30,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-    - uses: prefix-dev/setup-pixi@273e4808c831936a3ce1a3080c829d9e153143d3 # v0.8.11
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4
+    - uses: prefix-dev/setup-pixi@8ca4608ef7f4daeb54f5205b20d0b7cb42f11143 # v0.8.14
       with:
         pixi-version: latest
         cache: true
@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4
     - name: Check for CRLF in the repository
       run: |
         files_with_crlf="$(git ls-files --eol | awk '$1 ~ "crlf"')"
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4
     - name: Check for whitespace issues in the repository
       # The two example.txt files need to be excluded because whitespace at EOL is part
       # of their format and they fail to parse otherwise.
@@ -72,7 +72,7 @@ jobs:
   ensure-sha-pinned-actions:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v4
       - name: Ensure SHA pinned actions
         uses: zgosalvez/github-actions-ensure-sha-pinned-actions@fc87bb5b5a97953d987372e74478de634726b3e5 # v3
         with:
