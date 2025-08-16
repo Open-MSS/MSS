@@ -272,16 +272,8 @@ def register_user(email, password, username, fullname):
 def verify_user(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        auth_header = request.headers.get('Authorization')
-        if auth_header and auth_header.startswith('Bearer '):
-            token = auth_header.split(" ")[1]
-            logging.debug("Token found in Authorization header")
-        else:
-            # Fallback to existing behavior
-            token = request.args.get('token', request.form.get('token', False))
-            logging.debug("Token checked in args/form: %s", token)
         try:
-            user = User.verify_auth_token(token)
+            user = User.verify_auth_token(request.args.get('token', request.form.get('token', False)))
         except TypeError:
             logging.debug("no token in request form")
             abort(404)
@@ -882,10 +874,9 @@ def reset_request():
         return render_template('errors/403.html'), 403
 
 @APP.route("/save_operation_view_settings", methods=["POST"])
+@verify_user
 def save_operation_view_settings():
-    logging.info("Received request to /save_operation_view_settings")
     try:
-        logging.info("In the server")
         settings_data = request.get_json()
         logging.debug("Received payload: %s", json.dumps(settings_data, indent=2))
         if not settings_data:
@@ -899,26 +890,51 @@ def save_operation_view_settings():
 
         settings_str = json.dumps(settings_data["settings"])
         u_id = g.user.id
-        logging.debug("Saving settings for u_id=%s, op_id=%s: %s", u_id, op_id, settings_str)
 
         view_setting = ViewSettings.query.filter_by(u_id=u_id, op_id=op_id).first()
         if view_setting:
             view_setting.settings = settings_str
             view_setting.updated_at = datetime.datetime.now(tz=datetime.timezone.utc)
-            logging.debug("Updating existing ViewSettings record: u_id=%s, op_id=%s", u_id, op_id)
         else:
             view_setting = ViewSettings(op_id=op_id, u_id=u_id, settings=settings_str)
             db.session.add(view_setting)
-            logging.debug("Creating new ViewSettings record: u_id=%s, op_id=%s", u_id, op_id)
 
         db.session.commit()
-        logging.info("Settings saved successfully for op_id=%s, u_id=%s", op_id, u_id)
         return jsonify({"success": True, "message": "Settings saved successfully"}), 200
 
     except Exception as e:
         db.session.rollback()
         logging.error("Error saving view settings: %s", str(e))
         return jsonify({"success": False, "message": f"Failed to save settings: {str(e)}"}), 500
+    
+@APP.route("/get_operation_view_settings", methods=["GET"])
+@verify_user
+def get_operation_view_settings():
+    logging.info("in the server")
+    op_id = request.args.get('op_id', type=int)
+    if not op_id:
+        return jsonify({"success": False, "message": "Missing op_id parameter"}), 400
+    
+    u_id = g.user.id
+    view_settings = ViewSettings.query.filter_by(u_id=u_id, op_id=op_id).first()
+    if view_settings:
+        try:
+            settings = json.loads(view_settings.settings) if view_settings.settings else {}
+            logging.info(settings)
+            return jsonify({
+                "success": True,
+                "settings": settings
+            }), 200
+        except json.JSONDecodeError as e:
+            return jsonify({
+                "success": False,
+                "message": f"Invalid settings data in database: {str(e)}"
+            }), 500
+    else:
+        return jsonify({
+            "success": False,
+            "message": "No settings found for the specified operation"
+        }), 404
 
 if mscolab_settings.USE_SAML2:
     # setup idp login config
