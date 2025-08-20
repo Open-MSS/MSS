@@ -223,13 +223,14 @@ class Change(db.Model):
         if comment is not None:
             self.comment = str(comment)
 
+
 class ViewSettings(db.Model):
 
     __tablename__ = "ViewSettings"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
     op_id = db.Column(db.Integer, db.ForeignKey('operations.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    settings = db.Column(db.Text, nullable=False)
+    settings = db.Column(db.JSON, nullable=True)
     created_at = db.Column(AwareDateTime, default=lambda: datetime.datetime.now(tz=datetime.timezone.utc))
     updated_at = db.Column(AwareDateTime, default=lambda: datetime.datetime.now(tz=datetime.timezone.utc),
                            onupdate=lambda: datetime.datetime.now(tz=datetime.timezone.utc))

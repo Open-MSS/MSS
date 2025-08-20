@@ -55,7 +55,6 @@ from mslib.utils import conditional_decorator
 from mslib.index import create_app
 from mslib.mscolab.forms import ResetRequestForm, ResetPasswordForm
 from mslib.mscolab import migrations
-from mslib.mscolab.models import Operation, Permission, db, ViewSettings
 
 
 def _handle_db_upgrade():
@@ -873,12 +872,14 @@ def reset_request():
         logging.warning("To send emails, the value of `MAIL_ENABLED` in `conf.py` should be set to True.")
         return render_template('errors/403.html'), 403
 
+
 @APP.route("/save_operation_view_settings", methods=["POST"])
 @verify_user
 def save_operation_view_settings():
+    logging.info("Inside save_operation_view_settings route")
     try:
         settings_data = request.get_json()
-        logging.debug("Received payload: %s", json.dumps(settings_data, indent=2))
+        logging.info("Received payload: %s", json.dumps(settings_data, indent=2))
         if not settings_data:
             logging.error("No data provided in request")
             return jsonify({"success": False, "message": "No data provided"}), 400
@@ -888,53 +889,38 @@ def save_operation_view_settings():
             logging.error("Missing operation ID in payload")
             return jsonify({"success": False, "message": "Missing operation ID"}), 400
 
-        settings_str = json.dumps(settings_data["settings"])
-        u_id = g.user.id
-
-        view_setting = ViewSettings.query.filter_by(u_id=u_id, op_id=op_id).first()
-        if view_setting:
-            view_setting.settings = settings_str
-            view_setting.updated_at = datetime.datetime.now(tz=datetime.timezone.utc)
+        user = g.user
+        success, message = fm.save_view_settings(op_id, user, settings_data["settings"])
+        if success:
+            return jsonify({"success": True, "message": message}), 200
         else:
-            view_setting = ViewSettings(op_id=op_id, u_id=u_id, settings=settings_str)
-            db.session.add(view_setting)
-
-        db.session.commit()
-        return jsonify({"success": True, "message": "Settings saved successfully"}), 200
+            return jsonify({"success": False, "message": message}), 400
 
     except Exception as e:
-        db.session.rollback()
         logging.error("Error saving view settings: %s", str(e))
         return jsonify({"success": False, "message": f"Failed to save settings: {str(e)}"}), 500
-    
+
+
 @APP.route("/get_operation_view_settings", methods=["GET"])
 @verify_user
 def get_operation_view_settings():
-    logging.info("in the server")
+    logging.info("Fetching view settings for operation")
     op_id = request.args.get('op_id', type=int)
     if not op_id:
         return jsonify({"success": False, "message": "Missing op_id parameter"}), 400
-    
-    u_id = g.user.id
-    view_settings = ViewSettings.query.filter_by(u_id=u_id, op_id=op_id).first()
-    if view_settings:
-        try:
-            settings = json.loads(view_settings.settings) if view_settings.settings else {}
-            logging.info(settings)
-            return jsonify({
-                "success": True,
-                "settings": settings
-            }), 200
-        except json.JSONDecodeError as e:
-            return jsonify({
-                "success": False,
-                "message": f"Invalid settings data in database: {str(e)}"
-            }), 500
+
+    user = g.user
+    success, message, settings = fm.get_view_settings(op_id, user)
+    logging.info("Fetched settings from DB: %s", settings)
+    if success:
+        logging.info("View settings retrieved for user %s, operation %s", user.id, op_id)
+        return jsonify({"success": True, "message": message, "settings": settings}), 200
     else:
-        return jsonify({
-            "success": False,
-            "message": "No settings found for the specified operation"
-        }), 404
+        ERROR_KEYWORDS = ("Access denied", "Missing", "Invalid settings", "Invalid JSON")
+        status_code = 400 if any(e in message for e in ERROR_KEYWORDS) else 500
+        logging.error("Failed to retrieve view settings for user %s, operation %s: %s", user.id, op_id, message)
+        return jsonify({"success": False, "message": message, "settings": settings}), status_code
+
 
 if mscolab_settings.USE_SAML2:
     # setup idp login config

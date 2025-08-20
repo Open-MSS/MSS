@@ -1747,6 +1747,8 @@ class MSUIMscolab(QtCore.QObject):
 
     @verify_user_token
     def set_active_op_id(self, item):
+        from mslib.msui.msui_mainwindow import MSUIMainWindow
+        msui = MSUIMainWindow()
         logging.debug('set_active_op_id %s %s %s', item, item.op_id, self.active_op_id)
         if not self.ui.local_active and item.op_id == self.active_op_id:
             return
@@ -1786,6 +1788,7 @@ class MSUIMscolab(QtCore.QObject):
 
         # change font style for selected
         self._handle_font_bolding(item)
+        msui.load_operation_view_settings()
 
         # set new waypoints model to open views
         for window in self.ui.get_active_views():

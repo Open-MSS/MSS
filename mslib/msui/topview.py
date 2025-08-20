@@ -684,10 +684,9 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 "wms": wms_settings,
                 "docks_open": dock_states,
             }
-        except Exception as e:
-            logging.error("Failed to get settings for topview (id: %s): %s",
-                          getattr(self, 'view_id', 'unknown'), str(e))
-            return {}
+        except AttributeError as ae:
+            logging.info("Map extent not available: %s", str(ae))
+        return {}
 
     def restore_wms_settings(self, wms):
         """
@@ -802,4 +801,3 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             self.mpl.canvas.draw()
         except Exception as e:
             logging.error("Error restoring non-WMS Top View settings: %s\n%s", str(e), traceback.format_exc())
-
