@@ -511,7 +511,7 @@ class Test_MSUIMainWindow:
         assert restored_top_view1 is not None, "No view restored"
         restored_top_view1 = restored_top_view1.window
         assert isinstance(restored_top_view1, MSUITopViewWindow)
-        qtbot.wait(1000)
+        # qtbot.wait(1000)
 
         # Verify WMS settings
         wms_control1 = restored_top_view1.wms_control
@@ -529,7 +529,7 @@ class Test_MSUIMainWindow:
         assert new_window.listViews.count() == 2
         restored_top_view2_1 = new_window.listViews.item(0).window
         assert isinstance(restored_top_view2_1, MSUITopViewWindow)
-        qtbot.wait(1000)
+        # qtbot.wait(1000)
 
         # Verify WMS settings
         wms_control2_1 = restored_top_view2_1.wms_control

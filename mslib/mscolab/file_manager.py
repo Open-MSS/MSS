@@ -788,7 +788,9 @@ class FileManager:
             return False, "Access denied: User is not a member of this operation"
         try:
             settings_str = json.dumps(view_settings)
+            logging.info(f"settings_str : {settings_str}")
             view_setting = ViewSettings.query.filter_by(u_id=user.id, op_id=op_id).first()
+            logging.info(f"User: {user.id}, Operation: {op_id}, View settings: {view_settings}")
             if view_setting:
                 view_setting.settings = settings_str
                 view_setting.updated_at = datetime.datetime.now(tz=datetime.timezone.utc)
@@ -815,6 +817,7 @@ class FileManager:
         try:
             view_setting = ViewSettings.query.filter_by(u_id=user.id, op_id=op_id).first()
             settings = view_setting.settings if view_setting else None
+            logging.info(settings)
 
             if settings is None:
                 return True, "No view settings found", {"views": [], "global": {}}

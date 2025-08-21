@@ -1428,6 +1428,82 @@ class MSUIMscolab(QtCore.QObject):
             self.save_wp_mscolab()
 
     @verify_user_token
+    def save_operation_view_settings(self, settings):
+        """Save collected settings for the active operation to the server."""
+        logging.info("save_operation_view_settings: op_id=%s, server_url=%s",
+                     settings.get("global", {}).get("op_id"), self.mscolab_server_url)
+        headers = {
+            "Content-Type": "application/json"
+        }
+        data = {
+            "operation_name": self.active_operation_name,
+            "settings": settings,
+            "token": self.token
+        }
+        response = self.conn.request_post("save_operation_view_settings", data=data, headers=headers)
+        try:
+            response.raise_for_status()
+            logging.info("Raw server response: %s, response status : %s, response.json: %s",
+                         response.text, response.status_code, response.json)
+            response_data = response.json()
+            logging.info("Response JSON: %s", response_data)
+            if response.status_code == 200 and response_data.get("success"):
+                logging.info("Settings saved successfully for op_id=%s", settings.get("global", {}).get("op_id"))
+            else:
+                logging.error("Server error: status=%s, message=%s", response.status_code,
+                              response_data.get("message", "Unknown error"))
+        except requests.exceptions.RequestException as ex:
+            logging.error("Request error: %s", ex)
+            raise
+
+    def send_view_settings_to_server(self, op_id=None):
+        """Orchestrate saving view settings for the specified or active operation."""
+        logging.info("in the send view settings to server: op_id=%s, local_active=%s, active_op_id=%s",
+                     op_id, self.ui.local_active, self.active_op_id)
+        if self.ui.local_active or not self.active_op_id:
+            logging.warning("Skipping send_view_settings_to_server: local_active=%s, server_url=%s, token=%s, op_id=%s",
+                            self.ui.local_active, self.mscolab_server_url, self.token, self.active_op_id)
+            return
+        if op_id is not None and op_id != self.active_op_id:
+            logging.warning("Mismatched op_id=%s, active_op_id=%s; using active_op_id", op_id, self.active_op_id)
+            op_id = self.active_op_id
+        settings = self.ui.get_operation_view_settings()
+        if not settings["views"]:
+            logging.warning("No view settings to send for op_id=%s", self.active_op_id)
+            return
+        self.save_operation_view_settings(settings)
+
+    def load_operation_view_settings(self):
+        """Fetch view settings for the active operation from the server."""
+        if not self.mscolab_server_url or not self.token or not self.active_op_id:
+            logging.warning("Cannot fetch settings: Invalid MSColab context (server_url=%s, token=%s, op_id=%s)",
+                            self.mscolab_server_url, self.token, self.active_op_id)
+            return None
+        try:
+            # headers = {
+            #     "Authorization": f"Bearer {self.token}"
+            # }
+            data = {
+                "op_id": self.active_op_id
+            }
+            logging.info("Fetching settings from /get_operation_view_settings with op_id=%s", self.active_op_id)
+
+            response = self.conn.request_get("get_operation_view_settings", data=data)
+
+            logging.info("Response received: status=%s, text=%s", response.status_code, response.text)
+
+            response_data = response.json()
+            logging.info("Successfully retrieved settings for op_id=%s", self.active_op_id)
+            settings = response_data.get("settings")
+            self.ui.create_operation_view_settings(settings)
+            logging.info("Settings from server: %s", settings)
+            return settings
+
+        except requests.exceptions.RequestException as e:
+            logging.error("Failed to fetch settings: %s", str(e))
+            return None
+
+    @verify_user_token
     def fetch_wp_mscolab(self):
         server_xml = self.request_wps_from_server()
         server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
@@ -1747,8 +1823,6 @@ class MSUIMscolab(QtCore.QObject):
 
     @verify_user_token
     def set_active_op_id(self, item):
-        from mslib.msui.msui_mainwindow import MSUIMainWindow
-        msui = MSUIMainWindow()
         logging.debug('set_active_op_id %s %s %s', item, item.op_id, self.active_op_id)
         if not self.ui.local_active and item.op_id == self.active_op_id:
             return
@@ -1788,7 +1862,9 @@ class MSUIMscolab(QtCore.QObject):
 
         # change font style for selected
         self._handle_font_bolding(item)
-        msui.load_operation_view_settings()
+        restore_views = config_loader(dataset="restore_views", default=False)
+        if restore_views:
+            self.load_operation_view_settings()
 
         # set new waypoints model to open views
         for window in self.ui.get_active_views():

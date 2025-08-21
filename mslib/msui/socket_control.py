@@ -241,11 +241,12 @@ class ConnectionManager(QtCore.QObject):
 
         self.sio.disconnect()
 
-    def request_post(self, api, data=None, files=None):
+    def request_post(self, api, data=None, files=None, headers=None):
         response = requests.post(
             urljoin(self.mscolab_server_url, api),
             data=((data if data is not None else {}) | {"token": self.token}),
-            files=files, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            files=files, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")),
+            headers=headers)
         return response
 
     def request_get(self, api, data=None):
