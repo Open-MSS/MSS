@@ -28,10 +28,9 @@
 # The README.txt file should be written in reST so that PyPI can use
 # it to generate your project's PyPI page.
 import os
-from past.builtins import execfile
 from setuptools import setup, find_namespace_packages
+from mslib.version import __version__
 long_description = open('README.md').read()
-execfile('mslib/version.py')
 
 console_scripts = [
     "mscolab = mslib.mscolab.mscolab:main",
