@@ -74,8 +74,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs-2.4.16-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.sshfs-1.0.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.webdavfs-0.4.2-pyhd8ed1ab_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/fs_filepicker-0.3.7-pyhd8ed1ab_5.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/future-1.0.0-pyhd8ed1ab_2.conda
+      - conda: https://anaconda.org/conda-forge/fs_filepicker/0.3.9/download/noarch/fs_filepicker-0.3.9-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/geographiclib-2.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/geomag-0.9.2015-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/geopy-2.4.1-pyhd8ed1ab_2.conda
@@ -386,8 +385,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs-2.4.16-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.sshfs-1.0.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.webdavfs-0.4.2-pyhd8ed1ab_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/fs_filepicker-0.3.7-pyhd8ed1ab_5.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/future-1.0.0-pyhd8ed1ab_2.conda
+      - conda: https://anaconda.org/conda-forge/fs_filepicker/0.3.9/download/noarch/fs_filepicker-0.3.9-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/geographiclib-2.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/geomag-0.9.2015-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/geopy-2.4.1-pyhd8ed1ab_2.conda
@@ -646,8 +644,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs-2.4.16-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.sshfs-1.0.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.webdavfs-0.4.2-pyhd8ed1ab_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/fs_filepicker-0.3.7-pyhd8ed1ab_5.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/future-1.0.0-pyhd8ed1ab_2.conda
+      - conda: https://anaconda.org/conda-forge/fs_filepicker/0.3.9/download/noarch/fs_filepicker-0.3.9-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/geographiclib-2.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/geomag-0.9.2015-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/geopy-2.4.1-pyhd8ed1ab_2.conda
@@ -904,8 +901,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs-2.4.16-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.sshfs-1.0.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.webdavfs-0.4.2-pyhd8ed1ab_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/fs_filepicker-0.3.7-pyhd8ed1ab_5.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/future-1.0.0-pyhd8ed1ab_2.conda
+      - conda: https://anaconda.org/conda-forge/fs_filepicker/0.3.9/download/noarch/fs_filepicker-0.3.9-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/geographiclib-2.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/geomag-0.9.2015-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/geopy-2.4.1-pyhd8ed1ab_2.conda
@@ -1168,8 +1164,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs-2.4.16-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.sshfs-1.0.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.webdavfs-0.4.2-pyhd8ed1ab_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/fs_filepicker-0.3.7-pyhd8ed1ab_5.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/future-1.0.0-pyhd8ed1ab_2.conda
+      - conda: https://anaconda.org/conda-forge/fs_filepicker/0.3.9/download/noarch/fs_filepicker-0.3.9-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/geos-3.13.0-h5888daf_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/gettext-0.23.1-h5888daf_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/gettext-tools-0.23.1-h5888daf_0.conda
@@ -1477,8 +1472,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs-2.4.16-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.sshfs-1.0.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.webdavfs-0.4.2-pyhd8ed1ab_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/fs_filepicker-0.3.7-pyhd8ed1ab_5.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/future-1.0.0-pyhd8ed1ab_2.conda
+      - conda: https://anaconda.org/conda-forge/fs_filepicker/0.3.9/download/noarch/fs_filepicker-0.3.9-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/geos-3.13.0-hac325c4_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/giflib-5.2.2-h10d778d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/git-2.47.1-pl5321h0e333bc_0.conda
@@ -1734,8 +1728,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs-2.4.16-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.sshfs-1.0.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.webdavfs-0.4.2-pyhd8ed1ab_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/fs_filepicker-0.3.7-pyhd8ed1ab_5.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/future-1.0.0-pyhd8ed1ab_2.conda
+      - conda: https://anaconda.org/conda-forge/fs_filepicker/0.3.9/download/noarch/fs_filepicker-0.3.9-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/geos-3.13.0-hf9b8971_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/giflib-5.2.2-h93a5062_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/git-2.47.1-pl5321hd71a902_0.conda
@@ -1989,8 +1982,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs-2.4.16-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.sshfs-1.0.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.webdavfs-0.4.2-pyhd8ed1ab_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/fs_filepicker-0.3.7-pyhd8ed1ab_5.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/future-1.0.0-pyhd8ed1ab_2.conda
+      - conda: https://anaconda.org/conda-forge/fs_filepicker/0.3.9/download/noarch/fs_filepicker-0.3.9-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/geos-3.13.0-h5a68840_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/git-2.47.1-h57928b3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/gitdb-4.0.12-pyhd8ed1ab_0.conda
@@ -2263,8 +2255,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs-2.4.16-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.sshfs-1.0.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.webdavfs-0.4.2-pyhd8ed1ab_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/fs_filepicker-0.3.7-pyhd8ed1ab_5.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/future-1.0.0-pyhd8ed1ab_2.conda
+      - conda: https://anaconda.org/conda-forge/fs_filepicker/0.3.9/download/noarch/fs_filepicker-0.3.9-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/geos-3.13.0-h5888daf_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/gettext-0.23.1-h5888daf_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/gettext-tools-0.23.1-h5888daf_0.conda
@@ -2615,8 +2606,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs-2.4.16-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.sshfs-1.0.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.webdavfs-0.4.2-pyhd8ed1ab_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/fs_filepicker-0.3.7-pyhd8ed1ab_5.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/future-1.0.0-pyhd8ed1ab_2.conda
+      - conda: https://anaconda.org/conda-forge/fs_filepicker/0.3.9/download/noarch/fs_filepicker-0.3.9-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/geos-3.13.0-hac325c4_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/giflib-5.2.2-h10d778d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/git-2.47.1-pl5321h0e333bc_0.conda
@@ -2915,8 +2905,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs-2.4.16-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.sshfs-1.0.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.webdavfs-0.4.2-pyhd8ed1ab_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/fs_filepicker-0.3.7-pyhd8ed1ab_5.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/future-1.0.0-pyhd8ed1ab_2.conda
+      - conda: https://anaconda.org/conda-forge/fs_filepicker/0.3.9/download/noarch/fs_filepicker-0.3.9-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/geos-3.13.0-hf9b8971_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/giflib-5.2.2-h93a5062_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/git-2.47.1-pl5321hd71a902_0.conda
@@ -3211,8 +3200,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs-2.4.16-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.sshfs-1.0.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.webdavfs-0.4.2-pyhd8ed1ab_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/fs_filepicker-0.3.7-pyhd8ed1ab_5.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/future-1.0.0-pyhd8ed1ab_2.conda
+      - conda: https://anaconda.org/conda-forge/fs_filepicker/0.3.9/download/noarch/fs_filepicker-0.3.9-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/geos-3.13.0-h5a68840_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/git-2.47.1-h57928b3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/gitdb-4.0.12-pyhd8ed1ab_0.conda
@@ -3507,8 +3495,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs-2.4.16-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.sshfs-1.0.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.webdavfs-0.4.2-pyhd8ed1ab_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/fs_filepicker-0.3.7-pyhd8ed1ab_5.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/future-1.0.0-pyhd8ed1ab_2.conda
+      - conda: https://anaconda.org/conda-forge/fs_filepicker/0.3.9/download/noarch/fs_filepicker-0.3.9-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/gdk-pixbuf-2.42.12-hb9ae30d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/geos-3.13.0-h5888daf_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/gettext-0.23.1-h5888daf_0.conda
@@ -3890,8 +3877,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs-2.4.16-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.sshfs-1.0.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.webdavfs-0.4.2-pyhd8ed1ab_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/fs_filepicker-0.3.7-pyhd8ed1ab_5.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/future-1.0.0-pyhd8ed1ab_2.conda
+      - conda: https://anaconda.org/conda-forge/fs_filepicker/0.3.9/download/noarch/fs_filepicker-0.3.9-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/gdk-pixbuf-2.42.12-ha587570_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/geos-3.13.1-h502464c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/giflib-5.2.2-h10d778d_0.conda
@@ -4212,8 +4198,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs-2.4.16-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.sshfs-1.0.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fs.webdavfs-0.4.2-pyhd8ed1ab_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/fs_filepicker-0.3.7-pyhd8ed1ab_5.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/future-1.0.0-pyhd8ed1ab_2.conda
+      - conda: https://anaconda.org/conda-forge/fs_filepicker/0.3.9/download/noarch/fs_filepicker-0.3.9-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/gdk-pixbuf-2.42.12-hed59a49_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/geos-3.13.1-h9ea8674_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/git-2.48.1-h57928b3_0.conda
@@ -6989,34 +6974,20 @@ packages:
   - pkg:pypi/fs-webdavfs?source=hash-mapping
   size: 12837
   timestamp: 1637179439355
-- conda: https://conda.anaconda.org/conda-forge/noarch/fs_filepicker-0.3.7-pyhd8ed1ab_5.tar.bz2
-  sha256: 3f5662452ea2dace77a6cdbc3d8bcb067f6121e79f592bd3c80f40885b114425
-  md5: d090f88bf3236bd978d05001028cdc09
+- conda: https://anaconda.org/conda-forge/fs_filepicker/0.3.9/download/noarch/fs_filepicker-0.3.9-pyhd8ed1ab_1.conda
   depends:
   - fs
   - fs.sshfs
   - fs.webdavfs
-  - future
   - humanfriendly
-  - pyqt
-  - python >=3.6
+  - pyqt >=5,<6
+  - python >=3.10
+  - qt >=5.10,<6
+  channel: null
+  file_name: https://anaconda.org/conda-forge/fs_filepicker/0.3.9/download/noarch/fs_filepicker-0.3.9-pyhd8ed1ab_1.conda
   license: Apache-2.0
   license_family: APACHE
-  purls:
-  - pkg:pypi/fs-filepicker?source=hash-mapping
-  size: 43811
-  timestamp: 1637259984471
-- conda: https://conda.anaconda.org/conda-forge/noarch/future-1.0.0-pyhd8ed1ab_2.conda
-  sha256: 45dfd037889b7075c5eb46394f93172de0be0b1624c7f802dd3ecc94b814d8e0
-  md5: 1054c53c95d85e35b88143a3eda66373
-  depends:
-  - python >=3.9
-  license: MIT
-  license_family: MIT
-  purls:
-  - pkg:pypi/future?source=hash-mapping
-  size: 364561
-  timestamp: 1738926525117
+  timestamp: 1756020428329
 - conda: https://conda.anaconda.org/conda-forge/linux-64/gdk-pixbuf-2.42.12-hb9ae30d_0.conda
   sha256: d5283b95a8d49dcd88d29b360d8b38694aaa905d968d156d72ab71d32b38facb
   md5: 201db6c2d9a3c5e46573ac4cb2e92f4f
@@ -14975,7 +14946,8 @@ packages:
   - python
   license: BSD-3-Clause
   license_family: BSD
-  purls: []
+  purls:
+  - pkg:pypi/pycparser?source=hash-mapping
   size: 110100
   timestamp: 1733195786147
 - conda: https://conda.anaconda.org/conda-forge/noarch/pyflakes-3.2.0-pyhd8ed1ab_1.conda
