@@ -876,21 +876,29 @@ def reset_request():
 @APP.route("/save_operation_view_settings", methods=["POST"])
 @verify_user
 def save_operation_view_settings():
-    logging.info("Inside save_operation_view_settings route")
+    view_settings = request.form.get('view_settings', False)
+    user = g.user
     try:
-        settings_data = request.get_json()
+        try:
+            if isinstance(view_settings, str):
+                settings_data = json.loads(view_settings)
+            else:
+                settings_data = view_settings
+        except Exception as e:
+            logging.error("Invalid JSON: %s", str(e))
+            return jsonify({"success": False, "message": "Invalid JSON"}), 400
         logging.info("Received payload: %s", json.dumps(settings_data, indent=2))
         if not settings_data:
             logging.error("No data provided in request")
             return jsonify({"success": False, "message": "No data provided"}), 400
 
-        op_id = settings_data.get("settings", {}).get("global", {}).get("op_id")
+        op_id = settings_data.get('global', {}).get("op_id", None)
         if not op_id:
             logging.error("Missing operation ID in payload")
             return jsonify({"success": False, "message": "Missing operation ID"}), 400
 
         user = g.user
-        success, message = fm.save_view_settings(op_id, user, settings_data["settings"])
+        success, message = fm.save_view_settings(op_id, user, settings_data)
         if success:
             return jsonify({"success": True, "message": message}), 200
         else:
@@ -905,7 +913,7 @@ def save_operation_view_settings():
 @verify_user
 def get_operation_view_settings():
     logging.info("Fetching view settings for operation")
-    op_id = request.args.get('op_id', type=int)
+    op_id = request.form.get('op_id')
     if not op_id:
         return jsonify({"success": False, "message": "Missing op_id parameter"}), 400
 

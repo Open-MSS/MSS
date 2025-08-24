@@ -1349,6 +1349,7 @@ class MSUIMscolab(QtCore.QObject):
     @verify_user_token
     def handle_work_locally_toggle(self, _=None):
         if self.ui.workLocallyCheckbox.isChecked():
+            self.send_view_settings_to_server()
             if self.version_window is not None:
                 self.version_window.close()
             self.create_local_operation_file()
@@ -1432,21 +1433,25 @@ class MSUIMscolab(QtCore.QObject):
         """Save collected settings for the active operation to the server."""
         logging.info("save_operation_view_settings: op_id=%s, server_url=%s",
                      settings.get("global", {}).get("op_id"), self.mscolab_server_url)
-        headers = {
-            "Content-Type": "application/json"
-        }
         data = {
             "operation_name": self.active_operation_name,
-            "settings": settings,
+            "view_settings": json.dumps(settings),
             "token": self.token
         }
-        response = self.conn.request_post("save_operation_view_settings", data=data, headers=headers)
+        response = self.conn.request_post("save_operation_view_settings", data=data)
         try:
             response.raise_for_status()
             logging.info("Raw server response: %s, response status : %s, response.json: %s",
                          response.text, response.status_code, response.json)
-            response_data = response.json()
-            logging.info("Response JSON: %s", response_data)
+            try:
+                if not response.text.strip():  # empty response body
+                    logging.info("Empty response body from server! status=%s", response.status_code)
+                    return
+                response_data = response.json()
+
+            except requests.exceptions.JSONDecodeError:
+                logging.error("Response not valid JSON! text=%s", response.text)
+                return
             if response.status_code == 200 and response_data.get("success"):
                 logging.info("Settings saved successfully for op_id=%s", settings.get("global", {}).get("op_id"))
             else:
@@ -1486,13 +1491,15 @@ class MSUIMscolab(QtCore.QObject):
             data = {
                 "op_id": self.active_op_id
             }
-            logging.info("Fetching settings from /get_operation_view_settings with op_id=%s", self.active_op_id)
-
             response = self.conn.request_get("get_operation_view_settings", data=data)
 
             logging.info("Response received: status=%s, text=%s", response.status_code, response.text)
 
-            response_data = response.json()
+            try:
+                response_data = response.json()
+            except requests.exceptions.JSONDecodeError:
+                logging.error("Response not valid JSON! text=%s", response.text)
+                return
             logging.info("Successfully retrieved settings for op_id=%s", self.active_op_id)
             settings = response_data.get("settings")
             self.ui.create_operation_view_settings(settings)
@@ -1807,6 +1814,7 @@ class MSUIMscolab(QtCore.QObject):
             self.tr(f"Do you want to archive this operation '{self.active_operation_name}'?"),
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if ret == QMessageBox.Yes:
+            self.send_view_settings_to_server()
             try:
                 response = self.conn.request_post(
                     "update_operation",
@@ -1826,6 +1834,8 @@ class MSUIMscolab(QtCore.QObject):
         logging.debug('set_active_op_id %s %s %s', item, item.op_id, self.active_op_id)
         if not self.ui.local_active and item.op_id == self.active_op_id:
             return
+
+        self.send_view_settings_to_server()
 
         # close all hanging window
         self.close_external_windows()
@@ -2093,6 +2103,7 @@ class MSUIMscolab(QtCore.QObject):
         logging.debug('logout')
         if self.mscolab_server_url is None:
             return
+        self.send_view_settings_to_server()
         self.ui.local_active = True
         self.ui.menu_handler()
 

@@ -569,9 +569,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     @QtCore.pyqtSlot(int)
     def activate_operation_slot(self, active_op_id):
         self.signal_activate_operation.emit(active_op_id)
-        restore_views = config_loader(dataset="restore_views", default=False)
-        if restore_views:
-            self.mscolab.load_operation_view_settings()
+        # restore_views = config_loader(dataset="restore_views", default=False)
+        # if restore_views:
+        #     self.mscolab.load_operation_view_settings()
 
     @QtCore.pyqtSlot(int, str)
     def add_operation_slot(self, op_id, path):
@@ -1040,7 +1040,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 show_popup(self.mscolab.ui, "Error", "Session expired, new login required")
 
     def restore_views_for_active_flighttrack(self):
-        if not self.active_flight_track:
+        if not self.active_flight_track or self.mscolab.active_op_id:
             logging.warning("No active flight track to restore views for")
             return
 
@@ -1281,7 +1281,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
     def update_flight_track_settings(self, flight_track, view=None, remove=False, update_global=False):
         """Update the flight_track_settings dictionary when a flight track or view is created, modified, or removed."""
-        if not self.active_flight_track or flight_track.name != self.active_flight_track.name:
+        if self.mscolab.active_op_id:
             return
 
         json_key = flight_track.name
@@ -1415,20 +1415,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                     logging.debug("No setting available for %s", json_key)
             self.activated_flight_tracks.clear()
 
-    # def send_view_settings_to_server(self, op_id=None):
-    #     """Send view settings to the server if MSColab context is valid."""
-    #     logging.info("in the send view settings to server")
-    #     if self.local_active or not self.mscolab.active_op_id:
-    #         logging.warning("Skipping send_view_settings_to_server (server_url=%s, token=%s, op_id=%s)",
-    #                         self.mscolab.mscolab_server_url, self.mscolab.token, self.mscolab.active_op_id)
-    #         return
-    #     settings = self.get_operation_view_settings()
-    #     if not settings["views"]:
-    #         logging.warning("No view settings to send for op_id=%s", self.mscolab.active_op_id)
-    #         return
-
-    #     self.save_operation_view_settings(settings)
-
     def closeEvent(self, event):
         """Ask user if he/she wants to close the application. If yes, also
            close all views that are open.
@@ -1447,13 +1433,13 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             # cleanup mscolab widgets
             # Save MSColab view settings
             if self.mscolab.token is not None and not self.local_active:
-                logging.debug("closeEvent: Triggering send_view_settings_to_server")
+                logging.info("closeEvent: Triggering send_view_settings_to_server")
                 self.mscolab.send_view_settings_to_server()
                 self.mscolab.logout()
 
             # Table View stick around after MainWindow closes - maybe some dangling reference?
             # This removes them for sure!
-
+            logging.info(f"Active flightrack names: {self.active_flight_track.name}")
             self.update_flight_track_settings(self.active_flight_track)
             self.save_view_settings()
 
