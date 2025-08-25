@@ -1092,6 +1092,9 @@ def main():
         '\033[91mWARNING: msidp is solely for development and '
         'testing purposes; do not use in production environments.\033[0m'
     )
+    if os.name == "nt":
+        logger.error("The msidp application is not usable on Windows.")
+        return 1
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", dest="path", help="Path to configuration file.",
                         default="./idp_conf.py")
