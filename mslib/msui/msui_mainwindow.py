@@ -1040,7 +1040,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 show_popup(self.mscolab.ui, "Error", "Session expired, new login required")
 
     def restore_views_for_active_flighttrack(self):
-        if not self.active_flight_track or self.mscolab.active_op_id:
+        if not (self.active_flight_track or self.mscolab.active_op_id):
             logging.warning("No active flight track to restore views for")
             return
 
