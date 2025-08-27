@@ -29,7 +29,7 @@ import fs
 from packaging import version
 
 from mslib.utils import auth
-from mslib.version import __version__
+from mslib import __version__
 from mslib.msui.constants import MSUI_SETTINGS
 from tests.utils import create_msui_settings_file
 

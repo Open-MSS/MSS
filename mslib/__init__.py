@@ -25,6 +25,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import importlib.metadata
 
-
-from .version import __version__  # noqa
+__version__ = importlib.metadata.version("open-mss")

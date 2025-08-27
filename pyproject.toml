@@ -1,6 +1,41 @@
+[project]
+name = "open-mss"
+version = "10.1.0"
+description = "MSS - Mission Support System"
+readme = "README.md"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+]
+keywords = ["mslib"]
+maintainers = [
+    {name = "Reimar Bauer", email = "rb.proj@gmail.com"},
+]
+authors = [
+    {name = "Marc Rautenhaus", email = "wxmetvis@posteo.de"},
+]
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+
+[project.urls]
+Repository = "https://github.com/Open-MSS/MSS"
+
+[project.scripts]
+mscolab = "mslib.mscolab.mscolab:main"
+msidp = "mslib.msidp.idp:main"
+mssautoplot = "mslib.utils.mssautoplot:main"
+mss = "mslib.msui.mss:main"
+mswms_demodata = "mslib.mswms.demodata:main"
+mswms = "mslib.mswms.mswms:main"
+
+[project.gui-scripts]
+msui = "mslib.msui.msui:main"
+
 [build-system]
-requires = ["setuptools >= 40.8.0", "future"]
-build-backend = "setuptools.build_meta:__legacy__"
+requires = ["setuptools >= 40.8.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["mslib"]
 
 [tool.codespell]
 exclude-file = "codespell-ignored-lines.txt"
