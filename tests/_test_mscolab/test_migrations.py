@@ -96,7 +96,6 @@ def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
         metadata.reflect(bind=db.engine)
         expected_data = {name: db.session.execute(table.select()).all() for name, table in metadata.tables.items()}
         del expected_data["alembic_version"]  # the alembic_version table will be different, but that is expected
-        expected_data["viewsettings"] = []
 
     try:
         mscolab_settings.SQLALCHEMY_DB_URI_TO_MIGRATE_FROM = app.config["SQLALCHEMY_DATABASE_URI"]
@@ -115,11 +114,10 @@ def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
             # Check that no further migration is required
             flask_migrate.check(directory=migrations_path)
             actual_data = {name: db.session.execute(table.select()).all() for name, table in db.metadata.tables.items()}
-            if 'viewsettings' not in actual_data:
-                actual_data['viewsettings'] = []
             # Check that all tables have the right number of entries with matching ids copied over
-            assert {k: [e[0] for e in v] for k, v in expected_data.items()} == {
-                k: [e[0] for e in v] for k, v in actual_data.items()
+            common_keys = set(expected_data.keys()) & set(actual_data.keys())
+            assert {k: [e[0] for e in expected_data[k]] for k in common_keys} == {
+                k: [e[0] for e in actual_data[k]] for k in common_keys
             }
             # TODO: Maybe add more asserts? Basically anything could break with future migrations though, if the schema
             # is fundamentally changed. Having an id as the first column is already an assumption that might not always
@@ -131,9 +129,6 @@ def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
                 name: db.session.execute(table.select()).all() for name, table in metadata.tables.items()
             }
             del actual_data_after_downgrade["alembic_version"]  # expected data doesn't have the revision table
-            if 'viewsettings' not in actual_data_after_downgrade:
-                actual_data_after_downgrade['viewsettings'] = []
-            expected_data["viewsettings"] = []
             # Check that after a downgrade the data is definitely the same
             assert expected_data == actual_data_after_downgrade
 

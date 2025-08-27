@@ -1485,9 +1485,6 @@ class MSUIMscolab(QtCore.QObject):
                             self.mscolab_server_url, self.token, self.active_op_id)
             return None
         try:
-            # headers = {
-            #     "Authorization": f"Bearer {self.token}"
-            # }
             data = {
                 "op_id": self.active_op_id
             }
@@ -1893,6 +1890,7 @@ class MSUIMscolab(QtCore.QObject):
         self.conn.select_operation(item.op_id)
 
     def switch_to_local(self):
+        self.send_view_settings_to_server()
         logging.debug('switch_to_local')
         self.ui.local_active = True
         if self.active_op_id is not None:

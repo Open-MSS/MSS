@@ -569,9 +569,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     @QtCore.pyqtSlot(int)
     def activate_operation_slot(self, active_op_id):
         self.signal_activate_operation.emit(active_op_id)
-        # restore_views = config_loader(dataset="restore_views", default=False)
-        # if restore_views:
-        #     self.mscolab.load_operation_view_settings()
 
     @QtCore.pyqtSlot(int, str)
     def add_operation_slot(self, op_id, path):
@@ -614,7 +611,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 if flight == item.operation_path:
                     item = self.listOperationsMSC.item(index)
                     self.mscolab.set_active_op_id(item)
-                    # self.load_operation_view_settings()
                     break
         else:
             for index in range(self.listFlightTracks.count()):
@@ -945,6 +941,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.activate_flight_track(item)
 
     def switch_to_mscolab(self):
+        self.save_view_settings()
         self.local_active = False
         font = QtGui.QFont()
         for i in range(self.listFlightTracks.count()):
@@ -1372,6 +1369,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
     def create_operation_view_settings(self, settings):
         """Apply retrieved view settings to open views or create new views."""
+        logging.info("create_operation_view_settings: settings=%s", settings)
         if not settings or not isinstance(settings, dict):
             logging.warning("No valid settings to apply: %s", settings)
             return
@@ -1398,6 +1396,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             if not view_type:
                 logging.warning("Skipping view with missing view_type: %s", view_setting)
                 continue
+            for i, wp in enumerate(self.mscolab.waypoints_model.waypoints):
+                logging.info(f"Waypoint {i}: lat={wp.lat}, lon={wp.lon}")
+
             self.create_view(view_type, self.mscolab.waypoints_model, restore_settings=[view_setting])
 
     def save_view_settings(self):
@@ -1439,7 +1440,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
             # Table View stick around after MainWindow closes - maybe some dangling reference?
             # This removes them for sure!
-            logging.info(f"Active flightrack names: {self.active_flight_track.name}")
             self.update_flight_track_settings(self.active_flight_track)
             self.save_view_settings()
 

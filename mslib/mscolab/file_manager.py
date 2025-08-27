@@ -782,20 +782,15 @@ class FileManager:
 
     def save_view_settings(self, op_id, user, view_settings):
         """Save view settings for an operation and user to the database."""
-
-        if not self.is_member(user.id, op_id):
-            logging.error("User %s is not a member of operation %s", user.id, op_id)
-            return False, "Access denied: User is not a member of this operation"
+        if not self.is_member(user.id, op_id) and self.is_viewer(user.id, op_id):
+            return False, "Access denied"
         try:
             settings_str = json.dumps(view_settings)
-            logging.info(f"settings_str : {settings_str}")
             view_setting = ViewSettings.query.filter_by(u_id=user.id, op_id=op_id).first()
-            logging.info(f"User: {user.id}, Operation: {op_id}, View settings: {view_settings}")
             if view_setting:
                 view_setting.settings = settings_str
                 view_setting.updated_at = datetime.datetime.now(tz=datetime.timezone.utc)
                 db.session.commit()
-                logging.info("Updated view settings for user %s, operation %s", user.id, op_id)
                 return True, "View settings updated successfully"
             else:
                 view_setting = ViewSettings(op_id=op_id, u_id=user.id, settings=settings_str)
@@ -811,29 +806,22 @@ class FileManager:
     def get_view_settings(self, op_id, user):
         """Retrieve view settings for an operation and user from the database."""
         if not self.is_member(user.id, op_id):
-            logging.error("User %s is not a member of operation %s", user.id, op_id)
-            return False, "Access denied: User is not a member of this operation", {}
+            return False, "Access denied", {}
 
         try:
-            settings_exist = db.session.query(ViewSettings).filter_by(op_id=op_id).first() is not None
-            if not settings_exist:
-                return True, "No settings found for this operation", {"views": [], "global": {}}
-
             view_setting = ViewSettings.query.filter_by(u_id=user.id, op_id=op_id).first()
             settings = view_setting.settings if view_setting else None
 
             if settings is None:
                 return True, "No view settings found", {"views": [], "global": {}}
 
-            if not isinstance(settings, dict):
-                try:
-                    settings = json.loads(settings)
-                    if not isinstance(settings, dict):
-                        return False, f"Invalid settings type after parsing: {type(settings).__name__}", {}
-                except json.JSONDecodeError:
-                    return False, "Invalid JSON string for settings", {}
-            else:
-                return False, f"Invalid settings type: {type(settings).__name__}", {}
+            try:
+                settings = json.loads(settings)
+                if not isinstance(settings, dict):
+                    return False, f"Invalid settings type after parsing: {type(settings).__name__}", {}
+            except json.JSONDecodeError:
+                return False, "Invalid JSON string for settings", {}
+
             return True, "View settings retrieved successfully", settings
 
         except AttributeError as e:
