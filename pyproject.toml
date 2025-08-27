@@ -24,6 +24,7 @@ mscolab = "mslib.mscolab.mscolab:main"
 msidp = "mslib.msidp.idp:main"
 mssautoplot = "mslib.utils.mssautoplot:main"
 mss = "mslib.msui.mss:main"
+mswms_demodata = "mslib.mswms.demodata:main"
 mswms = "mslib.mswms.mswms:main"
 
 [project.gui-scripts]
