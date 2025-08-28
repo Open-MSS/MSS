@@ -783,7 +783,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             # Update plot
             self.mpl.canvas.waypoints_interactor.plotter.update_from_waypoints(
                 self.active_flighttrack.all_waypoint_data())
-            self.mpl.canvas.waypoints_interactor.redraw_path()
 
             # Restore docks
             docks_open = view.get("docks_open", [])
@@ -799,5 +798,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 self.restore_wms_settings(wms)
 
             self.mpl.canvas.draw()
+            # Redraw path last to ensure all settings (waypoints, map, WMS, docks) are applied
+            self.mpl.canvas.waypoints_interactor.redraw_path()
         except Exception as e:
             logging.error("Error restoring non-WMS Top View settings: %s\n%s", str(e), traceback.format_exc())

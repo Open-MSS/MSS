@@ -36,7 +36,6 @@ import logging
 import os
 import re
 import sys
-import json
 from pathlib import Path
 
 from slugify import slugify
@@ -1053,6 +1052,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 "Flight track name mismatch: JSON (%s) vs active (%s). Using active flight track's waypoints.",
                 saved_flighttrack_name, self.active_flight_track.name
             )
+            return
 
         # Extract views to restore
         views_to_restore = restored_data.get("views", [])
@@ -1276,7 +1276,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         else:
             return (f"Status : User Configuration '{constants.MSUI_SETTINGS}' loaded")
 
-    def update_flight_track_settings(self, flight_track, view=None, remove=False, update_global=False):
+    def update_flight_track_settings(self, flight_track, view=None, remove=False):
         """Update the flight_track_settings dictionary when a flight track or view is created, modified, or removed."""
         if self.mscolab.active_op_id:
             return
@@ -1329,9 +1329,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
     def get_operation_view_settings(self):
         """Collect settings for all views associated with the active operation."""
-        logging.info("get_operation_view_settings: local_active=%s, token=%s, active_op_id=%s",
-                     self.local_active, self.mscolab.token, self.mscolab.active_op_id)
-
         settings = {
             "global": {
                 "op_id": self.mscolab.active_op_id,
@@ -1363,13 +1360,10 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                     logging.warning("View %s has no get_settings method", getattr(view, 'name', 'unknown'))
             except Exception as ex:
                 logging.error("Failed to collect settings for view %s: %s", getattr(view, 'name', 'unknown'), ex)
-
-        logging.info("Collected settings for %d views: %s", len(settings["views"]), json.dumps(settings, indent=2))
         return settings
 
     def create_operation_view_settings(self, settings):
         """Apply retrieved view settings to open views or create new views."""
-        logging.info("create_operation_view_settings: settings=%s", settings)
         if not settings or not isinstance(settings, dict):
             logging.warning("No valid settings to apply: %s", settings)
             return
@@ -1396,14 +1390,11 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             if not view_type:
                 logging.warning("Skipping view with missing view_type: %s", view_setting)
                 continue
-            for i, wp in enumerate(self.mscolab.waypoints_model.waypoints):
-                logging.info(f"Waypoint {i}: lat={wp.lat}, lon={wp.lon}")
-
             self.create_view(view_type, self.mscolab.waypoints_model, restore_settings=[view_setting])
 
     def save_view_settings(self):
         # Save view settings for active flight track
-        if self.local_active and not self.mscolab.active_op_id:
+        if self.local_active and not self.mscolab.active_op_id and self.active_flight_track:
             for i in range(self.listViews.count()):
                 view = self.listViews.item(i).window
                 if hasattr(view, 'active_flighttrack') and view.active_flighttrack == self.active_flight_track:
@@ -1429,19 +1420,18 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
 
         if ret == QtWidgets.QMessageBox.Yes:
+            if self.local_active and self.active_flight_track:
+                self.save_view_settings()
+            self.mscolab.send_view_settings_to_server()
             if self.mscolab.help_dialog is not None:
                 self.mscolab.help_dialog.close()
             # cleanup mscolab widgets
             # Save MSColab view settings
-            if self.mscolab.token is not None and not self.local_active:
-                logging.info("closeEvent: Triggering send_view_settings_to_server")
-                self.mscolab.send_view_settings_to_server()
+            if self.mscolab.token is not None:
                 self.mscolab.logout()
 
             # Table View stick around after MainWindow closes - maybe some dangling reference?
             # This removes them for sure!
-            self.update_flight_track_settings(self.active_flight_track)
-            self.save_view_settings()
 
             while self.listViews.count() > 0:
                 self.listViews.item(0).window.handle_force_close()

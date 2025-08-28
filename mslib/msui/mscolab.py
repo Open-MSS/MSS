@@ -1431,8 +1431,6 @@ class MSUIMscolab(QtCore.QObject):
     @verify_user_token
     def save_operation_view_settings(self, settings):
         """Save collected settings for the active operation to the server."""
-        logging.info("save_operation_view_settings: op_id=%s, server_url=%s",
-                     settings.get("global", {}).get("op_id"), self.mscolab_server_url)
         data = {
             "operation_name": self.active_operation_name,
             "view_settings": json.dumps(settings),
@@ -1441,8 +1439,6 @@ class MSUIMscolab(QtCore.QObject):
         response = self.conn.request_post("save_operation_view_settings", data=data)
         try:
             response.raise_for_status()
-            logging.info("Raw server response: %s, response status : %s, response.json: %s",
-                         response.text, response.status_code, response.json)
             try:
                 if not response.text.strip():  # empty response body
                     logging.info("Empty response body from server! status=%s", response.status_code)
@@ -1463,11 +1459,7 @@ class MSUIMscolab(QtCore.QObject):
 
     def send_view_settings_to_server(self, op_id=None):
         """Orchestrate saving view settings for the specified or active operation."""
-        logging.info("in the send view settings to server: op_id=%s, local_active=%s, active_op_id=%s",
-                     op_id, self.ui.local_active, self.active_op_id)
         if self.ui.local_active or not self.active_op_id:
-            logging.warning("Skipping send_view_settings_to_server: local_active=%s, server_url=%s, token=%s, op_id=%s",
-                            self.ui.local_active, self.mscolab_server_url, self.token, self.active_op_id)
             return
         if op_id is not None and op_id != self.active_op_id:
             logging.warning("Mismatched op_id=%s, active_op_id=%s; using active_op_id", op_id, self.active_op_id)
@@ -1490,8 +1482,6 @@ class MSUIMscolab(QtCore.QObject):
             }
             response = self.conn.request_get("get_operation_view_settings", data=data)
 
-            logging.info("Response received: status=%s, text=%s", response.status_code, response.text)
-
             try:
                 response_data = response.json()
             except requests.exceptions.JSONDecodeError:
@@ -1500,7 +1490,6 @@ class MSUIMscolab(QtCore.QObject):
             logging.info("Successfully retrieved settings for op_id=%s", self.active_op_id)
             settings = response_data.get("settings")
             self.ui.create_operation_view_settings(settings)
-            logging.info("Settings from server: %s", settings)
             return settings
 
         except requests.exceptions.RequestException as e:
