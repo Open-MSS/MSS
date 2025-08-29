@@ -29,7 +29,7 @@ import datetime
 import logging
 import requests
 
-from mslib.version import __version__ as installed_version
+from mslib import __version__ as installed_version
 
 
 def get_latest_release():
