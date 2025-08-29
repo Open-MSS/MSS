@@ -597,13 +597,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         setattr(self, action_name, action)
 
     def update_treewidget_op_fl(self, op_fl, flight):
-
-        # if self.mscolab.active_op_id is not None:
-        #     logging.info("in update tree widget op_fl")
-        #     self.send_view_settings_to_server()
-        # else:
-        #     logging.info("Not saving settings: no active operation (active_op_id is None)")
-
         if op_fl == "operation":
             for index in range(self.listOperationsMSC.count()):
                 item = self.listOperationsMSC.item(index)

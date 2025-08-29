@@ -227,7 +227,6 @@ class Change(db.Model):
 class ViewSettings(db.Model):
 
     __tablename__ = "viewsettings"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
     op_id = db.Column(db.Integer, db.ForeignKey('operations.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     settings = db.Column(db.JSON, nullable=True)
