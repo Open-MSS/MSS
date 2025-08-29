@@ -887,13 +887,12 @@ def save_operation_view_settings():
         except Exception as e:
             logging.error("Invalid JSON: %s", str(e))
             return jsonify({"success": False, "message": "Invalid JSON"}), 400
-        logging.info("Received payload: %s", json.dumps(settings_data, indent=2))
         if not settings_data:
             logging.error("No data provided in request")
             return jsonify({"success": False, "message": "No data provided"}), 400
 
         op_id = settings_data.get('global', {}).get("op_id", None)
-        if not op_id:
+        if op_id is None:
             logging.error("Missing operation ID in payload")
             return jsonify({"success": False, "message": "Missing operation ID"}), 400
 
@@ -914,7 +913,7 @@ def save_operation_view_settings():
 def get_operation_view_settings():
     logging.info("Fetching view settings for operation")
     op_id = request.form.get('op_id')
-    if not op_id:
+    if op_id is None:
         return jsonify({"success": False, "message": "Missing op_id parameter"}), 400
 
     user = g.user

@@ -227,8 +227,8 @@ class Change(db.Model):
 class ViewSettings(db.Model):
 
     __tablename__ = "viewsettings"
-    op_id = db.Column(db.Integer, db.ForeignKey('operations.id'))
-    u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    op_id = db.Column(db.Integer, db.ForeignKey('operations.id'), primary_key=True)
+    u_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
     settings = db.Column(db.JSON, nullable=True)
     created_at = db.Column(AwareDateTime, default=lambda: datetime.datetime.now(tz=datetime.timezone.utc))
     updated_at = db.Column(AwareDateTime, default=lambda: datetime.datetime.now(tz=datetime.timezone.utc),

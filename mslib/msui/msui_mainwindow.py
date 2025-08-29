@@ -933,7 +933,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.activate_flight_track(item)
 
     def switch_to_mscolab(self):
-        self.save_view_settings()
         self.local_active = False
         font = QtGui.QFont()
         for i in range(self.listFlightTracks.count()):
@@ -1413,7 +1412,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
 
         if ret == QtWidgets.QMessageBox.Yes:
-            if self.local_active and self.active_flight_track:
+            if self.local_active:
                 self.save_view_settings()
             self.mscolab.send_view_settings_to_server()
             if self.mscolab.help_dialog is not None:

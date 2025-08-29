@@ -796,7 +796,6 @@ class FileManager:
                 view_setting = ViewSettings(op_id=op_id, u_id=user.id, settings=settings_str)
                 db.session.add(view_setting)
                 db.session.commit()
-                logging.info("View settings saved for user %s, operation %s", user.id, op_id)
                 return True, "View settings saved successfully"
         except Exception as e:
             db.session.rollback()
