@@ -1,6 +1,16 @@
 Changelog
 =========
 
+Version 10.2.0
+~~~~~~~~~~~~~~
+
+Bug fix release and minor enhancements:
+We've modernized our project build process by switching from `setup.py` to `pyproject.toml`. This eliminates dependencies on the `past` and `future` packages.
+When you launch msui from the command line, the location of the log file will be displayed.
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/113?closed=1
+
 
 Version 10.1.0
 ~~~~~~~~~~~~~~

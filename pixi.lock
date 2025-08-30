@@ -13835,8 +13835,8 @@ packages:
   timestamp: 1732915114536
 - pypi: ./
   name: open-mss
-  version: 10.1.0
-  sha256: 8ebdda9ae5de924ed1fac570bc430190595c8469b39ee46c1ecd2d177d5aa100
+  version: 10.2.0
+  sha256: 08a346e071ea96f70ce9ee27c188d398fcbf1207898a9edb46bea1144c7af3d7
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/linux-64/opencl-headers-2024.10.24-h5888daf_0.conda
   sha256: 7e1d3ad55d4ad3ddf826e205d4603b9ed40c5e655a9dfd66b56f459d7ba14db3
