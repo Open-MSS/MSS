@@ -32,7 +32,7 @@ def save_to_kml(filename, name, waypoints):
     if not filename:
         raise ValueError("filename to save flight track cannot be None")
     header = f"""<?xml version="1.0" encoding="UTF-8" ?>
-<kml xmlns="http://earth.google.com/kml/2.2">
+<kml xmlns="http://www.opengis.net/kml/2.2">
 <Document>
 <name>{name}</name>
 <open>1</open>
