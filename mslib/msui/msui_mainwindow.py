@@ -1271,6 +1271,11 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     def update_flight_track_settings(self, flight_track, view=None, remove=False):
         """Update the flight_track_settings dictionary when a flight track or view is created, modified, or removed."""
         if self.mscolab.active_op_id:
+
+    def update_flight_track_settings(self, flight_track, view=None, remove=False, update_global=False):
+        """Update the flight_track_settings dictionary when a flight track or view is created, modified, or removed."""
+        if not self.active_flight_track or flight_track.name != self.active_flight_track.name:
+
             return
 
         json_key = flight_track.name
@@ -1424,6 +1429,21 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
             # Table View stick around after MainWindow closes - maybe some dangling reference?
             # This removes them for sure!
+
+            self.update_flight_track_settings(self.active_flight_track)
+
+            # Save view settings for active flight track
+            for i in range(self.listViews.count()):
+                view = self.listViews.item(i).window
+                if hasattr(view, 'active_flighttrack') and view.active_flighttrack == self.active_flight_track:
+                    self.update_flight_track_settings(self.active_flight_track, view=view)
+            for json_key in self.activated_flight_tracks:
+                settings = self.flight_track_settings.get(json_key)
+                if settings:
+                    view_restoration.save_view_settings(settings["views"], settings["global"], json_key)
+                else:
+                    logging.debug("No setting available")
+            self.activated_flight_tracks.clear()
 
             while self.listViews.count() > 0:
                 self.listViews.item(0).window.handle_force_close()

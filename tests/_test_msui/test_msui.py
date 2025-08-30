@@ -44,6 +44,7 @@ from tests.utils import ExceptionMock
 from mslib.utils.config import read_config_file, config_loader
 from mslib.msui import flighttrack as ft
 from mslib.msui.topview import MSUITopViewWindow
+from mslib.msui.msui_mainwindow import QActiveViewsListWidgetItem
 
 
 def test_main():
@@ -505,6 +506,14 @@ class Test_MSUIMainWindow:
         assert new_window.listFlightTracks.count() == 1
         assert new_window.listViews.count() == 1
         qtbot.wait(1000)
+        new_window.active_flight_track.name == "new flight track (1)"
+        assert new_window.active_flight_track.name == "new flight track (1)"
+
+        while new_window.listViews.count() > 0:
+            new_window.listViews.item(0).window.handle_force_close()
+        QActiveViewsListWidgetItem.opened_views = 0
+        qtbot.wait(1000)
+        new_window.restore_views_for_active_flighttrack()
 
         # Access restored view
         restored_top_view1 = new_window.listViews.item(0)
@@ -532,6 +541,18 @@ class Test_MSUIMainWindow:
         # qtbot.wait(1000)
 
         # Verify WMS settings
+        while new_window.listViews.count() > 0:
+            new_window.listViews.item(0).window.handle_force_close()
+        QActiveViewsListWidgetItem.opened_views = 0
+        qtbot.wait(1000)
+        new_window.restore_views_for_active_flighttrack()
+
+        assert new_window.listFlightTracks.count() == 2
+        assert new_window.listViews.count() == 2
+
+        restored_top_view2_1 = new_window.listViews.item(0).window
+        assert isinstance(restored_top_view2_1, MSUITopViewWindow)
+
         wms_control2_1 = restored_top_view2_1.wms_control
         wms_control2_1.get_capabilities()
         assert wms_control2_1.multilayers.cbWMS_URL.currentText().rstrip("/") == mswms_server, \
@@ -542,6 +563,7 @@ class Test_MSUIMainWindow:
         assert isinstance(restored_top_view2_2, MSUITopViewWindow)
         wms_control2_2 = restored_top_view2_2.wms_control
         wms_control2_2.get_capabilities()
+        qtbot.wait(1000)
         assert wms_control2_2.multilayers.cbWMS_URL.currentText().rstrip("/") == mswms_server, \
             f"Expected URL {mswms_server}, got {wms_control2_2.multilayers.cbWMS_URL.currentText()}"
 
