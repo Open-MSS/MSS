@@ -911,16 +911,13 @@ def save_operation_view_settings():
 @APP.route("/get_operation_view_settings", methods=["GET"])
 @verify_user
 def get_operation_view_settings():
-    logging.info("Fetching view settings for operation")
     op_id = request.form.get('op_id')
     if op_id is None:
         return jsonify({"success": False, "message": "Missing op_id parameter"}), 400
 
     user = g.user
     success, message, settings = fm.get_view_settings(op_id, user)
-    logging.info("Fetched settings from DB: %s", settings)
     if success:
-        logging.info("View settings retrieved for user %s, operation %s", user.id, op_id)
         return jsonify({"success": True, "message": message, "settings": settings}), 200
     else:
         ERROR_KEYWORDS = ("Access denied", "Missing", "Invalid settings", "Invalid JSON")

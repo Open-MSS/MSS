@@ -1820,8 +1820,8 @@ class MSUIMscolab(QtCore.QObject):
         logging.debug('set_active_op_id %s %s %s', item, item.op_id, self.active_op_id)
         if not self.ui.local_active and item.op_id == self.active_op_id:
             return
-        self.ui.save_view_settings()
-        self.send_view_settings_to_server()
+        # self.ui.save_view_settings()
+        # self.send_view_settings_to_server()
 
         # close all hanging window
         self.close_external_windows()
