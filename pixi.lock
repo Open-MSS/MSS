@@ -13813,7 +13813,7 @@ packages:
 - pypi: ./
   name: open-mss
   version: 10.2.0
-  sha256: 224597a6ee68abff20516b8a7e088322ada0cfa88868f585a6ee29d534678a62
+  sha256: 08a346e071ea96f70ce9ee27c188d398fcbf1207898a9edb46bea1144c7af3d7
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/linux-64/opencl-headers-2024.10.24-h5888daf_0.conda
   sha256: 7e1d3ad55d4ad3ddf826e205d4603b9ed40c5e655a9dfd66b56f459d7ba14db3
