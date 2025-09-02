@@ -1043,10 +1043,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         global_data = restored_data.get("global")
         saved_flighttrack_name = global_data.get("flight_track_name")
         if saved_flighttrack_name and saved_flighttrack_name != self.active_flight_track.name:
-            logging.warning(
-                "Flight track name mismatch: JSON (%s) vs active (%s). Using active flight track's waypoints.",
-                saved_flighttrack_name, self.active_flight_track.name
-            )
             return
 
         # Extract views to restore
@@ -1271,10 +1267,17 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         else:
             return (f"Status : User Configuration '{constants.MSUI_SETTINGS}' loaded")
 
-    def update_flight_track_settings(self, flight_track, view=None, remove=False, update_global=False):
-        """Update the flight_track_settings dictionary when a flight track or view is created, modified, or removed."""
-        if not self.active_flight_track or flight_track.name != self.active_flight_track.name:
+    def is_flight_track_stored(self, flight_track):
+        """Check if the active flight track is saved (has a valid filename)."""
+        if flight_track is None:
+            return
+        return flight_track.filename is not None
 
+    def update_flight_track_settings(self, flight_track, view=None, remove=False):
+        """Update the flight_track_settings dictionary when a flight track or view is created, modified, or removed."""
+        if not flight_track or not self.is_flight_track_stored(flight_track):
+            return
+        if not self.active_flight_track or flight_track.name != self.active_flight_track.name:
             return
 
         json_key = flight_track.name
@@ -1302,10 +1305,11 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 settings["view_id"] = getattr(view, 'view_id',
                                               f"view_{view_type}_{len(self.flight_track_settings[json_key]['views'])}")
 
+                settings_compare = {k: v for k, v in settings.items() if k != "view_id"}
                 # Update or append view settings
                 for i, existing_setting in enumerate(self.flight_track_settings[json_key]["views"]):
-                    if existing_setting["view_id"] == settings["view_id"]:
-                        self.flight_track_settings[json_key]["views"][i] = settings
+                    existing_compare = {k: v for k, v in existing_setting.items() if k != "view_id"}
+                    if settings_compare == existing_compare:
                         break
                 else:
                     self.flight_track_settings[json_key]["views"].append(settings)
