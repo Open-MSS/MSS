@@ -31,11 +31,11 @@ mswms = "mslib.mswms.mswms:main"
 msui = "mslib.msui.msui:main"
 
 [build-system]
-requires = ["setuptools >= 40.8.0"]
+requires = ["setuptools >= 61.0"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ["mslib"]
+[tool.setuptools.packages.find]
+include = ["mslib*"]
 
 [tool.codespell]
 exclude-file = "codespell-ignored-lines.txt"
