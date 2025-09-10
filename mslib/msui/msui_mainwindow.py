@@ -886,11 +886,12 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
            displayed at a time).
         """
         self.mscolab.switch_to_local()
-        for i in range(self.listViews.count()):
-            view_item = self.listViews.item(i)
-            view_window = view_item.window
-            if hasattr(view_window, 'active_flighttrack') and view_window.active_flighttrack:
-                self.update_flight_track_settings(view_window.active_flighttrack, view_window)
+        if not config_loader(dataset="restore_views"):
+            for i in range(self.listViews.count()):
+                view_item = self.listViews.item(i)
+                view_window = view_item.window
+                if hasattr(view_window, 'active_flighttrack') and view_window.active_flighttrack:
+                    self.update_flight_track_settings(view_window.active_flighttrack, view_window)
 
         # self.setWindowModality(QtCore.Qt.NonModal)
         self.active_flight_track = item.flighttrack_model
@@ -916,17 +917,18 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.restore_views_for_active_flighttrack()
 
     def update_active_flight_track(self, old_flight_track_name=None):
-        logging.debug("update_active_flight_track")
-        for i in range(self.listViews.count()):
-            view_item = self.listViews.item(i)
-            view_item.window.setFlightTrackModel(self.active_flight_track)
-            view = view_item.window
-            # Update the flight track model and active_flighttrack
-            view.setFlightTrackModel(self.active_flight_track)
-            view.active_flighttrack = self.active_flight_track
-            view_item.window.enable_navbar_action_buttons()
-            if old_flight_track_name is not None:
-                view.setWindowTitle(view.windowTitle().replace(old_flight_track_name, self.active_flight_track.name))
+        if not config_loader(dataset="restore_views"):
+            for i in range(self.listViews.count()):
+                view_item = self.listViews.item(i)
+                view_item.window.setFlightTrackModel(self.active_flight_track)
+                view = view_item.window
+                # Update the flight track model and active_flighttrack
+                view.setFlightTrackModel(self.active_flight_track)
+                view.active_flighttrack = self.active_flight_track
+                view_item.window.enable_navbar_action_buttons()
+                if old_flight_track_name is not None:
+                    view.setWindowTitle(view.windowTitle().replace(old_flight_track_name,
+                                                                   self.active_flight_track.name))
 
     def activate_selected_flight_track(self):
         item = self.listFlightTracks.currentItem()
@@ -1036,6 +1038,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             return
 
         restored_data = view_restoration.restore_view_settings(self.active_flight_track.name)
+        if restored_data is None:
+            return
         if not isinstance(restored_data, dict):
             logging.error("Invalid restore data for flight track %s", self.active_flight_track.name)
             return
@@ -1267,15 +1271,15 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         else:
             return (f"Status : User Configuration '{constants.MSUI_SETTINGS}' loaded")
 
-    def is_flight_track_stored(self, flight_track):
-        """Check if the active flight track is saved (has a valid filename)."""
-        if flight_track is None:
-            return
-        return flight_track.filename is not None
+    # def is_flight_track_stored(self, flight_track):
+    #     """Check if the active flight track is saved (has a valid filename)."""
+    #     if flight_track is None:
+    #         return
+    #     return flight_track.filename is not None
 
     def update_flight_track_settings(self, flight_track, view=None, remove=False):
         """Update the flight_track_settings dictionary when a flight track or view is created, modified, or removed."""
-        if not flight_track or not self.is_flight_track_stored(flight_track):
+        if not flight_track or not view_restoration.is_flight_track_stored(flight_track):
             return
         if not self.active_flight_track or flight_track.name != self.active_flight_track.name:
             return
@@ -1422,7 +1426,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         if ret == QtWidgets.QMessageBox.Yes:
             if self.local_active:
                 self.save_view_settings()
-            else:
+            if self.mscolab.active_op_id:
                 self.mscolab.send_view_settings_to_server()
             if self.mscolab.help_dialog is not None:
                 self.mscolab.help_dialog.close()
