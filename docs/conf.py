@@ -96,7 +96,7 @@ if os.environ.get("GALLERY", "True") != "False":
                                             vtimes="2012-10-18T00:00:00,2012-10-19T00:00:00")
 
 with open("../pyproject.toml") as f:
-    __version__ = toml.load(f)["project"]["version"]
+    __version__ = tomllib.load(f)["project"]["version"]
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 
