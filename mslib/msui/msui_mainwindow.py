@@ -1123,8 +1123,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 view_window.mpl.setFixedSize(layout['sideview'][0], layout['sideview'][1])
             if restore_settings:
                 view_window.set_settings(restore_settings)
-            else:
-                logging.error("cannot restore settings")
+
         elif _type == "tableview":
             # Table view.
             view_window = tableview.MSUITableViewWindow(model=model, tutorial_mode=self.tutorial_mode)
