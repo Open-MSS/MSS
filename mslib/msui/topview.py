@@ -653,7 +653,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                     "init_time": self.curritime,
                     "valid_time": self.currvtime,
                 }
-            logging.debug(f"from get_settings url is {wms_settings['url']}")
+                if wms_settings["url"] is None:
+                    return ""
 
             # Get dock widget states
             dock_states = [dock is not None for dock in self.docks]
@@ -797,6 +798,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
             self.mpl.canvas.draw()
             # Redraw path last to ensure all settings (waypoints, map, WMS, docks) are applied
-            self.mpl.canvas.waypoints_interactor.redraw_path()
+            # self.mpl.canvas.waypoints_interactor.redraw_path()
         except Exception as e:
             logging.error("Error restoring non-WMS Top View settings: %s\n%s", str(e), traceback.format_exc())

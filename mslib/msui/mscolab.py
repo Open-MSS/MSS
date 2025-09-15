@@ -1447,10 +1447,6 @@ class MSUIMscolab(QtCore.QObject):
             except requests.exceptions.JSONDecodeError:
                 logging.error("Response not valid JSON! text=%s", response.text)
                 return
-            # if response.status_code == 200 and response_data.get("success"):
-            # else:
-            #     logging.error("Server error: status=%s, message=%s", response.status_code,
-            #                   response_data.get("message", "Unknown error"))
         except requests.exceptions.RequestException as ex:
             logging.error("Request error: %s", ex)
             raise
