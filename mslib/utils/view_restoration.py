@@ -111,13 +111,18 @@ def serialize_settings(settings_list):
     """
     Serialize settings to JSON string using a custom default serializer.
     """
-    if isinstance(settings_list, dict):
-        settings_list = [settings_list]
     try:
-        return json.dumps(settings_list, default=serializer)
-    except TypeError as e:
-        logging.error("Serialization failed: %s", e)
-        raise
+        settings = {}
+        if isinstance(settings_list, str):
+            settings = json.loads(settings_list)
+        if isinstance(settings_list, list):
+            settings = settings_list[0] if settings_list else {}
+        if not isinstance(settings_list, dict):
+            return {}
+        return settings
+    except Exception as e:
+        logging.error("Deserialization failed: %s", e)
+        return {}
 
 
 def restore_view_settings(flight_track_name):

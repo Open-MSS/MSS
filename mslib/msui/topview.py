@@ -727,8 +727,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             if target_layer_item:
                 self.wms_control.multilayers.current_layer = target_layer_item
                 self.wms_control.get_map()
-            else:
-                logging.warning("Layer '%s' not found; skipping get_map to avoid crash", layer)
 
             self.wms_connected = True
             self.mpl.canvas.redraw_map()

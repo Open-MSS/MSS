@@ -1443,16 +1443,14 @@ class MSUIMscolab(QtCore.QObject):
                 if not response.text.strip():  # empty response body
                     logging.info("Empty response body from server! status=%s", response.status_code)
                     return
-                response_data = response.json()
 
             except requests.exceptions.JSONDecodeError:
                 logging.error("Response not valid JSON! text=%s", response.text)
                 return
-            if response.status_code == 200 and response_data.get("success"):
-                logging.info("Settings saved successfully for op_id=%s", settings.get("global", {}).get("op_id"))
-            else:
-                logging.error("Server error: status=%s, message=%s", response.status_code,
-                              response_data.get("message", "Unknown error"))
+            # if response.status_code == 200 and response_data.get("success"):
+            # else:
+            #     logging.error("Server error: status=%s, message=%s", response.status_code,
+            #                   response_data.get("message", "Unknown error"))
         except requests.exceptions.RequestException as ex:
             logging.error("Request error: %s", ex)
             raise
@@ -1487,7 +1485,7 @@ class MSUIMscolab(QtCore.QObject):
             except requests.exceptions.JSONDecodeError:
                 logging.error("Response not valid JSON! text=%s", response.text)
                 return
-            logging.info("Successfully retrieved settings for op_id=%s", self.active_op_id)
+            # logging.info("Successfully retrieved settings for op_id=%s", self.active_op_id)
             settings = response_data.get("settings")
             self.ui.create_operation_view_settings(settings)
             return settings
