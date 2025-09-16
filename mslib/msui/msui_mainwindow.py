@@ -935,9 +935,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.activate_flight_track(item)
 
     def switch_to_mscolab(self):
-        restore_views = config_loader(dataset="restore_views", default=False)
-        if restore_views is False:
-            self.save_view_settings()
         self.local_active = False
         font = QtGui.QFont()
         for i in range(self.listFlightTracks.count()):
@@ -1269,12 +1266,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             return ("Status : System Configuration")
         else:
             return (f"Status : User Configuration '{constants.MSUI_SETTINGS}' loaded")
-
-    # def is_flight_track_stored(self, flight_track):
-    #     """Check if the active flight track is saved (has a valid filename)."""
-    #     if flight_track is None:
-    #         return
-    #     return flight_track.filename is not None
 
     def update_flight_track_settings(self, flight_track, view=None, remove=False):
         """Update the flight_track_settings dictionary when a flight track or view is created, modified, or removed."""
