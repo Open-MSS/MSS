@@ -306,6 +306,15 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
             else:
                 logging.warning("waypoints_model not initialized; skipping waypoint redraw")
 
+            # Restore dock visibility
+            docks_open = view.get("docks_open", [False] * len(self.docks))
+            for idx, state in enumerate(docks_open):
+                if idx < len(self.docks):
+                    if state and self.docks[idx] is None:
+                        self.openTool(idx + 1)
+                    elif self.docks[idx]:
+                        self.docks[idx].setVisible(state)
+
             # Restore WMS settings
             wms_settings = view.get("wms", {})
             if wms_settings:
@@ -323,15 +332,6 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
                     logging.warning("WMS dock not initialized")
             else:
                 logging.debug("No WMS settings provided; skipping WMS restoration")
-
-            # Restore dock visibility
-            docks_open = view.get("docks_open", [False] * len(self.docks))
-            for idx, state in enumerate(docks_open):
-                if idx < len(self.docks):
-                    if state and self.docks[idx] is None:
-                        self.openTool(idx + 1)
-                    elif self.docks[idx]:
-                        self.docks[idx].setVisible(state)
 
             # Redraw canvas
             if hasattr(self, 'mpl') and self.mpl.canvas:
@@ -355,7 +355,7 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
             valid_time = wms.get("valid_time", "")
 
             if not url:
-                logging.warning("No WMS URL provided; skipping restoration")
+                logging.info("No WMS URL provided")
                 return
 
             # Initialize WMS and update attributes
@@ -418,8 +418,6 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
                 self.wms_connected = True
                 if hasattr(self, 'mpl') and self.mpl.canvas:
                     self.mpl.canvas.redraw_map()
-            else:
-                logging.warning("Layer '%s' not found; skipping call_get_vsec", layer)
 
         except Exception as e:
             logging.error("Error restoring WMS settings: %s\n%s", str(e), traceback.format_exc())

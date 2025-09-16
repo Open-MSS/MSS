@@ -33,7 +33,7 @@ import os
 from PIL import Image
 
 from mslib.mscolab.app import APP
-from mslib.mscolab.models import User, Operation
+from mslib.mscolab.models import User, Operation, ViewSettings
 from mslib.mscolab.server import check_login, register_user
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
@@ -555,3 +555,78 @@ class Test_Server:
         }
         response = test_client.post('/upload_profile_image', data=data)
         return response
+
+    def test_save_operation_view_settings(self):
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        with self.app.test_client() as test_client:
+            self.user = get_user(self.userdata[0])
+            operation, token = self._create_operation(test_client, self.userdata)
+            settings = {
+                "global": {
+                    "op_id": operation.id,
+                    "user_id": self.user.id,
+                    "operation_name": "firstflight"
+                },
+                "views": [
+                    {
+                        "view_type": "topview",
+                        "map_section": "00 global (cyl)",
+                        "projection": "EPSG:4326",
+                        "extent": {
+                            "lon_min": -180.0,
+                            "lon_max": 180.0,
+                            "lat_min": -90.0,
+                            "lat_max": 90.0
+                        },
+                        "line_style": "Solid",
+                        "line_thickness": 5.0,
+                        "line_transparency": 1.0,
+                        "os_screen_region": [199, 268, 952, 782]
+                    }
+                ],
+                "wms": {
+                    "url": "http://open-mss.org/",
+                    "layer": "ecmwf_EUR_LL015.PLW01",
+                    "level": "150.0",
+                    "styles": "",
+                    "init_time": "2012-10-17T12:00:00Z",
+                    "valid_time": "2012-10-17T12:00:00Z"
+                }
+            }
+            # save settings in database
+            response = test_client.post('/save_operation_view_settings', data={
+                "token": token,
+                "view_settings": json.dumps(settings)
+            })
+
+            assert response.status_code == 200, f"Expected status code 200, got {response.status_code}"
+            data = json.loads(response.data.decode('utf-8'))
+            assert data["success"] is True, f"Expected success=True, got {data}"
+            # Verify database state
+            assert self.fm.save_view_settings(operation.id, self.user, settings)
+            saved_settings = ViewSettings.query.filter_by(op_id=operation.id, u_id=self.user.id).first()
+            assert saved_settings is not None
+
+            # Check if stored settings match input
+            stored = json.loads(saved_settings.settings)
+            assert stored is not None
+            assert stored["views"][0]["line_thickness"] == 5.0
+            assert stored["views"][0]["view_type"] == "topview"
+            assert stored["wms"]["url"] == settings["wms"]["url"]
+            assert stored["wms"]["level"] == settings["wms"]["level"]
+
+            # get the settings from database
+            response = test_client.get('/get_operation_view_settings', data={
+                "op_id": operation.id
+            })
+
+            assert self.fm.get_view_settings(operation.id, self.user)
+            settings_result = self.fm.get_view_settings(operation.id, self.user)
+            assert settings_result is not None, "No settings returned"
+            assert settings_result[0] is True, f"Failed to retrieve view settings: {settings_result[1]}"
+            setting = settings_result[2]  # Extract settings dictionary from tuple
+            assert isinstance(setting, dict), f"Expected dictionary, got {type(setting)}"
+            assert setting["views"][0]["line_thickness"] == 5.0, "Incorrect line_thickness"
+            assert setting["views"][0]["view_type"] == "topview", "Incorrect view_type"
+            assert setting["wms"]["url"] == settings["wms"]["url"], "Incorrect WMS URL"
+            assert setting["wms"]["level"] == settings["wms"]["level"], "Incorrect WMS level"

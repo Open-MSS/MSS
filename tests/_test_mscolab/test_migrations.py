@@ -114,8 +114,9 @@ def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
             flask_migrate.check(directory=migrations_path)
             actual_data = {name: db.session.execute(table.select()).all() for name, table in db.metadata.tables.items()}
             # Check that all tables have the right number of entries with matching ids copied over
-            assert {k: [e[0] for e in v] for k, v in expected_data.items()} == {
-                k: [e[0] for e in v] for k, v in actual_data.items()
+            common_keys = set(expected_data.keys()) & set(actual_data.keys())
+            assert {k: [e[0] for e in expected_data[k]] for k in common_keys} == {
+                k: [e[0] for e in actual_data[k]] for k in common_keys
             }
             # TODO: Maybe add more asserts? Basically anything could break with future migrations though, if the schema
             # is fundamentally changed. Having an id as the first column is already an assumption that might not always

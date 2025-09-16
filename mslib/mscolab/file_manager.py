@@ -34,12 +34,13 @@ import logging
 import git
 import threading
 import mimetypes
+import json
 from pathlib import Path
 from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
-from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
 from mslib.mscolab.app import APP
+from mslib.mscolab.models import db, Operation, Permission, User, Change, Message, ViewSettings
 
 
 class FileManager:
@@ -790,3 +791,50 @@ class FileManager:
         except IntegrityError:
             db.session.rollback()
             return False, None, "Some error occurred! Could not import permissions. Please try again."
+
+    def save_view_settings(self, op_id, user, view_settings):
+        """Save view settings for an operation and user to the database."""
+        if not self.is_member(user.id, op_id) and self.is_viewer(user.id, op_id):
+            return False, "Access denied"
+        try:
+            settings_str = json.dumps(view_settings)
+            view_setting = ViewSettings.query.filter_by(u_id=user.id, op_id=op_id).first()
+            if view_setting:
+                view_setting.settings = settings_str
+                view_setting.updated_at = datetime.datetime.now(tz=datetime.timezone.utc)
+                db.session.commit()
+                return True, "View settings updated successfully"
+            else:
+                view_setting = ViewSettings(op_id=op_id, u_id=user.id, settings=settings_str)
+                db.session.add(view_setting)
+                db.session.commit()
+                return True, "View settings saved successfully"
+        except Exception as e:
+            db.session.rollback()
+            logging.error("Error saving view settings for user %s, operation %s: %s", user.id, op_id, str(e))
+            return False, f"Failed to save view settings: {str(e)}"
+
+    def get_view_settings(self, op_id, user):
+        """Retrieve view settings for an operation and user from the database."""
+        if not self.is_member(user.id, op_id):
+            return False, "Access denied", {}
+
+        try:
+            view_setting = ViewSettings.query.filter_by(u_id=user.id, op_id=op_id).first()
+            settings = view_setting.settings if view_setting else None
+
+            if settings is None:
+                return True, "No view settings found", {"views": [], "global": {}}
+
+            try:
+                settings = json.loads(settings)
+                if not isinstance(settings, dict):
+                    return False, f"Invalid settings type after parsing: {type(settings).__name__}", {}
+            except json.JSONDecodeError:
+                return False, "Invalid JSON string for settings", {}
+
+            return True, "View settings retrieved successfully", settings
+
+        except AttributeError as e:
+            logging.warning("Database access error for user %s, operation %s: %s", user.id, op_id, str(e))
+            return False, f"Database error: {str(e)}", {}
