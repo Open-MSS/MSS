@@ -38,4 +38,3 @@ except importlib.metadata.PackageNotFoundError:
     with open(pyproject_path, "rb") as f:
         data = tomllib.load(f)
         __version__ = data["project"]["version"]
-
