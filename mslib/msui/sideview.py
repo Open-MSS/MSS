@@ -605,7 +605,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
             valid_time = wms.get("valid_time", "")
 
             if not url:
-                logging.warning("No WMS URL provided; skipping WMS restoration")
+                logging.warning("No WMS URL provided")
                 return
 
             self.wms_control.initialise_wms(url, level=level or "")
@@ -655,8 +655,6 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
                 self.wms_connected = True
                 if hasattr(self, 'mpl') and self.mpl.canvas:
                     self.mpl.canvas.redraw_map()
-            else:
-                logging.warning("Layer '%s' not found; skipping call_get_vsec to avoid crash", layer)
 
         except Exception as e:
             logging.error("Error restoring WMS settings: %s\n%s", str(e), traceback.format_exc())

@@ -873,6 +873,59 @@ def reset_request():
         return render_template('errors/403.html'), 403
 
 
+@APP.route("/save_operation_view_settings", methods=["POST"])
+@verify_user
+def save_operation_view_settings():
+    view_settings = request.form.get('view_settings', False)
+    user = g.user
+    try:
+        try:
+            if isinstance(view_settings, str):
+                settings_data = json.loads(view_settings)
+            else:
+                settings_data = view_settings
+        except Exception as e:
+            logging.error("Invalid JSON: %s", str(e))
+            return jsonify({"success": False, "message": "Invalid JSON"}), 400
+        if not settings_data:
+            logging.error("No data provided in request")
+            return jsonify({"success": False, "message": "No data provided"}), 400
+
+        op_id = settings_data.get('global', {}).get("op_id", None)
+        if op_id is None:
+            logging.error("Missing operation ID in payload")
+            return jsonify({"success": False, "message": "Missing operation ID"}), 400
+
+        user = g.user
+        success, message = fm.save_view_settings(op_id, user, settings_data)
+        if success:
+            return jsonify({"success": True, "message": message}), 200
+        else:
+            return jsonify({"success": False, "message": message}), 400
+
+    except Exception as e:
+        logging.error("Error saving view settings: %s", str(e))
+        return jsonify({"success": False, "message": f"Failed to save settings: {str(e)}"}), 500
+
+
+@APP.route("/get_operation_view_settings", methods=["GET"])
+@verify_user
+def get_operation_view_settings():
+    op_id = request.form.get('op_id')
+    if op_id is None:
+        return jsonify({"success": False, "message": "Missing op_id parameter"}), 400
+
+    user = g.user
+    success, message, settings = fm.get_view_settings(op_id, user)
+    if success:
+        return jsonify({"success": True, "message": message, "settings": settings}), 200
+    else:
+        ERROR_KEYWORDS = ("Access denied", "Missing", "Invalid settings", "Invalid JSON")
+        status_code = 400 if any(e in message for e in ERROR_KEYWORDS) else 500
+        logging.error("Failed to retrieve view settings for user %s, operation %s: %s", user.id, op_id, message)
+        return jsonify({"success": False, "message": message, "settings": settings}), status_code
+
+
 if mscolab_settings.USE_SAML2:
     # setup idp login config
     setup_saml2_backend()

@@ -874,6 +874,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
             # Update settings dictionary for new flight track
             self.update_flight_track_settings(waypoints_model)
+            self.mscolab.send_view_settings_to_server()
 
             # Activate new item
             if activate:
@@ -885,11 +886,12 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
            displayed at a time).
         """
         self.mscolab.switch_to_local()
-        for i in range(self.listViews.count()):
-            view_item = self.listViews.item(i)
-            view_window = view_item.window
-            if hasattr(view_window, 'active_flighttrack') and view_window.active_flighttrack:
-                self.update_flight_track_settings(view_window.active_flighttrack, view_window)
+        if not config_loader(dataset="restore_views"):
+            for i in range(self.listViews.count()):
+                view_item = self.listViews.item(i)
+                view_window = view_item.window
+                if hasattr(view_window, 'active_flighttrack') and view_window.active_flighttrack:
+                    self.update_flight_track_settings(view_window.active_flighttrack, view_window)
 
         # self.setWindowModality(QtCore.Qt.NonModal)
         self.active_flight_track = item.flighttrack_model
@@ -915,17 +917,18 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.restore_views_for_active_flighttrack()
 
     def update_active_flight_track(self, old_flight_track_name=None):
-        logging.debug("update_active_flight_track")
-        for i in range(self.listViews.count()):
-            view_item = self.listViews.item(i)
-            view_item.window.setFlightTrackModel(self.active_flight_track)
-            view = view_item.window
-            # Update the flight track model and active_flighttrack
-            view.setFlightTrackModel(self.active_flight_track)
-            view.active_flighttrack = self.active_flight_track
-            view_item.window.enable_navbar_action_buttons()
-            if old_flight_track_name is not None:
-                view.setWindowTitle(view.windowTitle().replace(old_flight_track_name, self.active_flight_track.name))
+        if not config_loader(dataset="restore_views"):
+            for i in range(self.listViews.count()):
+                view_item = self.listViews.item(i)
+                view_item.window.setFlightTrackModel(self.active_flight_track)
+                view = view_item.window
+                # Update the flight track model and active_flighttrack
+                view.setFlightTrackModel(self.active_flight_track)
+                view.active_flighttrack = self.active_flight_track
+                view_item.window.enable_navbar_action_buttons()
+                if old_flight_track_name is not None:
+                    view.setWindowTitle(view.windowTitle().replace(old_flight_track_name,
+                                                                   self.active_flight_track.name))
 
     def activate_selected_flight_track(self):
         item = self.listFlightTracks.currentItem()
@@ -1027,11 +1030,13 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 show_popup(self.mscolab.ui, "Error", "Session expired, new login required")
 
     def restore_views_for_active_flighttrack(self):
-        if not self.active_flight_track:
+        if not (self.active_flight_track or self.mscolab.active_op_id):
             logging.warning("No active flight track to restore views for")
             return
 
         restored_data = view_restoration.restore_view_settings(self.active_flight_track.name)
+        if restored_data is None:
+            return
         if not isinstance(restored_data, dict):
             logging.error("Invalid restore data for flight track %s", self.active_flight_track.name)
             return
@@ -1039,10 +1044,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         global_data = restored_data.get("global")
         saved_flighttrack_name = global_data.get("flight_track_name")
         if saved_flighttrack_name and saved_flighttrack_name != self.active_flight_track.name:
-            logging.warning(
-                "Flight track name mismatch: JSON (%s) vs active (%s). Using active flight track's waypoints.",
-                saved_flighttrack_name, self.active_flight_track.name
-            )
+            return
 
         # Extract views to restore
         views_to_restore = restored_data.get("views", [])
@@ -1118,8 +1120,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 view_window.mpl.setFixedSize(layout['sideview'][0], layout['sideview'][1])
             if restore_settings:
                 view_window.set_settings(restore_settings)
-            else:
-                logging.error("cannot restore settings")
+
         elif _type == "tableview":
             # Table view.
             view_window = tableview.MSUITableViewWindow(model=model, tutorial_mode=self.tutorial_mode)
@@ -1266,8 +1267,10 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         else:
             return (f"Status : User Configuration '{constants.MSUI_SETTINGS}' loaded")
 
-    def update_flight_track_settings(self, flight_track, view=None, remove=False, update_global=False):
+    def update_flight_track_settings(self, flight_track, view=None, remove=False):
         """Update the flight_track_settings dictionary when a flight track or view is created, modified, or removed."""
+        if not flight_track or not view_restoration.is_flight_track_stored(flight_track):
+            return
         if not self.active_flight_track or flight_track.name != self.active_flight_track.name:
             return
 
@@ -1296,10 +1299,11 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 settings["view_id"] = getattr(view, 'view_id',
                                               f"view_{view_type}_{len(self.flight_track_settings[json_key]['views'])}")
 
+                settings_compare = {k: v for k, v in settings.items() if k != "view_id"}
                 # Update or append view settings
                 for i, existing_setting in enumerate(self.flight_track_settings[json_key]["views"]):
-                    if existing_setting["view_id"] == settings["view_id"]:
-                        self.flight_track_settings[json_key]["views"][i] = settings
+                    existing_compare = {k: v for k, v in existing_setting.items() if k != "view_id"}
+                    if settings_compare == existing_compare:
                         break
                 else:
                     self.flight_track_settings[json_key]["views"].append(settings)
@@ -1307,10 +1311,95 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 global_data = view_restoration.set_global_data(flight_track)
                 self.flight_track_settings[json_key]["global"] = global_data
 
+            except KeyError as ae:
+                logging.info(
+                    "Failed to update view %s (type: %s, id: %s): %s",
+                    getattr(view, "name", "unknown"),
+                    type(view).__name__,
+                    getattr(view, "view_id", "unknown"),
+                    ae,
+                )
+            return
+
+    def get_operation_view_settings(self):
+        """Collect settings for all views associated with the active operation."""
+        settings = {
+            "global": {
+                "op_id": self.mscolab.active_op_id,
+                "user_id": self.mscolab.user.get("id") if self.mscolab.user else None,
+                "operation_name": self.mscolab.active_operation_name
+            },
+            "views": []
+        }
+
+        if not self.mscolab.active_op_id:
+            logging.warning("No active operation selected, returning empty settings")
+            return settings
+
+        for i in range(self.listViews.count()):
+            view = self.listViews.item(i).window
+            try:
+                if hasattr(view, 'get_settings'):
+                    view_settings = view.get_settings()
+                    if not isinstance(view_settings, dict):
+                        logging.warning("Invalid settings from view %s: %s",
+                                        getattr(view, 'name', 'unknown'), view_settings)
+                        continue
+                    view_type = getattr(view, 'view_type', type(view).__name__).lower().replace(" ", "")
+                    view_id = getattr(view, 'view_id', f"view_{view_type}_{self.mscolab.active_op_id}_{i}")
+                    view_settings["view_type"] = view_type
+                    view_settings["view_id"] = view_id
+                    settings["views"].append(view_settings)
+                else:
+                    logging.warning("View %s has no get_settings method", getattr(view, 'name', 'unknown'))
             except Exception as ex:
-                logging.error("Failed to update settings for view %s (type: %s, id: %s): %s",
-                              getattr(view, 'name', 'unknown'), type(view).__name__,
-                              getattr(view, 'view_id', 'unknown'), str(ex))
+                logging.error("Failed to collect settings for view %s: %s", getattr(view, 'name', 'unknown'), ex)
+        return settings
+
+    def create_operation_view_settings(self, settings):
+        """Apply retrieved view settings to open views or create new views."""
+        if not settings or not isinstance(settings, dict):
+            logging.warning("No valid settings to apply: %s", settings)
+            return
+
+        global_data = settings.get("global", {})
+        operation_name = global_data.get("operation_name")
+
+        # Verify that settings match the active operation
+        if operation_name and operation_name != self.mscolab.active_operation_name:
+            logging.warning(
+                "Settings operation name (%s) does not match active operation (%s). Skipping settings application.",
+                operation_name, self.mscolab.active_operation_name
+            )
+            return
+        views = settings.get("views", [])
+        # Close existing views to avoid conflicts
+        while self.listViews.count() > 0:
+            self.listViews.item(0).window.handle_force_close()
+        self.listViews.clear()
+        QActiveViewsListWidgetItem.opened_views = 0
+
+        for view_setting in views:
+            view_type = view_setting.get("view_type")
+            if not view_type:
+                logging.warning("Skipping view with missing view_type: %s", view_setting)
+                continue
+            self.create_view(view_type, self.mscolab.waypoints_model, restore_settings=[view_setting])
+
+    def save_view_settings(self):
+        # Save view settings for active flight track
+        if self.local_active and not self.mscolab.active_op_id and self.active_flight_track:
+            for i in range(self.listViews.count()):
+                view = self.listViews.item(i).window
+                if hasattr(view, 'active_flighttrack') and view.active_flighttrack == self.active_flight_track:
+                    self.update_flight_track_settings(self.active_flight_track, view=view)
+            for json_key in self.activated_flight_tracks:
+                settings = self.flight_track_settings.get(json_key)
+                if settings:
+                    view_restoration.save_view_settings(settings["views"], settings["global"], json_key)
+                else:
+                    logging.debug("No setting available for %s", json_key)
+            self.activated_flight_tracks.clear()
 
     def closeEvent(self, event):
         """Ask user if he/she wants to close the application. If yes, also
@@ -1325,27 +1414,19 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
 
         if ret == QtWidgets.QMessageBox.Yes:
+            if self.local_active:
+                self.save_view_settings()
+            if self.mscolab.active_op_id:
+                self.mscolab.send_view_settings_to_server()
             if self.mscolab.help_dialog is not None:
                 self.mscolab.help_dialog.close()
             # cleanup mscolab widgets
+            # Save MSColab view settings
             if self.mscolab.token is not None:
                 self.mscolab.logout()
+
             # Table View stick around after MainWindow closes - maybe some dangling reference?
             # This removes them for sure!
-            self.update_flight_track_settings(self.active_flight_track)
-
-            # Save view settings for active flight track
-            for i in range(self.listViews.count()):
-                view = self.listViews.item(i).window
-                if hasattr(view, 'active_flighttrack') and view.active_flighttrack == self.active_flight_track:
-                    self.update_flight_track_settings(self.active_flight_track, view=view)
-            for json_key in self.activated_flight_tracks:
-                settings = self.flight_track_settings.get(json_key)
-                if settings:
-                    view_restoration.save_view_settings(settings["views"], settings["global"], json_key)
-                else:
-                    logging.debug("No setting available")
-            self.activated_flight_tracks.clear()
             while self.listViews.count() > 0:
                 self.listViews.item(0).window.handle_force_close()
             self.listViews.clear()
