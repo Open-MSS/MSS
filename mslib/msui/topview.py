@@ -653,7 +653,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                     "init_time": self.curritime,
                     "valid_time": self.currvtime,
                 }
-            logging.debug(f"from get_settings url is {wms_settings['url']}")
+                if wms_settings["url"] is None:
+                    return ""
 
             # Get dock widget states
             dock_states = [dock is not None for dock in self.docks]
@@ -684,10 +685,9 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 "wms": wms_settings,
                 "docks_open": dock_states,
             }
-        except Exception as e:
-            logging.error("Failed to get settings for topview (id: %s): %s",
-                          getattr(self, 'view_id', 'unknown'), str(e))
-            return {}
+        except AttributeError as ae:
+            logging.info("Map extent not available: %s", str(ae))
+        return {}
 
     def restore_wms_settings(self, wms):
         """
@@ -728,8 +728,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             if target_layer_item:
                 self.wms_control.multilayers.current_layer = target_layer_item
                 self.wms_control.get_map()
-            else:
-                logging.warning("Layer '%s' not found; skipping get_map to avoid crash", layer)
 
             self.wms_connected = True
             self.mpl.canvas.redraw_map()
@@ -784,7 +782,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             # Update plot
             self.mpl.canvas.waypoints_interactor.plotter.update_from_waypoints(
                 self.active_flighttrack.all_waypoint_data())
-            self.mpl.canvas.waypoints_interactor.redraw_path()
 
             # Restore docks
             docks_open = view.get("docks_open", [])
@@ -800,5 +797,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 self.restore_wms_settings(wms)
 
             self.mpl.canvas.draw()
+            # Redraw path last to ensure all settings (waypoints, map, WMS, docks) are applied
+            # self.mpl.canvas.waypoints_interactor.redraw_path()
         except Exception as e:
             logging.error("Error restoring non-WMS Top View settings: %s\n%s", str(e), traceback.format_exc())
