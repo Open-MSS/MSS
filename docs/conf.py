@@ -17,7 +17,6 @@ import setuptools
 import requests
 import zipfile
 import shutil
-import tomllib
 
 
 def get_tutorial_images():
