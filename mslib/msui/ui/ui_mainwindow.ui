@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>738</width>
-    <height>749</height>
+    <width>739</width>
+    <height>736</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -134,6 +134,12 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>250</height>
+             </size>
+            </property>
             <property name="title">
              <string/>
             </property>
@@ -183,6 +189,12 @@ Save a flight track to name it.</string>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>200</height>
+             </size>
+            </property>
             <layout class="QVBoxLayout" name="openViewsVL">
              <property name="leftMargin">
               <number>8</number>
@@ -198,6 +210,15 @@ Save a flight track to name it.</string>
              </property>
              <item>
               <widget class="QLabel" name="openViewsLabel">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="mouseTracking">
+                <bool>false</bool>
+               </property>
+               <property name="autoFillBackground">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string>Open Views:</string>
                </property>
@@ -211,6 +232,96 @@ Save a flight track to name it.</string>
               </widget>
              </item>
             </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupBox">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="title">
+             <string/>
+            </property>
+            <widget class="QListWidget" name="listWidget">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>40</y>
+               <width>256</width>
+               <height>61</height>
+              </rect>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>16777215</height>
+              </size>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>10</y>
+               <width>251</width>
+               <height>18</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>Save View:</string>
+             </property>
+            </widget>
+            <widget class="QLineEdit" name="lineEdit">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>60</y>
+               <width>181</width>
+               <height>26</height>
+              </rect>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="pushButton">
+             <property name="geometry">
+              <rect>
+               <x>200</x>
+               <y>60</y>
+               <width>0</width>
+               <height>0</height>
+              </rect>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>1000</width>
+               <height>1000</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Save</string>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="pushButton_2">
+             <property name="geometry">
+              <rect>
+               <x>190</x>
+               <y>60</y>
+               <width>75</width>
+               <height>26</height>
+              </rect>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>1670000</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Save</string>
+             </property>
+            </widget>
            </widget>
           </item>
          </layout>
@@ -419,8 +530,8 @@ Double click a operation to activate and view its description.</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>738</width>
-     <height>22</height>
+     <width>739</width>
+     <height>23</height>
     </rect>
    </property>
    <property name="nativeMenuBar">
