@@ -17,7 +17,7 @@ import setuptools
 import requests
 import zipfile
 import shutil
-import toml
+import tomllib
 
 
 def get_tutorial_images():
@@ -95,8 +95,8 @@ if os.environ.get("GALLERY", "True") != "False":
     mslib.mswms.wms.server.generate_gallery(sphinx=True, generate_code=True, all_plots=True, levels="3,4,200,300",
                                             vtimes="2012-10-18T00:00:00,2012-10-19T00:00:00")
 
-with open("../pyproject.toml") as f:
-    __version__ = toml.load(f)["project"]["version"]
+with open("../pyproject.toml", "rb") as f:
+    __version__ = tomllib.load(f)["project"]["version"]
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 
