@@ -27,4 +27,14 @@
 """
 import importlib.metadata
 
-__version__ = importlib.metadata.version("open-mss")
+try:
+    __version__ = importlib.metadata.version("open-mss")
+except importlib.metadata.PackageNotFoundError:
+    import tomllib
+    import os
+    project_root = os.path.dirname(os.path.dirname(__file__))
+    pyproject_path = os.path.join(project_root, "pyproject.toml")
+    with open(pyproject_path, "rb") as f:
+        data = tomllib.load(f)
+        __version__ = data["project"]["version"]
+
