@@ -321,16 +321,15 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
             # Performance settings
             if hasattr(self, 'waypoints_model') and self.waypoints_model:
                 raw_perf = getattr(self.waypoints_model, 'performance_settings', {})
-                if isinstance(raw_perf, dict):
-                    try:
-                        performance_settings = view_restoration.serialize_settings(raw_perf)
-                        for key, value in raw_perf.items():
-                            if isinstance(value, QtCore.QDateTime):
-                                performance_settings[key] = value.toString(QtCore.Qt.ISODate)
-                    except Exception as ex:
-                        logging.error("Failed to serialize performance_settings: %s", ex)
-                else:
-                    logging.warning("performance_settings is not a dict: %s", type(raw_perf))
+                try:
+                    performance_settings = view_restoration.serialize_settings(raw_perf)
+                    for key, value in raw_perf.items():
+                        if isinstance(value, QtCore.QDateTime):
+                            performance_settings[key] = value.toString(QtCore.Qt.ISODate)
+                except Exception as ex:
+                    logging.error("Failed to serialize performance_settings: %s", ex)
+            else:
+                logging.warning("performance_settings is not a dict: %s", type(raw_perf))
 
             # Dock states
             if hasattr(self, 'docks') and isinstance(self.docks, list):

@@ -1349,6 +1349,7 @@ class MSUIMscolab(QtCore.QObject):
     @verify_user_token
     def handle_work_locally_toggle(self, _=None):
         if self.ui.workLocallyCheckbox.isChecked():
+            self.send_view_settings_to_server()
             if self.version_window is not None:
                 self.version_window.close()
             self.create_local_operation_file()
@@ -1426,6 +1427,68 @@ class MSUIMscolab(QtCore.QObject):
             self.fetch_wp_mscolab()
         elif selected_option == "Save To Server":
             self.save_wp_mscolab()
+
+    @verify_user_token
+    def save_operation_view_settings(self, settings):
+        """Save collected settings for the active operation to the server."""
+        data = {
+            "operation_name": self.active_operation_name,
+            "view_settings": json.dumps(settings),
+            "token": self.token
+        }
+        response = self.conn.request_post("save_operation_view_settings", data=data)
+        try:
+            response.raise_for_status()
+            try:
+                if not response.text.strip():  # empty response body
+                    logging.info("Empty response body from server! status=%s", response.status_code)
+                    return
+
+            except requests.exceptions.JSONDecodeError:
+                logging.error("Response not valid JSON! text=%s", response.text)
+                return
+        except requests.exceptions.RequestException as ex:
+            logging.error("Request error: %s", ex)
+            raise
+
+    def send_view_settings_to_server(self, op_id=None):
+        """Orchestrate saving view settings for the specified or active operation."""
+        if self.ui.local_active or not self.active_op_id:
+            return
+        if op_id is not None and op_id != self.active_op_id:
+            logging.warning("Mismatched op_id=%s, active_op_id=%s; using active_op_id", op_id, self.active_op_id)
+            op_id = self.active_op_id
+        settings = self.ui.get_operation_view_settings()
+        if not settings["views"]:
+            logging.warning("No view settings to send for op_id=%s", self.active_op_id)
+            return
+        self.save_operation_view_settings(settings)
+
+    def load_operation_view_settings(self):
+        """Fetch view settings for the active operation from the server."""
+        if not self.mscolab_server_url or not self.token or not self.active_op_id:
+            logging.warning("Cannot fetch settings: Invalid MSColab context (server_url=%s, token=%s, op_id=%s)",
+                            self.mscolab_server_url, self.token, self.active_op_id)
+            return None
+        try:
+            data = {
+                "op_id": self.active_op_id
+            }
+            response = self.conn.request_get("get_operation_view_settings", data=data)
+
+            try:
+                response_data = response.json()
+            except requests.exceptions.JSONDecodeError:
+                logging.error("Response not valid JSON! text=%s", response.text)
+                return
+            # logging.info("Successfully retrieved settings for op_id=%s", self.active_op_id)
+            settings = response_data.get("settings")
+            self.ui.create_operation_view_settings(settings)
+            return settings
+
+        except requests.exceptions.RequestException as e:
+            logging.error("Failed to fetch settings: %s", str(e))
+            return None
 
     @verify_user_token
     def fetch_wp_mscolab(self):
@@ -1731,6 +1794,7 @@ class MSUIMscolab(QtCore.QObject):
             self.tr(f"Do you want to archive this operation '{self.active_operation_name}'?"),
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if ret == QMessageBox.Yes:
+            self.send_view_settings_to_server()
             try:
                 response = self.conn.request_post(
                     "update_operation",
@@ -1747,9 +1811,10 @@ class MSUIMscolab(QtCore.QObject):
 
     @verify_user_token
     def set_active_op_id(self, item):
-        logging.debug('set_active_op_id %s %s %s', item, item.op_id, self.active_op_id)
         if not self.ui.local_active and item.op_id == self.active_op_id:
             return
+        self.send_view_settings_to_server()
+        self.ui.save_view_settings()
 
         # close all hanging window
         self.close_external_windows()
@@ -1786,6 +1851,9 @@ class MSUIMscolab(QtCore.QObject):
 
         # change font style for selected
         self._handle_font_bolding(item)
+        restore_views = config_loader(dataset="restore_views", default=False)
+        if restore_views:
+            self.load_operation_view_settings()
 
         # set new waypoints model to open views
         for window in self.ui.get_active_views():
@@ -1804,6 +1872,7 @@ class MSUIMscolab(QtCore.QObject):
         self.conn.select_operation(item.op_id)
 
     def switch_to_local(self):
+        self.send_view_settings_to_server()
         logging.debug('switch_to_local')
         self.ui.local_active = True
         if self.active_op_id is not None:
@@ -2014,6 +2083,7 @@ class MSUIMscolab(QtCore.QObject):
         logging.debug('logout')
         if self.mscolab_server_url is None:
             return
+        self.send_view_settings_to_server()
         self.ui.local_active = True
         self.ui.menu_handler()
 

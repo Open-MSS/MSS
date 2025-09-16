@@ -111,13 +111,18 @@ def serialize_settings(settings_list):
     """
     Serialize settings to JSON string using a custom default serializer.
     """
-    if isinstance(settings_list, dict):
-        settings_list = [settings_list]
     try:
-        return json.dumps(settings_list, default=serializer)
-    except TypeError as e:
-        logging.error("Serialization failed: %s", e)
-        raise
+        settings = {}
+        if isinstance(settings_list, str):
+            settings = json.loads(settings_list)
+        if isinstance(settings_list, list):
+            settings = settings_list[0] if settings_list else {}
+        if not isinstance(settings_list, dict):
+            return {}
+        return settings
+    except Exception as e:
+        logging.error("Deserialization failed: %s", e)
+        return {}
 
 
 def restore_view_settings(flight_track_name):
@@ -132,7 +137,6 @@ def restore_view_settings(flight_track_name):
     config_path = Path(constants.MSUI_CONFIG_PATH)
     save_path = config_path / "view_settings.json"
     if not save_path.exists():
-        logging.info("No view settings file found at %s", save_path)
         return default_settings
 
     try:
@@ -156,3 +160,10 @@ def restore_view_settings(flight_track_name):
     except Exception as e:
         logging.error("Failed to restore view settings for %s: %s", flight_track_name, str(e))
         return default_settings
+
+
+def is_flight_track_stored(flight_track):
+    """Check if the active flight track is saved (has a valid filename)."""
+    if flight_track is None:
+        return False
+    return flight_track.filename is not None
