@@ -65,6 +65,7 @@ if os.getenv("PROJ_LIB") is None or os.getenv("PROJ_LIB") == "PROJ_LIB":
 if os.environ.get("GALLERY", "True") != "False":
     # Generate plot gallery
     import fs
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
     from mslib.mswms.demodata import DataFiles
 
     root_fs = fs.open_fs("~/")
