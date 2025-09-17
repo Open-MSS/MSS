@@ -17,6 +17,10 @@ import setuptools
 import requests
 import zipfile
 import shutil
+import importlib
+
+
+__version__ = importlib.metadata.version("open-mss")
 
 
 def get_tutorial_images():
@@ -77,9 +81,7 @@ if os.environ.get("GALLERY", "True") != "False":
 
     import mslib.mswms.wms
     import mslib.mswms.gallery_builder
-    import importlib
 
-    __version__ = importlib.metadata.version("open-mss")
 
     # Generate template plots
     from docs.gallery.plot_examples import HS_template, VS_template

@@ -2,7 +2,7 @@ name: rtd
 channels:
   - conda-forge
 dependencies:
-  - python =3.11
+  - python
   - setuptools <81
   - pip
   - pip:
