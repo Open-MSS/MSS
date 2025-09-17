@@ -82,7 +82,6 @@ if os.environ.get("GALLERY", "True") != "False":
     import mslib.mswms.wms
     import mslib.mswms.gallery_builder
 
-
     # Generate template plots
     from docs.gallery.plot_examples import HS_template, VS_template
     from mslib.mswms.mpl_lsec_styles import LS_DefaultStyle
