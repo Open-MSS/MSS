@@ -1359,13 +1359,13 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                               getattr(view, 'name', 'unknown'), type(view).__name__,
                               getattr(view, 'view_id', 'unknown'), str(ex))
                 if remove:
-                # Remove the view's settings
+                    # Remove the view's settings
                     view_id = getattr(view, 'view_id', None)
                     if view_id:
                         self.flight_track_settings[json_key]["views"] = [
                             setting for setting in self.flight_track_settings[json_key]["views"]
                             if setting.get("view_id") != view_id
-                    ]
+                        ]
                 else:
                     settings = view.get_settings()
                     if not isinstance(settings, dict):
@@ -1374,9 +1374,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                                         getattr(view, 'view_id', 'unknown'), settings)
                         return
                     settings["view_type"] = view_type
-                    settings["view_id"] = getattr(view, 'view_id',
-                                                f"view_{view_type}_{len(self.flight_track_settings[json_key]['views'])}")
-
+                    default_id = f"view_{view_type}_{len(self.flight_track_settings[json_key]['views'])}"
+                    settings["view_id"] = getattr(view, "view_id", default_id)
                     settings_compare = {k: v for k, v in settings.items() if k != "view_id"}
                     # Update or append view settings
                     for i, existing_setting in enumerate(self.flight_track_settings[json_key]["views"]):
