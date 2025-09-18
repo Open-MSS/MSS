@@ -1151,6 +1151,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             # listitem = QActiveViewsListWidgetItem(view_window, self.listViews, self.viewsChanged, mscolab)
             listitem = QActiveViewsListWidgetItem(view_window, self.listViews, self.viewsChanged)
             view_window.viewCloses.connect(listitem.view_destroyed)
+            view_window.viewCloses.connect(lambda: self.update_flight_track_settings(self.active_flight_track,
+                                                                                     view_window, remove=True))
             self.listViews.setCurrentItem(listitem)
             # self.active_view_windows.append(view_window)
             # disable navbar actions in the view for viewer
@@ -1310,6 +1312,82 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
                 global_data = view_restoration.set_global_data(flight_track)
                 self.flight_track_settings[json_key]["global"] = global_data
+
+            except KeyError as ae:
+                logging.info(
+                    "Failed to update view %s (type: %s, id: %s): %s",
+                    getattr(view, "name", "unknown"),
+                    type(view).__name__,
+                    getattr(view, "view_id", "unknown"),
+                    ae,
+                )
+            return
+
+    def get_operation_view_settings(self):
+        """Collect settings for all views associated with the active operation."""
+        settings = {
+            "global": {
+                "op_id": self.mscolab.active_op_id,
+                "user_id": self.mscolab.user.get("id") if self.mscolab.user else None,
+                "operation_name": self.mscolab.active_operation_name
+            },
+            "views": []
+        }
+
+        if not self.mscolab.active_op_id:
+            logging.warning("No active operation selected, returning empty settings")
+            return settings
+
+        for i in range(self.listViews.count()):
+            view = self.listViews.item(i).window
+            try:
+                if hasattr(view, 'get_settings'):
+                    view_settings = view.get_settings()
+                    if not isinstance(view_settings, dict):
+                        logging.warning("Invalid settings from view %s: %s",
+                                        getattr(view, 'name', 'unknown'), view_settings)
+                        continue
+                    view_type = getattr(view, 'view_type', type(view).__name__).lower().replace(" ", "")
+                    view_id = getattr(view, 'view_id', f"view_{view_type}_{self.mscolab.active_op_id}_{i}")
+                    view_settings["view_type"] = view_type
+                    view_settings["view_id"] = view_id
+                    settings["views"].append(view_settings)
+                else:
+                    logging.warning("View %s has no get_settings method", getattr(view, 'name', 'unknown'))
+            except Exception as ex:
+                logging.error("Failed to update settings for view %s (type: %s, id: %s): %s",
+                              getattr(view, 'name', 'unknown'), type(view).__name__,
+                              getattr(view, 'view_id', 'unknown'), str(ex))
+                if remove:
+                # Remove the view's settings
+                    view_id = getattr(view, 'view_id', None)
+                    if view_id:
+                        self.flight_track_settings[json_key]["views"] = [
+                            setting for setting in self.flight_track_settings[json_key]["views"]
+                            if setting.get("view_id") != view_id
+                    ]
+                else:
+                    settings = view.get_settings()
+                    if not isinstance(settings, dict):
+                        logging.warning("Invalid settings from view %s (type: %s, id: %s), skipping: %s",
+                                        getattr(view, 'name', 'unknown'), type(view).__name__,
+                                        getattr(view, 'view_id', 'unknown'), settings)
+                        return
+                    settings["view_type"] = view_type
+                    settings["view_id"] = getattr(view, 'view_id',
+                                                f"view_{view_type}_{len(self.flight_track_settings[json_key]['views'])}")
+
+                    settings_compare = {k: v for k, v in settings.items() if k != "view_id"}
+                    # Update or append view settings
+                    for i, existing_setting in enumerate(self.flight_track_settings[json_key]["views"]):
+                        existing_compare = {k: v for k, v in existing_setting.items() if k != "view_id"}
+                        if settings_compare == existing_compare:
+                            break
+                    else:
+                        self.flight_track_settings[json_key]["views"].append(settings)
+
+                    global_data = view_restoration.set_global_data(flight_track)
+                    self.flight_track_settings[json_key]["global"] = global_data
 
             except KeyError as ae:
                 logging.info(
