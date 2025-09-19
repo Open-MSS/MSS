@@ -40,7 +40,7 @@ def test_save_to_kml():
         with open(filename) as f:
             data = f.readlines()
         assert data == ['<?xml version="1.0" encoding="UTF-8" ?>\n',
-                        '<kml xmlns="http://earth.google.com/kml/2.2">\n',
+                        '<kml xmlns="http://www.opengis.net/kml/2.2">\n',
                         '<Document>\n',
                         '<name>testkmldata</name>\n',
                         '<open>1</open>\n',
