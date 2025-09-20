@@ -55,6 +55,12 @@
           <height>0</height>
          </size>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>100</height>
+         </size>
+        </property>
         <property name="title">
          <string/>
         </property>
@@ -226,7 +232,7 @@ Save a flight track to name it.</string>
            </widget>
           </item>
           <item>
-           <widget class="QGroupBox" name="groupBox">
+           <widget class="QGroupBox" name="shareViewGroupBox">
             <property name="maximumSize">
              <size>
               <width>16777215</width>
@@ -561,6 +567,10 @@ Double click a operation to activate and view its description.</string>
     <addaction name="separator"/>
     <addaction name="actionLeaveOperation"/>
     <addaction name="menuProperties"/>
+    <addaction name="separator"/>
+    <addaction name="separator"/>
+    <addaction name="separator"/>
+    <addaction name="actionOpenManageView"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuViews"/>
@@ -767,6 +777,11 @@ Double click a operation to activate and view its description.</string>
   <action name="actionCopyIntoNewMSColabOperation">
    <property name="text">
     <string>MSColab Operation</string>
+   </property>
+  </action>
+  <action name="actionOpenManageView">
+   <property name="text">
+    <string>Manage view</string>
    </property>
   </action>
  </widget>

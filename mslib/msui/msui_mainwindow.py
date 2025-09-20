@@ -530,6 +530,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             lambda: self.listFlightTracks.setCurrentItem(None))
         # disable category until connected/login into mscolab
         self.filterCategoryCb.setEnabled(False)
+        self.actionOpenManageView.setEnabled(False)
+        self.shareViewGroupBox.setEnabled(False)
         self.mscolab.signal_unarchive_operation.connect(self.activate_operation_slot)
         self.mscolab.signal_operation_added.connect(self.add_operation_slot)
         self.mscolab.signal_operation_removed.connect(self.remove_operation_slot)
@@ -1291,13 +1293,13 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 return
             view_type = getattr(view, 'view_type', type(view).__name__).lower().replace(" ", "")
             try:
-                if remove:# Remove the view's settings
+                if remove:   # Remove the view's settings
                     view_id = getattr(view, 'view_id', None)
                     if view_id:
                         self.flight_track_settings[json_key]["views"] = [
                             setting for setting in self.flight_track_settings[json_key]["views"]
                             if setting.get("view_id") != view_id
-                    ]
+                        ]
                 else:
                     settings = view.get_settings()
                     if not isinstance(settings, dict):
@@ -1306,9 +1308,11 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                                         getattr(view, 'view_id', 'unknown'), settings)
                         return
                     settings["view_type"] = view_type
-                    settings["view_id"] = getattr(view, 'view_id',
-                                                f"view_{view_type}_{len(self.flight_track_settings[json_key]['views'])}")
-
+                    settings["view_id"] = getattr(
+                        view,
+                        "view_id",
+                        f"view_{view_type}_{len(self.flight_track_settings[json_key]['views'])}"
+                    )
                     settings_compare = {k: v for k, v in settings.items() if k != "view_id"}
                     # Update or append view settings
                     for i, existing_setting in enumerate(self.flight_track_settings[json_key]["views"]):

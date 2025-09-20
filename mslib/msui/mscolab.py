@@ -69,6 +69,7 @@ from mslib.msui.qt5 import ui_mscolab_merge_waypoints_dialog as merge_wp_ui
 from mslib.msui.qt5 import ui_mscolab_connect_dialog as ui_conn
 from mslib.msui.qt5 import ui_mscolab_profile_dialog as ui_profile
 from mslib.msui.qt5 import ui_operation_archive as ui_opar
+from mslib.msui.qt5 import ui_manageView_dialog as ui_manage_view
 from mslib.msui import constants
 from mslib.utils.config import config_loader, modify_config_file
 
@@ -493,6 +494,14 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.set_status("Error", error_msg)
 
 
+class ManageViewDialog(QtWidgets.QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.ui = ui_manage_view.Ui_Form()
+        self.ui.setupUi(self)
+        self.setWindowTitle("Manage Views")
+
+
 class MSUIMscolab(QtCore.QObject):
     """
     Class for implementing MSColab functionalities
@@ -535,6 +544,7 @@ class MSUIMscolab(QtCore.QObject):
 
         # connect operation options menu actions
         self.ui.actionAddOperation.triggered.connect(self.add_operation_handler)
+        self.ui.actionOpenManageView.triggered.connect(self.open_manage_view_widget)
         self.ui.actionChat.triggered.connect(self.operation_options_handler)
         self.ui.actionVersionHistory.triggered.connect(self.operation_options_handler)
         self.ui.actionManageUsers.triggered.connect(self.operation_options_handler)
@@ -604,6 +614,8 @@ class MSUIMscolab(QtCore.QObject):
         # Gravatar image path
         self.gravatar = None
 
+        self.manage_view_widget = None
+
         # Service message text for flight-track changes (waypoints inserted, moved or deleted)
         self.lastChangeMessage = ""
 
@@ -613,6 +625,11 @@ class MSUIMscolab(QtCore.QObject):
         else:
             self.data_dir = Path(local_operations_data)
         self.create_dir()
+
+    def open_manage_view_widget(self):
+        self.manage_view_widget = ManageViewDialog(self.ui)
+        self.manage_view_widget.show()
+        # self.manage_view_widget.raise_()
 
     def _handle_font_bolding(self, item=None):
         font = QtGui.QFont()
@@ -1895,6 +1912,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.actionChangeDescription.setEnabled(False)
         self.ui.actionArchiveOperation.setEnabled(False)
         self.ui.actionViewDescription.setEnabled(True)
+        self.ui.actionOpenManageView.setEnabled(False)
         self.ui.menuProperties.setEnabled(True)
 
         if self.access_level == "viewer":
@@ -1904,9 +1922,13 @@ class MSUIMscolab(QtCore.QObject):
         if self.access_level in ["creator", "admin", "collaborator"]:
             if self.ui.workLocallyCheckbox.isChecked():
                 self.ui.actionChat.setEnabled(True)
+                self.ui.actionOpenManageView.setEnabled(False)
+                self.ui.shareViewGroupBox.setEnabled(False)
             else:
                 self.ui.actionChat.setEnabled(True)
                 self.ui.actionVersionHistory.setEnabled(True)
+                self.ui.actionOpenManageView.setEnabled(True)
+                self.ui.shareViewGroupBox.setEnabled(True)
             self.ui.workLocallyCheckbox.setEnabled(True)
         else:
             if self.version_window is not None:
@@ -1944,6 +1966,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.actionChangeCategory.setEnabled(False)
         self.ui.actionChangeDescription.setEnabled(False)
         self.ui.actionDeleteOperation.setEnabled(False)
+        self.ui.actionOpenManageView.setEnabled(False)
         self.ui.workLocallyCheckbox.setEnabled(False)
         self.ui.menuProperties.setEnabled(False)
         self.ui.serverOptionsCb.hide()
