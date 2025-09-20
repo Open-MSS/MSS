@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1051</width>
-    <height>772</height>
+    <width>738</width>
+    <height>749</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -137,7 +137,7 @@
             <property name="maximumSize">
              <size>
               <width>16777215</width>
-              <height>250</height>
+              <height>300</height>
              </size>
             </property>
             <property name="title">
@@ -192,7 +192,7 @@ Save a flight track to name it.</string>
             <property name="maximumSize">
              <size>
               <width>16777215</width>
-              <height>200</height>
+              <height>210</height>
              </size>
             </property>
             <layout class="QVBoxLayout" name="openViewsVL">
@@ -230,89 +230,37 @@ Save a flight track to name it.</string>
             <property name="maximumSize">
              <size>
               <width>16777215</width>
-              <height>16777215</height>
+              <height>150</height>
              </size>
             </property>
             <property name="title">
              <string/>
             </property>
-            <widget class="QListWidget" name="listWidget">
-             <property name="geometry">
-              <rect>
-               <x>10</x>
-               <y>40</y>
-               <width>256</width>
-               <height>61</height>
-              </rect>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>16777215</height>
-              </size>
-             </property>
-            </widget>
-            <widget class="QLabel" name="label">
-             <property name="geometry">
-              <rect>
-               <x>10</x>
-               <y>10</y>
-               <width>251</width>
-               <height>18</height>
-              </rect>
-             </property>
-             <property name="text">
-              <string>Save View:</string>
-             </property>
-            </widget>
-            <widget class="QLineEdit" name="lineEdit">
-             <property name="geometry">
-              <rect>
-               <x>10</x>
-               <y>60</y>
-               <width>181</width>
-               <height>26</height>
-              </rect>
-             </property>
-            </widget>
-            <widget class="QPushButton" name="pushButton">
-             <property name="geometry">
-              <rect>
-               <x>200</x>
-               <y>60</y>
-               <width>0</width>
-               <height>0</height>
-              </rect>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>1000</width>
-               <height>1000</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Save</string>
-             </property>
-            </widget>
-            <widget class="QPushButton" name="pushButton_2">
-             <property name="geometry">
-              <rect>
-               <x>190</x>
-               <y>60</y>
-               <width>75</width>
-               <height>26</height>
-              </rect>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>1670000</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Save</string>
-             </property>
-            </widget>
+            <layout class="QVBoxLayout" name="verticalLayout_4">
+             <item>
+              <widget class="QLabel" name="label_2">
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>18</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Share View:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="lineEdit"/>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton">
+               <property name="text">
+                <string>Save</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
          </layout>
@@ -521,7 +469,7 @@ Double click a operation to activate and view its description.</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1051</width>
+     <width>738</width>
      <height>23</height>
     </rect>
    </property>
