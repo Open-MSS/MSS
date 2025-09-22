@@ -501,6 +501,16 @@ class ManageViewDialog(QtWidgets.QDialog):
         self.ui.setupUi(self)
         self.setWindowTitle("Manage Views")
 
+    # def populate_shared_views(self):
+    #     if self.mscolab.active_op_id:
+    #         response = self.mscolab.conn.request_get(
+    #             "get_shared_views", {"op_id": self.mscolab.active_op_id, "token": self.mscolab.token}
+    #         )
+    #         response_data = response.json()
+    #         logging.debug("Shared views response: %s", response_data)
+    #         if response_data["success"]:
+    #             shared_views = response_data.get("setting", [])
+
 
 class MSUIMscolab(QtCore.QObject):
     """
@@ -618,6 +628,9 @@ class MSUIMscolab(QtCore.QObject):
 
         # Service message text for flight-track changes (waypoints inserted, moved or deleted)
         self.lastChangeMessage = ""
+
+        self.ui.listViews.itemDoubleClicked.connect(self.capture_current_view_name)
+        self.ui.pushButton.clicked.connect(self.button_clicked)
 
         # set data dir, uri
         if local_operations_data is None:
@@ -880,6 +893,32 @@ class MSUIMscolab(QtCore.QObject):
 
         self.prof_diag.show()
         self.fetch_profile_image()
+    
+    def capture_current_view_name(self):
+        if self.active_op_id:
+            view = self.ui.listViews.currentItem()
+            if view:
+                view_name = view.text()
+                self.ui.lineEdit.setText(str(view_name))
+    
+    def get_views(self):
+        if self.active_op_id:
+            current_view = self.ui.listViews.currentItem().window
+            logging.info(f"Current view: {current_view}")
+            if current_view:
+                if hasattr(current_view, 'get_settings'):
+                    return current_view.get_settings()
+                else:
+                    logging.error("Current view does not have get_settings method")
+            else:
+                logging.error("No view is currently selected")
+    
+    def button_clicked(self):
+        logging.info("Button clicked")
+        settings = self.get_views()
+        logging.info(f"Settings: {settings}")
+        if settings:
+            self.share_view(settings)
 
     @verify_user_token
     def upload_image(self, _=None):
@@ -1446,6 +1485,18 @@ class MSUIMscolab(QtCore.QObject):
             self.save_wp_mscolab()
 
     @verify_user_token
+    def share_view(self, settings):
+        data = {
+            "operation_name": self.active_operation_name,
+            "view_settings": json.dumps(settings),
+            "token": self.token,
+            "op_id": self.active_op_id
+        }
+        response = self.conn.request_post("share_view", data=data)
+        response.raise_for_status()
+
+
+    @verify_user_token
     def save_operation_view_settings(self, settings):
         """Save collected settings for the active operation to the server."""
         data = {
@@ -1492,13 +1543,11 @@ class MSUIMscolab(QtCore.QObject):
                 "op_id": self.active_op_id
             }
             response = self.conn.request_get("get_operation_view_settings", data=data)
-
             try:
                 response_data = response.json()
             except requests.exceptions.JSONDecodeError:
                 logging.error("Response not valid JSON! text=%s", response.text)
                 return
-            # logging.info("Successfully retrieved settings for op_id=%s", self.active_op_id)
             settings = response_data.get("settings")
             self.ui.create_operation_view_settings(settings)
             return settings

@@ -39,7 +39,7 @@ from pathlib import Path
 from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
-from mslib.mscolab.models import db, Operation, Permission, User, Change, Message, ViewSettings
+from mslib.mscolab.models import db, Operation, Permission, User, Change, Message, ViewSettings, SharedView
 from mslib.mscolab.conf import mscolab_settings
 
 
@@ -779,6 +779,33 @@ class FileManager:
         except IntegrityError:
             db.session.rollback()
             return False, None, "Some error occurred! Could not import permissions. Please try again."
+    
+    def share_view(self, op_id, user, shared_data):
+        """Share view settings with other users in the same operation."""
+        if not self.is_member(user.id, op_id) and self.is_viewer(user.id, op_id):
+            return False, "Access denied"
+        try:
+            logging.info("share view called from fm")
+            setting_data = json.dumps(shared_data)
+            view_setting = SharedView(op_id=op_id, u_id=user.id, shared_data = setting_data)
+            db.session.add(view_setting)
+            db.session.commit()
+            return True, "View settings shared successfully"
+        except Exception as e:
+            logging.error("Error sharing view settings for user %s: %s", user.id, str(e))
+            return False, f"Failed to share view settings: {str(e)}"
+    
+    def get_shared_views(self, op_id, user):
+        """Retrieve shared view settings for a user from the database."""
+        if not self.is_member(user.id, op_id):
+            return False, "Access denied"
+        
+        settings = SharedView.query.filter_by(op_id=op_id).first()
+        setting = json.load(settings)
+        if not isinstance(setting, dict):
+            return False, f"Invalid settings type after parsing: {type(settings).__name__}"
+        return True, "View settings shared successfully"
+
 
     def save_view_settings(self, op_id, user, view_settings):
         """Save view settings for an operation and user to the database."""

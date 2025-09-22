@@ -873,6 +873,37 @@ def reset_request():
         return render_template('errors/403.html'), 403
 
 
+@APP.route("/share_view", methods=["POST"])
+@verify_user
+def share_view():
+    logging.info("share_view called from the server")
+    view_settings = request.form.get('view_settings', False)
+    if isinstance(view_settings, str):
+        settings_data = json.loads(view_settings)
+    else:
+        settings_data = view_settings
+    shared_data = settings_data
+    user = g.user
+    op_id = request.form.get("op_id")
+    success, message = fm.share_view(op_id, user, shared_data)
+    if success:
+        return jsonify({"success": True, "message": message}), 200
+    else:
+        return jsonify({"success": False, "message": message}), 400
+    
+
+@APP.route("/get_shared_view", methods=["GET"])
+@verify_user
+def get_shared_view():
+    op_id = request.form.get('op_id')
+    user = g.user
+    success, message = fm.get_shared_view(op_id, user)
+    if success:
+        return jsonify({"success": True, "message": message}), 200
+    else:
+        return jsonify({"success": False, "message": message}), 400
+
+
 @APP.route("/save_operation_view_settings", methods=["POST"])
 @verify_user
 def save_operation_view_settings():

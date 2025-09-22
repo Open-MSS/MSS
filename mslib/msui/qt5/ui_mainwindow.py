@@ -367,7 +367,7 @@ class Ui_MSUIMainWindow(object):
         self.openViewsLabel.setText(_translate("MSUIMainWindow", "Open Views:"))
         self.listViews.setToolTip(_translate("MSUIMainWindow", "Double-click a view to bring it to the front."))
         self.label_2.setText(_translate("MSUIMainWindow", "Share View:"))
-        self.pushButton.setText(_translate("MSUIMainWindow", "Save"))
+        self.pushButton.setText(_translate("MSUIMainWindow", "Share"))
         self.pbOpenOperationArchive.setText(_translate("MSUIMainWindow", "Operation Archive"))
         self.workingStatusLabel.setText(_translate("MSUIMainWindow", "No operations selected"))
         self.categoryLabel.setText(_translate("MSUIMainWindow", "Category:"))

@@ -242,3 +242,18 @@ class ViewSettings(db.Model):
         self.op_id = int(op_id)
         self.u_id = int(u_id)
         self.settings = settings
+
+
+class SharedView(db.Model):
+
+    __tablename__ = "sharedviews"
+    op_id = db.Column(db.Integer, db.ForeignKey('operations.id'), primary_key=True)
+    u_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    shared_data = db.Column(db.JSON, nullable=True)
+    created_at = db.Column(AwareDateTime, default=lambda: datetime.datetime.now(tz=datetime.timezone.utc))
+    user = db.relationship('User', backref='shared_views')
+
+    def __init__(self, op_id, u_id, shared_data):
+        self.op_id = int(op_id)
+        self.u_id = int(u_id)
+        self.shared_data = shared_data
