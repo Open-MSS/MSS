@@ -878,6 +878,7 @@ def reset_request():
 def share_view():
     logging.info("share_view called from the server")
     view_settings = request.form.get('view_settings', False)
+    view_id = request.form.get('view_id', None)
     if isinstance(view_settings, str):
         settings_data = json.loads(view_settings)
     else:
@@ -885,23 +886,24 @@ def share_view():
     shared_data = settings_data
     user = g.user
     op_id = request.form.get("op_id")
-    success, message = fm.share_view(op_id, user, shared_data)
+    success, message = fm.share_view(op_id, view_id, user, shared_data)
     if success:
         return jsonify({"success": True, "message": message}), 200
     else:
         return jsonify({"success": False, "message": message}), 400
-    
+
 
 @APP.route("/get_shared_view", methods=["GET"])
 @verify_user
 def get_shared_view():
     op_id = request.form.get('op_id')
+    view_id = request.form.get('view_id', None)
     user = g.user
-    success, message = fm.get_shared_view(op_id, user)
+    success, message, settings = fm.get_shared_view(op_id, user, view_id)
     if success:
-        return jsonify({"success": True, "message": message}), 200
+        return jsonify({"success": True, "message": message, "settings": settings}), 200
     else:
-        return jsonify({"success": False, "message": message}), 400
+        return jsonify({"success": False, "message": message, "settings": settings}), 400
 
 
 @APP.route("/save_operation_view_settings", methods=["POST"])
