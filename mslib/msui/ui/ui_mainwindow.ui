@@ -257,7 +257,7 @@ Save a flight track to name it.</string>
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="lineEdit"/>
+              <widget class="QListView" name="listView"/>
              </item>
              <item>
               <widget class="QPushButton" name="pushButton">

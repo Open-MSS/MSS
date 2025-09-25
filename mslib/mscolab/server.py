@@ -877,33 +877,51 @@ def reset_request():
 @verify_user
 def share_view():
     logging.info("share_view called from the server")
-    view_settings = request.form.get('view_settings', False)
-    view_id = request.form.get('view_id', None)
-    if isinstance(view_settings, str):
-        settings_data = json.loads(view_settings)
-    else:
-        settings_data = view_settings
-    shared_data = settings_data
-    user = g.user
-    op_id = request.form.get("op_id")
-    success, message = fm.share_view(op_id, view_id, user, shared_data)
-    if success:
-        return jsonify({"success": True, "message": message}), 200
-    else:
-        return jsonify({"success": False, "message": message}), 400
+    try:
+        view_settings = request.form.get('view_settings', False)
+        view_name = request.form.get('view_name', None)
+        op_id = request.form.get('op_id')
+        if not all([view_settings, view_name, op_id]):
+            return jsonify({"success": False, "message": "Missing required parameters"}), 400
+        if isinstance(view_settings, str):
+            settings_data = json.loads(view_settings)
+        else:
+            settings_data = view_settings
+        user = g.user
+        logging.info("User in share_view: %s (type: %s)", user, type(user))
+        if not hasattr(user, 'id'):
+            return jsonify({"success": False, "message": "Invalid user object"}), 400
+        success, message = fm.share_view(op_id, view_name, user, settings_data)
+        if success:
+            return jsonify({"success": True, "message": message}), 200
+        else:
+            return jsonify({"success": False, "message": message}), 400
+    except json.JSONDecodeError as e:
+        logging.error("Invalid view_settings JSON: %s", str(e))
+        return jsonify({"success": False, "message": "Invalid view_settings format"}), 400
+    except Exception as e:
+        logging.error("Error in share_view endpoint: %s", str(e))
+        return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
 
 
 @APP.route("/get_shared_view", methods=["GET"])
 @verify_user
 def get_shared_view():
-    op_id = request.form.get('op_id')
-    view_id = request.form.get('view_id', None)
     user = g.user
-    success, message, settings = fm.get_shared_view(op_id, user, view_id)
-    if success:
-        return jsonify({"success": True, "message": message, "settings": settings}), 200
-    else:
-        return jsonify({"success": False, "message": message, "settings": settings}), 400
+    logging.debug("User in get_shared_view: %s (type: %s)", user, type(user))
+    if user is None or not hasattr(user, 'id'):
+        return jsonify({"success": False, "message": "Unauthorized or invalid user"}), 401
+    op_id = request.args.get('op_id')
+    view_name = request.args.get('view_name', None)
+    try:
+        success, message, settings = fm.get_shared_views(op_id, view_name, user)
+        if success:
+            return jsonify({"success": True, "message": message, "settings": settings}), 200
+        else:
+            return jsonify({"success": False, "message": message, "settings": settings}), 400
+    except Exception as e:
+        logging.error("Error in get_shared_view endpoint: %s", str(e))
+        return jsonify({"success": False, "message": f"Server error: {str(e)}", "settings": {}}), 500
 
 
 @APP.route("/save_operation_view_settings", methods=["POST"])
@@ -929,7 +947,6 @@ def save_operation_view_settings():
             logging.error("Missing operation ID in payload")
             return jsonify({"success": False, "message": "Missing operation ID"}), 400
 
-        user = g.user
         success, message = fm.save_view_settings(op_id, user, settings_data)
         if success:
             return jsonify({"success": True, "message": message}), 200

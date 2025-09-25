@@ -248,15 +248,14 @@ class SharedView(db.Model):
 
     __tablename__ = "sharedviews"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
-    op_id = db.Column(db.Integer, db.ForeignKey('operations.id'))
-    u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    op_id = db.Column(db.Integer, db.ForeignKey('operations.id'), nullable=True)
+    u_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     view_name = db.Column(db.String(255), unique=True, nullable=True)
     shared_data = db.Column(db.JSON, nullable=True)
     created_at = db.Column(AwareDateTime, default=lambda: datetime.datetime.now(tz=datetime.timezone.utc))
     user = db.relationship('User', backref='shared_views')
 
-    def __init__(self, op_id, u_id, view_id, shared_data):
+    def __init__(self, op_id, view_name, shared_data):
         self.op_id = int(op_id)
-        self.u_id = int(u_id)
-        self.view_id = view_id
+        self.view_name = str(view_name)
         self.shared_data = shared_data

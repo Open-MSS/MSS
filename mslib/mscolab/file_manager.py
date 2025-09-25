@@ -780,20 +780,20 @@ class FileManager:
             db.session.rollback()
             return False, None, "Some error occurred! Could not import permissions. Please try again."
 
-    def share_view(self, op_id, view_id, user, shared_data):
+    def share_view(self, op_id, view_name, user, shared_data):
         """Share view settings with other users in the same operation."""
-        if not self.is_member(user.id, op_id) and self.is_viewer(user.id, op_id):
+        if not (self.is_member(user.id, op_id) or self.is_viewer(user.id, op_id)):
             return False, "Access denied"
         try:
             setting_data = json.dumps(shared_data)
-            existing = SharedView.query.filter_by(u_id=user.id, op_id=op_id, view_id=view_id).first()
+            existing = SharedView.query.filter_by(op_id=op_id, view_name=view_name).first()
             if existing:
                 existing.settings = setting_data
                 existing.updated_at = datetime.datetime.now(tz=datetime.timezone.utc)
                 db.session.commit()
                 return True, "Shared view settings updated successfully"
             else:
-                view_setting = SharedView(op_id=op_id, view_id=view_id, u_id=user.id, shared_data=setting_data)
+                view_setting = SharedView(op_id=op_id, view_name=view_name, shared_data=setting_data)
                 db.session.add(view_setting)
                 db.session.commit()
                 return True, "View settings shared successfully"
@@ -801,17 +801,16 @@ class FileManager:
             logging.error("Error sharing view settings for user %s: %s", user.id, str(e))
             return False, f"Failed to share view settings: {str(e)}"
 
-    def get_shared_views(self, op_id, view_id, user):
+    def get_shared_views(self, op_id, view_name, user):
         """Retrieve shared view settings for a user from the database."""
         if not self.is_member(user.id, op_id):
             return False, "Access denied", {}
-
-        if view_id:
-            shared_view = SharedView.query.filter_by(u_id=user.id, op_id=op_id, view_id=view_id).first()
+        if view_name:
+            shared_view = SharedView.query.filter_by(op_id=op_id, view_name=view_name).first()
             if not shared_view:
                 return False, "No shared view found with that ID", {}
         try:
-            setting = json.load(shared_view.shared_data)
+            setting = json.loads(shared_view.shared_data)
             if not isinstance(setting, dict):
                 return False, f"Invalid settings type after parsing: {type(shared_view).__name__}", {}
             return True, "View settings shared successfully", setting

@@ -35,10 +35,10 @@ def upgrade():
     # sharedviews table
     op.create_table(
         'sharedviews',
-        sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-        sa.Column('op_id', sa.Integer(), nullable=True),
-        sa.Column('u_id', sa.Integer(), nullable=True),
-        sa.Column('view_name', sa.String(), nullable=True),
+        sa.Column('id', sa.Integer(), primary_key=True, autoincrement=True, nullable=False),
+        sa.Column('op_id', sa.Integer(), sa.ForeignKey('operations.id'), nullable=False),
+        sa.Column('u_id', sa.Integer(), sa.ForeignKey('users.id'), nullable=False),
+        sa.Column('view_name', sa.String(255), unique=True, nullable=True),
         sa.Column('shared_data', sa.JSON(), nullable=True),
         sa.Column('created_at', cu.AwareDateTime(), nullable=True),
         sa.ForeignKeyConstraint(['op_id'], ['operations.id'], name=op.f('fk_sharedviews_op_id_operations')),
