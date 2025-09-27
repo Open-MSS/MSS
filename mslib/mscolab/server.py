@@ -881,6 +881,7 @@ def share_view():
         view_settings = request.form.get('view_settings', False)
         view_name = request.form.get('view_name', None)
         op_id = request.form.get('op_id')
+        user = g.user
         if not all([view_settings, view_name, op_id]):
             return jsonify({"success": False, "message": "Missing required parameters"}), 400
         if isinstance(view_settings, str):
@@ -889,8 +890,6 @@ def share_view():
             settings_data = view_settings
         user = g.user
         logging.info("User in share_view: %s (type: %s)", user, type(user))
-        if not hasattr(user, 'id'):
-            return jsonify({"success": False, "message": "Invalid user object"}), 400
         success, message = fm.share_view(op_id, view_name, user, settings_data)
         if success:
             return jsonify({"success": True, "message": message}), 200
@@ -908,20 +907,69 @@ def share_view():
 @verify_user
 def get_shared_view():
     user = g.user
-    logging.debug("User in get_shared_view: %s (type: %s)", user, type(user))
-    if user is None or not hasattr(user, 'id'):
-        return jsonify({"success": False, "message": "Unauthorized or invalid user"}), 401
-    op_id = request.args.get('op_id')
-    view_name = request.args.get('view_name', None)
+    logging.info("User in get_shared_view: %s (type: %s)", user, type(user))
+    op_id = request.form.get('op_id')
+    view_name = request.form.get('view_name')
+    user = g.user
     try:
         success, message, settings = fm.get_shared_views(op_id, view_name, user)
         if success:
+            logging.info(settings)
             return jsonify({"success": True, "message": message, "settings": settings}), 200
         else:
+            logging.info(settings)
             return jsonify({"success": False, "message": message, "settings": settings}), 400
     except Exception as e:
+        logging.info(settings)
         logging.error("Error in get_shared_view endpoint: %s", str(e))
         return jsonify({"success": False, "message": f"Server error: {str(e)}", "settings": {}}), 500
+
+
+@APP.route("/get_views_name", methods=["GET"])
+@verify_user
+def get_views_name():
+    op_id = request.args.get('op_id')
+    user = g.user
+    try:
+        success, message, views = fm.list_views(op_id, user)
+        if success:
+            return jsonify({"success": True, "message": message, "views": views}), 200
+        else:
+            return jsonify({"success": False, "message": message, "views": views}), 400
+    except Exception as e:
+        logging.error("Error listing views: %s", str(e))
+        return jsonify({"success": False, "message": f"Error listing views: {str(e)}", "views": []}), 500
+
+
+@APP.route("/manage_sharedView_metadata", methods=["POST"])
+@verify_user
+def manage_sharedView_metadata():
+    view_name = request.form.get('view_name', None)
+    op_id = request.form.get('op_id', None)
+    user = g.user
+    if not all([view_name, op_id]):
+        return jsonify({"success": False, "message": "Missing required parameters"}), 400
+    success, message = fm.save_manage_view_metadata(user, op_id, view_name)
+    if success:
+        return jsonify({"success": True, "message": message}), 200
+    else:
+        return jsonify({"success": False, "message": message}), 400
+
+
+@APP.route("/check_view_names", methods=["GET"])
+@verify_user
+def check_view_names():
+    op_id = request.form.get('op_id')
+    view_name = request.form.get('view_name')
+    user = g.user
+    if not all([op_id, view_name]):
+        return jsonify({"success": False, "message": "Missing required parameters", "exists": False}), 400
+    try:
+        exists = fm.check_view_name(user, op_id, view_name)
+        return jsonify({"success": True, "exists": exists}), 200
+    except Exception as e:
+        logging.error("Error checking view name: %s", str(e))
+        return jsonify({"success": False, "message": f"Error checking view name: {str(e)}", "exists": False}), 400
 
 
 @APP.route("/save_operation_view_settings", methods=["POST"])

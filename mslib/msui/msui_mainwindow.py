@@ -611,21 +611,24 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         new_name = self.viewListModel.data(index, QtCore.Qt.DisplayRole)
         window = self.viewListModel.data(index, QtCore.Qt.UserRole)
         if window and new_name:
-            # Update the window title, preserving the identifier prefix
             current_title = window.windowTitle()
             id_part = current_title.split(") ")[0] + ")"
             window.setWindowTitle(f"{id_part} {new_name} - {window.waypoints_model.name}")
             window.setIdentifier(new_name)
-            logging.debug("Updated shared view name to: %s", new_name)
-            # Update the view settings in MSColab if necessary
-            # if self.mscolab and hasattr(self.mscolab, 'update_view_name'):
-            #     self.mscolab.update_view_name(window, new_name)
-            # self.viewsChanged.emit()
 
     def update_share_view_list(self, item):
         """Append the double-clicked view from listViews to listView."""
         if item and item.window.isVisible():
-            self.viewListModel.add_view(item.text(), item.window)
+            view_window = item.window
+            view_name = item.text()
+            for i in range(self.viewListModel.rowCount()):
+                existing_window = self.viewListModel.data(self.viewListModel.index(i), QtCore.Qt.UserRole)
+                if existing_window == view_window or existing_window.identifier == view_window.identifier:
+                    view_window.showNormal()
+                    view_window.raise_()
+                    view_window.activateWindow()
+                    return
+            self.viewListModel.add_view(view_name, view_window)
             self.pushButton.setEnabled(True)
 
     def update_view_list_on_change(self):
@@ -653,33 +656,64 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 window.activateWindow()
 
     def handle_share_button(self):
-        """Handle the Share button click to retrieve and return settings for selected views."""
-        indexes = self.listView.selectionModel().selectedIndexes()
-        if not indexes:
-            return []
-        settings_list = []
-        for index in indexes:
-            window = self.viewListModel.data(index, QtCore.Qt.UserRole)
-            view_name = self.viewListModel.data(index, QtCore.Qt.DisplayRole)
-            if window:
-                try:
-                    # Retrieve the view's settings
-                    settings = window.get_settings()
-                    logging.info(settings)
-                    settings_list.append(settings)
-                    logging.info("Retrieved settings for view %s: %s", window.windowTitle(), settings)
-                except AttributeError as ex:
-                    logging.error("Failed to retrieve settings for %s: %s", window.windowTitle(), ex)
-                except Exception as ex:
-                    logging.error("Error retrieving settings for %s: %s", window.windowTitle(), ex)
-        if settings_list:
-            success = self.mscolab.share_view_settings(settings_list, view_name)
-            if success:
-                QtWidgets.QMessageBox.information(self, "Success", "Views shared successfully!")
-            else:
-                QtWidgets.QMessageBox.warning(self, "Error", "Failed to share some or all views.")
+        if not self.viewListModel.views:
+            QtWidgets.QMessageBox.warning(self, "No Views", "No views available to share.")
+            return
+
+        shared_views = []
+        failed_views = []
+        indices_to_remove = []
+
+        for i in range(self.viewListModel.rowCount()):
+            view_name = self.viewListModel.data(self.viewListModel.index(i), QtCore.Qt.DisplayRole)
+            window = self.viewListModel.data(self.viewListModel.index(i), QtCore.Qt.UserRole)
+            if not view_name:
+                failed_views.append((view_name or "Unnamed View", "View name cannot be empty."))
+                continue
+            result = self.mscolab.get_views(view_name)
+            if not result["success"]:
+                failed_views.append((view_name, result["message"]))
+                continue
+            if result["exists"]:
+                failed_views.append((view_name,
+                                     f"View name '{view_name}' already exists. Please choose a different name."))
+                continue
+            try:
+                view_settings = window.get_settings()
+                if not isinstance(view_settings, dict):
+                    failed_views.append((view_name, "Invalid view settings."))
+                    continue
+                self.mscolab.share_view_settings(view_settings, view_name)
+                shared_views.append(view_name)
+                indices_to_remove.append(i)
+            except Exception as ex:
+                logging.error("Failed to share view %s: %s", view_name, ex)
+                failed_views.append((view_name, f"Failed to share: {str(ex)}"))
+
+        indices_to_remove.sort(reverse=True)
+
+        for index in indices_to_remove:
+            self.viewListModel.beginRemoveRows(QtCore.QModelIndex(), index, index)
+            self.viewListModel.views.pop(index)
+            self.viewListModel.endRemoveRows()
+
+        self.pushButton.setEnabled(bool(self.viewListModel.views))
+
+        message = []
+        if shared_views:
+            message.append(f"Successfully shared and removed {len(shared_views)} view(s): {', '.join(shared_views)}")
+        if failed_views:
+            message.append("Failed to share the following view(s):")
+            for view_name, reason in failed_views:
+                message.append(f"- {view_name}: {reason}")
+        if message:
+            QtWidgets.QMessageBox.information(
+                self,
+                "Share Views",
+                "\n".join(message)
+            )
         else:
-            QtWidgets.QMessageBox.warning(self, "No Selection", "Please select at least one view to share.")
+            QtWidgets.QMessageBox.information(self, "Share Views", "No views were processed.")
 
     def bring_main_window_to_front(self):
         self.show()
@@ -1406,36 +1440,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             return ("Status : System Configuration")
         else:
             return (f"Status : User Configuration '{constants.MSUI_SETTINGS}' loaded")
-
-    def create_view_from_settings(self, settings, view_name):
-        """Create and open a new view window with the given settings and name"""
-        if not settings or not isinstance(settings, dict):
-            show_popup(self, "Error", "Invalid view settings!")
-            return
-        try:
-            from mslib.msui.topview import TopViewWindow
-            from mslib.msui.sideview import SideViewWindow
-            from mslib.msui.tableview import TableViewWindow
-            from mslib.msui.linearview import LinearViewWindow
-            view_type = settings.get("view_type", "topview")
-            if view_type == "topview":
-                new_view = TopViewWindow(name=view_name, parent=self)
-            elif view_type == "sideview":
-                new_view = SideViewWindow(name=view_name, parent=self)
-            elif view_type == "tableview":
-                new_view = TableViewWindow(name=view_name, parent=self)
-            elif view_type == "linearview":
-                new_view = LinearViewWindow(name=view_name, parent=self)
-            else:
-                raise ValueError(f"Unknown view type: {view_type}")
-            new_view.set_settings(settings)
-            new_view.show()
-            # item = QActiveViewsListWidgetItem(view_name, new_view)
-            # self.listViews.addItem(item)
-            # self.mscolab.update_active_views_list()
-        except Exception as e:
-            logging.error("Failed to open view: %s", str(e))
-            show_popup(self, "Error", f"Failed to open view: {str(e)}")
 
     def update_flight_track_settings(self, flight_track, view=None, remove=False):
         """Update the flight_track_settings dictionary when a flight track or view is created, modified, or removed."""

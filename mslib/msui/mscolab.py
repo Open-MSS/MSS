@@ -499,58 +499,18 @@ class ManageViewDialog(QtWidgets.QDialog):
         super().__init__(parent)
         self.ui = ui_manage_view.Ui_Form()
         self.ui.setupUi(self)
-        self.ui.listView.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
-
+        self.ui.listView.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.setModal(False)
+        self.setWindowFlags(QtCore.Qt.Dialog | QtCore.Qt.WindowCloseButtonHint)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
         self.mscolab = mscolab
         self.setWindowTitle("Manage Views")
+        self.model = QtGui.QStandardItemModel()
+        self.model = QtGui.QStandardItemModel()
+        self.ui.listView.setModel(self.model)
+
         self.ui.pushButton.clicked.connect(self.apply_selected_view)
-        # self.refresh_shared_views()
-
-    def refresh_shared_views(self):
-        """Fetch shared views from the server and populate listView."""
-        if not self.mscolab.active_op_id or not self.mscolab.token:
-            logging.debug("No active operation or token available")
-            return False
-        data = {
-            'op_id': self.mscolab.active_op_id,
-            'token': self.mscolab.token
-        }
-        response = self.mscolab.conn.request_get('get_shared_view', data=data)
-        if response and response["status"] == "success":
-            self.ui.listView.clear()
-            for view_record in response["data"]:
-                display_text = f"{view_record['view_name']} (shared by {view_record['username']})"
-                item = QtGui.QStandardItem(display_text)
-                item.setData({
-                    'view_name': view_record['view_name'],
-                    'view_settings': view_record['viewsettings'],
-                    'username': view_record['username'],
-                    'user_id': view_record['user_id']
-                }, QtCore.Qt.UserRole)
-                self.ui.listView.model().appendRow(item)
-            return True
-        else:
-            show_popup(self, "Error", "Failed to fetch shared views from server")
-            return False
-
-    def highlight_view(self, view_name):
-        """Highlight the view with the given view_name in listView."""
-        model = self.ui.listView.model()
-        if not model:
-            logging.debug("No model set for listView")
-            return
-
-        for row in range(model.rowCount()):
-            index = model.index(row, 0)
-            item = model.itemFromIndex(index)
-            data = item.data(QtCore.Qt.UserRole)
-            if data['view_name'] == view_name:
-                self.ui.listView.setCurrentIndex(index)
-                self.ui.listView.scrollTo(index)
-                logging.debug("Highlighted view: %s at index %d", view_name, row)
-                return
-
-        logging.debug("View not found in listView: %s", view_name)
+        self.refresh_shared_views()
 
     def apply_selected_view(self):
         """Apply settings for selected views in listView."""
@@ -558,20 +518,42 @@ class ManageViewDialog(QtWidgets.QDialog):
         if not selected_indexes:
             QtWidgets.QMessageBox.warning(self, "No Selection", "Please select at least one shared view to apply.")
             return
+        index = selected_indexes[0]
         for index in selected_indexes:
             item = self.ui.listView.model().itemFromIndex(index)
             if not item:
                 continue
             data = item.data(QtCore.Qt.UserRole)
             view_name = data['view_name']
-            user_id = data['user_id']
-            view_settings = self.mscolab.get_sharedView_settings(view_name, user_id)
+            op_id = data['op_id']
+            view_settings = self.mscolab.get_sharedView_settings(view_name, op_id)
+            view_type = view_settings.get("view_type")
             if view_settings is None:
                 QtWidgets.QMessageBox.warning(self, "Error",
                                               f"Failed to retrieve settings for {view_name} by user {data['username']}")
                 continue
-            self.mscolab.ui.create_view_from_settings(view_settings, view_name)
+            self.mscolab.ui.create_view(view_type, model=self.mscolab.waypoints_model, restore_settings=view_settings)
         self.close()
+
+    def refresh_shared_views(self):
+        logging.info("Refreshing shared views for op_id %s", self.mscolab.active_op_id)
+        url = urljoin(self.mscolab.mscolab_server_url, "get_views_name")
+        data = {"op_id": self.mscolab.active_op_id, "token": self.mscolab.token}
+        if hasattr(self.mscolab, 'auth') and self.mscolab.auth:
+            response = requests.get(url, params=data, auth=self.mscolab.auth, timeout=(5, 30))
+        else:
+            response = requests.get(url, params=data, timeout=(5, 30))
+        response.raise_for_status()
+        logging.info("Response from get_views_name: %s", response.text)
+        views = response.json().get("views", [])
+        self.model.clear()
+        for view in views:
+            item = QtGui.QStandardItem(f"{view['view_name']} (by {view['username']})")
+            item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+            item.setData(view, QtCore.Qt.UserRole)
+            self.model.appendRow(item)
+        logging.info("Refreshed shared views for op_id %s: %s views loaded", self.mscolab.active_op_id, len(views))
+        return True
 
 
 class MSUIMscolab(QtCore.QObject):
@@ -700,11 +682,6 @@ class MSUIMscolab(QtCore.QObject):
 
     def open_manage_view_widget(self):
         self.manage_view_widget = ManageViewDialog(self, self.ui)
-        if self.manage_view_widget.refresh_shared_views():
-            current_view_name = self.ui.lineEdit.text()
-            if current_view_name:
-                logging.debug("Attempting to highlight view: %s", current_view_name)
-                self.manage_view_widget.highlight_view(current_view_name)
         self.manage_view_widget.show()
 
     def _handle_font_bolding(self, item=None):
@@ -1521,14 +1498,39 @@ class MSUIMscolab(QtCore.QObject):
         elif selected_option == "Save To Server":
             self.save_wp_mscolab()
 
+    def get_views(self, view_name):
+        data = {
+            "op_id": self.active_op_id,
+            "view_name": view_name,
+            "token": self.token
+        }
+        response = self.conn.request_get("check_view_names", data=data)
+        return response.json()
+
+    @verify_user_token
+    def manage_view_metadata(self, op_id, view_name):
+        if not self.active_op_id or not self.token:
+            return None
+        data = {
+            "op_id": op_id,
+            "view_name": view_name,
+            "token": self.token
+        }
+        try:
+            response = self.conn.request_post("manage_sharedView_metadata", data=data)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as ex:
+            logging.error("Error fetching view metadata for %s: %s", view_name, ex)
+            return None
+
     @verify_user_token
     def share_view_settings(self, settings_list, view_name):
         """Send view settings to the MSColab server for sharing."""
         if not self.active_op_id or not self.token:
-            logging.error("Cannot share views: No active operation or token")
             return False
+        op_id = self.active_op_id
         data = {
-            "op_id": self.active_op_id,
+            "op_id": op_id,
             "view_name": view_name,
             "view_settings": json.dumps(settings_list),
             "token": self.token
@@ -1536,39 +1538,33 @@ class MSUIMscolab(QtCore.QObject):
         try:
             response = self.conn.request_post("share_view", data=data)
             response.raise_for_status()
-            if response.text != "True":
-                logging.error("Failed to share view %s: %s", view_name, response.text)
-                success = False
+            self.manage_view_metadata(op_id=op_id, view_name=view_name)
         except requests.exceptions.RequestException as ex:
             logging.error("Error sharing view %s: %s", view_name, ex)
-            success = False
-        if success and self.manage_view_widget:
-            self.manage_view_widget.refresh_shared_views()
-            if settings_list:
-                self.manage_view_widget.highlight_view(settings_list[-1]['view_name'])
-        return success
 
-    @verify_user_token
-    def get_sharedView_settings(self, view_name):
+    def get_sharedView_settings(self, view_name, op_id):
         """Retrieve settings for a specific view from the server."""
         if not self.active_op_id or not self.token:
             logging.error("Cannot fetch view settings: No active operation or token")
             return None
         data = {
-            'op_id': self.active_op_id,
+            'op_id': op_id,
             'view_name': view_name,
             'token': self.token
         }
         try:
             response = self.conn.request_get('get_shared_view', data=data)
-            if response and response["status"] == "success":
-                for view_record in response["data"]:
-                    if view_record['view_name'] == view_name and view_record['user_id'] == self.user['id']:
-                        return json.loads(view_record['viewsettings'])
-                logging.error("View %s not found for user %s", view_name, self.user['id'])
-                return None
+            response.raise_for_status()
+            data = response.json()
+            if data.get("success"):
+                settings = data.get("settings", {})
+                if settings:
+                    return settings
+                else:
+                    logging.error("No settings found for view %s", view_name)
+                    return None
             else:
-                logging.error("Failed to fetch view settings: %s", response.get("message", "Unknown error"))
+                logging.error("Failed to fetch view settings: %s", data.get("message", "Unknown error"))
                 return None
         except requests.exceptions.RequestException as ex:
             logging.error("Error fetching view settings for %s: %s", view_name, ex)

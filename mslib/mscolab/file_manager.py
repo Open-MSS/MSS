@@ -39,7 +39,7 @@ from pathlib import Path
 from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
-from mslib.mscolab.models import db, Operation, Permission, User, Change, Message, ViewSettings, SharedView
+from mslib.mscolab.models import db, Operation, Permission, User, Change, Message, ViewSettings, SharedView, ManageViews
 from mslib.mscolab.conf import mscolab_settings
 
 
@@ -780,20 +780,62 @@ class FileManager:
             db.session.rollback()
             return False, None, "Some error occurred! Could not import permissions. Please try again."
 
-    def share_view(self, op_id, view_name, user, shared_data):
+    def list_views(self, op_id, user):
+        if not self.is_member(user.id, op_id):
+            return False, "Access denied", {}
+        views = ManageViews.query.filter_by(op_id=op_id).all()
+        views_data = []
+        for v in views:
+            views_data.append({
+                "id": v.id,
+                "op_id": v.op_id,
+                "u_id": v.u_id,
+                "view_name": v.view_name,
+                "created_at": v.created_at.isoformat() if v.created_at else None,
+                "username": v.user.username if v.user else None,
+            })
+        return True, "Views fetched successfully", views_data
+
+    def check_view_name(self, user, op_id, view_name):
+        if not (self.is_member(user.id, op_id) or self.is_viewer(user.id, op_id)):
+            return False, "Access denied"
+        return ManageViews.query.filter_by(op_id=op_id, view_name=view_name).first() is not None
+
+    def save_manage_view_metadata(self, user, op_id, view_name):
+        if not (self.is_member(user.id, op_id) or self.is_viewer(user.id, op_id)):
+            return False, "Access denied"
+        try:
+            data = ManageViews(
+                op_id=op_id,
+                u_id=user.id,
+                view_name=view_name
+            )
+            db.session.add(data)
+            db.session.commit()
+            return True, "Metadata saved to database"
+        except Exception as e:
+            logging.error("Error saving metadata for user %s: %s", user.id, str(e))
+            return False, f"Error saving metadata: {str(e)}"
+
+    def share_view(self, op_id, view_name, user, settings_data):
         """Share view settings with other users in the same operation."""
         if not (self.is_member(user.id, op_id) or self.is_viewer(user.id, op_id)):
             return False, "Access denied"
         try:
-            setting_data = json.dumps(shared_data)
-            existing = SharedView.query.filter_by(op_id=op_id, view_name=view_name).first()
+            shared_data = json.dumps(settings_data)
+            existing = SharedView.query.filter_by(op_id=op_id, u_id=user.id, view_name=view_name).first()
             if existing:
-                existing.settings = setting_data
+                existing.settings = shared_data
                 existing.updated_at = datetime.datetime.now(tz=datetime.timezone.utc)
                 db.session.commit()
                 return True, "Shared view settings updated successfully"
             else:
-                view_setting = SharedView(op_id=op_id, view_name=view_name, shared_data=setting_data)
+                view_setting = SharedView(
+                    op_id=op_id,
+                    u_id=user.id,
+                    view_name=view_name,
+                    shared_data=shared_data
+                )
                 db.session.add(view_setting)
                 db.session.commit()
                 return True, "View settings shared successfully"
@@ -815,7 +857,7 @@ class FileManager:
                 return False, f"Invalid settings type after parsing: {type(shared_view).__name__}", {}
             return True, "View settings shared successfully", setting
         except Exception as e:
-            return False, f"Error parsing settings: {str(e)}"
+            return False, f"Error parsing settings: {str(e)}", {}
 
     def save_view_settings(self, op_id, user, view_settings):
         """Save view settings for an operation and user to the database."""
