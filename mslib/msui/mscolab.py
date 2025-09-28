@@ -533,7 +533,8 @@ class ManageViewDialog(QtWidgets.QDialog):
                                               f"Failed to retrieve settings for {view_name} by user {data['username']}")
                 continue
             self.mscolab.ui.create_view(view_type, model=self.mscolab.waypoints_model, restore_settings=view_settings)
-        self.close()
+            item = QtWidgets.QListWidgetItem(view_name)
+            self.ui.listWidget.addItem(item)
 
     def refresh_shared_views(self):
         logging.info("Refreshing shared views for op_id %s", self.mscolab.active_op_id)
