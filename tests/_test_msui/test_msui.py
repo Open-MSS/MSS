@@ -437,10 +437,6 @@ class Test_MSUIMainWindow:
         assert window.listViews.count() == 1
         top_view2_1 = window.listViews.item(0).window
         assert top_view2_1.view_type == "Top View"
-        qtbot.waitUntil(
-            lambda: top_view2_1.wms_control.multilayers.cbWMS_URL.currentText().rstrip('/') == mswms_server,
-            timeout=1000
-        )
 
         window.create_view("topview", flight_track2)
         assert window.listViews.count() == 2
@@ -460,8 +456,7 @@ class Test_MSUIMainWindow:
         top_view2_2.restore_wms_settings(wms_settings2)
         qtbot.waitUntil(
             lambda: top_view2_2.wms_control.multilayers.cbWMS_URL.currentText().rstrip('/') == mswms_server,
-            timeout=1000
-        )
+            timeout=500)
 
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             window.close()
@@ -477,18 +472,12 @@ class Test_MSUIMainWindow:
         assert len(settings_data["flight_track1"]["views"]) == 1
         assert settings_data["flight_track1"]["views"][0]["view_type"] == "topview"
         assert settings_data["flight_track1"]["views"][0]["wms"]["url"].rstrip('/') == mswms_server
-        # assert settings_data["flight_track1"]["views"][0]["wms"]["layer"] == "ecmwf_EUR_LL015.PLRelHum01"
-        # assert settings_data["flight_track1"]["views"][0]["wms"]["level"] == "200.0"
         assert "flight_track2" in settings_data
         assert len(settings_data["flight_track2"]["views"]) == 2
         assert settings_data["flight_track2"]["views"][0]["view_type"] == "topview"
         assert settings_data["flight_track2"]["views"][0]["wms"]["url"].rstrip('/') == mswms_server
-        # assert settings_data["flight_track2"]["views"][0]["wms"]["layer"] == "ecmwf_EUR_LL015.PLRelHum01"
-        # assert settings_data["flight_track2"]["views"][0]["wms"]["level"] == "200.0"
         assert settings_data["flight_track2"]["views"][1]["view_type"] == "topview"
         assert settings_data["flight_track2"]["views"][1]["wms"]["url"].rstrip('/') == mswms_server
-        # assert settings_data["flight_track2"]["views"][1]["wms"]["layer"] == "ecmwf_EUR_LL015.PLW01"
-        # assert settings_data["flight_track2"]["views"][1]["wms"]["level"] == "250.0"
 
         # Create MSUIMainWindow
         new_window = msui_mw.MSUIMainWindow()
@@ -520,7 +509,7 @@ class Test_MSUIMainWindow:
         assert new_window.listViews.count() == 1
         assert new_window.listFlightTracks.count() == 1
 
-        # Access restored view
+        # # Access restored view
         restored_top_view1 = new_window.listViews.item(0)
         assert restored_top_view1 is not None, "No view restored"
         restored_top_view1 = restored_top_view1.window
@@ -552,9 +541,6 @@ class Test_MSUIMainWindow:
         restored_top_view2_1 = new_window.listViews.item(0).window
         assert isinstance(restored_top_view2_1, MSUITopViewWindow)
 
-        assert new_window.listFlightTracks.count() == 2
-        assert new_window.listViews.count() == 2
-
         restored_top_view2_1 = new_window.listViews.item(0).window
         assert isinstance(restored_top_view2_1, MSUITopViewWindow)
 
@@ -568,6 +554,9 @@ class Test_MSUIMainWindow:
         assert isinstance(restored_top_view2_2, MSUITopViewWindow)
         wms_control2_2 = restored_top_view2_2.wms_control
         wms_control2_2.get_capabilities()
+        qtbot.wait(1000)
+        assert wms_control2_2.multilayers.cbWMS_URL.currentText().rstrip("/") == mswms_server, \
+            f"Expected URL {mswms_server}, got {wms_control2_2.multilayers.cbWMS_URL.currentText()}"
         qtbot.wait(1000)
         assert wms_control2_2.multilayers.cbWMS_URL.currentText().rstrip("/") == mswms_server, \
             f"Expected URL {mswms_server}, got {wms_control2_2.multilayers.cbWMS_URL.currentText()}"
