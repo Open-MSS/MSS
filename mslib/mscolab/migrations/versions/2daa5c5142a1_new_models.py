@@ -39,7 +39,7 @@ def upgrade():
     sa.ForeignKeyConstraint(['op_id'], ['operations.id'], name=op.f('fk_sharedviews_op_id_operations')),
     sa.ForeignKeyConstraint(['u_id'], ['users.id'], name=op.f('fk_sharedviews_u_id_users')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_sharedviews')),
-    sa.UniqueConstraint('view_name', name=op.f('uq_sharedviews_view_name'))
+    sa.UniqueConstraint('op_id', 'view_name', name='_op_view_uc')
     )
     op.create_table('viewsettings',
     sa.Column('op_id', sa.Integer(), nullable=False),

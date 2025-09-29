@@ -54,13 +54,3 @@ class Ui_Form(object):
         self.label_2.setText(_translate("Form", "Your Saved View Collections:"))
         self.label_3.setText(_translate("Form", "Shared View Collections ( All Users ):"))
         self.pushButton.setText(_translate("Form", "Apply Selected View"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    Form = QtWidgets.QWidget()
-    ui = Ui_Form()
-    ui.setupUi(Form)
-    Form.show()
-    sys.exit(app.exec_())

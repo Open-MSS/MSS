@@ -876,7 +876,6 @@ def reset_request():
 @APP.route("/share_view", methods=["POST"])
 @verify_user
 def share_view():
-    logging.info("share_view called from the server")
     try:
         view_settings = request.form.get('view_settings', False)
         view_name = request.form.get('view_name', None)
@@ -888,8 +887,6 @@ def share_view():
             settings_data = json.loads(view_settings)
         else:
             settings_data = view_settings
-        user = g.user
-        logging.info("User in share_view: %s (type: %s)", user, type(user))
         success, message = fm.share_view(op_id, view_name, user, settings_data)
         if success:
             return jsonify({"success": True, "message": message}), 200
@@ -906,21 +903,16 @@ def share_view():
 @APP.route("/get_shared_view", methods=["GET"])
 @verify_user
 def get_shared_view():
-    user = g.user
-    logging.info("User in get_shared_view: %s (type: %s)", user, type(user))
     op_id = request.form.get('op_id')
     view_name = request.form.get('view_name')
     user = g.user
     try:
         success, message, settings = fm.get_shared_views(op_id, view_name, user)
         if success:
-            logging.info(settings)
             return jsonify({"success": True, "message": message, "settings": settings}), 200
         else:
-            logging.info(settings)
             return jsonify({"success": False, "message": message, "settings": settings}), 400
     except Exception as e:
-        logging.info(settings)
         logging.error("Error in get_shared_view endpoint: %s", str(e))
         return jsonify({"success": False, "message": f"Server error: {str(e)}", "settings": {}}), 500
 
@@ -962,7 +954,7 @@ def check_view_names():
     op_id = request.form.get('op_id')
     view_name = request.form.get('view_name')
     user = g.user
-    if not all([op_id, view_name]):
+    if not all([op_id is not None, view_name is not None]):
         return jsonify({"success": False, "message": "Missing required parameters", "exists": False}), 400
     try:
         exists = fm.check_view_name(user, op_id, view_name)

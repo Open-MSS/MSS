@@ -537,7 +537,6 @@ class ManageViewDialog(QtWidgets.QDialog):
             self.ui.listWidget.addItem(item)
 
     def refresh_shared_views(self):
-        logging.info("Refreshing shared views for op_id %s", self.mscolab.active_op_id)
         url = urljoin(self.mscolab.mscolab_server_url, "get_views_name")
         data = {"op_id": self.mscolab.active_op_id, "token": self.mscolab.token}
         if hasattr(self.mscolab, 'auth') and self.mscolab.auth:
@@ -545,7 +544,6 @@ class ManageViewDialog(QtWidgets.QDialog):
         else:
             response = requests.get(url, params=data, timeout=(5, 30))
         response.raise_for_status()
-        logging.info("Response from get_views_name: %s", response.text)
         views = response.json().get("views", [])
         self.model.clear()
         for view in views:
@@ -553,7 +551,6 @@ class ManageViewDialog(QtWidgets.QDialog):
             item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
             item.setData(view, QtCore.Qt.UserRole)
             self.model.appendRow(item)
-        logging.info("Refreshed shared views for op_id %s: %s views loaded", self.mscolab.active_op_id, len(views))
         return True
 
 
@@ -682,8 +679,20 @@ class MSUIMscolab(QtCore.QObject):
         self.create_dir()
 
     def open_manage_view_widget(self):
-        self.manage_view_widget = ManageViewDialog(self, self.ui)
-        self.manage_view_widget.show()
+        if self.manage_view_widget is not None and self.manage_view_widget.isVisible():
+            # If the widget is already open, raise and activate it
+            self.manage_view_widget.raise_()
+            self.manage_view_widget.activateWindow()
+        else:
+            # Create a new widget if none exists or the existing one is closed
+            self.manage_view_widget = ManageViewDialog(self, self.ui)
+            self.manage_view_widget.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)  # Ensure cleanup on close
+            self.manage_view_widget.destroyed.connect(self.close_manage_view_widget)  # Connect to cleanup slot
+            self.manage_view_widget.show()
+
+    def close_manage_view_widget(self):
+        # Clean up the reference when the widget is closed
+        self.manage_view_widget = None
 
     def _handle_font_bolding(self, item=None):
         font = QtGui.QFont()
@@ -1520,6 +1529,8 @@ class MSUIMscolab(QtCore.QObject):
         try:
             response = self.conn.request_post("manage_sharedView_metadata", data=data)
             response.raise_for_status()
+            if self.manage_view_widget is not None:
+                self.manage_view_widget.refresh_shared_views()
         except requests.exceptions.RequestException as ex:
             logging.error("Error fetching view metadata for %s: %s", view_name, ex)
             return None
@@ -2003,6 +2014,10 @@ class MSUIMscolab(QtCore.QObject):
                 window.disable_navbar_action_buttons()
             else:
                 window.enable_navbar_action_buttons()
+
+        # Refresh ManageViewDialog if it is open
+        if self.manage_view_widget is not None and self.manage_view_widget.isVisible():
+            self.manage_view_widget.refresh_shared_views()
 
         self.ui.switch_to_mscolab()
 
