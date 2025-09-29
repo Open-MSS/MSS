@@ -40,6 +40,7 @@ import requests
 import re
 import mimetypes
 import urllib.request
+from urllib.parse import urljoin
 from pathlib import Path
 
 from PIL import Image, UnidentifiedImageError
@@ -66,6 +67,7 @@ from mslib.msui.qt5 import ui_mscolab_help_dialog as msc_help_dialog
 from mslib.msui.qt5 import ui_mscolab_add_operation_dialog as msc_add_operation_ui
 from mslib.msui.qt5 import ui_mscolab_merge_waypoints_dialog as merge_wp_ui
 from mslib.msui.qt5 import ui_mscolab_profile_dialog as ui_profile
+from mslib.msui.qt5 import ui_manageView_dialog as ui_manage_view
 from mslib.msui import constants
 from mslib.utils.config import config_loader
 
@@ -95,6 +97,66 @@ def verify_user_token(func):
         finally:
             verify_user_token.depth -= 1
     return wrapper
+
+
+class ManageViewDialog(QtWidgets.QDialog):
+    def __init__(self, mscolab, parent=None):
+        super().__init__(parent)
+        self.ui = ui_manage_view.Ui_Form()
+        self.ui.setupUi(self)
+        self.ui.listView.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.setModal(False)
+        self.setWindowFlags(QtCore.Qt.Dialog | QtCore.Qt.WindowCloseButtonHint)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+        self.mscolab = mscolab
+        self.setWindowTitle("Manage Views")
+        self.model = QtGui.QStandardItemModel()
+        self.model = QtGui.QStandardItemModel()
+        self.ui.listView.setModel(self.model)
+
+        self.ui.pushButton.clicked.connect(self.apply_selected_view)
+        self.refresh_shared_views()
+
+    def apply_selected_view(self):
+        """Apply settings for selected views in listView."""
+        selected_indexes = self.ui.listView.selectedIndexes()
+        if not selected_indexes:
+            QtWidgets.QMessageBox.warning(self, "No Selection", "Please select at least one shared view to apply.")
+            return
+        index = selected_indexes[0]
+        for index in selected_indexes:
+            item = self.ui.listView.model().itemFromIndex(index)
+            if not item:
+                continue
+            data = item.data(QtCore.Qt.UserRole)
+            view_name = data['view_name']
+            op_id = data['op_id']
+            view_settings = self.mscolab.get_sharedView_settings(view_name, op_id)
+            view_type = view_settings.get("view_type")
+            if view_settings is None:
+                QtWidgets.QMessageBox.warning(self, "Error",
+                                              f"Failed to retrieve settings for {view_name} by user {data['username']}")
+                continue
+            self.mscolab.ui.create_view(view_type, model=self.mscolab.waypoints_model, restore_settings=view_settings)
+            item = QtWidgets.QListWidgetItem(view_name)
+            self.ui.listWidget.addItem(item)
+
+    def refresh_shared_views(self):
+        url = urljoin(self.mscolab.mscolab_server_url, "get_views_name")
+        data = {"op_id": self.mscolab.active_op_id, "token": self.mscolab.token}
+        if hasattr(self.mscolab, 'auth') and self.mscolab.auth:
+            response = requests.get(url, params=data, auth=self.mscolab.auth, timeout=(5, 30))
+        else:
+            response = requests.get(url, params=data, timeout=(5, 30))
+        response.raise_for_status()
+        views = response.json().get("views", [])
+        self.model.clear()
+        for view in views:
+            item = QtGui.QStandardItem(f"{view['view_name']} (by {view['username']})")
+            item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+            item.setData(view, QtCore.Qt.UserRole)
+            self.model.appendRow(item)
+        return True
 
 
 class MSUIMscolab(QtCore.QObject):
@@ -139,6 +201,7 @@ class MSUIMscolab(QtCore.QObject):
 
         # connect operation options menu actions
         self.ui.actionAddOperation.triggered.connect(self.add_operation_handler)
+        self.ui.actionOpenManageView.triggered.connect(self.open_manage_view_widget)
         self.ui.actionChat.triggered.connect(self.operation_options_handler)
         self.ui.actionVersionHistory.triggered.connect(self.operation_options_handler)
         self.ui.actionManageUsers.triggered.connect(self.operation_options_handler)
@@ -208,6 +271,8 @@ class MSUIMscolab(QtCore.QObject):
         # Gravatar image path
         self.gravatar = None
 
+        self.manage_view_widget = None
+
         # Service message text for flight-track changes (waypoints inserted, moved or deleted)
         self.lastChangeMessage = ""
 
@@ -217,6 +282,22 @@ class MSUIMscolab(QtCore.QObject):
         else:
             self.data_dir = Path(local_operations_data)
         self.create_dir()
+
+    def open_manage_view_widget(self):
+        if self.manage_view_widget is not None and self.manage_view_widget.isVisible():
+            # If the widget is already open, raise and activate it
+            self.manage_view_widget.raise_()
+            self.manage_view_widget.activateWindow()
+        else:
+            # Create a new widget if none exists or the existing one is closed
+            self.manage_view_widget = ManageViewDialog(self, self.ui)
+            self.manage_view_widget.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)  # Ensure cleanup on close
+            self.manage_view_widget.destroyed.connect(self.close_manage_view_widget)  # Connect to cleanup slot
+            self.manage_view_widget.show()
+
+    def close_manage_view_widget(self):
+        # Clean up the reference when the widget is closed
+        self.manage_view_widget = None
 
     def _handle_font_bolding(self, item=None):
         font = QtGui.QFont()
@@ -783,6 +864,9 @@ class MSUIMscolab(QtCore.QObject):
         if self.version_window is not None:
             self.version_window.close()
             self.version_window = None
+        if self.manage_view_widget is not None:
+            self.manage_view_widget.close()
+            self.manage_view_widget = None
 
     @verify_user_token
     def handle_delete_operation(self):
@@ -1032,6 +1116,80 @@ class MSUIMscolab(QtCore.QObject):
         elif selected_option == "Save To Server":
             self.save_wp_mscolab()
 
+    def get_views(self, view_name):
+        data = {
+            "op_id": self.active_op_id,
+            "view_name": view_name,
+            "token": self.token
+        }
+        response = self.conn.request_get("check_view_names", data=data)
+        return response.json()
+
+    @verify_user_token
+    def manage_view_metadata(self, op_id, view_name):
+        if not self.active_op_id or not self.token:
+            return None
+        data = {
+            "op_id": op_id,
+            "view_name": view_name,
+            "token": self.token
+        }
+        try:
+            response = self.conn.request_post("manage_sharedView_metadata", data=data)
+            response.raise_for_status()
+            if self.manage_view_widget is not None:
+                self.manage_view_widget.refresh_shared_views()
+        except requests.exceptions.RequestException as ex:
+            logging.error("Error fetching view metadata for %s: %s", view_name, ex)
+            return None
+
+    @verify_user_token
+    def share_view_settings(self, settings_list, view_name):
+        """Send view settings to the MSColab server for sharing."""
+        if not self.active_op_id or not self.token:
+            return False
+        op_id = self.active_op_id
+        data = {
+            "op_id": op_id,
+            "view_name": view_name,
+            "view_settings": json.dumps(settings_list),
+            "token": self.token
+        }
+        try:
+            response = self.conn.request_post("share_view", data=data)
+            response.raise_for_status()
+            self.manage_view_metadata(op_id=op_id, view_name=view_name)
+        except requests.exceptions.RequestException as ex:
+            logging.error("Error sharing view %s: %s", view_name, ex)
+
+    def get_sharedView_settings(self, view_name, op_id):
+        """Retrieve settings for a specific view from the server."""
+        if not self.active_op_id or not self.token:
+            logging.error("Cannot fetch view settings: No active operation or token")
+            return None
+        data = {
+            'op_id': op_id,
+            'view_name': view_name,
+            'token': self.token
+        }
+        try:
+            response = self.conn.request_get('get_shared_view', data=data)
+            response.raise_for_status()
+            data = response.json()
+            if data.get("success"):
+                settings = data.get("settings", {})
+                if settings:
+                    return settings
+                else:
+                    logging.error("No settings found for view %s", view_name)
+                    return None
+            else:
+                logging.error("Failed to fetch view settings: %s", data.get("message", "Unknown error"))
+                return None
+        except requests.exceptions.RequestException as ex:
+            logging.error("Error fetching view settings for %s: %s", view_name, ex)
+            return None
+
     @verify_user_token
     def save_operation_view_settings(self, settings):
         """Save collected settings for the active operation to the server."""
@@ -1079,13 +1237,11 @@ class MSUIMscolab(QtCore.QObject):
                 "op_id": self.active_op_id
             }
             response = self.conn.request_get("get_operation_view_settings", data=data)
-
             try:
                 response_data = response.json()
             except requests.exceptions.JSONDecodeError:
                 logging.error("Response not valid JSON! text=%s", response.text)
                 return
-            # logging.info("Successfully retrieved settings for op_id=%s", self.active_op_id)
             settings = response_data.get("settings")
             self.ui.create_operation_view_settings(settings)
             return settings
@@ -1467,6 +1623,10 @@ class MSUIMscolab(QtCore.QObject):
             else:
                 window.enable_navbar_action_buttons()
 
+        # Refresh ManageViewDialog if it is open
+        if self.manage_view_widget is not None and self.manage_view_widget.isVisible():
+            self.manage_view_widget.refresh_shared_views()
+
         self.ui.switch_to_mscolab()
 
         # Enable the active user count label
@@ -1499,6 +1659,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.actionChangeDescription.setEnabled(False)
         self.ui.actionArchiveOperation.setEnabled(False)
         self.ui.actionViewDescription.setEnabled(True)
+        self.ui.actionOpenManageView.setEnabled(False)
         self.ui.menuProperties.setEnabled(True)
 
         if self.access_level == "viewer":
@@ -1508,9 +1669,13 @@ class MSUIMscolab(QtCore.QObject):
         if self.access_level in ["creator", "admin", "collaborator"]:
             if self.ui.workLocallyCheckbox.isChecked():
                 self.ui.actionChat.setEnabled(True)
+                self.ui.actionOpenManageView.setEnabled(False)
+                self.ui.shareViewGroupBox.setEnabled(False)
             else:
                 self.ui.actionChat.setEnabled(True)
                 self.ui.actionVersionHistory.setEnabled(True)
+                self.ui.actionOpenManageView.setEnabled(True)
+                self.ui.shareViewGroupBox.setEnabled(True)
             self.ui.workLocallyCheckbox.setEnabled(True)
         else:
             if self.version_window is not None:
@@ -1548,6 +1713,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.actionChangeCategory.setEnabled(False)
         self.ui.actionChangeDescription.setEnabled(False)
         self.ui.actionDeleteOperation.setEnabled(False)
+        self.ui.actionOpenManageView.setEnabled(False)
         self.ui.workLocallyCheckbox.setEnabled(False)
         self.ui.menuProperties.setEnabled(False)
         self.ui.serverOptionsCb.hide()

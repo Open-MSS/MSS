@@ -45,6 +45,7 @@ from tests.utils import create_msui_settings_file, ExceptionMock
 from mslib.msui import msui
 from mslib.msui import mscolab
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
+from mslib.msui import flighttrack as ft
 
 
 class Test_Mscolab_connect_window:
@@ -1109,3 +1110,101 @@ class Test_Mscolab:
         point = self.window.listFlightTracks.visualItemRect(item).center()
         QtTest.QTest.mouseClick(self.window.listFlightTracks.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtTest.QTest.mouseDClick(self.window.listFlightTracks.viewport(), QtCore.Qt.LeftButton, pos=point)
+
+    def test_switch_within_operations(self, qtbot):
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
+        self._create_user(qtbot, "something", "something@something.org", "something", "Test User")
+        self._create_operation(qtbot, "op_1", "Description op_1")
+        assert self.window.listOperationsMSC.model().rowCount() == 1
+        self._activate_operation_at_index(0)
+        self.window.actionTableView.trigger()
+        self.window.actionLinearView.trigger()
+        assert len(self.window.get_active_views()) == 2
+
+        self._create_operation(qtbot, "op_2", "Description op_2")
+        assert self.window.listOperationsMSC.model().rowCount() == 2
+        self._activate_operation_at_index(1)
+        self.window.actionTableView.trigger()
+        self.window.actionLinearView.trigger()
+        assert len(self.window.get_active_views()) == 4
+
+        self.window.mscolab.logout()
+        modify_config_file({"restore_views": True})
+        self._connect_to_mscolab(qtbot)
+        self._login(qtbot, emailid="something@something.org", password="something")
+        assert self.window.listOperationsMSC.model().rowCount() == 2
+
+        self._activate_operation_at_index(0)
+        assert len(self.window.get_active_views()) == 2
+
+        self._activate_operation_at_index(1)
+        assert len(self.window.get_active_views()) == 4
+        view1 = self.window.get_active_views()[0]
+        view1.handle_force_close()
+
+        self._activate_operation_at_index(0)
+        assert len(self.window.get_active_views()) == 2
+
+        self._activate_operation_at_index(1)
+        assert len(self.window.get_active_views()) == 3
+
+        self._activate_operation_at_index(0)
+        self.window.actionTopView.trigger()
+
+        self._activate_operation_at_index(1)
+        assert len(self.window.get_active_views()) == 3
+
+        self._activate_operation_at_index(0)
+        assert len(self.window.get_active_views()) == 3
+
+        self.window.hide()
+
+    def test_switch_local_and_operation_with_views(self, qtbot, mscolab_server, tmp_path):
+        # --- Setup config with restore_view enabled ---
+        modify_config_file({"restore_views": True})
+
+        flight_track = self.window.active_flight_track
+        assert flight_track.name == "new flight track (1)"
+        flight_track.insertRows(0, 2, waypoints=[
+            ft.Waypoint(lat=22.44, lon=86.67, location="point1"),
+            ft.Waypoint(lat=67.77, lon=48.67, location="point2"),
+        ])
+        flight_track.name = "MyDefaultFlightTrack"
+        filepath = tmp_path / "MyDefaultFlightTrack.ftml"
+        flight_track.save_to_ftml(str(filepath))
+        self.window.listFlightTracks.item(0).setText("MyDefaultFlightTrack")
+
+        assert self.window.listFlightTracks.count() == 1
+        assert self.window.listFlightTracks.item(0).text() == "MyDefaultFlightTrack"
+
+        self.window.create_view("tableview", flight_track)
+        self.window.create_view("sideview", flight_track)
+        self.window.create_view("linearview", flight_track)
+        assert self.window.listViews.count() == 3
+
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
+        self._create_user(qtbot, "something", "something@something.org", "something", "Test User")
+        self._create_operation(qtbot, "op_1", "Description op_1")
+        assert self.window.listOperationsMSC.model().rowCount() == 1
+        self._activate_operation_at_index(0)
+        self.window.actionTableView.trigger()
+        self.window.actionLinearView.trigger()
+        assert len(self.window.get_active_views()) == 2
+
+        # --- Switch back to local flight track ---
+        self.window.update_treewidget_op_fl("flighttrack", flight_track.name)
+
+        # After switching back, views should still be restored
+        assert self.window.active_flight_track.name == "MyDefaultFlightTrack"
+        assert self.window.listViews.count() == 3
+
+        self._connect_to_mscolab(qtbot)
+        self._login(qtbot, emailid="something@something.org", password="something")
+        assert self.window.listOperationsMSC.model().rowCount() == 1
+
+        self._activate_operation_at_index(0)
+        assert len(self.window.get_active_views()) == 2
+
+        self.window.hide()

@@ -222,6 +222,7 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.set_status("Error", "Some unexpected error occurred. Please try again.")
 
     def disconnect_handler(self):
+        self.mscolab.close_external_windows()
         self.urlCb.setEnabled(True)
 
         # enable/disable appropriate widgets in login frame
