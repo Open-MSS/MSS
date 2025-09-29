@@ -406,6 +406,50 @@ class MSUI_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         self.lblPython.setPixmap(blub)
 
 
+class ViewListModel(QtCore.QAbstractListModel):
+    def __init__(self, views, parent=None):
+        super().__init__(parent)
+        self.views = views
+
+    def rowCount(self, parent=QtCore.QModelIndex()):
+        return len(self.views)
+
+    def data(self, index, role=QtCore.Qt.DisplayRole):
+        if not index.isValid() or index.row() >= len(self.views):
+            return None
+        if role == QtCore.Qt.DisplayRole:
+            return self.views[index.row()][0]
+        elif role == QtCore.Qt.UserRole:
+            return self.views[index.row()][1]
+        return None
+
+    def setData(self, index, value, role=QtCore.Qt.EditRole):
+        """Handle changes to the item data when edited."""
+        if not index.isValid() or role != QtCore.Qt.EditRole:
+            return False
+        if value.strip() == "":
+            return False  # Prevent empty names
+        self.views[index.row()] = (value, self.views[index.row()][1])
+        self.dataChanged.emit(index, index, [QtCore.Qt.DisplayRole])
+        return True
+
+    def flags(self, index):
+        """Enable items to be editable."""
+        if not index.isValid():
+            return QtCore.Qt.NoItemFlags
+        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable
+
+    def add_view(self, text, window):
+        self.beginInsertRows(QtCore.QModelIndex(), len(self.views), len(self.views))
+        self.views.append((text, window))
+        self.endInsertRows()
+
+    def clear(self):
+        self.beginResetModel()
+        self.views = []
+        self.endResetModel()
+
+
 class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     """MSUI new main window class. Provides user interface elements for managing
        flight tracks, views and MSColab functionalities.
@@ -453,6 +497,16 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.new_flight_track_counter = 0
         self.flight_track_settings = {}  # Real-time settings dictionary
         self.activated_flight_tracks = set()
+
+        self.listView.setEditTriggers(QtWidgets.QAbstractItemView.DoubleClicked)
+        self.viewListModel = ViewListModel([], self)
+        self.listView.setModel(self.viewListModel)
+        self.listView.selectionModel().selectionChanged.connect(self.handle_share_view_selection)
+        self.listView.model().dataChanged.connect(self.handle_view_name_changed)
+        self.pushButton.clicked.connect(self.handle_share_button)
+        self.listViews.itemDoubleClicked.connect(self.update_share_view_list)
+        self.viewsChanged.connect(self.update_view_list_on_change)
+        self.pushButton.setEnabled(False)
 
         # Reference to the flight track that is currently displayed in the views.
         self.active_flight_track = None
@@ -516,6 +570,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
         # Create MSColab instance to handle all MSColab functionalities
         self.mscolab = mscolab.MSUIMscolab(parent=self, local_operations_data=local_operations_data)
+        # Create manage view dialog instance
+        # self.mangeView = mscolab.ManageViewDialog(parent=self)
 
         # Setting up MSColab Tab
         self.connectBtn.clicked.connect(self.mscolab.open_connect_window)
@@ -530,6 +586,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             lambda: self.listFlightTracks.setCurrentItem(None))
         # disable category until connected/login into mscolab
         self.filterCategoryCb.setEnabled(False)
+        self.actionOpenManageView.setEnabled(False)
+        self.shareViewGroupBox.setEnabled(False)
         self.mscolab.signal_unarchive_operation.connect(self.activate_operation_slot)
         self.mscolab.signal_operation_added.connect(self.add_operation_slot)
         self.mscolab.signal_operation_removed.connect(self.remove_operation_slot)
@@ -542,6 +600,120 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
 
         self.openOperationsGb.hide()
+
+    def handle_view_name_changed(self, topLeft, bottomRight, roles):
+        """Handle changes to the view name when edited in the listView widget."""
+        if QtCore.Qt.DisplayRole not in roles:
+            return
+        index = topLeft
+        if not index.isValid():
+            return
+        new_name = self.viewListModel.data(index, QtCore.Qt.DisplayRole)
+        window = self.viewListModel.data(index, QtCore.Qt.UserRole)
+        if window and new_name:
+            current_title = window.windowTitle()
+            id_part = current_title.split(") ")[0] + ")"
+            window.setWindowTitle(f"{id_part} {new_name} - {window.waypoints_model.name}")
+            window.setIdentifier(new_name)
+
+    def update_share_view_list(self, item):
+        """Append the double-clicked view from listViews to listView."""
+        if item and item.window.isVisible():
+            view_window = item.window
+            view_name = item.text()
+            for i in range(self.viewListModel.rowCount()):
+                existing_window = self.viewListModel.data(self.viewListModel.index(i), QtCore.Qt.UserRole)
+                if existing_window == view_window or existing_window.identifier == view_window.identifier:
+                    view_window.showNormal()
+                    view_window.raise_()
+                    view_window.activateWindow()
+                    return
+            self.viewListModel.add_view(view_name, view_window)
+            self.pushButton.setEnabled(True)
+
+    def update_view_list_on_change(self):
+        """Remove closed views from listView and update button state."""
+        if not self.viewListModel.views:
+            self.pushButton.setEnabled(False)
+            return
+        # Keep only visible views
+        valid_views = [(text, window) for text, window in self.viewListModel.views if window.isVisible()]
+        if len(valid_views) != len(self.viewListModel.views):
+            self.viewListModel.clear()
+            for text, window in valid_views:
+                self.viewListModel.add_view(text, window)
+        self.pushButton.setEnabled(bool(self.viewListModel.views))
+
+    def handle_share_view_selection(self, selected, deselected):
+        """Handle selection in listView to access the window instances."""
+        indexes = self.listView.selectionModel().selectedIndexes()
+        for index in indexes:
+            window = self.viewListModel.data(index, QtCore.Qt.UserRole)
+            if window:
+                logging.info("Selected shared view: %s (type: %s)", window.windowTitle(), window.view_type)
+                window.showNormal()
+                window.raise_()
+                window.activateWindow()
+
+    def handle_share_button(self):
+        if not self.viewListModel.views:
+            QtWidgets.QMessageBox.warning(self, "No Views", "No views available to share.")
+            return
+
+        shared_views = []
+        failed_views = []
+        indices_to_remove = []
+
+        for i in range(self.viewListModel.rowCount()):
+            view_name = self.viewListModel.data(self.viewListModel.index(i), QtCore.Qt.DisplayRole)
+            window = self.viewListModel.data(self.viewListModel.index(i), QtCore.Qt.UserRole)
+            if not view_name:
+                failed_views.append((view_name or "Unnamed View", "View name cannot be empty."))
+                continue
+            result = self.mscolab.get_views(view_name)
+            if not result["success"]:
+                failed_views.append((view_name, result["message"]))
+                continue
+            if result["exists"]:
+                failed_views.append((view_name,
+                                     f"View name '{view_name}' already exists. Please choose a different name."))
+                continue
+            try:
+                view_settings = window.get_settings()
+                if not isinstance(view_settings, dict):
+                    failed_views.append((view_name, "Invalid view settings."))
+                    continue
+                self.mscolab.share_view_settings(view_settings, view_name)
+                shared_views.append(view_name)
+                indices_to_remove.append(i)
+            except Exception as ex:
+                logging.error("Failed to share view %s: %s", view_name, ex)
+                failed_views.append((view_name, f"Failed to share: {str(ex)}"))
+
+        indices_to_remove.sort(reverse=True)
+
+        for index in indices_to_remove:
+            self.viewListModel.beginRemoveRows(QtCore.QModelIndex(), index, index)
+            self.viewListModel.views.pop(index)
+            self.viewListModel.endRemoveRows()
+
+        self.pushButton.setEnabled(bool(self.viewListModel.views))
+
+        message = []
+        if shared_views:
+            message.append(f"Successfully shared and removed {len(shared_views)} view(s): {', '.join(shared_views)}")
+        if failed_views:
+            message.append("Failed to share the following view(s):")
+            for view_name, reason in failed_views:
+                message.append(f"- {view_name}: {reason}")
+        if message:
+            QtWidgets.QMessageBox.information(
+                self,
+                "Share Views",
+                "\n".join(message)
+            )
+        else:
+            QtWidgets.QMessageBox.information(self, "Share Views", "No views were processed.")
 
     def bring_main_window_to_front(self):
         self.show()
@@ -1151,6 +1323,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             # listitem = QActiveViewsListWidgetItem(view_window, self.listViews, self.viewsChanged, mscolab)
             listitem = QActiveViewsListWidgetItem(view_window, self.listViews, self.viewsChanged)
             view_window.viewCloses.connect(listitem.view_destroyed)
+            view_window.viewCloses.connect(lambda: self.update_flight_track_settings(self.active_flight_track,
+                                                                                     view_window, remove=True))
             self.listViews.setCurrentItem(listitem)
             # self.active_view_windows.append(view_window)
             # disable navbar actions in the view for viewer
@@ -1289,27 +1463,37 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 return
             view_type = getattr(view, 'view_type', type(view).__name__).lower().replace(" ", "")
             try:
-                settings = view.get_settings()
-                if not isinstance(settings, dict):
-                    logging.warning("Invalid settings from view %s (type: %s, id: %s), skipping: %s",
-                                    getattr(view, 'name', 'unknown'), type(view).__name__,
-                                    getattr(view, 'view_id', 'unknown'), settings)
-                    return
-                settings["view_type"] = view_type
-                settings["view_id"] = getattr(view, 'view_id',
-                                              f"view_{view_type}_{len(self.flight_track_settings[json_key]['views'])}")
-
-                settings_compare = {k: v for k, v in settings.items() if k != "view_id"}
-                # Update or append view settings
-                for i, existing_setting in enumerate(self.flight_track_settings[json_key]["views"]):
-                    existing_compare = {k: v for k, v in existing_setting.items() if k != "view_id"}
-                    if settings_compare == existing_compare:
-                        break
+                if remove:   # Remove the view's settings
+                    view_id = getattr(view, 'view_id', None)
+                    if view_id:
+                        self.flight_track_settings[json_key]["views"] = [
+                            setting for setting in self.flight_track_settings[json_key]["views"]
+                            if setting.get("view_id") != view_id
+                        ]
                 else:
-                    self.flight_track_settings[json_key]["views"].append(settings)
+                    settings = view.get_settings()
+                    if not isinstance(settings, dict):
+                        logging.warning("Invalid settings from view %s (type: %s, id: %s), skipping: %s",
+                                        getattr(view, 'name', 'unknown'), type(view).__name__,
+                                        getattr(view, 'view_id', 'unknown'), settings)
+                        return
+                    settings["view_type"] = view_type
+                    settings["view_id"] = getattr(
+                        view,
+                        "view_id",
+                        f"view_{view_type}_{len(self.flight_track_settings[json_key]['views'])}"
+                    )
+                    settings_compare = {k: v for k, v in settings.items() if k != "view_id"}
+                    # Update or append view settings
+                    for i, existing_setting in enumerate(self.flight_track_settings[json_key]["views"]):
+                        existing_compare = {k: v for k, v in existing_setting.items() if k != "view_id"}
+                        if settings_compare == existing_compare:
+                            break
+                    else:
+                        self.flight_track_settings[json_key]["views"].append(settings)
 
-                global_data = view_restoration.set_global_data(flight_track)
-                self.flight_track_settings[json_key]["global"] = global_data
+                    global_data = view_restoration.set_global_data(flight_track)
+                    self.flight_track_settings[json_key]["global"] = global_data
 
             except KeyError as ae:
                 logging.info(
