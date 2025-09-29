@@ -242,3 +242,38 @@ class ViewSettings(db.Model):
         self.op_id = int(op_id)
         self.u_id = int(u_id)
         self.settings = settings
+
+
+class SharedView(db.Model):
+
+    __tablename__ = "sharedviews"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    op_id = db.Column(db.Integer, db.ForeignKey('operations.id'), nullable=False)
+    u_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    view_name = db.Column(db.String(255), nullable=False)
+    shared_data = db.Column(db.JSON, nullable=False)
+    created_at = db.Column(AwareDateTime, default=lambda: datetime.datetime.now(tz=datetime.timezone.utc))
+    user = db.relationship('User', backref='shared_views')
+    __table_args__ = (db.UniqueConstraint('op_id', 'view_name', name='_op_view_uc'),)
+
+    def __init__(self, op_id, view_name, shared_data, u_id):
+        self.op_id = int(op_id)
+        self.u_id = int(u_id)
+        self.view_name = str(view_name)
+        self.shared_data = shared_data
+
+
+class ManageViews(db.Model):
+
+    __tablename__ = "manageviews"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    op_id = db.Column(db.Integer, db.ForeignKey('operations.id'), nullable=False)
+    u_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    view_name = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(AwareDateTime, default=lambda: datetime.datetime.now(tz=datetime.timezone.utc))
+    user = db.relationship('User', backref='manage_views')
+
+    def __init__(self, op_id, u_id, view_name):
+        self.op_id = int(op_id)
+        self.u_id = int(u_id)
+        self.view_name = str(view_name)
