@@ -441,12 +441,3 @@ class Ui_MSUIMainWindow(object):
         self.actionCopyIntoNewMSColabOperation.setText(_translate("MSUIMainWindow", "MSColab Operation"))
         self.actionOpenManageView.setText(_translate("MSUIMainWindow", "&Manage Views"))
 
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MSUIMainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MSUIMainWindow()
-    ui.setupUi(MSUIMainWindow)
-    MSUIMainWindow.show()
-    sys.exit(app.exec_())
