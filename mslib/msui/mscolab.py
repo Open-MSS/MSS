@@ -329,6 +329,7 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.set_status("Error", "Some unexpected error occurred. Please try again.")
 
     def disconnect_handler(self):
+        self.mscolab.close_external_windows()
         self.urlCb.setEnabled(True)
 
         # enable/disable appropriate widgets in login frame
@@ -1259,6 +1260,9 @@ class MSUIMscolab(QtCore.QObject):
         if self.version_window is not None:
             self.version_window.close()
             self.version_window = None
+        if self.manage_view_widget is not None:
+            self.manage_view_widget.close()
+            self.manage_view_widget = None
 
     @verify_user_token
     def handle_delete_operation(self):
