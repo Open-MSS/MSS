@@ -440,4 +440,3 @@ class Ui_MSUIMainWindow(object):
         self.actionCopyIntoNewLocalFlightTrack.setText(_translate("MSUIMainWindow", "Local Flight Track"))
         self.actionCopyIntoNewMSColabOperation.setText(_translate("MSUIMainWindow", "MSColab Operation"))
         self.actionOpenManageView.setText(_translate("MSUIMainWindow", "&Manage Views"))
-
