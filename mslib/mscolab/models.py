@@ -256,7 +256,7 @@ class SharedView(db.Model):
     user = db.relationship('User', backref='shared_views')
     __table_args__ = (db.UniqueConstraint('op_id', 'view_name', name='_op_view_uc'),)
 
-    def __init__(self, op_id, view_name, shared_data, u_id):
+    def __init__(self, op_id, u_id, view_name, shared_data):
         self.op_id = int(op_id)
         self.u_id = int(u_id)
         self.view_name = str(view_name)
