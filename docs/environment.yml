@@ -21,6 +21,9 @@ dependencies:
       - PyQt5
       - owslib
       - future
+      - sphinx-rtd-theme
+      - any-other-pip-packages
   - basemap >=1.3.3
   - pint
   - python <3.12
+  - toml
