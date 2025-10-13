@@ -6,11 +6,13 @@ on:
       - develop
       - stable
       - 'GSOC**'
+      - 'prepare**'
   pull_request:
     branches:
       - develop
       - stable
       - 'GSOC**'
+      - 'prepare**'
 
 jobs:
   test:
