@@ -41,6 +41,7 @@ Topics
    tutorial
    gallery/index
    funding
+   view_resoring
 
 
 Indices and tables
