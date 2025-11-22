@@ -2,7 +2,7 @@
 """
 
     tests._test_mscolab.test_models
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     api integration tests for models
 

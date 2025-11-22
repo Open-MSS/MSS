@@ -317,7 +317,7 @@ like e.g. a running MSColab server or a QApplication instance for GUI tests,
 are collected in :mod:`tests.fixtures` in the form of pytest fixtures that can be requested as needed in tests.
 
 Keyring Features
------------------
+----------------
 
 This document outlines step-by-step instructions for using the keyring features using the command line.
 

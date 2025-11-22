@@ -2,7 +2,7 @@
 """
 
     mslib.utils.units
-    ~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~
 
     Collection of unit conversion related routines for the Mission Support System.
 

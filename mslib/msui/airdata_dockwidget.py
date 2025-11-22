@@ -2,7 +2,7 @@
 """
 
     mslib.msui.airdata_dockwidget
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Control to load airports and airspaces into the top view.
 

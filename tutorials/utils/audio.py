@@ -1,6 +1,6 @@
 """
     msui.tutorials.audio
-    ~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~
 
     This python script is meant for generating audio of our choice from text files describing the tutorial.
 

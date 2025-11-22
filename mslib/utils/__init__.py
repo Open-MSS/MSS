@@ -2,7 +2,7 @@
 """
 
     mslib.utils
-    ~~~~~~~~~~~~~~
+    ~~~~~~~~~~~
 
     Collection of utility routines for the Mission Support System.
 

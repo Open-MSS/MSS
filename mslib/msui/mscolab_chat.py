@@ -2,7 +2,7 @@
 """
 
     mslib.msui.mscolab_operation
-    ~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Mscolab operation window, to display chat, file change
 

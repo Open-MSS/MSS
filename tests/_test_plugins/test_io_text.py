@@ -2,7 +2,7 @@
 """
 
     tests._test_plugins.test_io_text
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to test mslib.plugins.io.text
 

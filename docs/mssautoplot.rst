@@ -63,7 +63,7 @@ of topview in the mssautoplot.json.
 
 
 Settings file
---------------
+-------------
 
 This file includes configuration settings to generate plots in automated fashion. It includes,
 

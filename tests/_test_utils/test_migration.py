@@ -2,7 +2,7 @@
 """
 
     tests._test_utils.test_migration
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests migrations
 

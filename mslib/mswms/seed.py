@@ -858,7 +858,7 @@ class DataFiles:
 """
 
     mswms_settings
-    ~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~
 
     Configuration module for programs accessing data on the MSS server.
 
@@ -898,7 +898,7 @@ allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
 """
 
     mswms_settings
-    ~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~
 
     Configuration module for programs accessing data on the MSS server.
 

@@ -1,6 +1,6 @@
 """
     mslib.mswms.gallery_builder
-    ~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module contains functions for generating the plots.html file, aka the gallery.
 
@@ -407,7 +407,7 @@ def write_doc_index(path):
                                   if "index" not in f and ".rst" in f]))
         rst.write(f"""
 Code Examples
---------------
+-------------
 
 .. toctree::
 

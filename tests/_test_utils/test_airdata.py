@@ -2,7 +2,7 @@
 """
 
     tests._test_utils.test_airdata
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to test mslib.utils.airdata
 

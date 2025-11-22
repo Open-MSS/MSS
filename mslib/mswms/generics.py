@@ -2,7 +2,7 @@
 """
 
     mslib.mslib.generics
-    ~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~
 
     This module provides functions for the wms server
 

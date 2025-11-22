@@ -2,7 +2,7 @@
 """
 
     mslib.utils.update_json_file_to_version_nine
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     updates the old attributes to the new attributes and creates credentials in keyring
 

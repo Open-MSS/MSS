@@ -2,7 +2,7 @@
 """
 
     mslib.plugins.io.navaid
-    ~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~
 
     plugin for navaid format flight track export
 

@@ -2,7 +2,7 @@
 """
 
     mslib.utils.migration.config_before_nine
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Collection of functions all around config handling before version 9.0.0
 
