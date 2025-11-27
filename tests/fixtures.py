@@ -201,8 +201,11 @@ def _running_eventlet_server(app):
     process = ctx.Process(target=eventlet.wsgi.server, args=(socket, app), daemon=True)
     try:
         process.start()
-        while not is_url_response_ok(urllib.parse.urljoin(url, "index")):
-            time.sleep(0.5)
+        retry_time = 0
+        sleep_time = 0.5
+        while not is_url_response_ok(urllib.parse.urljoin(url, "index")) and retry_time < 5:
+            time.sleep(sleep_time)
+            retry_time += sleep_time
         yield url
     finally:
         process.terminate()
