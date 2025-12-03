@@ -18,7 +18,6 @@ import requests
 import zipfile
 import shutil
 import importlib
-from pathlib import Path
 
 
 __version__ = importlib.metadata.version("open-mss")
