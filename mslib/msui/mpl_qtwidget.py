@@ -843,25 +843,6 @@ class MplCanvas(FigureCanvasQTAgg):
         self.plotter.set_settings(settings, save)
 
 
-save_figure_original = NavigationToolbar2QT.save_figure
-
-
-def save_figure(self, *args):
-    """
-    saves the figure dependent to the filepicker_default
-    """
-    # ToDo remove picker_type
-    picker_type = config_loader(dataset="filepicker_default")
-    if picker_type in ["default", "qt"]:
-        save_figure_original(self, *args)
-    else:
-        raise FatalUserError(f"Unknown file picker type '{picker_type}'")
-
-
-# Patch matplotlib function
-NavigationToolbar2QT.save_figure = save_figure
-
-
 class _Mode(str, enum.Enum):
     """
     Override _Mode of backend_base to include our tools.
