@@ -41,7 +41,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from matplotlib.lines import Line2D
 
 from mslib.utils.thermolib import convert_pressure_to_vertical_axis_measure
-from mslib.utils import thermolib, FatalUserError
+from mslib.utils import thermolib
 from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
 from mslib.utils.units import units
 from mslib.msui import mpl_pathinteractor as mpl_pi
@@ -841,25 +841,6 @@ class MplCanvas(FigureCanvasQTAgg):
         Apply settings from options ui to the linear view
         """
         self.plotter.set_settings(settings, save)
-
-
-save_figure_original = NavigationToolbar2QT.save_figure
-
-
-def save_figure(self, *args):
-    """
-    saves the figure dependent to the filepicker_default
-    """
-    # ToDo remove picker_type
-    picker_type = config_loader(dataset="filepicker_default")
-    if picker_type in ["default", "qt"]:
-        save_figure_original(self, *args)
-    else:
-        raise FatalUserError(f"Unknown file picker type '{picker_type}'")
-
-
-# Patch matplotlib function
-NavigationToolbar2QT.save_figure = save_figure
 
 
 class _Mode(str, enum.Enum):

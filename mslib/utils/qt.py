@@ -66,7 +66,7 @@ def get_save_filename_qt(*args):
 def get_pickertype(pickertype=None):
     if pickertype is None:
         return config_loader(dataset="filepicker_default")
-    if pickertype not in ["qt", "default", "fs"]:
+    if pickertype not in ["qt", "default"]:
         raise FatalUserError(f"Unknown file picker type '{pickertype}'.")
     return pickertype
 
