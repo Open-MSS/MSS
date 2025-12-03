@@ -19,6 +19,15 @@ interface (top view and side view).
 
 .. _msui-configuration:
 
+HINT Changes Version 11
+-----------------------
+
+We have removed the `fs` library and the `conda-forge` package `fs_filepicker` by version 11.
+Internally, we are now using `Pathlib` and `os.path`.
+
+The change does not affect directories that use `~` to represent the home directory.
+But we have dropped support for FS_URLs.
+
 Configuration of MSUI
 ---------------------
 
