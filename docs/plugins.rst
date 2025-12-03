@@ -55,6 +55,25 @@ and will be overwritten after reading back the file.
     },
 
 
+HINT Changes Version 11
+-----------------------
+
+We have removed the `fs` library and the `conda-forge` package `fs_filepicker` by version 11. Internally, we are now using `Pathlib` and `os.path`.
+
+This has required revisions to imports and, for example, replacement of this syntax in plugins.
+
+Before::
+
+  _dirname, _name = os.path.split(filename)
+  _fs = open_fs(_dirname)
+  with _fs.open(_name, "wb") as csvfile:
+
+After::
+
+  path = Path(filename)
+  with path.open("wb") as csvfile:
+
+
 User contributed Plugins
 ------------------------
 
