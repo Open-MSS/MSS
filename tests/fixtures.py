@@ -206,6 +206,8 @@ def _running_eventlet_server(app):
         while not is_url_response_ok(urllib.parse.urljoin(url, "index")) and retry_time < 5:
             time.sleep(sleep_time)
             retry_time += sleep_time
+        if not is_url_response_ok(urllib.parse.urljoin(url, "index")):
+            raise RuntimeError(f"Server did not start within 5 seconds at {url}")
         yield url
     finally:
         process.terminate()
