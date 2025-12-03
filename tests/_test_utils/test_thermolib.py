@@ -33,7 +33,7 @@ from mslib.utils import thermolib
 
 
 def test_flightlevel2pressure2flightlevel():
-    fs = (np.arange(1, 95000, 1000.) * units.m).to(units.hft)
+    fs = (np.arange(1, 99900, 100.) * units.m).to(units.hft)
     ps = thermolib.flightlevel2pressure(fs)
     fs_p = thermolib.pressure2flightlevel(ps).magnitude
     assert fs.magnitude == pytest.approx(fs_p)
@@ -41,6 +41,10 @@ def test_flightlevel2pressure2flightlevel():
 
 def test_pressure2flightlevel2pressure():
     ps = np.arange(1, 105000, 1.)[::-1] * units.Pa
+    fs = thermolib.pressure2flightlevel(ps)
+    ps_p = thermolib.flightlevel2pressure(fs).magnitude
+    assert ps.magnitude == pytest.approx(ps_p)
+    ps = np.arange(0.024, 1, 0.001)[::-1] * units.Pa
     fs = thermolib.pressure2flightlevel(ps)
     ps_p = thermolib.flightlevel2pressure(fs).magnitude
     assert ps.magnitude == pytest.approx(ps_p)
@@ -54,7 +58,7 @@ def test_flightlevel2pressure():
     assert thermolib.flightlevel2pressure(1626.8966 * units.hft).magnitude == pytest.approx(80)
     assert thermolib.flightlevel2pressure(1804.2727 * units.hft).magnitude == pytest.approx(40)
     with pytest.raises(ValueError):
-        thermolib.flightlevel2pressure(102000 * units.m)
+        thermolib.flightlevel2pressure(100000 * units.m)
 
 
 def test_pressure2flightlevel():
@@ -69,7 +73,6 @@ def test_pressure2flightlevel():
     with pytest.raises(ValueError):
         thermolib.pressure2flightlevel(0.02 * units.Pa)
 
-
 def test_isa_temperature():
     assert thermolib.isa_temperature(100 * units.hft).magnitude == pytest.approx(268.338)
     assert thermolib.isa_temperature(200 * units.hft).magnitude == pytest.approx(248.526)
@@ -80,8 +83,6 @@ def test_isa_temperature():
     assert thermolib.isa_temperature(700 * units.hft).magnitude == pytest.approx(217.986)
     assert thermolib.isa_temperature(800 * units.hft).magnitude == pytest.approx(221.034)
     assert thermolib.isa_temperature(1000 * units.hft).magnitude == pytest.approx(227.13)
-    with pytest.raises(ValueError):
-        thermolib.isa_temperature(100001 * units.m)
     assert thermolib.isa_temperature(11000 * units.m).magnitude == pytest.approx(216.65)
     assert thermolib.isa_temperature(20000 * units.m).magnitude == pytest.approx(216.65)
     assert thermolib.isa_temperature(32000 * units.m).magnitude == pytest.approx(228.65)
@@ -89,6 +90,9 @@ def test_isa_temperature():
     assert thermolib.isa_temperature(51000 * units.m).magnitude == pytest.approx(270.65)
     assert thermolib.isa_temperature(71000 * units.m).magnitude == pytest.approx(214.65)
     assert thermolib.isa_temperature(84852 * units.m).magnitude == pytest.approx(186.95)
+    assert thermolib.isa_temperature(99999 * units.m).magnitude == pytest.approx(186.95)
+    with pytest.raises(ValueError):
+        thermolib.isa_temperature(100000 * units.m)
 
 
 class TestConverter:
