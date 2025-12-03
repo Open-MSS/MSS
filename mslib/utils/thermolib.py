@@ -126,6 +126,7 @@ def omega_to_w(omega, p, t):
 
 # Values according to the 1976 U.S. Standard atmosphere [NOAA1976]_.
 # List of tuples (height, temperature, pressure, temperature gradient)
+# Added a value for 100km roughly based on CIRA
 _STANDARD_ATMOSPHERE = [
     (0 * units.km, 288.15 * units.K, 101325 * units.Pa, 0.0065 * units.K / units.m),
     (11 * units.km, 216.65 * units.K, 22632.1 * units.Pa, 0 * units.K / units.m),
@@ -133,7 +134,9 @@ _STANDARD_ATMOSPHERE = [
     (32 * units.km, 228.65 * units.K, 868.019 * units.Pa, -0.0028 * units.K / units.m),
     (47 * units.km, 270.65 * units.K, 110.906 * units.Pa, 0 * units.K / units.m),
     (51 * units.km, 270.65 * units.K, 66.9389 * units.Pa, 0.0028 * units.K / units.m),
-    (71 * units.km, 214.65 * units.K, 3.95642 * units.Pa, np.nan * units.K / units.m)
+    (71 * units.km, 214.65 * units.K, 3.95642 * units.Pa, 0.002 * units.K / units.m),
+    (84.852 * units.km, 186.95 * units.K, 0.3734 * units.Pa, 0 * units.K / units.m),
+    (100 * units.km, 186.95 * units.K, 0.025641 * units.Pa, np.nan * units.K / units.m),
 ]
 _HEIGHT, _TEMPERATURE, _PRESSURE, _TEMPERATURE_GRADIENT = 0, 1, 2, 3
 
@@ -235,8 +238,8 @@ def pressure2flightlevel(pressure):
             z[indices] = z0 - (Rd * t0) / g * np.log(pressure[indices] / p0)
 
     if np.isnan(z).any():
-        raise ValueError("flight level to pressure conversion not "
-                         "implemented for z > 71km")
+        raise ValueError("pressure to flight level conversion not "
+                         "implemented for p < 0.025641 Pa")
 
     return z if is_array else z[0]
 
@@ -262,7 +265,7 @@ def isa_temperature(height):
             return t0 - gamma * (height - z0)
 
     raise ValueError("ISA temperature from flight level not "
-                     "implemented for z > 71km")
+                     "implemented for z > 100 km")
 
 
 def convert_pressure_to_vertical_axis_measure(vertical_axis, pressure):
