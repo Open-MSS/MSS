@@ -41,7 +41,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from matplotlib.lines import Line2D
 
 from mslib.utils.thermolib import convert_pressure_to_vertical_axis_measure
-from mslib.utils import thermolib, FatalUserError
+from mslib.utils import thermolib
 from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
 from mslib.utils.units import units
 from mslib.msui import mpl_pathinteractor as mpl_pi
