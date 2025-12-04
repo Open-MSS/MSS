@@ -29,7 +29,7 @@
 import argparse
 import os
 import sys
-import numpy as np
+from numpy import asarray, linspace, interp, newaxis, empty, sin, cos, nan, arange, array
 import netCDF4 as nc
 import fs
 from mslib import __version__
@@ -734,7 +734,7 @@ def _parse_text(text, entry_length):
     for i in range(0, len(lines), entry_length):
         name = lines[i]
         unit = lines[i + 1]
-        data = np.asarray([list(map(float, line.split())) for line in lines[i + 2:i + entry_length]])
+        data = asarray([list(map(float, line.split())) for line in lines[i + 2:i + entry_length]])
         result[name] = {"unit": unit, "data": data}
     return result
 
@@ -758,26 +758,26 @@ def get_profile(coordinate, levels, standard_name):
     assert standard_name in _PROFILES, standard_name
 
     if _PROFILES[coordinate]["data"][0, 0] < _PROFILES[coordinate]["data"][1, 0]:
-        mean = np.interp(levels, _PROFILES[coordinate]["data"][:, 0], _PROFILES[standard_name]["data"][:, 0])
-        std = np.interp(levels, _PROFILES[coordinate]["data"][:, 0], _PROFILES[standard_name]["data"][:, 1])
+        mean = interp(levels, _PROFILES[coordinate]["data"][:, 0], _PROFILES[standard_name]["data"][:, 0])
+        std = interp(levels, _PROFILES[coordinate]["data"][:, 0], _PROFILES[standard_name]["data"][:, 1])
     else:
-        mean = np.interp(levels, _PROFILES[coordinate]["data"][::-1, 0], _PROFILES[standard_name]["data"][::-1, 0])
-        std = np.interp(levels, _PROFILES[coordinate]["data"][::-1, 0], _PROFILES[standard_name]["data"][::-1, 1])
+        mean = interp(levels, _PROFILES[coordinate]["data"][::-1, 0], _PROFILES[standard_name]["data"][::-1, 0])
+        std = interp(levels, _PROFILES[coordinate]["data"][::-1, 0], _PROFILES[standard_name]["data"][::-1, 1])
     return mean, std
 
 
 def _generate_3d_data(ntimes, nlats, nlons, mean, std, ilev=0):
-    xarr = np.linspace(0., 10. + (ilev / 3.), nlons)
-    yarr = np.linspace(0., 5. + (ilev / 3.), nlats)
-    tarr = np.linspace(0, 2., ntimes)
-    datax = xarr[np.newaxis, np.newaxis, :] + tarr[:, np.newaxis, np.newaxis]
-    datay = yarr[np.newaxis, :, np.newaxis] - tarr[:, np.newaxis, np.newaxis]
-    return mean + std * (np.sin(datax) + np.cos(datay)) / 2
+    xarr = linspace(0., 10. + (ilev / 3.), nlons)
+    yarr = linspace(0., 5. + (ilev / 3.), nlats)
+    tarr = linspace(0, 2., ntimes)
+    datax = xarr[newaxis, newaxis, :] + tarr[:, newaxis, newaxis]
+    datay = yarr[newaxis, :, newaxis] - tarr[:, newaxis, newaxis]
+    return mean + std * (sin(datax) + cos(datay)) / 2
 
 
 def _generate_4d_data(ntimes, nlats, nlons, means, stds):
     assert len(means) == len(stds)
-    data = np.empty((ntimes, len(means), nlats, nlons))
+    data = empty((ntimes, len(means), nlats, nlons))
     for ilev, (mean, std) in enumerate(zip(means, stds)):
         data[:, ilev, :, :] = _generate_3d_data(ntimes, nlats, nlons, mean, std, ilev=ilev)
     return data
@@ -1161,7 +1161,7 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
             newvar.units = unit
             newvar[:] = test_data
             newvar.grid_mapping = 'LatLon_Projection'
-            newvar.missing_value = np.nan
+            newvar.missing_value = nan
 
         ecmwf.close()
 
@@ -1169,12 +1169,12 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
         """
         Method to generate all required model data for testing purposes.
         """
-        times, lats, lons = np.arange(0, 39, 6), np.arange(70, 30, -1), np.arange(-50, 50)
+        times, lats, lons = arange(0, 39, 6), arange(70, 30, -1), arange(-50, 50)
 
         for coordinate, label, levtype, coord_levels, variables in (
                 ("air_pressure", "PRESSURE_LEVELS", "pl",
                  ("atmosphere_pressure_coordinate",
-                  np.array([30, 50, 70, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900])),
+                  array([30, 50, 70, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900])),
                  ["air_potential_temperature", "air_pressure", "air_temperature",
                   "eastward_wind", "ertel_potential_vorticity", "geopotential_height",
                   "northward_wind", "specific_humidity", "lagrangian_tendency_of_air_pressure", "divergence_of_wind",
@@ -1186,11 +1186,11 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
                  ["air_potential_temperature", "geopotential_height", "air_pressure"]),
 
                 ("geopotential_height", "ALTITUDE_LEVELS", "al",
-                 ("atmosphere_altitude_coordinate", np.arange(5000, 15001, 500)),
+                 ("atmosphere_altitude_coordinate", arange(5000, 15001, 500)),
                  ["air_pressure", "ertel_potential_vorticity", "mole_fraction_of_ozone_in_air"]),
 
                 ("air_potential_temperature", "THETA_LEVELS", "tl",
-                 ("atmosphere_potential_temperature_coordinate", np.arange(300, 460, 20)),
+                 ("atmosphere_potential_temperature_coordinate", arange(300, 460, 20)),
                  ["air_pressure", "ertel_potential_vorticity", "mole_fraction_of_ozone_in_air"])):
             self.generate_file(
                 coordinate, label, levtype,
@@ -1215,7 +1215,7 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
                 ("DIV", "divergence_of_wind")):
             self.generate_file(
                 "hybrid", varname, "ml",
-                (("time", times), ("hybrid", np.arange(0, 18)), ("latitude", lats), ("longitude", lons)),
+                (("time", times), ("hybrid", arange(0, 18)), ("latitude", lats), ("longitude", lons)),
                 [standard_name])
 
         self.generate_file(
