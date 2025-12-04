@@ -29,8 +29,8 @@
 import argparse
 import os
 import sys
-import netCDF4 as nc
 import numpy as np
+import netCDF4 as nc
 import fs
 from mslib import __version__
 
