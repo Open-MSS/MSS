@@ -35,7 +35,6 @@ import pytest
 import fs
 import shutil
 import keyring
-from mslib.mswms.demodata import DataFiles
 import tests.constants as constants
 from mslib.utils.loggerdef import configure_mpl_logger
 
@@ -86,6 +85,9 @@ def generate_initial_config():
     # make a copy for mscolab test, so that we read different paths during parallel tests.
     sample_path = os.path.join(os.path.dirname(__file__), "tests", "data")
     shutil.copy(os.path.join(sample_path, "example.ftml"), constants.ROOT_DIR)
+
+    # late import bypass netCDF4 import error
+    from mslib.mswms.demodata import DataFiles
 
     if not constants.SERVER_CONFIG_FS.exists(constants.SERVER_CONFIG_FILE):
         print('\n configure testdata')
