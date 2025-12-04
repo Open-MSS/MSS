@@ -956,8 +956,6 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/libexpat-2.6.4-he0c23c2_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libffi-3.4.6-h537db12_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libgcc-15.2.0-h8ee18e1_15.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/libgfortran-15.2.0-h719f0c7_15.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/libgfortran5-15.2.0-h44d81a7_15.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libglib-2.82.2-h7025463_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libgomp-15.2.0-h8ee18e1_15.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libhwloc-2.11.2-default_ha69328c_1001.conda
@@ -2040,8 +2038,6 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/libexpat-2.6.4-he0c23c2_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libffi-3.4.6-h537db12_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libgcc-15.2.0-h8ee18e1_15.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/libgfortran-15.2.0-h719f0c7_15.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/libgfortran5-15.2.0-h44d81a7_15.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libglib-2.82.2-h7025463_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libgomp-15.2.0-h8ee18e1_15.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libhwloc-2.11.2-default_ha69328c_1001.conda
@@ -3267,8 +3263,6 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/libexpat-2.6.4-he0c23c2_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libffi-3.4.6-h537db12_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libgcc-15.2.0-h8ee18e1_15.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/libgfortran-15.2.0-h719f0c7_15.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/libgfortran5-15.2.0-h44d81a7_15.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libglib-2.82.2-h7025463_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libgomp-15.2.0-h8ee18e1_15.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libhwloc-2.11.2-default_ha69328c_1001.conda
@@ -4276,8 +4270,6 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/libffi-3.4.6-h537db12_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libgcc-15.2.0-h8ee18e1_15.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libgettextpo-0.22.5-h5728263_3.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/libgfortran-15.2.0-h719f0c7_15.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/libgfortran5-15.2.0-h44d81a7_15.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libglib-2.82.2-h7025463_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libgomp-15.2.0-h8ee18e1_15.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libhwloc-2.11.2-default_ha69328c_1001.conda
@@ -9785,17 +9777,6 @@ packages:
   purls: []
   size: 110233
   timestamp: 1707330749033
-- conda: https://conda.anaconda.org/conda-forge/win-64/libgfortran-15.2.0-h719f0c7_15.conda
-  sha256: 2e13c0abe4887924ebcba9c08aeb9c3289889d579325f216d0271be28b6dbf6f
-  md5: 41281eb49f687da348f503f3e12642a9
-  depends:
-  - libgfortran5 15.2.0 h44d81a7_15
-  constrains:
-  - libgfortran-ng ==15.2.0=*_15
-  license: GPL-3.0-only WITH GCC-exception-3.1
-  purls: []
-  size: 50400
-  timestamp: 1764841145627
 - conda: https://conda.anaconda.org/conda-forge/linux-64/libgfortran5-14.2.0-hd5240d6_1.conda
   sha256: d149a37ca73611e425041f33b9d8dbed6e52ec506fe8cc1fc0ee054bddeb6d5d
   md5: 9822b874ea29af082e5d36098d25427d
@@ -9832,18 +9813,6 @@ packages:
   purls: []
   size: 997381
   timestamp: 1707330687590
-- conda: https://conda.anaconda.org/conda-forge/win-64/libgfortran5-15.2.0-h44d81a7_15.conda
-  sha256: 8804f9a08f2dc45ee6b22f96377cc6779315c4532e01c212042fc841f2cca1f4
-  md5: 60a1ca3c6bbd1be8817507595afa5719
-  depends:
-  - libgcc >=15.2.0
-  - libwinpthread >=12.0.0.r4.gg4f2fc60ca
-  constrains:
-  - libgfortran 15.2.0
-  license: GPL-3.0-only WITH GCC-exception-3.1
-  purls: []
-  size: 2790920
-  timestamp: 1764840904215
 - conda: https://conda.anaconda.org/conda-forge/linux-64/libgl-1.7.0-ha4b6fd6_2.conda
   sha256: dc2752241fa3d9e40ce552c1942d0a4b5eeb93740c9723873f6fcf8d39ef8d2d
   md5: 928b8be80851f5d8ffb016f9c81dae7a
