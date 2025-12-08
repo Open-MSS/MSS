@@ -201,13 +201,15 @@ def _running_eventlet_server(app):
     process = ctx.Process(target=eventlet.wsgi.server, args=(socket, app), daemon=True)
     try:
         process.start()
-        retry_time = 0
-        sleep_time = 0.5
-        while not is_url_response_ok(urllib.parse.urljoin(url, "index")) and retry_time < 5:
+        start_time = time.time()
+        sleep_time = 0.01
+        while not is_url_response_ok(urllib.parse.urljoin(url, "index")):
+            if (time.time() - start_time) > 5:
+                raise RuntimeError(f"Server did not start within 5 seconds at {url}")
             time.sleep(sleep_time)
-            retry_time += sleep_time
-        if not is_url_response_ok(urllib.parse.urljoin(url, "index")):
-            raise RuntimeError(f"Server did not start within 5 seconds at {url}")
+            sleep_time *= 2
+            if sleep_time > 1:
+                sleep_time = 1
         yield url
     finally:
         process.terminate()
