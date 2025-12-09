@@ -213,7 +213,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         """
         Load settings from the file self.settingsfile.
         """
-        self.performance_settings = load_settings_qsettings(self.settings_tag, DEFAULT_PERFORMANCE)
+        settings = load_settings_qsettings(self.settings_tag, DEFAULT_PERFORMANCE)
+        # Ensure we have a dictionary. If QSettings returns a string/garbage, reset to default.
+        if not isinstance(settings, dict):
+            settings = DEFAULT_PERFORMANCE
+        self.performance_settings = settings
 
     def save_settings(self):
         """
