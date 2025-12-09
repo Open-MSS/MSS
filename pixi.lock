@@ -13556,12 +13556,9 @@ packages:
   - __osx >=10.13
   - hdf5 * nompi_*
   - hdf5 >=1.14.6,<1.14.7.0a0
-  - libgfortran 5.*
-  - libgfortran5 >=13.3.0
-  - libgfortran5 >=14.2.0
-  - hdf5 >=1.14.4,<1.14.5.0a0
-  - libgfortran >=5
-  - libgfortran5 >=13.2.0
+  - libgfortran
+  - libgfortran5 >=14.3.0
+  - libgfortran5 >=15.1.0
   - libnetcdf * nompi_*
   - libnetcdf >=4.9.2,<4.9.3.0a0
   license: NetCDF
@@ -13575,12 +13572,9 @@ packages:
   - __osx >=11.0
   - hdf5 * nompi_*
   - hdf5 >=1.14.6,<1.14.7.0a0
-  - libgfortran 5.*
-  - libgfortran5 >=13.3.0
-  - libgfortran5 >=14.2.0
-  - hdf5 >=1.14.4,<1.14.5.0a0
-  - libgfortran >=5
-  - libgfortran5 >=13.2.0
+  - libgfortran
+  - libgfortran5 >=14.3.0
+  - libgfortran5 >=15.1.0
   - libnetcdf * nompi_*
   - libnetcdf >=4.9.2,<4.9.3.0a0
   license: NetCDF
