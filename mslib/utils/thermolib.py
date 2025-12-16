@@ -186,7 +186,8 @@ def flightlevel2pressure(height):
             p[indices] = p0 * np.exp(-g * (height[indices] - z0) / (Rd * t0))
 
     if np.isnan(p).any():
-        raise ValueError("flight level to pressure conversion not implemented for z >= 100km")
+        raise ValueError("flight level to pressure conversion not implemented for z >= 100km " +
+                         str(np.max(height)))
 
     return p if is_array else p[0]
 
@@ -237,7 +238,8 @@ def pressure2flightlevel(pressure):
             z[indices] = z0 - (Rd * t0) / g * np.log(pressure[indices] / p0)
 
     if np.isnan(z).any():
-        raise ValueError("pressure to flight level conversion not implemented for p <= 0.0238725468 Pa")
+        raise ValueError("pressure to flight level conversion not implemented for p <= 0.0238725468 Pa " +
+                         str(np.min(pressure)))
 
     return z if is_array else z[0]
 
@@ -262,7 +264,8 @@ def isa_temperature(height):
         if ((i == 0) and (height < z0)) or (z0 <= height < z1):
             return t0 - gamma * (height - z0)
 
-    raise ValueError("ISA temperature from flight level not implemented for z >= 100 km")
+    raise ValueError("ISA temperature from flight level not implemented for z >= 100 km " +
+                     np.max(height))
 
 
 def convert_pressure_to_vertical_axis_measure(vertical_axis, pressure):

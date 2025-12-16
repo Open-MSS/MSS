@@ -149,7 +149,7 @@ class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
 
     def setBotTopLimits(self, axis_type):
         bot, top, dec = {
-            "maximum": (0, 3248, 0),
+            "maximum": (0, 3248, 4),
             "pressure": (0.0003, 1050, 4),
             "pressure altitude": (0, 99.9, 1),
             "flight level": (0, 3248, 0),
