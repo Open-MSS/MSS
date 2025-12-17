@@ -183,7 +183,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     # Signal emitted when a waypoint is moved, inserted or deleted
     changeMessageSignal = QtCore.pyqtSignal(str)
 
-    def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False, data_dir=mss_default.mss_dir,
+    def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False,
+                 data_dir=config_loader(dataset="mss_dir"),
                  xml_content=None):
         super().__init__()
         self.name = name  # a name for this flight track
