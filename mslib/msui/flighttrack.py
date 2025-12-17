@@ -52,7 +52,6 @@ from mslib.utils.find_location import find_location
 from mslib.utils import thermolib
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
-from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.qt import variant_to_string, variant_to_float
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 
