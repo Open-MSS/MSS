@@ -265,7 +265,7 @@ def isa_temperature(height):
             return t0 - gamma * (height - z0)
 
     raise ValueError("ISA temperature from flight level not implemented for z >= 100 km " +
-                     np.max(height))
+                     str(np.max(height)))
 
 
 def convert_pressure_to_vertical_axis_measure(vertical_axis, pressure):
