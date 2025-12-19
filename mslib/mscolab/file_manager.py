@@ -347,9 +347,7 @@ class FileManager:
         user = db.session.get(User, user_id)
         if user:
             if user.profile_image_path:
-                base_path = mscolab_settings.UPLOAD_FOLDER
-                filename = user.profile_image_path
-                return True, Path(base_path) / filename
+                return True, user.profile_image_path
             return False, "Profile image not found"
         else:
             return False, "User not found"

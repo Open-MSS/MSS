@@ -34,6 +34,7 @@ import socketio
 import sqlalchemy.exc
 import werkzeug
 import flask_migrate
+from pathlib import Path
 
 from itsdangerous import URLSafeTimedSerializer, BadSignature
 from flask import g, jsonify, request, render_template, flash
@@ -471,9 +472,10 @@ def upload_profile_image():
 @verify_user
 def fetch_profile_image():
     user_id = request.form['user_id']
-    success, file = fm.get_user_profile_image(user_id)
+    success, filename = fm.get_user_profile_image(user_id)
     if success:
-        return send_from_directory(file.name)
+        base_path = mscolab_settings.UPLOAD_FOLDER
+        return send_from_directory(Path(base_path), filename)
     else:
         return jsonify({'message': 'User or profile image not found'}), 404
 
