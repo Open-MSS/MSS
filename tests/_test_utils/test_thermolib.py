@@ -73,6 +73,7 @@ def test_pressure2flightlevel():
     with pytest.raises(ValueError):
         thermolib.pressure2flightlevel(0.02 * units.Pa)
 
+
 def test_isa_temperature():
     assert thermolib.isa_temperature(100 * units.hft).magnitude == pytest.approx(268.338)
     assert thermolib.isa_temperature(200 * units.hft).magnitude == pytest.approx(248.526)
