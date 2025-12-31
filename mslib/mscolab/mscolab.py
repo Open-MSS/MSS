@@ -431,22 +431,25 @@ def main():
 
     elif args.action == "db":
         if args.reset:
-            confirmation = confirm_action("Are you sure you want to reset the database? This would delete "
-                                          "all your data! (y/[n]):",
+            confirmation = confirm_action(
+                "Are you sure you want to reset the database? This would delete "
+                "all your data! (y/[n]):",
                 assume_yes=args.yes)
             if confirmation is True:
                 with APP.app_context():
                     handle_db_reset()
         elif args.seed:
-            confirmation = confirm_action("Are you sure you want to seed the database? Seeding will delete all your "
-                                          "existing data and replace it with seed data (y/[n]):",
+            confirmation = confirm_action(
+                "Are you sure you want to seed the database? Seeding will delete all your "
+                "existing data and replace it with seed data (y/[n]):",
                 assume_yes=args.yes)
             if confirmation is True:
                 with APP.app_context():
                     handle_db_seed()
         elif args.users_by_file is not None:
             # fileformat: suggested_username  name   <email>
-            confirmation = confirm_action("Are you sure you want to add users to the database? (y/[n]):",
+            confirmation = confirm_action(
+                "Are you sure you want to add users to the database? (y/[n]):",
                 assume_yes=args.yes)
             if confirmation is True:
                 for line in args.users_by_file.readlines():
