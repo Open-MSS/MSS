@@ -20,7 +20,7 @@ Usage
    - Each flighttrack maintains its own view configuration.
 
 2. **Restoring Operation Views**
-   - When activting aoperation, the last opened views will be restored automatically.
+   - When activating anoperation, the last opened views will be restored automatically.
    - When switching between operations, the application remembers the last opened views for each operation.
    - Any changes made to views in an operation (adding/removing views) are saved automatically when switching operations.
    - Returning to a previous operation reloads the most recent configuration.
