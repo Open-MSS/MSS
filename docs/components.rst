@@ -10,7 +10,7 @@ Components
    plugins
    mswms
    mscolab
-   View Layout and Restoring 
+   view layout and restoring 
    gentutorials
    mssautoplot
    autoplot_dock_widget

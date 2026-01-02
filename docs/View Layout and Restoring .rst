@@ -41,5 +41,4 @@ Limitations
 
 Tips
 ----
-- Always save your flighttrack or operation before closing the application to ensure views are persisted.
 - Ensure each shared view has a **unique name** within an operation to avoid conflicts.
