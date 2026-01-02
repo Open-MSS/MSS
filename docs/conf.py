@@ -17,8 +17,11 @@ import setuptools
 import requests
 import zipfile
 import shutil
+import importlib
 from pathlib import Path
-import toml
+
+
+__version__ = importlib.metadata.version("open-mss")
 
 
 def get_tutorial_images():
@@ -78,7 +81,6 @@ if os.environ.get("GALLERY", "True") != "False":
 
     import mslib.mswms.wms
     import mslib.mswms.gallery_builder
-    import importlib
 
     # Generate template plots
     from docs.gallery.plot_examples import HS_template, VS_template
@@ -95,8 +97,6 @@ if os.environ.get("GALLERY", "True") != "False":
     mslib.mswms.wms.server.generate_gallery(sphinx=True, generate_code=True, all_plots=True, levels="3,4,200,300",
                                             vtimes="2012-10-18T00:00:00,2012-10-19T00:00:00")
 
-with open("../pyproject.toml") as f:
-    __version__ = toml.load(f)["project"]["version"]
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 

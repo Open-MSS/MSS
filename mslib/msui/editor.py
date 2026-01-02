@@ -332,8 +332,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     duplicate = True
                     color = QtCore.Qt.red
             elif key == 'filepicker_default':
-                # ToDo remove filepicker_default
-                if data[key] not in ['default', 'qt', 'fs']:
+                if data[key] not in ['default', 'qt']:
                     invalid = True
                     color = QtCore.Qt.red
 
