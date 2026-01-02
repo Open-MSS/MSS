@@ -34,6 +34,15 @@ Steps to Run MSColab Server
   - To start the server run :code:`mscolab start`.
   - If you ever want to reset or add dummy data to your database you can use the commands :code:`mscolab db --reset` and :code:`mscolab db --seed` respectively.
 
+    Both commands support a :code:`--yes` (or :code:`-y`) flag to skip the interactive
+    confirmation prompt. This is useful for non-interactive usage such as CI pipelines
+    or tutorial scripts.
+
+    Examples::
+
+      mscolab db --reset --yes
+      mscolab db --seed --yes
+
 
 
 Notes for server administrators
