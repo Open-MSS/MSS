@@ -41,7 +41,7 @@ trap cleanup EXIT
 
 if [[ "$2" == "./tutorial_mscolab.py" ]]; then
   # ToDo mscolab needs a -Y and a stop
-  python $PYTHONPATH/mslib/mscolab/mscolab.py db --seed
+  python $PYTHONPATH/mslib/mscolab/mscolab.py db --seed --yes
   # sleep(2)
   python $PYTHONPATH/mslib/mscolab/mscolab.py start &
   # sleep(2)
