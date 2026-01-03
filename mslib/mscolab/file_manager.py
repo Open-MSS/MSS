@@ -329,7 +329,7 @@ class FileManager:
         """
         relative_file_path = self.upload_file(image_file, subfolder='profile', identifier=user_id)
 
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if user:
             if user.profile_image_path:
                 # Delete the previous image
@@ -337,6 +337,18 @@ class FileManager:
             user.profile_image_path = relative_file_path
             db.session.commit()
             return True, "Image uploaded successfully"
+        else:
+            return False, "User not found"
+
+    def get_user_profile_image(self, user_id):
+        """
+        Retrieve the user's profile image from the database.
+        """
+        user = db.session.get(User, user_id)
+        if user:
+            if user.profile_image_path:
+                return True, user.profile_image_path
+            return False, "Profile image not found"
         else:
             return False, "User not found"
 
