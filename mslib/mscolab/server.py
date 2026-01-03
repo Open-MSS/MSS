@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from pathlib import Path
 import sys
 import functools
 import json
@@ -35,6 +34,7 @@ import socketio
 import sqlalchemy.exc
 import werkzeug
 import flask_migrate
+from pathlib import Path
 
 from itsdangerous import URLSafeTimedSerializer, BadSignature
 from flask import g, jsonify, request, render_template, flash
@@ -472,13 +472,12 @@ def upload_profile_image():
 @verify_user
 def fetch_profile_image():
     user_id = request.form['user_id']
-    user = User.query.get(user_id)
-    if user and user.profile_image_path:
+    success, filename = fm.get_user_profile_image(user_id)
+    if success:
         base_path = mscolab_settings.UPLOAD_FOLDER
-        filename = user.profile_image_path
         return send_from_directory(Path(base_path), filename)
     else:
-        abort(404)
+        return jsonify({'message': 'User or profile image not found'}), 404
 
 
 @APP.route("/delete_own_account", methods=["POST"])
