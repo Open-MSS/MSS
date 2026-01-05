@@ -58,7 +58,10 @@ def handle_start(args=None):
     start_server(APP, sockio, cm, fm)
 
 
-def confirm_action(confirmation_prompt):
+def confirm_action(confirmation_prompt, assume_yes=False):
+    if assume_yes:
+        return True
+
     while True:
         confirmation = input(confirmation_prompt).lower()
         if confirmation == "n" or confirmation == "":
@@ -375,17 +378,27 @@ def main():
                                default=None)
 
     database_parser = subparsers.add_parser("db", help="Manage mscolab database")
-    database_parser = database_parser.add_mutually_exclusive_group(required=True)
-    database_parser.add_argument("--reset", help="Reset database", action="store_true")
-    database_parser.add_argument("--seed", help="Seed database", action="store_true")
-    database_parser.add_argument("--users_by_file", type=argparse.FileType('r'),
-                                 help="adds users into database, fileformat: suggested_username  name   <email>")
-    database_parser.add_argument("--delete_users_by_file", type=argparse.FileType('r'),
-                                 help="removes users from the database, fileformat: email")
-    database_parser.add_argument("--default_operation", help="adds all users into a default TEMPLATE operation",
-                                 action="store_true")
-    database_parser.add_argument("--add_all_to_all_operation", help="adds all users into all other operations",
-                                 action="store_true")
+
+    db_actions = database_parser.add_mutually_exclusive_group(required=True)
+    db_actions.add_argument("--reset", help="Reset database", action="store_true")
+    db_actions.add_argument("--seed", help="Seed database", action="store_true")
+    db_actions.add_argument("--users_by_file", type=argparse.FileType("r"),
+                            help="adds users into database, fileformat: suggested_username  name   <email>")
+    db_actions.add_argument("--delete_users_by_file", type=argparse.FileType("r"),
+                            help="removes users from the database, fileformat: email")
+    db_actions.add_argument("--default_operation",
+                            help="adds all users into a default TEMPLATE operation",
+                            action="store_true")
+    db_actions.add_argument("--add_all_to_all_operation",
+                            help="adds all users into all other operations",
+                            action="store_true")
+
+    database_parser.add_argument(
+        "-y", "--yes",
+        action="store_true",
+        help="Skip confirmation prompt"
+    )
+
     sso_conf_parser = subparsers.add_parser("sso_conf", help="single sign on process configurations")
     sso_conf_parser = sso_conf_parser.add_mutually_exclusive_group(required=True)
     sso_conf_parser.add_argument("--init_sso_crts",
@@ -418,20 +431,26 @@ def main():
 
     elif args.action == "db":
         if args.reset:
-            confirmation = confirm_action("Are you sure you want to reset the database? This would delete "
-                                          "all your data! (y/[n]):")
+            confirmation = confirm_action(
+                "Are you sure you want to reset the database? This would delete "
+                "all your data! (y/[n]):",
+                assume_yes=args.yes)
             if confirmation is True:
                 with APP.app_context():
                     handle_db_reset()
         elif args.seed:
-            confirmation = confirm_action("Are you sure you want to seed the database? Seeding will delete all your "
-                                          "existing data and replace it with seed data (y/[n]):")
+            confirmation = confirm_action(
+                "Are you sure you want to seed the database? Seeding will delete all your "
+                "existing data and replace it with seed data (y/[n]):",
+                assume_yes=args.yes)
             if confirmation is True:
                 with APP.app_context():
                     handle_db_seed()
         elif args.users_by_file is not None:
             # fileformat: suggested_username  name   <email>
-            confirmation = confirm_action("Are you sure you want to add users to the database? (y/[n]):")
+            confirmation = confirm_action(
+                "Are you sure you want to add users to the database? (y/[n]):",
+                assume_yes=args.yes)
             if confirmation is True:
                 for line in args.users_by_file.readlines():
                     info = line.split()
@@ -442,19 +461,22 @@ def main():
                     add_user(emailid, username, password, fullname)
         elif args.default_operation:
             confirmation = confirm_action(
-                "Are you sure you want to add users to the default TEMPLATE operation? (y/[n]):")
+                "Are you sure you want to add users to the default TEMPLATE operation? (y/[n]):",
+                assume_yes=args.yes)
             if confirmation is True:
                 # adds all users as collaborator on the operation TEMPLATE if not added, command can be repeated
                 add_all_users_default_operation(access_level='admin')
         elif args.add_all_to_all_operation:
             confirmation = confirm_action(
-                "Are you sure you want to add users to the ALL operations? (y/[n]):")
+                "Are you sure you want to add users to the ALL operations? (y/[n]):",
+                assume_yes=args.yes)
             if confirmation is True:
                 # adds all users to all Operations
                 add_all_users_to_all_operations()
         elif args.delete_users_by_file:
             confirmation = confirm_action(
-                "Are you sure you want to delete a user? (y/[n]):")
+                "Are you sure you want to delete a user? (y/[n]):",
+                assume_yes=args.yes)
             if confirmation is True:
                 # deletes users from the db
                 for email in args.delete_users_by_file.readlines():
