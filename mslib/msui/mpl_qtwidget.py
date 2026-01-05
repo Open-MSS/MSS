@@ -382,8 +382,10 @@ class TopViewPlotter(ViewPlotter):
 
 
 class SideViewPlotter(ViewPlotter):
-    _pres_maj = np.concatenate([np.arange(top * 10, top, -top) for top in (10000, 1000, 100, 10)] + [[10]])
-    _pres_min = np.concatenate([np.arange(top * 10, top, -top // 10) for top in (10000, 1000, 100, 10)] + [[10]])
+    _pres_maj = np.concatenate([np.arange(top * 10, top, -top) for top in (10000, 1000, 100, 10, 1, 0.1)] +
+                               [[0.1]])
+    _pres_min = np.concatenate([np.arange(top * 10, top, -top // 10) for top in (10000, 1000, 100, 10, 1, 0.1)] +
+                               [[0.1]])
 
     def __init__(self, fig=None, ax=None, settings=None, numlabels=None, num_interpolation_points=None):
         """
@@ -427,23 +429,29 @@ class SideViewPlotter(ViewPlotter):
             # Compute the position of major and minor ticks. Major ticks are labelled.
             major_ticks = self._pres_maj[(self._pres_maj <= self.p_bot) & (self._pres_maj >= self.p_top)]
             minor_ticks = self._pres_min[(self._pres_min <= self.p_bot) & (self._pres_min >= self.p_top)]
-            labels = [f"{int(_x / 100)}"
-                      if (_x / 100) - int(_x / 100) == 0 else f"{float(_x / 100)}" for _x in major_ticks]
-            if len(labels) > 20:
-                labels = ["" if x.split(".")[-1][0] in "975" else x for x in labels]
+            labels = [f"{_x / 100:.0f}" if _x / 100 >= 1 else (
+                      f"{_x / 100:.1f}" if _x / 100 >= 0.1 else (
+                          f"{_x / 100:.2f}" if _x / 100 >= 0.01 else (
+                              f"{_x / 100:.3f}"))) for _x in major_ticks]
+            if len(labels) > 40:
+                labels = ["" if any(y in x for y in "9865") else x for x in labels]
+            elif len(labels) > 20:
+                labels = ["" if any(y in x for y in "975") else x for x in labels]
             elif len(labels) > 10:
-                labels = ["" if x.split(".")[-1][0] in "9" else x for x in labels]
+                labels = ["" if "9" in x else x for x in labels]
             ylabel = "pressure (hPa)"
         elif typ == "pressure altitude":
             bot_km = thermolib.pressure2flightlevel(self.p_bot * units.Pa).to(units.km).magnitude
             top_km = thermolib.pressure2flightlevel(self.p_top * units.Pa).to(units.km).magnitude
-            ma_dist, mi_dist = 4, 1.0
+            ma_dist, mi_dist = 5, 1.0
             if (top_km - bot_km) <= 20:
                 ma_dist, mi_dist = 1, 0.5
             elif (top_km - bot_km) <= 40:
                 ma_dist, mi_dist = 2, 0.5
-            major_heights = np.arange(0, top_km + 1, ma_dist)
-            minor_heights = np.arange(0, top_km + 1, mi_dist)
+            elif (top_km - bot_km) <= 60:
+                ma_dist, mi_dist = 4, 1.0
+            major_heights = np.arange(0, top_km + 0.1, ma_dist)
+            minor_heights = np.arange(0, top_km + 0.1, mi_dist)
             major_ticks = thermolib.flightlevel2pressure(major_heights * units.km).magnitude
             minor_ticks = thermolib.flightlevel2pressure(minor_heights * units.km).magnitude
             labels = major_heights
@@ -451,13 +459,15 @@ class SideViewPlotter(ViewPlotter):
         elif typ == "flight level":
             bot_km = thermolib.pressure2flightlevel(self.p_bot * units.Pa).to(units.km).magnitude
             top_km = thermolib.pressure2flightlevel(self.p_top * units.Pa).to(units.km).magnitude
-            ma_dist, mi_dist = 50, 10
+            ma_dist, mi_dist = 100, 20
             if (top_km - bot_km) <= 10:
                 ma_dist, mi_dist = 20, 10
             elif (top_km - bot_km) <= 40:
                 ma_dist, mi_dist = 40, 10
-            major_fl = np.arange(0, 2132, ma_dist)
-            minor_fl = np.arange(0, 2132, mi_dist)
+            elif (top_km - bot_km) <= 60:
+                ma_dist, mi_dist = 50, 10
+            major_fl = np.arange(0, 3248, ma_dist)
+            minor_fl = np.arange(0, 3248, mi_dist)
             major_ticks = thermolib.flightlevel2pressure(major_fl * units.hft).magnitude
             minor_ticks = thermolib.flightlevel2pressure(minor_fl * units.hft).magnitude
             labels = major_fl
