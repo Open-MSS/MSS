@@ -171,10 +171,10 @@ You can view the default configuration of MSColab in the file `mslib/mscolab/con
 If you want to change any values of the configuration, please take a look at the "Configuring Your MSColab Server"
 section in :ref:`mscolab`
 
-When using for the first time you need to initialise your database. Use the command :code:`mscolab db --init`
+When using for the first time you need to initialise your database. Use the command :code:`mscolab start`
 to initialise it. The default database is a sqlite3 database.
-You can add some dummy data to your database by using the command :code:`mscolab db --seed`.
-The content of the dummy data can be found in the file `mslib/mscolab/seed.py`.
+If you want to play around with example data, you can import it using `mscolab db --seed`.
+The content of the example data can be found in the file `mslib/mscolab/seed.py`.
 
 To start your server use the command :code:`mscolab start`. This would start the MSColab server on port 8083.
 Going to http://localhost:8083/status should now show "MSColab server". This means your server has started successfully.

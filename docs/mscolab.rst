@@ -30,7 +30,7 @@ Make a copy of the above file, rename it to mscolab_auth.py, make the necessary 
 Steps to Run MSColab Server
 ---------------------------
   - The MSColab server comes included in the MSS python package.
-  - Once MSS is installed, if you're running the mscolab server for the first time, run the command :code:`mscolab db --init` to initialise your database.
+  - When you run the MSColab server for the first time after installing MSS, the database is initialized.
   - To start the server run :code:`mscolab start`.
   - If you ever want to reset or add dummy data to your database you can use the commands :code:`mscolab db --reset` and :code:`mscolab db --seed` respectively.
 
