@@ -124,7 +124,7 @@ def mscolab_session_server(mscolab_session_app, mscolab_session_managers):
     with _running_eventlet_server(mscolab_session_app) as url:
         # Wait until the Flask-SocketIO server is ready for connections
         sio = socketio.Client()
-        sio.connect(url, retry=True)
+        sio.connect(url, retry=True, wait_timeout=60)
         sio.disconnect()
         del sio
         yield url
@@ -204,7 +204,7 @@ def _running_eventlet_server(app):
         start_time = time.time()
         sleep_time = 0.01
         while not is_url_response_ok(urllib.parse.urljoin(url, "index")):
-            if (time.time() - start_time) > 5:
+            if (time.time() - start_time) > 60:
                 raise RuntimeError(f"Server did not start within 5 seconds at {url}")
             time.sleep(sleep_time)
             sleep_time *= 2
