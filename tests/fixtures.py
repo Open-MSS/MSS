@@ -125,7 +125,7 @@ def mscolab_session_server(mscolab_session_app, mscolab_session_managers):
     with _running_eventlet_server(mscolab_session_app) as url:
         # Wait until the Flask-SocketIO server is ready for connections
         sio = socketio.Client()
-        sio.connect(url, retry=True, wait_timeout=20)
+        sio.connect(url, retry=True, wait_timeout=60)
         sio.disconnect()
         del sio
         yield url
