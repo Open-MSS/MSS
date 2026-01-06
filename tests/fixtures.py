@@ -189,11 +189,12 @@ def mswms_server(mswms_app):
 
 def _reserve_port(host):
     """Only reserve the port for the server"""
-    s = socket.socket()
-    s.bind((host, 0))
-    port = s.getsockname()[1]
-    s.close()
-    return port
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        # force IPv4 with AF_INET and SOCK_STREAM
+        s.bind((host, 0))
+        port = s.getsockname()[1]
+        s.close()
+        return port
 
 
 def _start_eventlet_server(host, port, app):
