@@ -83,7 +83,7 @@ def qtbot(qtbot, fail_if_open_message_boxes_left, close_remaining_widgets):
     qtbot.wait(5000)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def mscolab_session_app():
     """Session-scoped fixture that provides the WSGI app instance for MSColab.
 
@@ -97,7 +97,7 @@ def mscolab_session_app():
     return _app
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def mscolab_session_managers(mscolab_session_app):
     """Session-scoped fixture that provides the managers for the MSColab app.
 
@@ -114,7 +114,7 @@ def mscolab_session_managers(mscolab_session_app):
 #
 # This issue would also be avoided if the background server process wasn't started with multiprocessing and a fork, but
 # with a real subprocess, which would solve some other issues (e.g. testing on Windows) as well.
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(autouse=True)
 def mscolab_session_server(mscolab_session_app, mscolab_session_managers):
     """Session-scoped fixture that provides a running MSColab server.
 
@@ -170,13 +170,13 @@ def mscolab_server(mscolab_session_server, reset_mscolab):
     return mscolab_session_server
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def mswms_app():
     """Fixture that provides the MSWMS WSGI app instance."""
     return mslib.mswms.mswms.application
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def mswms_server(mswms_app):
     """Fixture that provides a running MSWMS server.
 
