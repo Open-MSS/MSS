@@ -28,7 +28,6 @@ import mock
 import multiprocessing
 import time
 import urllib
-import socket
 import socketio
 import mslib.mswms.mswms
 import eventlet
@@ -187,22 +186,13 @@ def mswms_server(mswms_app):
         yield url
 
 
-def _reserve_port(host):
-    """Only reserve the port for the server"""
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        # force IPv4 with AF_INET and SOCK_STREAM
-        s.bind((host, 0))
-        # make the port reusable immediately after closing the socket
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        port = s.getsockname()[1]
-        return port
-
-
-def _start_eventlet_server(host, port, app):
+def _start_eventlet_server(host, port_queue, app):
     """
-    Start the eventlet server for the given app on the specified host and port.
+    Starts the Eventlet server and sends the chosen port back to the parent process.
     """
-    sock = eventlet.listen((host, port))
+    sock = eventlet.listen((host, 0))
+    port = sock.getsockname()[1]
+    port_queue.put(port)
     eventlet.wsgi.server(sock, app, log_output=False)
 
 
@@ -211,15 +201,26 @@ def _running_eventlet_server(app):
     """Context manager that starts the app in an eventlet server and returns its URL."""
     scheme = "http"
     host = "127.0.0.1"
-    port = _reserve_port(host)
-    url = f"{scheme}://{host}:{port}"
-    app.config['URL'] = url
+
     if "fork" not in multiprocessing.get_all_start_methods():
         pytest.skip("requires the multiprocessing start_method 'fork', which is unavailable on this system")
+
     ctx = multiprocessing.get_context("fork")
-    process = ctx.Process(target=_start_eventlet_server, args=(host, port, app), daemon=True)
+    # We are using a queue to retrieve the port selected in the child process.
+    port_queue = ctx.Queue()
+
+    process = ctx.Process(target=_start_eventlet_server, args=(host, port_queue, app), daemon=True)
     try:
         process.start()
+        # Retrieve the port from the queue
+        try:
+            port = port_queue.get(timeout=10)
+        except multiprocessing.queues.Empty:
+            raise RuntimeError("Could not retrieve port from server process")
+
+        url = f"{scheme}://{host}:{port}"
+        app.config['URL'] = url
+
         start_time = time.time()
         sleep_time = 0.01
         time_out = 20
@@ -228,9 +229,7 @@ def _running_eventlet_server(app):
         while not is_url_response_ok(readiness_url):
             if not process.is_alive():
                 # show the exitcode for further debugging
-                raise RuntimeError(
-                    f"Server process exited early with code {process.exitcode} at {url}"
-                )
+                raise RuntimeError(f"Server process exited early with code {process.exitcode} at {url}")
             if (time.time() - start_time) > time_out:
                 raise RuntimeError(f"Server did not start within {time_out} seconds at {url}")
             time.sleep(sleep_time)
