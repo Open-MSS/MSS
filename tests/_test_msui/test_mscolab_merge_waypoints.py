@@ -207,10 +207,21 @@ class Test_Fetch_From_Server(Test_Mscolab_Merge_Waypoints):
         self.emailid = "fetch_from_server@alpha.org"
         self._create_user_data(qtbot, emailid=self.emailid)
         wp_server_before = self.window.mscolab.waypoints_model.waypoint_data(0)
+
         self.window.workLocallyCheckbox.setChecked(True)
-        wp_local = self.window.mscolab.waypoints_model.waypoint_data(0)
-        assert wp_local.lat == wp_server_before.lat
+
+        def assert_local_matches_server():
+            wp_local = self.window.mscolab.waypoints_model.waypoint_data(0)
+            assert wp_local.lat == wp_server_before.lat
+        qtbot.wait_until(assert_local_matches_server)
+
         self.window.mscolab.waypoints_model.invert_direction()
+
+        def assert_local_differs_from_server():
+            wp_local_before = self.window.mscolab.waypoints_model.waypoint_data(0)
+            assert wp_server_before.lat != wp_local_before.lat
+        qtbot.wait_until(assert_local_differs_from_server)
+
         wp_local_before = self.window.mscolab.waypoints_model.waypoint_data(0)
         assert wp_server_before.lat != wp_local_before.lat
 
