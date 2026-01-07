@@ -192,8 +192,9 @@ def _reserve_port(host):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # force IPv4 with AF_INET and SOCK_STREAM
         s.bind((host, 0))
+        # make the port reusable immediately after closing the socket
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         port = s.getsockname()[1]
-        s.close()
         return port
 
 
