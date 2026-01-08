@@ -506,7 +506,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.pushButton.clicked.connect(self.handle_share_button)
         self.listViews.itemDoubleClicked.connect(self.update_share_view_list)
         self.viewsChanged.connect(self.update_view_list_on_change)
-        self.pushButton.setEnabled(False)
+        self.pushButton.setVisible(False)
 
         # Reference to the flight track that is currently displayed in the views.
         self.active_flight_track = None
@@ -629,12 +629,12 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                     view_window.activateWindow()
                     return
             self.viewListModel.add_view(view_name, view_window)
-            self.pushButton.setEnabled(True)
+            self.pushButton.setVisible(True)
 
     def update_view_list_on_change(self):
         """Remove closed views from listView and update button state."""
         if not self.viewListModel.views:
-            self.pushButton.setEnabled(False)
+            self.pushButton.setVisible(False)
             return
         # Keep only visible views
         valid_views = [(text, window) for text, window in self.viewListModel.views if window.isVisible()]
@@ -642,7 +642,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.viewListModel.clear()
             for text, window in valid_views:
                 self.viewListModel.add_view(text, window)
-        self.pushButton.setEnabled(bool(self.viewListModel.views))
+        self.pushButton.setVisible(bool(self.viewListModel.views))
 
     def handle_share_view_selection(self, selected, deselected):
         """Handle selection in listView to access the window instances."""
@@ -697,7 +697,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.viewListModel.views.pop(index)
             self.viewListModel.endRemoveRows()
 
-        self.pushButton.setEnabled(bool(self.viewListModel.views))
+        self.pushButton.setVisible(bool(self.viewListModel.views))
 
         message = []
         if shared_views:
