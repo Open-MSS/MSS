@@ -33,6 +33,7 @@ from abc import abstractmethod
 from PyQt5 import QtCore, QtWidgets
 from mslib.utils.config import save_settings_qsettings
 
+
 def format_operation_with_revision(model):
     """
     Return operation name including revision id and optional revision name.
@@ -48,6 +49,7 @@ def format_operation_with_revision(model):
     if getattr(rev, "name", None):
         label += f" ({rev.name})"
     return label
+
 
 class MSUIViewWindow(QtWidgets.QMainWindow):
     """
@@ -127,7 +129,6 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
             old_label = format_operation_with_revision(self.waypoints_model)
             new_label = format_operation_with_revision(model)
             self.setWindowTitle(self.windowTitle().replace(old_label, new_label))
-
 
         self.waypoints_model = model
 
