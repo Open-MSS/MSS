@@ -62,6 +62,15 @@ xml.dom.minidom.Element.writexml = writexml  # nosec, we take care of writing co
 LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE = list(range(5))
 TIME_UTC = 9
 
+class Revision:
+    """
+    Represents a revision of a flight track.
+    ID is mandatory, name is optional.
+    """
+    def __init__(self, revision_id, name=None):
+        self.id = revision_id
+        self.name = name
+
 
 def seconds_to_string(seconds):
     """
@@ -184,8 +193,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
     def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False,
                  data_dir=config_loader(dataset="mss_dir"),
-                 xml_content=None):
+                 xml_content=None): 
         super().__init__()
+        self.revision = None
         self.name = name  # a name for this flight track
         self.filename = filename  # filename for store/load
         self.data_dir = data_dir
@@ -208,6 +218,12 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         if waypoints:
             self.replace_waypoints(waypoints)
+            
+        if self.revision is None:
+            self.revision = Revision(
+                revision_id=int(datetime.datetime.utcnow().timestamp()),
+                name=None
+            )    
 
     def load_settings(self):
         """
@@ -639,12 +655,23 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
     def get_xml_doc(self):
         doc = xml.dom.minidom.Document()  # nosec, we take care of writing correct XML
+
         ft_el = doc.createElement("FlightTrack")
         ft_el.setAttribute("version", __version__)
         doc.appendChild(ft_el)
-        # The list of waypoint elements.
+
+        # --- NEW: write revision information ---
+        if self.revision is not None:
+            rev_el = doc.createElement("Revision")
+            rev_el.setAttribute("id", str(self.revision.id))
+            if self.revision.name:
+                rev_el.setAttribute("name", self.revision.name)
+            ft_el.appendChild(rev_el)
+
+        # --- existing: list of waypoints ---
         wp_el = doc.createElement("ListOfWaypoints")
         ft_el.appendChild(wp_el)
+
         for wp in self.waypoints:
             element = doc.createElement("Waypoint")
             wp_el.appendChild(element)
@@ -652,10 +679,13 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             element.setAttribute("lat", str(wp.lat))
             element.setAttribute("lon", str(wp.lon))
             element.setAttribute("flightlevel", str(wp.flightlevel))
+
             comments = doc.createElement("Comments")
             comments.appendChild(doc.createTextNode(str(wp.comments)))
             element.appendChild(comments)
+
         return doc
+
 
     def get_xml_content(self):
         doc = self.get_xml_doc()
@@ -671,14 +701,35 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
     def load_from_xml_data(self, xml_content, name="Flight track"):
         self.name = name
+
+        try:
+            doc = defusedxml.minidom.parseString(xml_content)
+        except DefusedXmlException as ex:
+            raise SyntaxError(str(ex))
+
+        ft_el = doc.getElementsByTagName("FlightTrack")[0]
+
+        # Load revision
+        revision_nodes = ft_el.getElementsByTagName("Revision")
+        if revision_nodes:
+            rev_el = revision_nodes[0]
+            revision_id = int(rev_el.getAttribute("id"))
+            revision_name = rev_el.getAttribute("name") or None
+            self.revision = Revision(revision_id, revision_name)
+        else:
+            # Backward compatibility
+            self.revision = Revision(
+                revision_id=int(datetime.datetime.utcnow().timestamp()),
+                name=None
+            )
+
+        # Existing waypoint loading
         if verify_waypoint_data(xml_content):
             _waypoints_list = load_from_xml_data(xml_content, name)
             self.replace_waypoints(_waypoints_list)
         else:
             raise SyntaxError(f"Invalid flight track filename: {name}")
 
-    def get_filename(self):
-        return self.filename
 
 
 #
