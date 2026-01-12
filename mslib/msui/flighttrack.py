@@ -733,7 +733,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
     def get_filename(self):
         return self.filename
-    
+
 #
 # CLASS  WaypointDelegate
 #
