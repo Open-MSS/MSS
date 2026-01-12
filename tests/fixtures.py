@@ -124,7 +124,7 @@ def mscolab_session_server(mscolab_session_app, mscolab_session_managers):
     with _running_eventlet_server(mscolab_session_app) as url:
         # Wait until the Flask-SocketIO server is ready for connections
         sio = socketio.Client()
-        sio.connect(url, retry=True)
+        sio.connect(url, retry=True, wait_timeout=60)
         sio.disconnect()
         del sio
         yield url
@@ -186,26 +186,52 @@ def mswms_server(mswms_app):
         yield url
 
 
+def _start_eventlet_server(host, port_queue, app):
+    """
+    Starts the Eventlet server and sends the chosen port back to the parent process.
+    """
+    sock = eventlet.listen((host, 0))
+    port = sock.getsockname()[1]
+    port_queue.put(port)
+    eventlet.wsgi.server(sock, app, log_output=False)
+
+
 @contextmanager
 def _running_eventlet_server(app):
     """Context manager that starts the app in an eventlet server and returns its URL."""
     scheme = "http"
     host = "127.0.0.1"
-    socket = eventlet.listen((host, 0))
-    port = socket.getsockname()[1]
-    url = f"{scheme}://{host}:{port}"
-    app.config['URL'] = url
+
     if "fork" not in multiprocessing.get_all_start_methods():
         pytest.skip("requires the multiprocessing start_method 'fork', which is unavailable on this system")
+
     ctx = multiprocessing.get_context("fork")
-    process = ctx.Process(target=eventlet.wsgi.server, args=(socket, app), daemon=True)
+    # We are using a queue to retrieve the port selected in the child process.
+    port_queue = ctx.Queue()
+
+    process = ctx.Process(target=_start_eventlet_server, args=(host, port_queue, app), daemon=True)
     try:
         process.start()
+        # Retrieve the port from the queue
+        try:
+            port = port_queue.get(timeout=10)
+        except multiprocessing.queues.Empty:
+            raise RuntimeError("Could not retrieve port from server process")
+
+        url = f"{scheme}://{host}:{port}"
+        app.config['URL'] = url
+
         start_time = time.time()
         sleep_time = 0.01
-        while not is_url_response_ok(urllib.parse.urljoin(url, "index")):
-            if (time.time() - start_time) > 5:
-                raise RuntimeError(f"Server did not start within 5 seconds at {url}")
+        time_out = 20
+        # we check only for the root url, index.html may take longer
+        readiness_url = urllib.parse.urljoin(url, "/")
+        while not is_url_response_ok(readiness_url):
+            if not process.is_alive():
+                # show the exitcode for further debugging
+                raise RuntimeError(f"Server process exited early with code {process.exitcode} at {url}")
+            if (time.time() - start_time) > time_out:
+                raise RuntimeError(f"Server did not start within {time_out} seconds at {url}")
             time.sleep(sleep_time)
             sleep_time *= 2
             if sleep_time > 1:
@@ -213,5 +239,9 @@ def _running_eventlet_server(app):
         yield url
     finally:
         process.terminate()
-        process.join(10)
+        process.join(timeout=10)
+        if process.is_alive():
+            # when it is still alive after 10 seconds, kill it
+            process.kill()
+            process.join(timeout=5)
         process.close()
