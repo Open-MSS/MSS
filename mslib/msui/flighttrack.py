@@ -731,7 +731,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         else:
             raise SyntaxError(f"Invalid flight track filename: {name}")
 
-
+    def get_filename(self):
+        return self.filename
+    
 #
 # CLASS  WaypointDelegate
 #
