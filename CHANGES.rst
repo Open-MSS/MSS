@@ -1,6 +1,16 @@
 Changelog
 =========
 
+Version 10.2.1
+~~~~~~~~~~~~~~
+
+Bug fix release and minor enhancements:
+We improved our setup and tests for Mac Users.
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/115?closed=1
+
+
 Version 10.2.0
 ~~~~~~~~~~~~~~
 
