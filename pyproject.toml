@@ -1,6 +1,6 @@
 [project]
 name = "open-mss"
-version = "10.2.0"
+version = "10.2.1"
 description = "MSS - Mission Support System"
 readme = "README.md"
 classifiers = [
