@@ -80,12 +80,17 @@ def test_multiple_times_save_filename(qtbot, tmp_path):
     msui.save_flight_track(filename)
     assert os.path.exists(filename)
     first_timestamp = os.stat(filename).st_mtime_ns
-    msui.save_handler()
-    second_timestamp = os.stat(filename).st_mtime_ns
+
+    # on github saving is too fast
+    def assert_():
+        msui.save_handler()
+        second_timestamp = os.stat(filename).st_mtime_ns
+        assert second_timestamp > first_timestamp
+    qtbot.wait_until(assert_)
+
     with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
         msui.close()
     # check that the second save is newer than the first one
-    assert second_timestamp > first_timestamp
     assert os.path.exists(filename)
 
 
