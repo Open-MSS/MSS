@@ -103,11 +103,27 @@ class Test_LinearViewWMS:
         yield
         self.window.hide()
 
-    def query_server(self, qtbot, url):
-        QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
-        with qtbot.wait_signal(self.wms_control.cpdlg.canceled):
-            QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
+    def query_server(self, qtbot, url, timeout=5_000):
+        self.wms_control.multilayers.cbWMS_URL.clear()
+        self.wms_control.multilayers.cbWMS_URL.setEditText(url)
+        self.wms_control.multilayers.cbWMS_URL.lineEdit().setText(url)
 
+        QtTest.QTest.mouseClick(
+            self.wms_control.multilayers.btGetCapabilities,
+            QtCore.Qt.LeftButton
+        )
+
+        qtbot.waitUntil(
+            lambda: getattr(self.wms_control, "cpdlg", None) is not None,
+            timeout=timeout
+        )
+
+        with qtbot.wait_signal(
+                self.wms_control.cpdlg.canceled,
+                timeout=timeout,
+                raising=True
+        ):
+            pass
     def test_server_getmap(self, qtbot):
         """
         assert that a getmap call to a WMS server displays an image

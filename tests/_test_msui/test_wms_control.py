@@ -84,13 +84,27 @@ class WMSControlWidgetSetup:
     def _teardown(self):
         self.window.hide()
 
-    def query_server(self, qtbot, url):
-        while len(self.window.multilayers.cbWMS_URL.currentText()) > 0:
-            QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
-        QtTest.QTest.keyClicks(self.window.multilayers.cbWMS_URL, url)
-        with qtbot.wait_signal(self.window.cpdlg.canceled):
-            QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
+    def query_server(self, qtbot, url, timeout=5_000):
+        self.window.multilayers.cbWMS_URL.clear()
+        self.window.multilayers.cbWMS_URL.setEditText(url)
+        self.window.multilayers.cbWMS_URL.lineEdit().setText(url)
 
+        QtTest.QTest.mouseClick(
+            self.window.multilayers.btGetCapabilities,
+            QtCore.Qt.LeftButton
+        )
+
+        qtbot.waitUntil(
+            lambda: getattr(self.window, "cpdlg", None) is not None,
+            timeout=timeout
+        )
+
+        with qtbot.wait_signal(
+                self.window.cpdlg.canceled,
+                timeout=timeout,
+                raising=True
+        ):
+            pass
 
 class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
     @pytest.fixture(autouse=True)
@@ -105,7 +119,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"{self.scheme}://{self.host}:{self.port - 1}")
-            mock_critical.assert_called_once()
+            qtbot.waitUntil(lambda: mock_critical.call_count == 1, timeout=3000)
 
     def test_no_schema(self, qtbot):
         """
@@ -113,7 +127,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"{self.host}:{self.port}")
-            mock_critical.assert_called_once()
+            qtbot.waitUntil(lambda: mock_critical.call_count == 1, timeout=3000)
 
     def test_invalid_schema(self, qtbot):
         """
@@ -121,7 +135,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"hppd://{self.host}:{self.port}")
-            mock_critical.assert_called_once()
+            qtbot.waitUntil(lambda: mock_critical.call_count == 1, timeout=3000)
 
     def test_invalid_url(self, qtbot):
         """
@@ -129,7 +143,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"{self.scheme}://???{self.host}:{self.port}")
-            mock_critical.assert_called_once()
+            qtbot.waitUntil(lambda: mock_critical.call_count == 1, timeout=3000)
 
     def test_connection_error(self, qtbot):
         """
@@ -137,7 +151,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"{self.scheme}://.....{self.host}:{self.port}")
-            mock_critical.assert_called_once()
+            qtbot.waitUntil(lambda: mock_critical.call_count == 1, timeout=3000)
 
     @pytest.mark.skip("Breaks other tests in this class because of a lingering message box, for some reason")
     def test_forward_backward_clicks(self, qtbot):
