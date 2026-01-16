@@ -381,7 +381,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert layer_a.get_itime() == layer_a.get_itimes()[-1]
 
     @mock.patch("mslib.msui.wms_control.WMSMapFetcher.moveToThread")
-    def test_server_no_thread(self, mockthread, qtbot):
+    def test_server_no_thread(self, mockthread, qtbot, mswms_server):
+        assert self.url == mswms_server.rstrip("/")
         self.query_server(qtbot, self.url)
         server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                               QtCore.Qt.MatchFixedString)[0]
