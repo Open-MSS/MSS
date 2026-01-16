@@ -80,7 +80,6 @@ def test_multiple_times_save_filename(qtbot, tmp_path):
     msui.save_flight_track(filename)
     assert os.path.exists(filename)
     first_timestamp = os.stat(filename).st_mtime_ns
-    QtTest.QTest.qWait(5)  # ensure filesystem timestamp advances
     msui.save_handler()
     second_timestamp = os.stat(filename).st_mtime_ns
     with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
