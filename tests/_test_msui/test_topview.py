@@ -284,7 +284,7 @@ class Test_TopViewWMS:
         yield
         self.window.hide()
 
-    def query_server(self, qtbot, url, timeout=5_000):
+    def query_server(self, qtbot, url, timeout=5000):
         self.wms_control.multilayers.cbWMS_URL.clear()
         self.wms_control.multilayers.cbWMS_URL.setEditText(url)
         self.wms_control.multilayers.cbWMS_URL.lineEdit().setText(url)
@@ -299,6 +299,10 @@ class Test_TopViewWMS:
 
         qtbot.waitUntil(
             lambda: getattr(self.wms_control, "cpdlg", None) is not None and not self.wms_control.cpdlg.isVisible(),
+            timeout=timeout)
+
+        qtbot.waitUntil(
+            lambda: self.wms_control.btGetMap.isEnabled(),
             timeout=timeout)
 
     def test_server_getmap(self, qtbot):

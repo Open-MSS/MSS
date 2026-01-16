@@ -84,7 +84,7 @@ class WMSControlWidgetSetup:
     def _teardown(self):
         self.window.hide()
 
-    def query_server(self, qtbot, url, timeout=5_000):
+    def query_server(self, qtbot, url, timeout=5000):
         self.window.multilayers.cbWMS_URL.clear()
         self.window.multilayers.cbWMS_URL.setEditText(url)
         self.window.multilayers.cbWMS_URL.lineEdit().setText(url)

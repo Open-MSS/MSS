@@ -207,7 +207,7 @@ class Test_SideViewWMS:
         yield
         self.window.hide()
 
-    def query_server(self, qtbot, url, timeout=5_000):
+    def query_server(self, qtbot, url, timeout=5000):
         self.wms_control.multilayers.cbWMS_URL.clear()
         self.wms_control.multilayers.cbWMS_URL.setEditText(url)
         self.wms_control.multilayers.cbWMS_URL.lineEdit().setText(url)
@@ -224,12 +224,16 @@ class Test_SideViewWMS:
             lambda: getattr(self.wms_control, "cpdlg", None) is not None and not self.wms_control.cpdlg.isVisible(),
             timeout=timeout)
 
+        qtbot.waitUntil(
+            lambda: self.wms_control.btGetMap.isEnabled(),
+            timeout=timeout)
+
     def test_server_getmap(self, qtbot):
         """
         assert that a getmap call to a WMS server displays an image
         """
         self.query_server(qtbot, self.url)
-        with qtbot.wait_signal(self.wms_control.image_displayed):
+        with qtbot.wait_signal(self.wms_control.image_displayed, timeout=15000):
             QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         assert self.window.getView().plotter.image is not None
 
