@@ -291,20 +291,16 @@ class Test_TopViewWMS:
 
         QtTest.QTest.mouseClick(
             self.wms_control.multilayers.btGetCapabilities,
-            QtCore.Qt.LeftButton
-        )
+            QtCore.Qt.LeftButton)
 
         qtbot.waitUntil(
             lambda: getattr(self.wms_control, "cpdlg", None) is not None,
-            timeout=timeout
-        )
+            timeout=timeout)
 
-        with qtbot.wait_signal(
-                self.wms_control.cpdlg.canceled,
-                timeout=timeout,
-                raising=True
-        ):
-            pass
+        qtbot.waitUntil(
+            lambda: getattr(self.wms_control, "cpdlg", None) is not None and not self.wms_control.cpdlg.isVisible(),
+            timeout=timeout)
+
     def test_server_getmap(self, qtbot):
         """
         assert that a getmap call to a WMS server displays an image

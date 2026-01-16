@@ -91,20 +91,15 @@ class WMSControlWidgetSetup:
 
         QtTest.QTest.mouseClick(
             self.window.multilayers.btGetCapabilities,
-            QtCore.Qt.LeftButton
-        )
+            QtCore.Qt.LeftButton)
 
         qtbot.waitUntil(
             lambda: getattr(self.window, "cpdlg", None) is not None,
-            timeout=timeout
-        )
+            timeout=timeout)
 
-        with qtbot.wait_signal(
-                self.window.cpdlg.canceled,
-                timeout=timeout,
-                raising=True
-        ):
-            pass
+        qtbot.waitUntil(lambda: getattr(self.window, "cpdlg", None) is not None and not self.window.cpdlg.isVisible(),
+                        timeout=timeout)
+
 
 class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
     @pytest.fixture(autouse=True)
