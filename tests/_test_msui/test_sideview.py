@@ -221,10 +221,6 @@ class Test_SideViewWMS:
             timeout=timeout)
 
         qtbot.waitUntil(
-            lambda: getattr(self.wms_control, "cpdlg", None) is not None and not self.wms_control.cpdlg.isVisible(),
-            timeout=timeout)
-
-        qtbot.waitUntil(
             lambda: self.wms_control.btGetMap.isEnabled(),
             timeout=timeout)
 

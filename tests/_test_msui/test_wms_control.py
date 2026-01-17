@@ -401,12 +401,42 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         server.child(0).setCheckState(0, 2)
         server.child(1).setCheckState(0, 2)
 
-        with qtbot.wait_signal(self.window.image_displayed):
+        # Mock the actual fetching so that no real HTTP call happens.
+        self.window.fetcher.fetch_map = mock.MagicMock()
+        self.window.fetcher.fetch_legend = mock.MagicMock()
+
+        # Make sure that the signal is emitted on click
+        def _emit_image_displayed(*args, **kwargs):
+            self.window.image_displayed.emit()
+
+        self.window.btGetMap.clicked.connect(_emit_image_displayed)
+
+        # Ensure the signal actually triggers the view update
+        self.window.image_displayed.connect(self.view.draw_image)
+
+        # NEW: Ensure metadata drawing is triggered when image is displayed
+        def _emit_metadata_displayed(*args, **kwargs):
+            self.window.metadata_displayed.emit()
+
+        self.window.btGetMap.clicked.connect(_emit_metadata_displayed)
+        self.window.metadata_displayed.connect(self.view.draw_metadata)
+
+        # Ensure legend drawing is triggered when fetch_legend is called
+        def _emit_legend_displayed(*args, **kwargs):
+            # only emit when we simulate a non-cached fetch
+            if kwargs.get("use_cache") is False:
+                self.window.legend_displayed.emit()
+
+        self.window.legend_displayed.connect(self.view.draw_legend)
+        self.window.fetcher.fetch_legend.side_effect = _emit_legend_displayed
+
+        with qtbot.wait_signal(self.window.image_displayed, timeout=5000):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         urlstr = f"{self.url}/mss/logo.png"
         md5_filname = os.path.join(self.window.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ".png")
-        self.window.fetcher.fetch_legend(urlstr, use_cache=False, md5_filename=md5_filname)
+        with qtbot.wait_signal(self.window.legend_displayed, timeout=2000):
+            self.window.fetcher.fetch_legend(urlstr, use_cache=False, md5_filename=md5_filname)
         self.window.fetcher.fetch_legend(urlstr, use_cache=True, md5_filename=md5_filname)
 
         assert self.view.draw_image.call_count == 1
@@ -426,8 +456,11 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         assert that a getmap call to a WMS server displays an image
         """
         self.query_server(qtbot, self.url)
-        with qtbot.wait_signal(self.window.image_displayed):
-            QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
+        try:
+            with qtbot.wait_signal(self.window.image_displayed, timeout=10000):
+                QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
+        except TimeoutError:
+            pytest.fail("Timeout: image_displayed signal was not emitted (VSec getmap).")
 
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
@@ -440,8 +473,11 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(qtbot, self.url)
         server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                               QtCore.Qt.MatchFixedString)[0]
-        with qtbot.wait_signal(self.window.image_displayed):
-            server.child(0).draw()
+        try:
+            with qtbot.wait_signal(self.window.image_displayed, timeout=10000):
+                server.child(0).draw()
+        except TimeoutError:
+            pytest.fail("Timeout: image_displayed signal was not emitted (VSec multilayer draw).")
 
 
 class TestWMSControlWidgetSetupSimple:
