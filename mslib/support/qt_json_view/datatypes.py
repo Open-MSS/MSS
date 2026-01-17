@@ -13,7 +13,7 @@ class DataType:
     """Base class for data types."""
 
     # (mss)
-    COLOR = QtCore.Qt.black
+    COLOR = QtGui.QColor("black")
 
     def matches(self, data):
         """Logic to define whether the given data matches this type."""
@@ -54,9 +54,13 @@ class DataType:
         """Create an item for the key column for this data type."""
         key_item = QtGui.QStandardItem(key)
         key_item.setData(datatype, TypeRole)
-        key_item.setData(datatype.__class__.__name__, QtCore.Qt.ToolTipRole)
-        key_item.setData(
-            QtGui.QBrush(datatype.COLOR), QtCore.Qt.ForegroundRole)
+        if datatype:
+            key_item.setData(datatype.__class__.__name__, QtCore.Qt.ToolTipRole)
+            color = datatype.COLOR
+        else:
+            key_item.setData("None", QtCore.Qt.ToolTipRole)
+            color = QtGui.QColor("black")
+        key_item.setData(QtGui.QBrush(color), QtCore.Qt.ForegroundRole)
         key_item.setFlags(
             QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
         if editable and model.editable_keys:
