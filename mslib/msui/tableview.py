@@ -263,7 +263,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         return condition
 
     def update_roundtrip_enabled(self):
-        self.btRoundtrip.setEnabled(self.is_roundtrip_possible())
+        self.btRoundtrip.setEnabled(bool(self.is_roundtrip_possible()))
 
     def resizeColumns(self):
         for column in range(self.waypoints_model.columnCount()):
