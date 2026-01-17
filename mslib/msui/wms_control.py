@@ -942,6 +942,18 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         base_url = self.multilayers.cbWMS_URL.currentText()
         self.base_url_changed.emit(base_url)
 
+        # Early validate scheme to avoid network timeouts on invalid schemas
+        parsed_url = urllib.parse.urlparse(base_url)
+        if parsed_url.scheme not in ("http", "https"):
+            logging.error("Invalid URL schema: %s", parsed_url.scheme)
+            QtWidgets.QMessageBox.critical(
+                self.multilayers, self.tr("Web Map Service"),
+                self.tr(f"ERROR: We cannot load the capability document!\n\n"
+                        f"{requests.exceptions.InvalidSchema}\n"
+                        f"Invalid URL schema: {parsed_url.scheme}")
+            )
+            return
+
         params = {'service': 'WMS',
                   'request': 'GetCapabilities'}
 
@@ -964,6 +976,12 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     requests.exceptions.InvalidSchema,
                     requests.exceptions.MissingSchema) as ex:
                 logging.error("Cannot load capabilities document.\n"
+                              "No layers can be used in this view.")
+                QtWidgets.QMessageBox.critical(
+                    self.multilayers, self.tr("Web Map Service"),
+                    self.tr(f"ERROR: We cannot load the capability document!\n\\n{type(ex)}\n{ex}"))
+            except Exception as ex:
+                logging.error("Cannot load capabilities document due to an unexpected error.\n"
                               "No layers can be used in this view.")
                 QtWidgets.QMessageBox.critical(
                     self.multilayers, self.tr("Web Map Service"),
