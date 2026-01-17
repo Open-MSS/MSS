@@ -366,7 +366,9 @@ class UrlType(DataType):
 class FilepathType(DataType):
     """Files and paths can be opened."""
 
-    REGEX = re.compile(r'(\/.*)|([A-Z]:\\.*)')
+    # REGEX = re.compile(r'(\/.*)|([A-Z]:\\.*)')
+    # (mss)
+    REGEX = re.compile(r'(~\/.*)|(\/.*)|([A-Z]:\\.*)')
 
     def matches(self, data):
         # (mss)

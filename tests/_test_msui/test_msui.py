@@ -51,8 +51,9 @@ def test_main():
 
 
 def test_keep_config_file(qtbot):
-    # in conftest we set always the mss_dir in the config file
+    # in fixtures we set the mss_dir in the config file
     mss_dir = config_loader(dataset="mss_dir")
+    assert "~" not in mss_dir
     _config = MSUI_CONFIG_FILE_PATH.read_text()
     assert _config == f'''{{
     "mss_dir": "{mss_dir}"

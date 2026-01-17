@@ -23,6 +23,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
+
 import pytest
 import mock
 import multiprocessing
@@ -72,6 +74,7 @@ def close_remaining_widgets():
 
 @pytest.fixture
 def msui_configs(tmp_path):
+    os.environ['MSUI_SETTINGS'] = os.path.join(tmp_path, "msui_settings.json")
     modify_config_file({"mss_dir": str(tmp_path)})
 
 
