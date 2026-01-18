@@ -186,8 +186,11 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         self.query_server(qtbot, self.url)
 
-        with qtbot.wait_signal(self.window.image_displayed):
-            QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
+        try:
+            with qtbot.wait_signal(self.window.image_displayed, timeout=5000):
+                QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
+        except TimeoutError:
+            pytest.fail("Timeout: image_displayed was not emitted.")
 
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
@@ -578,7 +581,6 @@ class TestWMSControlWidgetSetupSimple:
             <Extent name="TIME"> 2014-10-17T12:00:00Z/current/P1Y </Extent>"""
         testxml = self.xml.format("", self.srs_base, dimext_time + self.dimext_inittime + self.dimext_elevation)
         self.window.activate_wms(wc.MSUIWebMapService(None, version='1.1.1', xml=testxml))
-        print([self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())])
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())][:4] == \
             ['2014-10-17T12:00:00Z', '2015-10-17T12:00:00Z', '2016-10-17T12:00:00Z', '2017-10-17T12:00:00Z']
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
