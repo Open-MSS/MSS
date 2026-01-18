@@ -23,9 +23,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import os
 import json
-import tempfile
 
 from mslib.msui.flighttrack import WaypointsTableModel
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
@@ -37,7 +35,7 @@ class Test_WaypointsTableModel_CorruptedSettings:
     Addresses issue #2885.
     """
 
-    def test_load_settings_with_corrupted_performance_settings(self, tmp_path):
+    def test_load_settings_with_corrupted_performance_settings(self, tmp_path, monkeypatch):
         """
         Test that load_settings handles corrupted performance_settings gracefully.
 
@@ -54,41 +52,35 @@ class Test_WaypointsTableModel_CorruptedSettings:
         }
         temp_file.write_text(json.dumps(corrupted_data), encoding="utf-8")
 
-        try:
-            # Temporarily override the settings file location
-            import mslib.utils.config as config_module
+        # Temporarily override the settings file location
+        import mslib.utils.config as config_module
 
-            original_func = config_module.read_config_file
+        def mock_read_config(tag, default, settings_file=None):
+            if tag == "performance":
+                with open(temp_file, 'r') as f:
+                    data = json.load(f)
+                    return data.get("performance", {}).get("performance_settings", default)
+            return default
 
-            def mock_read_config(tag, default, settings_file=None):
-                if tag == "performance":
-                    with open(temp_file, 'r') as f:
-                        data = json.load(f)
-                        return data.get("performance", {}).get("performance_settings", default)
-                return default
+        monkeypatch.setattr(config_module, "read_config_file", mock_read_config)
 
-            config_module.read_config_file = mock_read_config
+        # Create a WaypointsTableModel instance
+        model = WaypointsTableModel(name="test_track")
 
-            # Create a WaypointsTableModel instance
-            model = WaypointsTableModel(name="test_track")
+        # This should NOT raise a TypeError anymore
+        model.load_settings()
 
-            # This should NOT raise a TypeError anymore
-            model.load_settings()
+        # Verify that performance_settings is now a dict (DEFAULT_PERFORMANCE)
+        assert isinstance(model.performance_settings, dict), \
+            "performance_settings should be a dict after handling corrupted data"
 
-            # Verify that performance_settings is now a dict (DEFAULT_PERFORMANCE)
-            assert isinstance(model.performance_settings, dict), \
-                "performance_settings should be a dict after handling corrupted data"
+        # Verify it was reset to DEFAULT_PERFORMANCE
+        assert model.performance_settings == DEFAULT_PERFORMANCE, \
+            "Should fall back to DEFAULT_PERFORMANCE when data is corrupted"
 
-            # Verify it was reset to DEFAULT_PERFORMANCE
-            assert model.performance_settings == DEFAULT_PERFORMANCE, \
-                "Should fall back to DEFAULT_PERFORMANCE when data is corrupted"
-
-        finally:
-            # Restore original function
-            config_module.read_config_file = original_func
-            # Clean up the temporary file
-            if os.path.exists(temp_file):
-                os.unlink(temp_file)
+        # Verify it was reset to DEFAULT_PERFORMANCE
+        assert model.performance_settings == DEFAULT_PERFORMANCE, \
+            "Should fall back to DEFAULT_PERFORMANCE when data is corrupted"
 
     def test_isinstance_check_with_various_types(self):
         """
