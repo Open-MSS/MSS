@@ -702,6 +702,7 @@ class LinearViewPlotter(ViewPlotter):
         self.fig.clf()
         self.ax = self.fig.add_subplot(111, zorder=99)
         self.ax.figure.patch.set_visible(False)
+        self.vertical_lines = []
         self.fig.canvas.draw()
 
     def redraw_xaxis(self, lats, lons):
@@ -720,8 +721,8 @@ class LinearViewPlotter(ViewPlotter):
         for line in self.vertical_lines:
             try:
                 line.remove()
-            except ValueError as e:
-                logging.debug("Vertical line was somehow already removed:\n%s", e)
+            except (ValueError, NotImplementedError) as e:
+                logging.debug("Vertical line could not be removed:\n%s", e)
         self.vertical_lines = []
 
     def draw_vertical_lines(self, highlight, lats, lons):
