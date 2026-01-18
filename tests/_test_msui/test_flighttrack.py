@@ -37,7 +37,7 @@ class Test_WaypointsTableModel_CorruptedSettings:
     Addresses issue #2885.
     """
 
-    def test_load_settings_with_corrupted_performance_settings(self):
+    def test_load_settings_with_corrupted_performance_settings(self, tmp_path):
         """
         Test that load_settings handles corrupted performance_settings gracefully.
 
@@ -46,14 +46,13 @@ class Test_WaypointsTableModel_CorruptedSettings:
         instead of crashing with a TypeError.
         """
         # Create a temporary settings file with corrupted performance_settings
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            corrupted_data = {
-                "performance": {
-                    "performance_settings": "corrupted_string_data"
-                }
+        temp_file = tmp_path / "corrupted_settings.json"
+        corrupted_data = {
+            "performance": {
+                "performance_settings": "corrupted_string_data"
             }
-            json.dump(corrupted_data, f)
-            temp_file = f.name
+        }
+        temp_file.write_text(json.dumps(corrupted_data), encoding="utf-8")
 
         try:
             # Temporarily override the settings file location
