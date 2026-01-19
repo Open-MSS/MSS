@@ -260,7 +260,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
             condition = first_waypoint.lat != last_waypoint.lat or first_waypoint.lon != last_waypoint.lon or \
                 first_waypoint.flightlevel != last_waypoint.flightlevel
 
-        return condition
+        return bool(condition)
 
     def update_roundtrip_enabled(self):
         self.btRoundtrip.setEnabled(self.is_roundtrip_possible())
