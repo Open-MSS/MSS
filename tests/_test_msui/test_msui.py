@@ -38,7 +38,7 @@ from tests.constants import ROOT_DIR, MSUI_CONFIG_PATH, MSUI_CONFIG_FILE_PATH
 from mslib.msui import msui
 from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
-from mslib.utils.config import read_config_file
+from mslib.utils.config import read_config_file, config_loader
 import re
 
 
@@ -51,9 +51,12 @@ def test_main():
 
 
 def test_keep_config_file(qtbot):
-    # in conftest we reset always the config file to an empty dict
+    # in conftest we set always the mss_dir in the config file
+    mss_dir = config_loader(dataset="mss_dir")
     _config = MSUI_CONFIG_FILE_PATH.read_text()
-    assert _config == "{}"
+    assert _config == f'''{{
+    "mss_dir": "{mss_dir}"
+}}'''
     config = """{
             "MSCOLAB_skip_archived_operations": true
 }"""
