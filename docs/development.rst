@@ -481,8 +481,9 @@ Creating a new release
 
 * make sure all issues for this milestone are closed or moved to the next milestone
 * update CHANGES.rst, based on git log
-* check version number of upcoming release in CHANGES.rst
-* verify that version.py, MANIFEST.in and setup.py are complete
+* check version number of upcoming release in pyproject.toml
+* verify that pyproject.toml, MANIFEST.in are complete
+* Update the version in the lock file by `pixi lock`
 * for a new stable release merge from develop to stable
 * tag the release::
 
@@ -494,7 +495,7 @@ Creating a new release
 * announce on:
 
   * Mailing list
-  * Twitter (follow @TheMSSystem for these tweets)
+  * Mastodon (follow https://fosstodon.org/@MSS)
 
 
 
