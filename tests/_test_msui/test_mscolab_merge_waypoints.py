@@ -110,7 +110,8 @@ class AutoClickOverwriteMscolabMergeWaypointsDialog(mslib.msui.mscolab.MscolabMe
         self.overwriteBtn.animateClick()
 
 
-@pytest.mark.xfail('The test identifies an inaccuracy in the code, which sporadically results in errors.')
+@pytest.mark.xfail(reason='The test identifies an inaccuracy in the code, which sporadically results in errors.',
+                   strict=True)
 class Test_Overwrite_To_Server(Test_Mscolab_Merge_Waypoints):
     def test_save_overwrite_to_server(self, qtbot):
         self.emailid = "save_overwrite@alpha.org"
@@ -161,7 +162,8 @@ class AutoClickKeepMscolabMergeWaypointsDialog(mslib.msui.mscolab.MscolabMergeWa
         self.keepServerBtn.animateClick()
 
 
-@pytest.mark.xfail('The test identifies an inaccuracy in the code, which sporadically results in errors.')
+@pytest.mark.xfail(reason='The test identifies an inaccuracy in the code, which sporadically results in errors.',
+                   strict=True)
 class Test_Save_Keep_Server_Points(Test_Mscolab_Merge_Waypoints):
     def test_save_keep_server_points(self, qtbot):
         self.emailid = "save_keepe@alpha.org"
@@ -202,7 +204,8 @@ class Test_Save_Keep_Server_Points(Test_Mscolab_Merge_Waypoints):
         qtbot.wait_until(assert_)
 
 
-@pytest.mark.xfail('The test identifies an inaccuracy in the code, which sporadically results in errors.')
+@pytest.mark.xfail(reason='The test identifies an inaccuracy in the code, which sporadically results in errors.',
+                   strict=True)
 class Test_Fetch_From_Server(Test_Mscolab_Merge_Waypoints):
     def test_fetch_from_server(self, qtbot):
         self.emailid = "fetch_from_server@alpha.org"
