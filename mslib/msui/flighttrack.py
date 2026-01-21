@@ -50,7 +50,6 @@ from mslib.utils.units import units
 from mslib.utils.coordinate import path_points, get_distance
 from mslib.utils.find_location import find_location
 from mslib.utils import thermolib
-from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
 from mslib.utils.qt import variant_to_string, variant_to_float
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
@@ -725,12 +724,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 name=None
             )
 
-        # Existing waypoint loading
-        if verify_waypoint_data(xml_content):
-            _waypoints_list = load_from_xml_data(xml_content, name)
-            self.replace_waypoints(_waypoints_list)
-        else:
-            raise SyntaxError(f"Invalid flight track filename: {name}")
+        # Validate only waypoint structure, revision is optional metadata
+        _waypoints_list = load_from_xml_data(xml_content, name)
+        self.replace_waypoints(_waypoints_list)
 
     def get_filename(self):
         return self.filename
