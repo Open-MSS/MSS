@@ -81,9 +81,8 @@ def test_multiple_times_save_filename(qtbot, tmp_path):
     assert os.path.exists(filename)
     first_timestamp = os.stat(filename).st_mtime_ns
 
-    # on github saving is too fast
+    msui.save_handler()
     def assert_():
-        msui.save_handler()
         second_timestamp = os.stat(filename).st_mtime_ns
         assert second_timestamp > first_timestamp
     qtbot.wait_until(assert_)

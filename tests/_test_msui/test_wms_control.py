@@ -114,7 +114,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"{self.scheme}://{self.host}:{self.port - 1}")
-            qtbot.waitUntil(lambda: mock_critical.call_count == 1, timeout=3000)
+            qtbot.wait_until(mock_critical.assert_called_once)
 
     def test_no_schema(self, qtbot):
         """
@@ -122,7 +122,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"{self.host}:{self.port}")
-            qtbot.waitUntil(lambda: mock_critical.call_count == 1, timeout=3000)
+            qtbot.wait_until(mock_critical.assert_called_once)
 
     def test_invalid_schema(self, qtbot):
         """
@@ -130,7 +130,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"hppd://{self.host}:{self.port}")
-            qtbot.waitUntil(lambda: mock_critical.call_count == 1, timeout=3000)
+            qtbot.wait_until(mock_critical.assert_called_once)
 
     def test_invalid_url(self, qtbot):
         """
@@ -138,7 +138,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"{self.scheme}://???{self.host}:{self.port}")
-            qtbot.waitUntil(lambda: mock_critical.call_count == 1, timeout=3000)
+            qtbot.wait_until(mock_critical.assert_called_once)
 
     def test_connection_error(self, qtbot):
         """
@@ -146,7 +146,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"{self.scheme}://.....{self.host}:{self.port}")
-            qtbot.waitUntil(lambda: mock_critical.call_count == 1, timeout=3000)
+            qtbot.wait_until(mock_critical.assert_called_once)
 
     @pytest.mark.skip("Breaks other tests in this class because of a lingering message box, for some reason")
     def test_forward_backward_clicks(self, qtbot):
@@ -186,11 +186,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         self.query_server(qtbot, self.url)
 
-        try:
-            with qtbot.wait_signal(self.window.image_displayed, timeout=5000):
-                QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
-        except TimeoutError:
-            pytest.fail("Timeout: image_displayed was not emitted.")
+        with qtbot.wait_signal(self.window.image_displayed):
+            QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
@@ -393,8 +390,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert layer_a.get_itime() == layer_a.get_itimes()[-1]
 
     @mock.patch("mslib.msui.wms_control.WMSMapFetcher.moveToThread")
-    def test_server_no_thread(self, mockthread, qtbot, mswms_server):
-        assert self.url == mswms_server.rstrip("/")
+    def test_server_no_thread(self, mockthread, qtbot):
         self.query_server(qtbot, self.url)
         server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                               QtCore.Qt.MatchFixedString)[0]
@@ -404,42 +400,12 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         server.child(0).setCheckState(0, 2)
         server.child(1).setCheckState(0, 2)
 
-        # Mock the actual fetching so that no real HTTP call happens.
-        self.window.fetcher.fetch_map = mock.MagicMock()
-        self.window.fetcher.fetch_legend = mock.MagicMock()
-
-        # Make sure that the signal is emitted on click
-        def _emit_image_displayed(*args, **kwargs):
-            self.window.image_displayed.emit()
-
-        self.window.btGetMap.clicked.connect(_emit_image_displayed)
-
-        # Ensure the signal actually triggers the view update
-        self.window.image_displayed.connect(self.view.draw_image)
-
-        # NEW: Ensure metadata drawing is triggered when image is displayed
-        def _emit_metadata_displayed(*args, **kwargs):
-            self.window.metadata_displayed.emit()
-
-        self.window.btGetMap.clicked.connect(_emit_metadata_displayed)
-        self.window.metadata_displayed.connect(self.view.draw_metadata)
-
-        # Ensure legend drawing is triggered when fetch_legend is called
-        def _emit_legend_displayed(*args, **kwargs):
-            # only emit when we simulate a non-cached fetch
-            if kwargs.get("use_cache") is False:
-                self.window.legend_displayed.emit()
-
-        self.window.legend_displayed.connect(self.view.draw_legend)
-        self.window.fetcher.fetch_legend.side_effect = _emit_legend_displayed
-
-        with qtbot.wait_signal(self.window.image_displayed, timeout=5000):
+        with qtbot.wait_signal(self.window.image_displayed):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         urlstr = f"{self.url}/mss/logo.png"
         md5_filname = os.path.join(self.window.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ".png")
-        with qtbot.wait_signal(self.window.legend_displayed, timeout=2000):
-            self.window.fetcher.fetch_legend(urlstr, use_cache=False, md5_filename=md5_filname)
+        self.window.fetcher.fetch_legend(urlstr, use_cache=False, md5_filename=md5_filname)
         self.window.fetcher.fetch_legend(urlstr, use_cache=True, md5_filename=md5_filname)
 
         assert self.view.draw_image.call_count == 1

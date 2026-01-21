@@ -207,22 +207,16 @@ class Test_SideViewWMS:
         yield
         self.window.hide()
 
-    def query_server(self, qtbot, url, timeout=5000):
+    def query_server(self, qtbot, url):
         self.wms_control.multilayers.cbWMS_URL.clear()
         self.wms_control.multilayers.cbWMS_URL.setEditText(url)
         self.wms_control.multilayers.cbWMS_URL.lineEdit().setText(url)
 
-        QtTest.QTest.mouseClick(
-            self.wms_control.multilayers.btGetCapabilities,
-            QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
-        qtbot.waitUntil(
-            lambda: getattr(self.wms_control, "cpdlg", None) is not None,
-            timeout=timeout)
-
-        qtbot.waitUntil(
-            lambda: self.wms_control.btGetMap.isEnabled(),
-            timeout=timeout)
+        qtbot.waitExposed(self.wms_control.cpdlg)
+        qtbot.waitSignal(self.wms_control.btGetMap.enabledChanged)
+        qtbot.waitUntil(self.wms_control.cpdlg.isVisible())
 
     def test_server_getmap(self, qtbot):
         """
