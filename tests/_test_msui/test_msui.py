@@ -82,6 +82,7 @@ def test_multiple_times_save_filename(qtbot, tmp_path):
     first_timestamp = os.stat(filename).st_mtime_ns
 
     msui.save_handler()
+
     def assert_():
         second_timestamp = os.stat(filename).st_mtime_ns
         assert second_timestamp > first_timestamp
