@@ -147,8 +147,8 @@ class Waypoint:
         self.lat = lat
         self.lon = lon
 
-        # Only resolve location name if coordinates are not provided
-        if (lat == 0.0 and lon == 0.0) and location:
+        # Only resolve location name if coordinates are truly missing
+        if (lat is None or lon is None) and location:
             locations = config_loader(dataset='locations')
             if location in locations:
                 self.lat, self.lon = locations[location]
@@ -225,11 +225,6 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         if waypoints:
             self.replace_waypoints(waypoints)
 
-        if self.revision is None:
-            self.revision = Revision(
-                revision_id=int(datetime.datetime.utcnow().timestamp()),
-                name=None
-            )
 
     def load_settings(self):
         """
@@ -723,11 +718,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             revision_name = rev_el.getAttribute("name") or None
             self.revision = Revision(revision_id, revision_name)
         else:
-            # Backward compatibility
-            self.revision = Revision(
-                revision_id=int(datetime.datetime.utcnow().timestamp()),
-                name=None
-            )
+            self.revision = None
 
         # Validate only waypoint structure, revision is optional metadata
         _waypoints_list = load_from_xml_data(xml_content, name)
