@@ -661,8 +661,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         ft_el = doc.createElement("FlightTrack")
         ft_el.setAttribute("version", __version__)
         doc.appendChild(ft_el)
+        # The list of waypoint elements.
 
-        # --- NEW: write revision information ---
+        # Write revision information
         if self.revision is not None:
             rev_el = doc.createElement("Revision")
             rev_el.setAttribute("id", str(self.revision.id))
@@ -670,7 +671,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 rev_el.setAttribute("name", self.revision.name)
             ft_el.appendChild(rev_el)
 
-        # --- existing: list of waypoints ---
+        # List of waypoints
         wp_el = doc.createElement("ListOfWaypoints")
         ft_el.appendChild(wp_el)
 
