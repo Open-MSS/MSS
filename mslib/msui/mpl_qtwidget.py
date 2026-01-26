@@ -721,8 +721,8 @@ class LinearViewPlotter(ViewPlotter):
         for line in self.vertical_lines:
             try:
                 line.remove()
-            except (ValueError) as e:
-                logging.debug("Vertical line could not be removed:\n%s", e)
+            except ValueError as e:
+                logging.debug("Vertical line was somehow already removed:\n%s", e)
         self.vertical_lines = []
 
     def draw_vertical_lines(self, highlight, lats, lons):
