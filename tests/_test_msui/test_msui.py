@@ -80,7 +80,7 @@ def test_multiple_times_save_filename(qtbot, tmp_path):
     msui.save_flight_track(filename)
     assert os.path.exists(filename)
     first_timestamp = os.stat(filename).st_mtime_ns
-
+    assert filename == msui.active_flight_track.get_filename()
     msui.save_handler()
 
     def assert_():

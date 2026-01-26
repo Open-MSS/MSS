@@ -302,6 +302,7 @@ class Test_TopViewWMS:
         assert self.window.getView().map.image is None
         self.window.mpl.canvas.redraw_map()
 
+
 class Test_MSUITopViewWindow:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot):
