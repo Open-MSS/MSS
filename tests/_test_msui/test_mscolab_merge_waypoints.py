@@ -111,7 +111,7 @@ class AutoClickOverwriteMscolabMergeWaypointsDialog(mslib.msui.mscolab.MscolabMe
 
 
 @pytest.mark.skip(reason='The test identifies an inaccuracy in the code, which sporadically results in errors.',
-                   strict=True)
+                  strict=True)
 class Test_Overwrite_To_Server(Test_Mscolab_Merge_Waypoints):
     def test_save_overwrite_to_server(self, qtbot):
         self.emailid = "save_overwrite@alpha.org"
