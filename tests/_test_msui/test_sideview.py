@@ -215,7 +215,6 @@ class Test_SideViewWMS:
         QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
         qtbot.waitExposed(self.wms_control.cpdlg)
-        qtbot.waitSignal(self.wms_control.btGetMap.enabledChanged)
         qtbot.waitUntil(self.wms_control.cpdlg.isVisible())
 
     def test_server_getmap(self, qtbot):
