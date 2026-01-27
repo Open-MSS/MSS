@@ -635,8 +635,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         doc = self.get_xml_doc()
         with open(filename, "w") as file_object:
             doc.writexml(file_object, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
-            # we force sync to disc
-            os.fsync(file_object.fileno())
+            # we force flush to disc
+            file_object.flush()
         self.name = os.path.basename(self.filename).replace(".ftml", "").strip()
 
     def get_xml_doc(self):
