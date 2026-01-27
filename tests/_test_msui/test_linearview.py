@@ -105,7 +105,6 @@ class Test_LinearViewWMS:
 
     def query_server(self, qtbot, url):
         QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
-
         QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
         def assert_():

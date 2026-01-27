@@ -86,19 +86,16 @@ class WMSControlWidgetSetup:
 
     def query_server(self, qtbot, url, timeout=5000):
         self.window.multilayers.cbWMS_URL.clear()
-        self.window.multilayers.cbWMS_URL.setEditText(url)
         self.window.multilayers.cbWMS_URL.lineEdit().setText(url)
 
         QtTest.QTest.mouseClick(
             self.window.multilayers.btGetCapabilities,
             QtCore.Qt.LeftButton)
 
-        qtbot.waitUntil(
-            lambda: getattr(self.window, "cpdlg", None) is not None,
-            timeout=timeout)
+        def assert_():
+            return getattr(self.window, "cpdlg", None) is not None and not self.window.cpdlg.isVisible()
 
-        qtbot.waitUntil(lambda: getattr(self.window, "cpdlg", None) is not None and not self.window.cpdlg.isVisible(),
-                        timeout=timeout)
+        qtbot.waitUntil(assert_)
 
 
 class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
