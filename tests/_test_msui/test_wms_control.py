@@ -425,11 +425,9 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         assert that a getmap call to a WMS server displays an image
         """
         self.query_server(qtbot, self.url)
-        try:
-            with qtbot.wait_signal(self.window.image_displayed, timeout=10000):
-                QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
-        except TimeoutError:
-            pytest.fail("Timeout: image_displayed signal was not emitted (VSec getmap).")
+
+        with qtbot.wait_signal(self.window.image_displayed, timeout=10000):
+            QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
@@ -442,11 +440,9 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(qtbot, self.url)
         server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                               QtCore.Qt.MatchFixedString)[0]
-        try:
-            with qtbot.wait_signal(self.window.image_displayed, timeout=10000):
-                server.child(0).draw()
-        except TimeoutError:
-            pytest.fail("Timeout: image_displayed signal was not emitted (VSec multilayer draw).")
+
+        with qtbot.wait_signal(self.window.image_displayed, timeout=10000):
+            server.child(0).draw()
 
 
 class TestWMSControlWidgetSetupSimple:

@@ -78,10 +78,6 @@ class Test_WaypointsTableModel_CorruptedSettings:
         assert model.performance_settings == DEFAULT_PERFORMANCE, \
             "Should fall back to DEFAULT_PERFORMANCE when data is corrupted"
 
-        # Verify it was reset to DEFAULT_PERFORMANCE
-        assert model.performance_settings == DEFAULT_PERFORMANCE, \
-            "Should fall back to DEFAULT_PERFORMANCE when data is corrupted"
-
     def test_isinstance_check_with_various_types(self):
         """
         Test that the isinstance check correctly identifies dict vs non-dict types.

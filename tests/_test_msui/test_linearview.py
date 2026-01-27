@@ -103,26 +103,20 @@ class Test_LinearViewWMS:
         yield
         self.window.hide()
 
-    def query_server(self, qtbot, url, timeout=5000):
-        self.wms_control.multilayers.cbWMS_URL.clear()
-        self.wms_control.multilayers.cbWMS_URL.setEditText(url)
-        self.wms_control.multilayers.cbWMS_URL.lineEdit().setText(url)
+    def query_server(self, qtbot, url):
+        QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
 
-        QtTest.QTest.mouseClick(
-            self.wms_control.multilayers.btGetCapabilities,
-            QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
-        qtbot.waitUntil(
-            lambda: getattr(self.wms_control, "cpdlg", None) is not None,
-            timeout=timeout)
+        def assert_():
+            return getattr(self.wms_control, "cpdlg", None) is not None and not self.wms_control.cpdlg.isVisible()
 
-        qtbot.waitUntil(
-            lambda: getattr(self.wms_control, "cpdlg", None) is not None and not self.wms_control.cpdlg.isVisible(),
-            timeout=timeout)
+        qtbot.waitUntil(assert_)
 
-        qtbot.waitUntil(
-            lambda: self.wms_control.btGetMap.isEnabled(),
-            timeout=timeout)
+        def assert_():
+            return self.wms_control.btGetMap.isEnabled()
+
+        qtbot.waitUntil(assert_)
 
     def test_server_getmap(self, qtbot):
         """

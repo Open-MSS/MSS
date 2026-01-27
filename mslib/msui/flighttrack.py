@@ -635,9 +635,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         doc = self.get_xml_doc()
         with open(filename, "w") as file_object:
             doc.writexml(file_object, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
-            # the with should ensure that the file is flushed and synced to disk
-            # nevertheless we try if that changes the linux test behavior
-            file_object.flush()
+            # we force sync to disc
             os.fsync(file_object.fileno())
         self.name = os.path.basename(self.filename).replace(".ftml", "").strip()
 
