@@ -55,8 +55,6 @@ from mslib.utils.config import config_loader, save_settings_qsettings, load_sett
 from mslib.utils.qt import variant_to_string, variant_to_float
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 
-from mslib.utils import writexml
-xml.dom.minidom.Element.writexml = writexml  # nosec, we take care of writing correct XML
 # Constants for identifying the table columns when the WaypointsTableModel is
 # used with a QTableWidget.
 LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE = list(range(5))
@@ -637,8 +635,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             doc.writexml(file_object, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
             # we force flush and sync to disc
             # without that test_multiple_times_save_filename fails on github ubuntu-latest
-            file_object.flush()
-            os.fsync(file_object.fileno())
+            # file_object.flush()
+            # os.fsync(file_object.fileno())
         self.name = os.path.basename(self.filename).replace(".ftml", "").strip()
 
     def get_xml_doc(self):
