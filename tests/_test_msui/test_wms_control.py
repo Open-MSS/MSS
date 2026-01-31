@@ -84,18 +84,12 @@ class WMSControlWidgetSetup:
     def _teardown(self):
         self.window.hide()
 
-    def query_server(self, qtbot, url, timeout=5000):
-        self.window.multilayers.cbWMS_URL.clear()
-        self.window.multilayers.cbWMS_URL.lineEdit().setText(url)
-
-        QtTest.QTest.mouseClick(
-            self.window.multilayers.btGetCapabilities,
-            QtCore.Qt.LeftButton)
-
-        def assert_():
-            return getattr(self.window, "cpdlg", None) is not None and not self.window.cpdlg.isVisible()
-
-        qtbot.waitUntil(assert_)
+    def query_server(self, qtbot, url):
+        while len(self.window.multilayers.cbWMS_URL.currentText()) > 0:
+            QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
+        QtTest.QTest.keyClicks(self.window.multilayers.cbWMS_URL, url)
+        with qtbot.wait_signal(self.window.cpdlg.canceled):
+            QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
 
 class Test_HSecWMSControlWidget(WMSControlWidgetSetup):

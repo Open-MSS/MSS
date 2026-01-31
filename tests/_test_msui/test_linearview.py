@@ -105,17 +105,8 @@ class Test_LinearViewWMS:
 
     def query_server(self, qtbot, url):
         QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
-        QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
-
-        def assert_():
-            return getattr(self.wms_control, "cpdlg", None) is not None and not self.wms_control.cpdlg.isVisible()
-
-        qtbot.waitUntil(assert_)
-
-        def assert_():
-            return self.wms_control.btGetMap.isEnabled()
-
-        qtbot.waitUntil(assert_)
+        with qtbot.wait_signal(self.wms_control.cpdlg.canceled):
+            QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
     def test_server_getmap(self, qtbot):
         """
