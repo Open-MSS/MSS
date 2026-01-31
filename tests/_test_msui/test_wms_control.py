@@ -107,6 +107,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         # get a free port which we haven't used
         sock = eventlet.listen((self.host, 0))
         port = sock.getsockname()[1]
+        sock.close()
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"{self.scheme}://{self.host}:{port}")
             qtbot.wait_until(mock_critical.assert_called_once)
