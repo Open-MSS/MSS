@@ -28,6 +28,7 @@
 
 import mock
 import os
+import sys
 import argparse
 import pytest
 from pathlib import Path
@@ -70,6 +71,10 @@ def test_keep_config_file(qtbot):
     assert _config == config
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("linux") and os.getenv("GITHUB_ACTIONS") == "true",
+    reason="skip on GitHub Actions Linux runners because of flush and sync issue",
+)
 def test_multiple_times_save_filename(qtbot, tmp_path):
     msui = msui_mw.MSUIMainWindow()
     msui.show()
