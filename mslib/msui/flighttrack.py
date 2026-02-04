@@ -143,15 +143,12 @@ class Waypoint:
     def __init__(self, lat=0., lon=0., flightlevel=0., location="", comments=""):
         self.location = location
 
-        # Always trust explicitly provided coordinates first
-        self.lat = lat
-        self.lon = lon
-
-        # Only resolve location name if coordinates are truly missing
-        if (lat is None or lon is None) and location:
-            locations = config_loader(dataset='locations')
-            if location in locations:
-                self.lat, self.lon = locations[location]
+        locations = config_loader(dataset='locations')
+        if location in locations:
+            self.lat, self.lon = locations[location]
+        else:
+            self.lat = lat
+            self.lon = lon
 
         self.flightlevel = flightlevel
         self.pressure = thermolib.flightlevel2pressure(flightlevel * units.hft).magnitude
@@ -717,7 +714,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             revision_name = rev_el.getAttribute("name") or None
             self.revision = Revision(revision_id, revision_name)
         else:
-            self.revision = None
+            # Backward compatibility: create deterministic default revision
+            self.revision = Revision(
+                revision_id=0,
+                name=None
+            )
 
         # Validate only waypoint structure, revision is optional metadata
         _waypoints_list = load_from_xml_data(xml_content, name)
