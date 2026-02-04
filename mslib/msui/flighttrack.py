@@ -62,11 +62,13 @@ xml.dom.minidom.Element.writexml = writexml  # nosec, we take care of writing co
 LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE = list(range(5))
 TIME_UTC = 9
 
+
 class Revision:
     """
     Represents a revision of a flight track.
     ID is mandatory, name is optional.
     """
+
     def __init__(self, revision_id, name=None):
         self.id = revision_id
         self.name = name
@@ -193,7 +195,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
     def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False,
                  data_dir=config_loader(dataset="mss_dir"),
-                 xml_content=None): 
+                 xml_content=None):
         super().__init__()
         self.revision = None
         self.name = name  # a name for this flight track
@@ -218,12 +220,12 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         if waypoints:
             self.replace_waypoints(waypoints)
-            
+
         if self.revision is None:
             self.revision = Revision(
                 revision_id=int(datetime.datetime.utcnow().timestamp()),
                 name=None
-            )    
+            )
 
     def load_settings(self):
         """
@@ -686,7 +688,6 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         return doc
 
-
     def get_xml_content(self):
         doc = self.get_xml_doc()
         return doc.toprettyxml(indent="  ", newl="\n")
@@ -729,7 +730,6 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             self.replace_waypoints(_waypoints_list)
         else:
             raise SyntaxError(f"Invalid flight track filename: {name}")
-
 
 
 #

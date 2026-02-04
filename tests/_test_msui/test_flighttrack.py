@@ -114,7 +114,7 @@ class Test_WaypointsTableModel_CorruptedSettings:
             "Dict should pass isinstance dict check"
         assert isinstance({}, dict), \
             "Empty dict should pass isinstance dict check"
-           
+
     def test_load_ftml_with_revision(self):
         xml_content = """
         <FlightTrack version="test">
@@ -131,7 +131,7 @@ class Test_WaypointsTableModel_CorruptedSettings:
 
         assert model.revision is not None
         assert model.revision.id == 42
-        assert model.revision.name == "draft"        
+        assert model.revision.name == "draft"
 
     def test_load_ftml_without_revision_creates_default_revision(self):
         xml_content = """
