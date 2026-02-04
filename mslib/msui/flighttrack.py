@@ -225,7 +225,6 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         if waypoints:
             self.replace_waypoints(waypoints)
 
-
     def load_settings(self):
         """
         Load settings from the file self.settingsfile.
