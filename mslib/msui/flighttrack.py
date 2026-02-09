@@ -55,8 +55,6 @@ from mslib.utils.config import config_loader, save_settings_qsettings, load_sett
 from mslib.utils.qt import variant_to_string, variant_to_float
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 
-from mslib.utils import writexml
-xml.dom.minidom.Element.writexml = writexml  # nosec, we take care of writing correct XML
 # Constants for identifying the table columns when the WaypointsTableModel is
 # used with a QTableWidget.
 LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE = list(range(5))

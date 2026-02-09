@@ -70,41 +70,6 @@ def setup_logging(args):
             logger.addHandler(fh)
 
 
-# ToDo likely this can be removed in python 3 because that uses unicode
-# modified Version from minidom, https://github.com/python/cpython/blob/2.7/Lib/xml/dom/minidom.py
-# MSS needed to change all writings as unicode not str
-from xml.dom.minidom import _write_data, Node
-# Copyright © 2001-2018 Python Software Foundation. All rights reserved.
-# Copyright © 2000 BeOpen.com. All rights reserved.
-
-
-def writexml(self, writer, indent="", addindent="", newl=""):
-    # indent = current indentation
-    # addindent = indentation to add to higher levels
-    # newl = newline string
-    writer.write(indent + "<" + self.tagName)
-
-    attrs = self._get_attributes()
-
-    for a_name in sorted(attrs.keys()):
-        writer.write(" %s=\"" % a_name)
-        _write_data(writer, attrs[a_name].value)  # nosec, we take care of writing correct XML
-        writer.write("\"")
-    if self.childNodes:
-        writer.write(">")
-        if (len(self.childNodes) == 1 and self.childNodes[0].nodeType == Node.TEXT_NODE):
-            # nosec, we take care of writing correct XML
-            self.childNodes[0].writexml(writer, '', '', '')
-        else:
-            writer.write(newl)
-            for node in self.childNodes:
-                node.writexml(writer, indent + addindent, addindent, newl)
-            writer.write(indent)
-        writer.write("</%s>%s" % (self.tagName, newl))
-    else:
-        writer.write("/>%s" % (newl))
-
-
 def conditional_decorator(dec, condition):
     def decorator(func):
         if not condition:

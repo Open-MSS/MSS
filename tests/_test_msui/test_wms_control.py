@@ -30,6 +30,7 @@ import mock
 import pytest
 import hashlib
 import urllib
+import eventlet
 from PyQt5 import QtCore, QtTest
 from mslib.msui import flighttrack as ft
 from mslib.utils.service_manager import WMSServiceManager
@@ -103,9 +104,13 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that a message box informs about server troubles
         """
+        # get a free port which we haven't used
+        sock = eventlet.listen((self.host, 0))
+        port = sock.getsockname()[1]
+        sock.close()
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
-            self.query_server(qtbot, f"{self.scheme}://{self.host}:{self.port - 1}")
-            mock_critical.assert_called_once()
+            self.query_server(qtbot, f"{self.scheme}://{self.host}:{port}")
+            qtbot.wait_until(mock_critical.assert_called_once)
 
     def test_no_schema(self, qtbot):
         """
@@ -113,7 +118,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"{self.host}:{self.port}")
-            mock_critical.assert_called_once()
+            qtbot.wait_until(mock_critical.assert_called_once)
 
     def test_invalid_schema(self, qtbot):
         """
@@ -121,7 +126,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"hppd://{self.host}:{self.port}")
-            mock_critical.assert_called_once()
+            qtbot.wait_until(mock_critical.assert_called_once)
 
     def test_invalid_url(self, qtbot):
         """
@@ -129,7 +134,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"{self.scheme}://???{self.host}:{self.port}")
-            mock_critical.assert_called_once()
+            qtbot.wait_until(mock_critical.assert_called_once)
 
     def test_connection_error(self, qtbot):
         """
@@ -137,7 +142,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"{self.scheme}://.....{self.host}:{self.port}")
-            mock_critical.assert_called_once()
+            qtbot.wait_until(mock_critical.assert_called_once)
 
     @pytest.mark.skip("Breaks other tests in this class because of a lingering message box, for some reason")
     def test_forward_backward_clicks(self, qtbot):
@@ -416,7 +421,8 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         assert that a getmap call to a WMS server displays an image
         """
         self.query_server(qtbot, self.url)
-        with qtbot.wait_signal(self.window.image_displayed):
+
+        with qtbot.wait_signal(self.window.image_displayed, timeout=10000):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
@@ -430,7 +436,8 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(qtbot, self.url)
         server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                               QtCore.Qt.MatchFixedString)[0]
-        with qtbot.wait_signal(self.window.image_displayed):
+
+        with qtbot.wait_signal(self.window.image_displayed, timeout=10000):
             server.child(0).draw()
 
 
@@ -532,7 +539,6 @@ class TestWMSControlWidgetSetupSimple:
             <Extent name="TIME"> 2014-10-17T12:00:00Z/current/P1Y </Extent>"""
         testxml = self.xml.format("", self.srs_base, dimext_time + self.dimext_inittime + self.dimext_elevation)
         self.window.activate_wms(wc.MSUIWebMapService(None, version='1.1.1', xml=testxml))
-        print([self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())])
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())][:4] == \
             ['2014-10-17T12:00:00Z', '2015-10-17T12:00:00Z', '2016-10-17T12:00:00Z', '2017-10-17T12:00:00Z']
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \

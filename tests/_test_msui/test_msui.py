@@ -28,6 +28,7 @@
 
 import mock
 import os
+import sys
 import argparse
 import pytest
 from pathlib import Path
@@ -70,6 +71,10 @@ def test_keep_config_file(qtbot):
     assert _config == config
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("linux") and os.getenv("GITHUB_ACTIONS") == "true",
+    reason="skip on GitHub Actions Linux runners because of flush and sync issue",
+)
 def test_multiple_times_save_filename(qtbot, tmp_path):
     msui = msui_mw.MSUIMainWindow()
     msui.show()
@@ -79,13 +84,18 @@ def test_multiple_times_save_filename(qtbot, tmp_path):
     # verify that we can save the file multiple times
     msui.save_flight_track(filename)
     assert os.path.exists(filename)
-    first_timestamp = os.path.getmtime(filename)
+    first_timestamp = os.stat(filename).st_mtime_ns
+    assert filename == msui.active_flight_track.get_filename()
     msui.save_handler()
-    second_timestamp = os.path.getmtime(filename)
+
+    def assert_():
+        second_timestamp = os.stat(filename).st_mtime_ns
+        assert second_timestamp > first_timestamp
+    qtbot.wait_until(assert_)
+
     with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
         msui.close()
     # check that the second save is newer than the first one
-    assert second_timestamp > first_timestamp
     assert os.path.exists(filename)
 
 

@@ -702,6 +702,7 @@ class LinearViewPlotter(ViewPlotter):
         self.fig.clf()
         self.ax = self.fig.add_subplot(111, zorder=99)
         self.ax.figure.patch.set_visible(False)
+        self.vertical_lines = []
         self.fig.canvas.draw()
 
     def redraw_xaxis(self, lats, lons):
