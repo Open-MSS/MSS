@@ -143,12 +143,14 @@ class Waypoint:
     def __init__(self, lat=0., lon=0., flightlevel=0., location="", comments=""):
         self.location = location
 
+        # Prefer explicitly provided coordinates (e.g. from XML/server)
+        self.lat = lat
+        self.lon = lon
+
+        # Only resolve from configured locations if coordinates were not meaningfully provided
         locations = config_loader(dataset='locations')
-        if location in locations:
+        if location in locations and (lat == 0.0 and lon == 0.0):
             self.lat, self.lon = locations[location]
-        else:
-            self.lat = lat
-            self.lon = lon
 
         self.flightlevel = flightlevel
         self.pressure = thermolib.flightlevel2pressure(flightlevel * units.hft).magnitude
