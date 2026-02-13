@@ -116,6 +116,9 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
             palette.setColor(QtGui.QPalette.Button, colour)
             button.setPalette(palette)
 
+            self.cbAltitudeColor = QtWidgets.QCheckBox("Color flight track by altitude")
+            self.layout().addWidget(self.cbAltitudeColor)
+
         # Connect colour button signals.
         self.btWaterColour.clicked.connect(functools.partial(self.setColour, "water"))
         self.btLandColour.clicked.connect(functools.partial(self.setColour, "land"))
@@ -173,6 +176,8 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
                 QtGui.QPalette(self.btVerticesColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
             "colour_ft_waypoints":
                 QtGui.QPalette(self.btWaypointsColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
+            "color_by_altitude": self.cbAltitudeColor.isChecked(),
+
         }
         return settings
 
