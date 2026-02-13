@@ -1,5 +1,30 @@
 Top View and Selecting of Layers
 --------------------------------
+Altitude-based Color Coding in Top View
+----------------------------------------
+
+A new feature allows users to visualize flight altitude directly in the Top View using color coding.
+
+How to Enable
+~~~~~~~~~~~~~
+
+1. Open the Top View window.
+2. Click on the Map Appearance settings.
+3. Enable the option **"Color flight track by altitude"**.
+4. Click Apply.
+
+Behavior
+~~~~~~~~
+
+- When enabled, the flight track is rendered using a color gradient.
+- Different colors represent different altitude levels.
+- When disabled, the flight track is displayed in a single default color.
+
+Use Case
+~~~~~~~~
+
+This feature helps users quickly identify altitude changes along the flight path,
+making vertical profile interpretation easier directly from the Top View.
 
 Selection and display of different data in the Top View with the help of the layer chooser.
 
