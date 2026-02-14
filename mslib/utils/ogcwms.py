@@ -167,10 +167,25 @@ class WebMapService(wms111.WebMapService_1_1_1):
     Implements IWebMapService.
     """
 
-    def __init__(self, url, version=None, xml=None, username=None, password=None,
-                 parse_remote_metadata=False, headers=None,
-                 timeout=config_loader(dataset="WMS_request_timeout"),
-                 auth=None):
+   def __init__(self, url, version=None, xml=None, username=None, password=None,
+             parse_remote_metadata=False, headers=None,
+             timeout=config_loader(dataset="WMS_request_timeout"),
+             auth=None):
+
+    super().__init__(
+        url,
+        version=version,
+        xml=xml,
+        username=username,
+        password=password,
+        parse_remote_metadata=parse_remote_metadata,
+        headers=headers,
+        timeout=timeout,
+        auth=auth
+    )
+
+    # existing custom code yaha se niche rahega
+
         """Initialize."""
 
         if auth:
