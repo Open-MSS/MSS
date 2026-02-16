@@ -216,7 +216,7 @@ class DefaultDataAccess(NWPDataAccess):
         self._mfDatasetArgsDict = {"skip_dim_check": skip_dim_check}
         self._file_cache = {}
 
-    def _determine_filename(self, variable, vartype, init_time, valid_time, reload=True):
+   def _determine_filename(self, variable, vartype, init_time, valid_time, reload=True):
         """
         Determines the name of the data file that contains
         the variable <variable> with type <vartype> of the forecast specified
@@ -455,7 +455,7 @@ class WatchModificationDataAccess(DefaultDataAccess):
         except (KeyError, OSError) as ex:
             if reload:
                 self.setup()
-                self._determine_filename(self, variable, vartype, init_time, valid_time, reload=False)
+                return self._determine_filename(variable, vartype, init_time, valid_time, reload=False)
             else:
                 logging.error("Could not identify filename. %s %s %s %s %s %s",
                               variable, vartype, init_time, valid_time, type(ex), ex)
