@@ -11,6 +11,16 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class Ui_MultipleViewWidget(object):
+    def closeEvent(self, event):
+    self._disconnect_signals()
+    super().closeEvent(event)
+
+    def _disconnect_signals(self):
+    try:
+        self.mainui.some_signal.disconnect(self.update_function)
+    except (TypeError, RuntimeError):
+        pass
+
     def setupUi(self, MultipleViewWidget):
         MultipleViewWidget.setObjectName("MultipleViewWidget")
         MultipleViewWidget.resize(798, 282)
