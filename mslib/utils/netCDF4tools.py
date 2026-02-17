@@ -200,6 +200,10 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
 
     def __init__(self, files, exclude=None, skip_dim_check=None,
                  require_dim_num=False):
+        super(MFDatasetCommonDims, self).__init__(files)
+
+                     super().__init__(files)
+
         """
         Open a Dataset spanning multiple files sharing common dimensions but
         containing different record variables, making it look as if it was a
@@ -247,7 +251,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
 
         # Open the master again, this time as a classic CDF instance. This will avoid
         # calling methods of the CDFMF subclass when querying the master file.
-        cdfm = netCDF4.Dataset(master)
+        
         # copy attributes from master.
         self.__dict__.update(cdfm.__dict__)
 
