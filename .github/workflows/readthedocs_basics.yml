@@ -14,6 +14,6 @@ jobs:
         cache: true
         environments: docs
     - name: try sphinx build
-      timeout-minutes: 10
+      timeout-minutes: 20
       run: |
-        pixi run -e docs sphinx-build -T -b html docs $READTHEDOCS_OUTPUT/html
+        pixi run -e docs sphinx-build -T -b html docs docs/html
