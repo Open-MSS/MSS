@@ -15,8 +15,8 @@ dependencies:
       - metpy
       - markdown
       - xstatic>=1.0.3
-      - xstatic-jquery
-      - xstatic-bootstrap
+      - xstatic-jquery<3.6
+      - xstatic-bootstrap<4.6
       - defusedxml
       - sphinx_rtd_theme
       - sphinxcontrib-video>=0.2.1
