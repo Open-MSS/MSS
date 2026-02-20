@@ -1,0 +1,19 @@
+name: RTFD env basics
+
+on:
+  pull_request:
+
+jobs:
+  Test-RTFD:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
+    - uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
+      with:
+        pixi-version: latest
+        cache: true
+        environments: docs
+    - name: try sphinx build
+      timeout-minutes: 10
+      run: |
+        pixi run -e docs sphinx-build -T -b html docs $READTHEDOCS_OUTPUT/html
