@@ -1,0 +1,30 @@
+[workspace]
+authors = ["Reimar Bauer <rb.proj@gmail.com>"]
+channels = ["conda-forge"]
+name = "docs"
+platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+python = "<312"
+setuptools = "<81"
+flask = ">=3.1.3,<4"
+flask-httpauth = ">=4.8.0,<5"
+chameleon = ">=3.9.1,<4"
+multidict = ">=6.7.0,<7"
+isodate = ">=0.7.2,<0.8"
+scipy = ">=1.17.0,<2"
+metpy = ">=1.7.1,<2"
+markdown = ">=3.10.2,<4"
+xstatic = ">=1.0.2,<2"
+xstatic-jquery = "<3.6"
+xstatic-bootstrap = "<4.6"
+defusedxml = ">=0.7.1,<0.8"
+sphinx_rtd_theme = ">=3.1.0,<4"
+sphinxcontrib-video = ">=0.2.1"
+sphinx = ">=8.2.3,<9"
+netcdf4 = ">=1.7.4,<2"
+owslib = ">=0.35.0,<0.36"
+pyqt = ">=5.15.11,<6"
