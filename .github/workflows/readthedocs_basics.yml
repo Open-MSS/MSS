@@ -12,10 +12,8 @@ jobs:
       with:
         pixi-version: latest
         cache: true
-        environments: dev
-    - name: Mamba Env Creation
-      timeout-minutes: 5
+        environments: docs
+    - name: try sphinx build
+      timeout-minutes: 10
       run: |
-        cd docs
-        pixi global install mamba
-        mamba env create --quiet --name stable --file environment.yml
+        pixi run -e docs sphinx-build -T -b html docs $READTHEDOCS_OUTPUT/html
