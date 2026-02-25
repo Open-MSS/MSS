@@ -17,8 +17,7 @@ computer.
 We distinguish between Developer and User installations.
 
 ### Developer Installation
-Please read our [contributing](https://open-mss.github.io/contributing/) pages.
-and [development](https://mss.readthedocs.io/en/stable/development.html) guidelines
+Please read our [contributing pages](https://open-mss.github.io/contributing/) and [development guidelines](https://mss.readthedocs.io/en/stable/development.html) guidelines
 
 ### User Installation
 
@@ -31,7 +30,8 @@ You can install **mss** global without defining a project first.
 This method is practical when you are interested in starting the client
 and don't need server configurations.
 
-    pixi global install mss
+    ```bash
+pixi global install mss
 
 #### Global Usage
 
