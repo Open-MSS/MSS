@@ -55,6 +55,7 @@ jobs:
     timeout-minutes: 10
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
+
     - name: Check for whitespace issues in the repository
       # The two example.txt files need to be excluded because whitespace at EOL is part
       # of their format and they fail to parse otherwise.
@@ -68,6 +69,19 @@ jobs:
         )"
         echo "$issues"
         [ "$issues" == "" ] || exit 1
+
+    - name: Check for missing newline at EOF
+      run: |
+        missing_newline="$(
+          git ls-files | while read f; do
+            [ -f "$f" ] || continue
+            if [ -s "$f" ]; then
+              tail -c1 "$f" | read -r _ || echo "$f"
+            fi
+          done
+        )"
+        echo "$missing_newline"
+        [ "$missing_newline" == "" ] || exit 1
 
   ensure-sha-pinned-actions:
     runs-on: ubuntu-latest
