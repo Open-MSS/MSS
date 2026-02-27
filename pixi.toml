@@ -94,7 +94,6 @@ dnspython = ">=2.0.0, <2.3.0"
 eventlet = ">0.30.2"
 flake8 = "*"
 flake8-builtins = "*"
-gitpython = "*"
 gsl = "==2.7.0"
 mock = "*"
 py = "*"
@@ -104,9 +103,6 @@ pytest-cov = "*"
 pytest-qt = "*"
 pytest-randomly = "*"
 pytest-xdist = "*"
-sphinx = "*"
-sphinx_rtd_theme = "*"
-sphinxcontrib-video = "*"
 
 [feature.tutorials]
 platforms = ["win-64", "linux-64", "osx-64"]
@@ -122,29 +118,12 @@ python-mss = "*"
 platforms = ["win-64", "linux-64", "osx-64"]
 
 [feature.docs.dependencies]
-python = "<312"
-setuptools = "<81"
-flask = "*"
-flask-httpauth = "*"
-chameleon = "*"
-multidict = "*"
-isodate = "*"
-scipy = "*"
-metpy = "*"
-markdown = "*"
-xstatic = "*"
-xstatic-jquery = "<3.6"
-xstatic-bootstrap = "<4.6"
-defusedxml = "*"
+sphinx = "*"
 sphinx_rtd_theme = "*"
 sphinxcontrib-video = ">=0.2.1"
-sphinx = "*"
-netcdf4 = "*"
-owslib = "*"
-pyqt = "*"
 
 [environments]
 addons = ["addons"]
-dev = ["dev"]
+dev = ["dev", "docs"]
 tutorials = ["tutorials"]
 docs = ["docs"]
