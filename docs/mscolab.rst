@@ -167,15 +167,15 @@ To do this follow these steps:
 
 #. Stop MSColab completely, no process interacting with the MSColab database should remain running
 #. **Make a backup of your existing database**
-#. Set ``SQLALCHEMY_DB_URI_TO_MIGRATE_FROM`` to your existing database
-#. Set ``SQLALCHEMY_DB_URI`` to a new database
+#. Set ``SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM`` to your existing database
+#. Set ``SQLALCHEMY_DATABASE_URI`` to a new database
 #. If you are not using SQLite: create the new database
 #. Start MSColab
 #. Check that everything was migrated successfully
-#. Unset ``SQLALCHEMY_DB_URI_TO_MIGRATE_FROM``
+#. Unset ``SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM``
 
 If you want to keep using your old database URI you can first rename your existing database so that it has a different URI
-and just set ``SQLALCHEMY_DB_URI_TO_MIGRATE_FROM`` to that.
+and just set ``SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM`` to that.
 
 
 Steps to use the MSColab UI features

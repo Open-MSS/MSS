@@ -455,7 +455,7 @@ class WatchModificationDataAccess(DefaultDataAccess):
         except (KeyError, OSError) as ex:
             if reload:
                 self.setup()
-                self._determine_filename(self, variable, vartype, init_time, valid_time, reload=False)
+                return self._determine_filename(variable, vartype, init_time, valid_time, reload=False)
             else:
                 logging.error("Could not identify filename. %s %s %s %s %s %s",
                               variable, vartype, init_time, valid_time, type(ex), ex)

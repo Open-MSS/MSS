@@ -35,7 +35,6 @@ import eventlet.wsgi
 
 from PyQt5 import QtWidgets
 from contextlib import contextmanager
-from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import APP, sockio, cm, fm
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.utils.config import modify_config_file
@@ -96,9 +95,9 @@ def mscolab_session_app():
     handles per-test cleanup as well.
     """
     _app = APP
-    _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    _app.config['OPERATIONS_DATA'] = mscolab_settings.OPERATIONS_DATA
-    _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+    _app.config['SQLALCHEMY_DATABASE_URI'] = APP.config['SQLALCHEMY_DATABASE_URI']
+    _app.config['OPERATIONS_DATA'] = APP.config['OPERATIONS_DATA']
+    _app.config['UPLOAD_FOLDER'] = APP.config['UPLOAD_FOLDER']
     return _app
 
 
@@ -143,7 +142,7 @@ def reset_mscolab(mscolab_session_app):
     do the cleanup actions.
     """
     with mscolab_session_app.app_context():
-        handle_db_reset()
+        handle_db_reset(verbose=False)
 
 
 @pytest.fixture

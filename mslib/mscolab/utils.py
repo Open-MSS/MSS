@@ -24,7 +24,7 @@
     limitations under the License.
 """
 from pathlib import Path
-from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.app import APP
 
 
 def get_recent_op_id(fm, user):
@@ -65,6 +65,6 @@ def get_message_dict(message):
 
 
 def create_files():
-    Path(mscolab_settings.OPERATIONS_DATA).mkdir(parents=True, exist_ok=True)
-    Path(mscolab_settings.UPLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
-    Path(mscolab_settings.SSO_DIR).mkdir(parents=True, exist_ok=True)
+    Path(APP.config['OPERATIONS_DATA']).mkdir(parents=True, exist_ok=True)
+    Path(APP.config['UPLOAD_FOLDER']).mkdir(parents=True, exist_ok=True)
+    Path(APP.config['SSO_DIR']).mkdir(parents=True, exist_ok=True)
