@@ -139,3 +139,5 @@ We are very grateful for your continuing support for MSS!
 
 See our [Contributors page](https://mss.readthedocs.io/en/stable/authors.html) for a list of authors. See also our info on [funding](
 https://mss.readthedocs.io/en/stable/funding.html).
+
+Added contribution by Santhosh.
