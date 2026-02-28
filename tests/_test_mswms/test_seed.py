@@ -81,3 +81,11 @@ class Testseed:
             assert "unit" in entry
             assert isinstance(entry["unit"], str)
             assert isinstance(entry["data"], np.ndarray)
+
+    def test_standard_profile_dimensions(self):
+        """Added test to verify standard output dimensions for PR requirements."""
+        levels = [100, 200, 500, 1000]
+        mean, std = seed.get_profile("air_pressure", levels, "air_temperature")
+        assert len(mean) == len(levels)
+        assert len(std) == len(levels)
+        assert isinstance(mean, np.ndarray)
