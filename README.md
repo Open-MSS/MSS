@@ -137,5 +137,7 @@ Acknowledgements
 
 We are very grateful for your continuing support for MSS!
 
+Thank You for giving the Opertunity to Contribute.
+
 See our [Contributors page](https://mss.readthedocs.io/en/stable/authors.html) for a list of authors. See also our info on [funding](
 https://mss.readthedocs.io/en/stable/funding.html).
