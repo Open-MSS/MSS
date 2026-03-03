@@ -1,6 +1,18 @@
 Changelog
 =========
 
+Version 11.0.0
+~~~~~~~~~~~~~~
+
+This is primarily a refactoring release.
+
+Reimar Bauer has removed our dependency on the pyfilesystem2 (fs) library, replacing it with Pathlib and os.path.
+Matthias Riße and Reimar Bauer have improved the stability of our test setup.
+The generation of demo data has been unified, and various deprecations have been resolved.
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/107?closed=1
+
 Version 10.2.1
 ~~~~~~~~~~~~~~
 
