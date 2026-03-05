@@ -12,7 +12,7 @@ Bug fixes are backported to the `stable` branch whenever feasible.
 If a bug fix cannot be backported, corresponding updates will be made to the develop branch.
 We release new minor versions on a regular basis.
 New features should be submitted as pull requests against the develop branch.
-Changes and documentation are managed through our issue tracker <https://github.com/Open-MSS/MSS/issues>."
+Changes and documentation are managed through our `issue tracker <https://github.com/Open-MSS/MSS/issues>`__.
 
 When it is ready the developer version becomes the next stable.
 
