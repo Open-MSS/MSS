@@ -720,7 +720,7 @@ All changes:
 https://github.com/Open-MSS/MSS/milestone/48?closed=1
 
 Version 2.0.1
----------------
+-------------
 
 Bug Fix release
 

@@ -2,7 +2,7 @@
 """
 
     mslib.index
-    ~~~~~~~~~~~~
+    ~~~~~~~~~~~
 
     shows some docs on the root url of the server
 

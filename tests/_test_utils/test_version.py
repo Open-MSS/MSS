@@ -2,7 +2,7 @@
 """
 
     mslib._tests.test_version
-    ~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides a test for the version string
 

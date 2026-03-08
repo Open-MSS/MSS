@@ -2,7 +2,7 @@
 """
 
     mslib.plugins.io.text
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~
 
     plugin for text format flight track export
 

@@ -2,7 +2,7 @@
 """
 
     mslib.utils.thermolib
-    ~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~
 
     Collection of thermodynamic functions.
 

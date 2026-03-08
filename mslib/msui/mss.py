@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
     mslib.msui.mss
-    ~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~
 
     Mission Support System Python/Qt Rename Message
 

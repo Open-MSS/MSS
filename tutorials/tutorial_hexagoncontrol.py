@@ -1,6 +1,6 @@
 """
     msui.tutorials.tutorial_hexagoncontrol.py
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This python script generates an automatic demonstration of how to create a hexagon flightrack with the waypoints.
     Placing a centre waypoint, how we can draw a perfect hexagon flight path around it with variable radius of

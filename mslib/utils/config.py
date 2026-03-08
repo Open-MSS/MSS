@@ -2,7 +2,7 @@
 """
 
     mslib.utils.config
-    ~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~
 
     Collection of functions all around config handling.
 

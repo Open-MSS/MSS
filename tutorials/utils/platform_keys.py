@@ -1,6 +1,6 @@
 """
     msui.tutorials.utils.platform_keys
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Includes platform-specific modules
 
