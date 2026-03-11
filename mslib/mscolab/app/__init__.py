@@ -54,12 +54,15 @@ def file_exists(filepath=None):
 
 
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
+DOCS_STATIC_DIR = os.path.join(DOCS_SERVER_PATH, 'static')
+DOCS_IMG_DIR = os.path.join(DOCS_STATIC_DIR, 'img')
+DOCS_DOCS_DIR = os.path.join(DOCS_STATIC_DIR, 'docs')
 # This can be used to set a location by SCRIPT_NAME for testing. e.g. export SCRIPT_NAME=/demo/
 SCRIPT_NAME = os.environ.get('SCRIPT_NAME', '/')
 
 # in memory database for testing
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'
-APP = Flask(__name__, template_folder=os.path.join(DOCS_SERVER_PATH, 'static', 'templates'))
+APP = Flask(__name__, template_folder=os.path.join(DOCS_STATIC_DIR, 'templates'))
 APP.config.from_object(mscolab_settings)
 # Expose docs path for callers/tests and make it part of Flask config for consistency.
 APP.config['DOCS_SERVER_PATH'] = DOCS_SERVER_PATH
@@ -92,14 +95,9 @@ def _xstatic(name):
 APP.xstatic = _xstatic
 
 
-def create_app(name="", imprint=None, gdpr=None):
+def create_app(imprint=None, gdpr=None):
     imprint_file = imprint
     gdpr_file = gdpr
-
-#    if "mscolab.server" in name:
-#        from mslib.mscolab.app import APP, get_topmenu
-#    else:
-#        from mslib.mswms.app import APP, get_topmenu
 
     APP.jinja_env.globals.update(file_exists=file_exists)
     APP.jinja_env.globals["imprint"] = imprint_file
@@ -116,7 +114,7 @@ def create_app(name="", imprint=None, gdpr=None):
 
     @APP.route('/mss_theme/img/<path:filename>')
     def mss_theme(filename):
-        base_path = os.path.join(DOCS_SERVER_PATH, 'static', 'img')
+        base_path = os.path.join(DOCS_IMG_DIR)
         return send_from_directory(base_path, filename)
 
     APP.jinja_env.globals.update(get_topmenu=get_topmenu)
@@ -128,24 +126,24 @@ def create_app(name="", imprint=None, gdpr=None):
     @APP.route("/mss/about")
     @APP.route("/mss")
     def about():
-        _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'about.md')
+        _file = os.path.join(DOCS_DOCS_DIR, 'about.md')
         img_url = url_for('overview')
         md_overrides = ('![image](/mss/overview.png)', f'![image]({img_url})')
 
-        html_overrrides = ('<img alt="image" src="/mss/overview.png" />',
+        html_overrides = ('<img alt="image" src="/mss/overview.png" />',
                            '<img class="mx-auto d-block img-fluid" alt="image" src="/mss/overview.png" />')
-        content = get_content(_file, md_overrides=md_overrides, html_overrides=html_overrrides)
+        content = get_content(_file, md_overrides=md_overrides, html_overrides=html_overrides)
         return render_template("/content.html", act="about", content=content)
 
     @APP.route("/mss/install")
     def install():
-        _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'installation.md')
+        _file = os.path.join(DOCS_DOCS_DIR, 'installation.md')
         content = get_content(_file)
         return render_template("/content.html", act="install", content=content)
 
     @APP.route("/mss/help")
     def help():  # noqa: A001
-        _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'help.md')
+        _file = os.path.join(DOCS_DOCS_DIR, 'help.md')
         html_overrides = ('<img alt="Waypoint Tutorial" '
                           'src="https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.gif" />',
                           '<img  class="mx-auto d-block img-fluid" alt="Waypoint Tutorial" '
@@ -181,7 +179,7 @@ def create_app(name="", imprint=None, gdpr=None):
 
     @APP.route('/mss/overview.png')
     def overview():
-        base_path = os.path.join(DOCS_SERVER_PATH, 'static', 'img', 'wise12_overview.png')
+        base_path = os.path.join(DOCS_IMG_DIR, 'wise12_overview.png')
         return send_file(base_path)
 
     return APP

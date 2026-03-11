@@ -146,7 +146,7 @@ ORDER BY sequence_namespace.nspname, class_sequence.relname;
     logging.info("Database initialised successfully!")
 
 
-APP = create_app(__name__, imprint=APP.config['IMPRINT'], gdpr=APP.config['GDPR'])
+APP = create_app(imprint=APP.config['IMPRINT'], gdpr=APP.config['GDPR'])
 with APP.app_context():
     _handle_db_upgrade()
 mail = Mail(APP)
