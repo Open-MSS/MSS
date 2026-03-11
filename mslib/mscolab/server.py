@@ -47,12 +47,12 @@ from saml2.metadata import create_metadata_string
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from flask.wrappers import Response
 
-from mslib.mscolab.conf import mscolab_settings, setup_saml2_backend
+from mslib.mscolab.conf import setup_saml2_backend
+from mslib.mscolab.app import create_app, APP
 from mslib.mscolab.models import Change, MessageType, User
 from mslib.mscolab.sockets_manager import _setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
-from mslib.index import create_app
 from mslib.mscolab.forms import ResetRequestForm, ResetPasswordForm
 from mslib.mscolab import migrations
 
@@ -80,9 +80,9 @@ your database MSColab will abort. Please follow the documentation for a manual d
         and db.session.execute(sqlalchemy.text("SELECT * FROM alembic_version")).first() is None
     )
     # If a database connection to migrate from is set and the target database is empty, then migrate the existing data
-    if is_empty_database and mscolab_settings.SQLALCHEMY_DB_URI_TO_MIGRATE_FROM is not None:
+    if is_empty_database and APP.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'] is not None:
         logging.info("The target database is empty and a database to migrate from is set, starting the data migration")
-        source_engine = sqlalchemy.create_engine(mscolab_settings.SQLALCHEMY_DB_URI_TO_MIGRATE_FROM)
+        source_engine = sqlalchemy.create_engine(APP.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'])
         source_metadata = sqlalchemy.MetaData()
         source_metadata.reflect(bind=source_engine)
         # Determine the previous MSColab version based on the database content and upgrade to the corresponding revision
@@ -93,7 +93,7 @@ your database MSColab will abort. Please follow the documentation for a manual d
             # It's probably v8
             flask_migrate.upgrade(directory=migrations.__path__[0], revision="92eaba86a92e")
         # Copy over the existing data
-        target_engine = sqlalchemy.create_engine(mscolab_settings.SQLALCHEMY_DB_URI)
+        target_engine = sqlalchemy.create_engine(APP.config['SQLALCHEMY_DATABASE_URI'])
         target_metadata = sqlalchemy.MetaData()
         target_metadata.reflect(bind=target_engine)
         with source_engine.connect() as src_connection, target_engine.connect() as target_connection:
@@ -146,11 +146,11 @@ ORDER BY sequence_namespace.nspname, class_sequence.relname;
     logging.info("Database initialised successfully!")
 
 
-APP = create_app(__name__, imprint=mscolab_settings.IMPRINT, gdpr=mscolab_settings.GDPR)
+APP = create_app(imprint=APP.config['IMPRINT'], gdpr=APP.config['GDPR'])
 with APP.app_context():
     _handle_db_upgrade()
 mail = Mail(APP)
-CORS(APP, origins=mscolab_settings.CORS_ORIGINS if hasattr(mscolab_settings, "CORS_ORIGINS") else ["*"])
+CORS(APP, origins=APP.config['CORS_ORIGINS'] if hasattr(APP, "CORS_ORIGINS") else ["*"])
 auth = HTTPBasicAuth()
 
 
@@ -165,7 +165,7 @@ except ImportError as ex:
         __file__ = None
 
 # setup http auth
-if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
+if APP.__dict__.get('enable_basic_http_authentication', False):
     logging.debug("Enabling basic HTTP authentication. Username and "
                   "password required to access the service.")
     import hashlib
@@ -238,7 +238,7 @@ def check_login(emailid, password):
         logging.debug("Problem in the database (%ex), likely version client different", ex)
         return False
     if user is not None:
-        if mscolab_settings.MAIL_ENABLED:
+        if APP.config['MAIL_ENABLED']:
             if user.confirmed:
                 if user.verify_password(password):
                     return user
@@ -280,7 +280,7 @@ def verify_user(func):
             return "False"
         else:
             # saving user details in flask.g
-            if mscolab_settings.MAIL_ENABLED:
+            if APP.config['MAIL_ENABLED']:
                 if user.confirmed:
                     g.user = user
                     return func(*args, **kwargs)
@@ -331,43 +331,43 @@ def create_or_update_idp_user(email, username, token, authentication_backend):
 
 
 @APP.route('/')
-@conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
+@conditional_decorator(auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
 def home():
     return render_template("/index.html")
 
 
 @APP.route("/status")
-@conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
+@conditional_decorator(auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
 def hello():
     if request.authorization is not None:
-        if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
+        if APP.__dict__.get('enable_basic_http_authentication', False):
             auth.login_required()
             return json.dumps({
                 'message': "Mscolab server",
-                'use_saml2': mscolab_settings.USE_SAML2,
-                'direct_login': mscolab_settings.DIRECT_LOGIN
+                'use_saml2': APP.config['USE_SAML2'],
+                'direct_login': APP.DIRECT_LOGIN
             })
         return json.dumps({
             'message': "Mscolab server",
-            'use_saml2': mscolab_settings.USE_SAML2,
-            'direct_login': mscolab_settings.DIRECT_LOGIN
+            'use_saml2': APP.config['USE_SAML2'],
+            'direct_login': APP.config['DIRECT_LOGIN']
         })
     else:
         return json.dumps({
             'message': "Mscolab server",
-            'use_saml2': mscolab_settings.USE_SAML2,
-            'direct_login': mscolab_settings.DIRECT_LOGIN
+            'use_saml2': APP.config['USE_SAML2'],
+            'direct_login': APP.config['DIRECT_LOGIN']
         })
 
 
 @APP.route('/token', methods=["POST"])
-@conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
+@conditional_decorator(auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
 def get_auth_token():
     emailid = request.form['email']
     password = request.form['password']
     user = check_login(emailid, password)
     if user is not False:
-        if mscolab_settings.MAIL_ENABLED:
+        if APP.config['MAIL_ENABLED']:
             if user.confirmed:
                 token = user.generate_auth_token()
                 return json.dumps({
@@ -390,7 +390,7 @@ def authorized():
     token = request.args.get('token', request.form.get('token'))
     user = User.verify_auth_token(token)
     if user is not None:
-        if mscolab_settings.MAIL_ENABLED:
+        if APP.config['MAIL_ENABLED']:
             if user.confirmed is False:
                 return "False"
             else:
@@ -402,7 +402,7 @@ def authorized():
 
 
 @APP.route("/register", methods=["POST"])
-@conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
+@conditional_decorator(auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
 def user_register_handler():
     email = request.form['email']
     password = request.form['password']
@@ -413,7 +413,7 @@ def user_register_handler():
     try:
         if result["success"]:
             status_code = 201
-            if mscolab_settings.MAIL_ENABLED:
+            if APP.config['MAIL_ENABLED']:
                 status_code = 204
                 token = generate_confirmation_token(email)
                 confirm_url = url_for('confirm_email', token=token, _external=True)
@@ -427,7 +427,7 @@ def user_register_handler():
 
 @APP.route('/confirm/<token>')
 def confirm_email(token):
-    if mscolab_settings.MAIL_ENABLED:
+    if APP.config['MAIL_ENABLED']:
         try:
             email = confirm_token(token)
         except TypeError:
@@ -458,7 +458,7 @@ def upload_profile_image():
         return jsonify({'message': 'No file provided or invalid file type'}), 400
     if not file.mimetype.startswith('image/'):
         return jsonify({'message': 'Invalid file type'}), 400
-    if file.content_length > mscolab_settings.MAX_UPLOAD_SIZE:
+    if file.content_length > APP.config['MAX_UPLOAD_SIZE']:
         return jsonify({'message': 'File too large'}), 413
 
     success, message = fm.save_user_profile_image(user_id, file)
@@ -474,7 +474,7 @@ def fetch_profile_image():
     user_id = request.form['user_id']
     success, filename = fm.get_user_profile_image(user_id)
     if success:
-        base_path = mscolab_settings.UPLOAD_FOLDER
+        base_path = APP.config['UPLOAD_FOLDER']
         return send_from_directory(Path(base_path), filename)
     else:
         return jsonify({'message': 'User or profile image not found'}), 404
@@ -532,7 +532,7 @@ def message_attachment():
 
 @APP.route('/uploads/<name>/<path:filename>', methods=["GET"])
 def uploads(name=None, filename=None):
-    base_path = mscolab_settings.UPLOAD_FOLDER
+    base_path = APP.config['UPLOAD_FOLDER']
     if name is None:
         abort(404)
     if filename is None:
@@ -844,7 +844,7 @@ def reset_password(token):
 
 @APP.route("/reset_request", methods=['GET', 'POST'])
 def reset_request():
-    if mscolab_settings.MAIL_ENABLED:
+    if APP.config['MAIL_ENABLED']:
         form = ResetRequestForm()
         if form.validate_on_submit():
             # Check whether user exists or not based on the db
@@ -872,7 +872,7 @@ def reset_request():
         return render_template('errors/403.html'), 403
 
 
-if mscolab_settings.USE_SAML2:
+if APP.config['USE_SAML2']:
     # setup idp login config
     setup_saml2_backend()
 
@@ -973,7 +973,7 @@ if mscolab_settings.USE_SAML2:
                 APP.add_url_rule(f'/{assertion_consumer_endpoint}/', assertion_consumer_endpoint,
                                  create_acs_post_handler(idp_config), methods=['POST'])
         except (NameError, AttributeError, KeyError) as ex:
-            logging.warning("USE_SAML2 is %s, Failure is: %s", mscolab_settings.USE_SAML2, ex)
+            logging.warning("USE_SAML2 is %s, Failure is: %s", APP.config['USE_SAML2'], ex)
 
     @APP.route('/idp_login_auth/', methods=['POST'])
     def idp_login_auth():
@@ -1013,7 +1013,7 @@ if mscolab_settings.USE_SAML2:
 
 def start_server(app, sockio, cm, fm, port=8083):
     create_files()
-    sockio.run(app, port=port, debug=mscolab_settings.DEBUG)
+    sockio.run(app, port=port, debug=APP.config['DEBUG'])
 
 
 def main():

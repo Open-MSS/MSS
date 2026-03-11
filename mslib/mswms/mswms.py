@@ -32,7 +32,7 @@ from pathlib import Path
 
 from mslib import __version__
 from mslib.utils import setup_logging
-from mslib.mswms.wms import app as application
+from mslib.mswms.wms import APP as application
 from mslib.mswms.seed import DataFiles
 
 

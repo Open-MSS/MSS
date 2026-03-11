@@ -94,7 +94,7 @@ def generate_initial_config():
 
     if not constants.MSCOLAB_SERVER_CONFIG_FILE_PATH.exists():
         config_string = f'''
-# SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
+# SQLALCHEMY_DATABASE_URI = 'mysql://user:pass@127.0.0.1/mscolab'
 import os
 import logging
 import secrets
@@ -147,7 +147,7 @@ MAIL_DEFAULT_SENDER = 'MSS@localhost'
 # enable verification by Mail
 MAIL_ENABLED = False
 
-SQLALCHEMY_DB_URI = 'sqlite:///' + urljoin(DATA_DIR, 'mscolab.db')
+SQLALCHEMY_DATABASE_URI = 'sqlite:///' + urljoin(DATA_DIR, 'mscolab.db')
 
 # enable SQLALCHEMY_ECHO
 SQLALCHEMY_ECHO = False

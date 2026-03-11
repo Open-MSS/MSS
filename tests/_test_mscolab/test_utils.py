@@ -28,7 +28,7 @@ import os
 import pytest
 import json
 
-from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.app import APP
 from mslib.mscolab.models import Operation, Message, MessageType, User
 from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.utils import (get_recent_op_id, get_session_id,
@@ -77,8 +77,8 @@ class Test_Utils:
 
     def test_create_file(self):
         create_files()
-        assert os.path.exists(mscolab_settings.OPERATIONS_DATA)
-        assert os.path.exists(mscolab_settings.UPLOAD_FOLDER)
+        assert os.path.exists(APP.config['OPERATIONS_DATA'])
+        assert os.path.exists(APP.config['UPLOAD_FOLDER'])
 
     def _create_operation(self, test_client, userdata=None, path="firstflight",
                           description="simple test", content=XML_CONTENT_INIT):

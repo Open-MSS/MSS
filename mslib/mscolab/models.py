@@ -89,8 +89,8 @@ class User(db.Model):
 
     def generate_auth_token(self, expiration=None):
         # Importing conf here to avoid loading settings on opening chat window
-        from mslib.mscolab.conf import mscolab_settings
-        expiration = mscolab_settings.__dict__.get('EXPIRATION', expiration)
+        from mslib.mscolab.app import APP
+        expiration = APP.__dict__.get('EXPIRATION', expiration)
         if expiration is None:
             expiration = 864000
             token = jwt.encode(
@@ -98,7 +98,7 @@ class User(db.Model):
                     "id": self.id,
                     "exp": datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=expiration)
                 },
-                mscolab_settings.SECRET_KEY,
+                APP.config['SECRET_KEY'],
                 algorithm="HS256"
             )
             return token

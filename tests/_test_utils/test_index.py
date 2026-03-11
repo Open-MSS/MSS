@@ -24,20 +24,18 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
-from mslib import index
-from mslib.mscolab.server import APP as app
+from mslib.mscolab import app
 
 
 def test_xstatic():
-    assert index._xstatic('jquery') is not None
-    assert index._xstatic('bootstrap') is not None
-    assert index._xstatic('notinstalled') is None
+    assert app._xstatic('jquery') is not None
+    assert app._xstatic('bootstrap') is not None
+    assert app._xstatic('notinstalled') is None
 
 
 def test_app_loader():
-    assert index.DOCS_SERVER_PATH.endswith('mslib')
-    with app.test_client() as c:
+    assert app.APP.config['DOCS_SERVER_PATH'].endswith('mslib')
+    with app.APP.test_client() as c:
         response = c.get('/xstatic/bootstrap/css/bootstrap.css')
         assert response.status_code == 200
         response = c.get('mss_theme/img/wise12_overview.png')

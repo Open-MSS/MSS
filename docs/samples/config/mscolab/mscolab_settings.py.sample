@@ -75,7 +75,7 @@ GROUP_POSTFIX = "Group"
 # MySQL: "mysql+pymysql://<username>:<password>@<host>/<db_name>?charset=utf8mb4"
 # PostgreSQL: "postgresql://<username>:<password>@<host>/<db_name>"
 # SQLite: "sqlite:///<path_to_db>"
-SQLALCHEMY_DB_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'mscolab.db')
+SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'mscolab.db')
 
 # Set to True for testing and False for production
 SQLALCHEMY_ECHO = False

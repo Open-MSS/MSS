@@ -29,9 +29,8 @@ import git
 from pathlib import Path
 from sqlalchemy.exc import IntegrityError
 
-from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.app import APP
 from mslib.mscolab.models import User, db, Permission, Operation
-from mslib.mscolab.server import APP as app
 
 
 XML_CONTENT_INIT = """<?xml version="1.0" encoding="utf-8"?>
@@ -51,9 +50,9 @@ XML_CONTENT_INIT = """<?xml version="1.0" encoding="utf-8"?>
 # Todo: refactor move to mscolab.utils
 def add_all_users_to_all_operations(access_level='collaborator'):
     """ on db level we add all users as collaborator to all operations """
-    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    with app.app_context():
+    APP.config['SQLALCHEMY_DATABASE_URI'] = APP.config['SQLALCHEMY_DATABASE_URI']
+    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    with APP.app_context():
         all_operations = Operation.query.all()
         all_path = [operation.path for operation in all_operations]
         db.session.close()
@@ -65,16 +64,16 @@ def add_all_users_to_all_operations(access_level='collaborator'):
 
 def add_all_users_default_operation(path='TEMPLATE', description="Operation to keep all users", access_level='admin'):
     """ on db level we add all users to the operation TEMPLATE for user handling"""
-    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    APP.config['SQLALCHEMY_DATABASE_URI'] = APP.config['SQLALCHEMY_DATABASE_URI']
+    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    with app.app_context():
+    with APP.app_context():
         operation_available = Operation.query.filter_by(path=path).first()
         if not operation_available:
             operation = Operation(path, description)
             db.session.add(operation)
             db.session.commit()
-            operation_file_name = Path(mscolab_settings.OPERATIONS_DATA) / path
+            operation_file_name = Path(APP.config['OPERATIONS_DATA']) / path
             if not operation_file_name.exists():
                 operation_file_name.mkdir(parents=True, exist_ok=True)
                 operation_file_path = operation_file_name / "main.ftml"
@@ -82,7 +81,7 @@ def add_all_users_default_operation(path='TEMPLATE', description="Operation to k
                 <waypoints>
                 </waypoints>'''
                 operation_file_path.write_text(xml_content, encoding='utf-8')
-                git_repo_path = Path(mscolab_settings.OPERATIONS_DATA) / path
+                git_repo_path = Path(APP.config['OPERATIONS_DATA']) / path
                 git_repo_path.mkdir(parents=True, exist_ok=True)
                 r = git.Repo.init(str(git_repo_path))
                 r.git.clear_cache()
@@ -114,9 +113,9 @@ def add_all_users_default_operation(path='TEMPLATE', description="Operation to k
 
 
 def delete_user(email):
-    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    with app.app_context():
+    APP.config['SQLALCHEMY_DATABASE_URI'] = APP.config['SQLALCHEMY_DATABASE_URI']
+    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    with APP.app_context():
         user = User.query.filter_by(emailid=str(email)).first()
         if user:
             logging.info("User: %s deleted from db", email)
@@ -132,10 +131,10 @@ def add_user(email, username, password, fullname):
     """
     on db level we add a user
     """
-    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    APP.config['SQLALCHEMY_DATABASE_URI'] = APP.config['SQLALCHEMY_DATABASE_URI']
+    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    with app.app_context():
+    with APP.app_context():
         user_email_exists = User.query.filter_by(emailid=str(email)).first()
         user_name_exists = User.query.filter_by(username=str(username)).first()
         if not user_email_exists and not user_name_exists:
@@ -151,30 +150,31 @@ def add_user(email, username, password, fullname):
 
 
 def get_user(email):
-    with app.app_context():
+    with APP.app_context():
         return User.query.filter_by(emailid=str(email)).first()
 
 
 def get_operation(operation_name):
-    with app.app_context():
+    with APP.app_context():
         return Operation.query.filter_by(path=operation_name).first()
 
 
 def add_operation(operation_name, description):
-    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    with app.app_context():
+    APP.config['SQLALCHEMY_DATABASE_URI'] = APP.config['SQLALCHEMY_DATABASE_URI']
+    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    with APP.app_context():
         operation_available = Operation.query.filter_by(path=operation_name).first()
         if not operation_available:
             operation = Operation(operation_name, description)
             db.session.add(operation)
             db.session.commit()
-            operation_file_name = Path(mscolab_settings.OPERATIONS_DATA) / operation_name
+            operation_file_name = Path(APP.config['OPERATIONS_DATA']) / operation_name
+
             if not operation_file_name.exists():
                 operation_file_name.mkdir(parents=True, exist_ok=True)
                 operation_file_path = operation_file_name / "main.ftml"
                 operation_file_path.write_text(XML_CONTENT_INIT, encoding='utf-8')
-                git_repo_path = Path(mscolab_settings.OPERATIONS_DATA) / operation_name
+                git_repo_path = Path(APP.config['OPERATIONS_DATA']) / operation_name
                 git_repo_path.mkdir(parents=True, exist_ok=True)
                 r = git.Repo.init(str(git_repo_path))
                 r.git.clear_cache()
@@ -188,9 +188,9 @@ def add_operation(operation_name, description):
 
 
 def delete_operation(operation_name):
-    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    with app.app_context():
+    APP.config['SQLALCHEMY_DATABASE_URI'] = APP.config['SQLALCHEMY_DATABASE_URI']
+    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    with APP.app_context():
         operation = Operation.query.filter_by(path=operation_name).first()
         if operation:
             db.session.delete(operation)
@@ -205,9 +205,9 @@ def add_user_to_operation(path=None, access_level='admin', emailid=None):
     """ on db level we add all users to the operation TEMPLATE for user handling"""
     if None in (path, emailid):
         return False
-    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    with app.app_context():
+    APP.config['SQLALCHEMY_DATABASE_URI'] = APP.config['SQLALCHEMY_DATABASE_URI']
+    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    with APP.app_context():
         operation = Operation.query.filter_by(path=path).first()
         if operation:
             user = User.query.filter_by(emailid=emailid).first()
@@ -228,9 +228,9 @@ def archive_operation(path=None, emailid=None):
     """ this archives an existing operation """
     if None in (path, emailid):
         return False
-    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    with app.app_context():
+    APP.config['SQLALCHEMY_DATABASE_URI'] = APP.config['SQLALCHEMY_DATABASE_URI']
+    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    with APP.app_context():
         operation = Operation.query.filter_by(path=path).first()
         if operation:
             user = User.query.filter_by(emailid=emailid).first()
@@ -427,13 +427,13 @@ def seed_data():
 
     file_paths = ['one', 'two', 'three', 'four', 'Admin_Test', 'test_mscolab']
     for file_path in file_paths:
-        operation_dir = Path(mscolab_settings.OPERATIONS_DATA) / file_path
+        operation_dir = Path(APP.config['OPERATIONS_DATA']) / file_path
         operation_dir.mkdir(parents=True, exist_ok=True)
         operation_file = operation_dir / 'main.ftml'
         operation_file.write_text(XML_CONTENT_INIT)
 
         # initiate git in the same directory where the file is created
-        git_dir = Path(mscolab_settings.OPERATIONS_DATA) / file_path
+        git_dir = Path(APP.config['OPERATIONS_DATA']) / file_path
         git_dir.mkdir(parents=True, exist_ok=True)
 
         # Create the main.ftml file in the git directory as well

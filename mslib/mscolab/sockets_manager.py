@@ -34,11 +34,11 @@ from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.models import MessageType, Permission, User
 from mslib.mscolab.utils import get_message_dict
 from mslib.mscolab.utils import get_user_id
-from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.app import APP
 
-socketio = SocketIO(logger=mscolab_settings.SOCKETIO_LOGGER, engineio_logger=mscolab_settings.ENGINEIO_LOGGER,
-                    cors_allowed_origins=("*" if not hasattr(mscolab_settings, "CORS_ORIGINS") or
-                                          "*" in mscolab_settings.CORS_ORIGINS else mscolab_settings.CORS_ORIGINS))
+socketio = SocketIO(logger=APP.config['SOCKETIO_LOGGER'], engineio_logger=APP.config['ENGINEIO_LOGGER'],
+                    cors_allowed_origins=("*" if not hasattr(APP, "CORS_ORIGINS") or
+                    "*" in APP.config['CORS_ORIGINS'] else APP.config['CORS_ORIGINS']))
 
 
 class SocketsManager:

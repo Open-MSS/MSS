@@ -39,7 +39,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
-from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.app import APP
 
 
 class FileManager:
@@ -96,8 +96,8 @@ class FileManager:
             db.session.add(perm)
             db.session.commit()
             # here we can import the permissions from Group file
-            if not path.endswith(mscolab_settings.GROUP_POSTFIX):
-                import_op = Operation.query.filter_by(path=f"{category}{mscolab_settings.GROUP_POSTFIX}").first()
+            if not path.endswith(APP.config['GROUP_POSTFIX']):
+                import_op = Operation.query.filter_by(path=f"{category}{APP.config['GROUP_POSTFIX']}").first()
                 if import_op is not None:
                     self.import_permissions(import_op.id, operation_id, user.id)
             data_dir = Path(self.data_dir)
@@ -266,7 +266,7 @@ class FileManager:
         """
         This function is called when deleting account or updating the profile picture
         """
-        upload_folder = mscolab_settings.UPLOAD_FOLDER
+        upload_folder = APP.config['UPLOAD_FOLDER']
         if sys.platform.startswith('win'):
             upload_folder = upload_folder.replace('\\', '/')
 
@@ -288,7 +288,7 @@ class FileManager:
         Generic function to save files securely in any specified directory with unique filename
         and return the relative file path.
         """
-        upload_folder = mscolab_settings.UPLOAD_FOLDER
+        upload_folder = APP.config['UPLOAD_FOLDER']
         if sys.platform.startswith('win'):
             upload_folder = upload_folder.replace('\\', '/')
 
@@ -380,9 +380,9 @@ class FileManager:
             except OSError:
                 shutil.move(str(old_path), str(new_path))
 
-            if value.endswith(mscolab_settings.GROUP_POSTFIX):
+            if value.endswith(APP.config['GROUP_POSTFIX']):
                 # getting the category
-                category = value.split(mscolab_settings.GROUP_POSTFIX)[0]
+                category = value.split(APP.config['GROUP_POSTFIX'])[0]
                 # all operation with that category
                 ops_category = Operation.query.filter_by(category=category)
                 for ops in ops_category:
@@ -637,14 +637,14 @@ class FileManager:
                 new_permissions.append(Permission(u_id, op_id, access_level))
         db.session.add_all(new_permissions)
         operation = Operation.query.filter_by(id=op_id).first()
-        if operation.path.endswith(mscolab_settings.GROUP_POSTFIX):
+        if operation.path.endswith(APP.config['GROUP_POSTFIX']):
             # the members of this gets added to all others of same category
-            category = operation.path.split(mscolab_settings.GROUP_POSTFIX)[0]
+            category = operation.path.split(APP.config['GROUP_POSTFIX'])[0]
             # all operation with that category
             ops_category = Operation.query.filter_by(category=category)
             new_permissions = []
             for ops in ops_category:
-                if not ops.path.endswith(mscolab_settings.GROUP_POSTFIX):
+                if not ops.path.endswith(APP.config['GROUP_POSTFIX']):
                     new_permissions.append(Permission(u_id, ops.id, access_level))
                 db.session.add_all(new_permissions)
         try:
@@ -665,9 +665,9 @@ class FileManager:
             .update({Permission.access_level: new_access_level}, synchronize_session='fetch')
 
         operation = Operation.query.filter_by(id=op_id).first()
-        if operation.path.endswith(mscolab_settings.GROUP_POSTFIX):
+        if operation.path.endswith(APP.config['GROUP_POSTFIX']):
             # the members of this gets added to all others of same category
-            category = operation.path.split(mscolab_settings.GROUP_POSTFIX)[0]
+            category = operation.path.split(APP.config['GROUP_POSTFIX'])[0]
             # all operation with that category
             ops_category = Operation.query.filter_by(category=category)
             for ops in ops_category:
@@ -706,9 +706,9 @@ class FileManager:
             .delete(synchronize_session='fetch')
 
         operation = Operation.query.filter_by(id=op_id).first()
-        if operation.path.endswith(mscolab_settings.GROUP_POSTFIX):
+        if operation.path.endswith(APP.config['GROUP_POSTFIX']):
             # the members of this gets added to all others of same category
-            category = operation.path.split(mscolab_settings.GROUP_POSTFIX)[0]
+            category = operation.path.split(APP.config['GROUP_POSTFIX'])[0]
             # all operation with that category
             ops_category = Operation.query.filter_by(category=category)
             for ops in ops_category:
