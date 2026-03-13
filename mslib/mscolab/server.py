@@ -416,7 +416,7 @@ def user_register_handler():
             if APP.config['MAIL_ENABLED']:
                 status_code = 204
                 token = generate_confirmation_token(email)
-                confirm_url = url_for('confirm_email', token=token, _external=True)
+                confirm_url = url_for('docs.confirm_email', token=token, _external=True)
                 html = render_template('user/activate.html', username=username, confirm_url=confirm_url)
                 subject = "MSColab Please confirm your email"
                 send_email(email, subject, html)
@@ -850,7 +850,7 @@ def reset_request():
                 try:
                     username = user.username
                     token = generate_confirmation_token(form.email.data)
-                    reset_password_url = url_for('reset_password', token=token, _external=True)
+                    reset_password_url = url_for('docs.reset_password', token=token, _external=True)
                     html = render_template('user/reset_confirmation.html',
                                            reset_password_url=reset_password_url, username=username)
                     subject = "MSColab Password reset request"

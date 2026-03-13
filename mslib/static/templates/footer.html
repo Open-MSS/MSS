@@ -17,13 +17,13 @@
          <div class="container-fluid">
            <div class="row" style="background-color:lavender;">
                {% if file_exists(imprint) %}
-                  <div class="col-sm-2 col-md-2" style="background-color:f2f2f2;"><a href="{{ url_for('imprint') }}">
+                  <div class="col-sm-2 col-md-2" style="background-color:f2f2f2;"><a href="{{ url_for('docs.imprint') }}">
                   <p class="text-dark">Imprint</p></a>
                   </div>
                {% endif %}
                {% if file_exists(gdpr) %}
 
-                   <div class="col-sm-2 col-md-2" style="background-color:f2f2f2;"><a href="{{ url_for('gdpr') }}">
+                   <div class="col-sm-2 col-md-2" style="background-color:f2f2f2;"><a href="{{ url_for('docs.gdpr') }}">
                    <p class="text-dark">GDPR</p></a>
                    </div>
                {% endif %}
