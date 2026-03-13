@@ -72,6 +72,7 @@ message, update = release_info.check_for_new_release()
 if update:
     logging.warning(message)
 
+
 def file_exists(filepath=None):
     try:
         return os.path.isfile(filepath)

@@ -76,9 +76,6 @@ APP.config['DOCS_SERVER_PATH'] = DOCS_SERVER_PATH
 APP.route = prefix_route(APP.route, SCRIPT_NAME)
 
 
-
-
-
 def _xstatic(name):
     mod_names = [
         'jquery', 'bootstrap',
