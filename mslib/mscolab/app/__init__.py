@@ -38,19 +38,9 @@ from flask_sqlalchemy import SQLAlchemy
 from mslib.mscolab.conf import mscolab_settings
 from mslib.utils import prefix_route, release_info
 from mslib.msui.icons import icons
+from mslib.utils.file_exists import file_exists
 from mslib.utils.get_content import get_content
 from xstatic.main import XStatic
-
-message, update = release_info.check_for_new_release()
-if update:
-    logging.warning(message)
-
-
-def file_exists(filepath=None):
-    try:
-        return os.path.isfile(filepath)
-    except TypeError:
-        return False
 
 
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
@@ -61,11 +51,17 @@ DOCS_TEMPLATES_DIR = os.path.join(DOCS_STATIC_DIR, 'templates')
 # This can be used to set a location by SCRIPT_NAME for testing. e.g. export SCRIPT_NAME=/demo/
 SCRIPT_NAME = os.environ.get('SCRIPT_NAME', '/')
 
-docs_bp = Blueprint(
+DOCS_BP = Blueprint(
     "docs",
     __name__,
     template_folder=os.path.join(DOCS_TEMPLATES_DIR)
 )
+
+
+message, update = release_info.check_for_new_release()
+if update:
+    logging.warning(message)
+
 
 # in memory database for testing
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'
@@ -107,7 +103,7 @@ def create_app(imprint=None, gdpr=None):
     APP.jinja_env.globals["gdpr"] = gdpr_file
     APP.jinja_env.globals.update(get_topmenu=get_topmenu)
 
-    @docs_bp.route('/xstatic/<name>/<path:filename>')
+    @DOCS_BP.route('/xstatic/<name>/<path:filename>')
     def files(name, filename):
         base_path = _xstatic(name)
         if base_path is None:
@@ -116,17 +112,17 @@ def create_app(imprint=None, gdpr=None):
             abort(404)
         return send_from_directory(base_path, filename)
 
-    @docs_bp.route('/mss_theme/img/<path:filename>')
+    @DOCS_BP.route('/mss_theme/img/<path:filename>')
     def mss_theme(filename):
         base_path = os.path.join(DOCS_IMG_DIR)
         return send_from_directory(base_path, filename)
 
-    @docs_bp.route("/index")
+    @DOCS_BP.route("/index")
     def index():
         return render_template("/index.html")
 
-    @docs_bp.route("/mss/about")
-    @docs_bp.route("/mss")
+    @DOCS_BP.route("/mss/about")
+    @DOCS_BP.route("/mss")
     def about():
         _file = os.path.join(DOCS_DOCS_DIR, 'about.md')
         img_url = url_for('docs.overview')
@@ -137,13 +133,13 @@ def create_app(imprint=None, gdpr=None):
         content = get_content(_file, md_overrides=md_overrides, html_overrides=html_overrides)
         return render_template("/content.html", act="about", content=content)
 
-    @docs_bp.route("/mss/install")
+    @DOCS_BP.route("/mss/install")
     def install():
         _file = os.path.join(DOCS_DOCS_DIR, 'installation.md')
         content = get_content(_file)
         return render_template("/content.html", act="install", content=content)
 
-    @docs_bp.route("/mss/help")
+    @DOCS_BP.route("/mss/help")
     def help():  # noqa: A001
         _file = os.path.join(DOCS_DOCS_DIR, 'help.md')
         html_overrides = ('<img alt="Waypoint Tutorial" '
@@ -153,7 +149,7 @@ def create_app(imprint=None, gdpr=None):
         content = get_content(_file, html_overrides=html_overrides)
         return render_template("/content.html", act="help", content=content)
 
-    @docs_bp.route("/mss/imprint")
+    @DOCS_BP.route("/mss/imprint")
     def imprint():
         if file_exists(imprint_file):
             content = get_content(imprint_file)
@@ -161,7 +157,7 @@ def create_app(imprint=None, gdpr=None):
         else:
             return ""
 
-    @docs_bp.route("/mss/gdpr")
+    @DOCS_BP.route("/mss/gdpr")
     def gdpr():
         if file_exists(gdpr_file):
             content = get_content(gdpr_file)
@@ -169,21 +165,21 @@ def create_app(imprint=None, gdpr=None):
         else:
             return ""
 
-    @docs_bp.route('/mss/favicon.ico')
+    @DOCS_BP.route('/mss/favicon.ico')
     def favicons():
         base_path = icons("16x16", "favicon.ico")
         return send_file(base_path)
 
-    @docs_bp.route('/mss/logo.png')
+    @DOCS_BP.route('/mss/logo.png')
     def logo():
         base_path = icons("64x64", "mss-logo.png")
         return send_file(base_path)
 
-    @docs_bp.route('/mss/overview.png')
+    @DOCS_BP.route('/mss/overview.png')
     def overview():
         base_path = os.path.join(DOCS_IMG_DIR, 'wise12_overview.png')
         return send_file(base_path)
-    APP.register_blueprint(docs_bp)
+    APP.register_blueprint(DOCS_BP)
     return APP
 
 
