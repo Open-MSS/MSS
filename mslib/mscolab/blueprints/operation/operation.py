@@ -6,6 +6,8 @@ from flask import Blueprint, request, g, jsonify
 from mslib.mscolab.blueprints.auth.auth import verify_user
 
 OPERATION_BP = Blueprint('operation', __name__)
+
+
 @OPERATION_BP.route('/create_operation', methods=["POST"])
 @verify_user
 def create_operation():
@@ -38,15 +40,6 @@ def get_operation_by_id():
     if result is False:
         return "False"
     return json.dumps({"content": result})
-
-
-
-
-
-
-
-
-
 
 
 @OPERATION_BP.route('/authorized_users', methods=['GET'])
@@ -139,9 +132,6 @@ def set_last_used():
                         datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(days=days_ago),
                         user)
     return jsonify({"success": True}), 200
-
-
-
 
 
 @OPERATION_BP.route("/creator_of_operation", methods=["GET"])

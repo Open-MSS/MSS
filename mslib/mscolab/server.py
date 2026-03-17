@@ -179,6 +179,7 @@ if APP.__dict__.get('enable_basic_http_authentication', False):
             password = auth.password
         return authfunc(username, password)
 
+
 def _initialize_managers(app):
     sockio, cm, fm = _setup_managers(app)
     # initializing socketio and db
@@ -257,7 +258,6 @@ def uploads(name=None, filename=None):
 def error413(error):
     upload_limit = APP.config['MAX_CONTENT_LENGTH'] / 1024 / 1024
     return jsonify({"success": False, "message": f"File size too large. Upload limit is {upload_limit}MB"}), 413
-
 
 
 def start_server(app, sockio, cm, fm, port=8083):

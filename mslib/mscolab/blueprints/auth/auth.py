@@ -37,6 +37,7 @@ def check_login(emailid, password):
                 return user
     return False
 
+
 def register_user(email, password, username, fullname):
     if len(str(email.strip())) == 0 or len(str(username.strip())) == 0:
         return {"success": False, "message": "Your username or email cannot be empty"}
@@ -58,9 +59,11 @@ def register_user(email, password, username, fullname):
     result = fm.modify_user(user, action="create")
     return {"success": result}
 
+
 def generate_confirmation_token(email):
     serializer = URLSafeTimedSerializer(APP.config['SECRET_KEY'])
     return serializer.dumps(email, salt=APP.config['SECURITY_PASSWORD_SALT'])
+
 
 def send_email(to, subject, template):
     if APP.config['MAIL_DEFAULT_SENDER'] is not None:
@@ -79,6 +82,7 @@ def send_email(to, subject, template):
     else:
         logging.debug("setup user verification by email")
 
+
 def confirm_token(token, expiration=3600):
     serializer = URLSafeTimedSerializer(APP.config['SECRET_KEY'])
     try:
@@ -90,6 +94,7 @@ def confirm_token(token, expiration=3600):
     except (IOError, BadSignature):
         return False
     return email
+
 
 def get_idp_entity_id(selected_idp):
     """
@@ -103,6 +108,7 @@ def get_idp_entity_id(selected_idp):
             entity_id = only_idp
             return entity_id
     return None
+
 
 def create_or_update_idp_user(email, username, token, authentication_backend):
     """
@@ -129,6 +135,7 @@ def create_or_update_idp_user(email, username, token, authentication_backend):
         result = fm.modify_user(user, action="update_idp_user")
     return result
 
+
 def verify_user(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -152,8 +159,10 @@ def verify_user(func):
                 return func(*args, **kwargs)
     return wrapper
 
+
 AUTH_BP = Blueprint('auth', __name__)
 auth = HTTPBasicAuth()
+
 @AUTH_BP.route('/token', methods=["POST"])
 @conditional_decorator(auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
 def get_auth_token():
@@ -178,6 +187,7 @@ def get_auth_token():
         logging.debug("Unauthorized user: %s", emailid)
         return "False"
 
+
 @AUTH_BP.route('/test_authorized')
 def authorized():
     token = request.args.get('token', request.form.get('token'))
@@ -192,6 +202,7 @@ def authorized():
             return "True"
     else:
         return "False"
+
 
 @AUTH_BP.route("/register", methods=["POST"])
 @conditional_decorator(auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
@@ -216,6 +227,7 @@ def user_register_handler():
         result, status_code = {"success": False}, 401
     return jsonify(result), status_code
 
+
 @AUTH_BP.route('/confirm/<token>')
 def confirm_email(token):
     if APP.config['MAIL_ENABLED']:
@@ -234,6 +246,7 @@ def confirm_email(token):
             fm.modify_user(user, attribute="confirmed_on", value=datetime.datetime.now(tz=datetime.timezone.utc))
             fm.modify_user(user, attribute="confirmed", value=True)
             return render_template('user/confirmed.html', username=user.username)
+
 
 @AUTH_BP.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
@@ -258,6 +271,7 @@ def reset_password(token):
         except IOError:
             flash('Password reset failed. Please try again later', 'category_danger')
     return render_template('user/reset_password.html', form=form)
+
 
 @AUTH_BP.route("/reset_request", methods=['GET', 'POST'])
 def reset_request():
@@ -287,6 +301,7 @@ def reset_request():
     else:
         logging.warning("To send emails, the value of `MAIL_ENABLED` in `conf.py` should be set to True.")
         return render_template('errors/403.html'), 403
+
 
 if APP.config['USE_SAML2']:
     # setup idp login config

@@ -8,6 +8,8 @@ from mslib.mscolab.utils import get_message_dict
 from mslib.mscolab.blueprints.auth.auth import verify_user
 
 CHAT_BP = Blueprint('chat', __name__)
+
+
 @CHAT_BP.route('/undo_changes', methods=["POST"])
 @verify_user
 def undo_changes():
@@ -24,10 +26,11 @@ def undo_changes():
         sockio.sm.emit_file_change(ch.op_id)
     return str(result)
 
+
 @CHAT_BP.route("/messages", methods=["GET"])
 @verify_user
 def messages():
-    from  mslib.mscolab.server import getConfig
+    from mslib.mscolab.server import getConfig
     fm = getConfig()[3]
     user = g.user
     op_id = request.args.get("op_id", request.form.get("op_id", None))
@@ -38,6 +41,7 @@ def messages():
         chat_messages = cm.get_messages(op_id, timestamp)
         return jsonify({"messages": chat_messages})
     return "False"
+
 
 @CHAT_BP.route("/message_attachment", methods=["POST"])
 @verify_user
@@ -68,6 +72,7 @@ def message_attachment():
     # normal use case never gets to this
     return "False"
 
+
 @CHAT_BP.route('/get_all_changes', methods=['GET'])
 @verify_user
 def get_all_changes():
@@ -81,15 +86,19 @@ def get_all_changes():
         jsonify({"success": False, "message": "Some error occurred!"})
     return jsonify({"success": True, "changes": result})
 
+
 @CHAT_BP.route('/get_change_content', methods=['GET'])
 @verify_user
 def get_change_content():
+    from mslib.mscolab.server import getConfig
+    fm = getConfig()[3]
     ch_id = int(request.args.get('ch_id', request.form.get('ch_id', 0)))
     user = g.user
     result = fm.get_change_content(ch_id, user)
     if result is False:
         return "False"
     return jsonify({"content": result})
+
 
 @CHAT_BP.route('/set_version_name', methods=['POST'])
 @verify_user
