@@ -29,7 +29,7 @@ import datetime
 import textwrap
 from zoneinfo import ZoneInfo
 
-from mslib.mscolab.server import register_user
+from mslib.mscolab.blueprints.auth.auth import register_user
 from mslib.mscolab.models import AwareDateTime, User, Permission, Operation, Message, MessageType, Change
 
 

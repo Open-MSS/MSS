@@ -1,0 +1,278 @@
+import datetime
+import json
+
+from flask import Blueprint, request, g, jsonify
+
+from mslib.mscolab.blueprints.auth.auth import verify_user
+
+OPERATION_BP = Blueprint('operation', __name__)
+@OPERATION_BP.route('/create_operation', methods=["POST"])
+@verify_user
+def create_operation():
+    from mslib.mscolab.server import getConfig
+    fm = getConfig()[3]
+    path = request.form['path']
+    content = request.form.get('content', None)
+    description = request.form.get('description', None)
+    category = request.form.get('category', "default")
+    active = (request.form.get('active', "True") == "True")
+    last_used = datetime.datetime.now(tz=datetime.timezone.utc)
+    user = g.user
+    r = str(fm.create_operation(path, description, user, last_used, content=content, category=category, active=active))
+    if r == "True":
+        sockio = getConfig()[1]
+        token = request.args.get('token', request.form.get('token', False))
+        json_config = {"token": token}
+        sockio.sm.update_operation_list(json_config)
+    return r
+
+
+@OPERATION_BP.route('/get_operation_by_id', methods=['GET'])
+@verify_user
+def get_operation_by_id():
+    from mslib.mscolab.server import getConfig
+    fm = getConfig()[3]
+    op_id = request.args.get('op_id', request.form.get('op_id', None))
+    user = g.user
+    result = fm.get_file(int(op_id), user)
+    if result is False:
+        return "False"
+    return json.dumps({"content": result})
+
+
+
+
+
+
+
+
+
+
+
+@OPERATION_BP.route('/authorized_users', methods=['GET'])
+@verify_user
+def authorized_users():
+    from mslib.mscolab.server import getConfig
+    fm = getConfig()[3]
+    op_id = request.args.get('op_id', request.form.get('op_id', None))
+    return json.dumps({"users": fm.get_authorized_users(int(op_id))})
+
+
+@OPERATION_BP.route('/active_users', methods=["GET"])
+@verify_user
+def active_users():
+    from mslib.mscolab.server import getConfig
+    sockio = getConfig()[1]
+    op_id = request.args.get('op_id', request.form.get('op_id', None))
+    return jsonify(active_users=list(sockio.sm.active_users_per_operation[int(op_id)]))
+
+
+@OPERATION_BP.route('/operations', methods=['GET'])
+@verify_user
+def get_operations():
+    from mslib.mscolab.server import getConfig
+    fm = getConfig()[3]
+    skip_archived = (request.args.get('skip_archived', request.form.get('skip_archived', "False")) == "True")
+    user = g.user
+    return json.dumps({"operations": fm.list_operations(user, skip_archived=skip_archived)})
+
+
+@OPERATION_BP.route('/delete_operation', methods=["POST"])
+@verify_user
+def delete_operation():
+    from mslib.mscolab.server import getConfig
+    fm = getConfig()[3]
+    op_id = int(request.form.get('op_id', 0))
+    user = g.user
+    success = fm.delete_operation(op_id, user)
+    if success is False:
+        return jsonify({"success": False, "message": "You don't have access for this operation!"})
+    sockio = getConfig()[1]
+    sockio.sm.emit_operation_delete(op_id)
+    return jsonify({"success": True, "message": "Operation was successfully deleted!"})
+
+
+@OPERATION_BP.route('/update_operation', methods=['POST'])
+@verify_user
+def update_operation():
+    from mslib.mscolab.server import getConfig
+    fm = getConfig()[3]
+    op_id = request.form.get('op_id', None)
+    attribute = request.form['attribute']
+    value = request.form['value']
+    user = g.user
+    r = fm.update_operation(int(op_id), attribute, value, user)
+    if r is True:
+        sockio = getConfig()[1]
+        token = request.args.get('token', request.form.get('token', False))
+        json_config = {"token": token}
+        sockio.sm.update_operation_list(json_config)
+    return str(r)
+
+
+@OPERATION_BP.route('/operation_details', methods=["GET"])
+@verify_user
+def get_operation_details():
+    from mslib.mscolab.server import getConfig
+    fm = getConfig()[3]
+    op_id = request.args.get('op_id', request.form.get('op_id', None))
+    user = g.user
+    result = fm.get_operation_details(int(op_id), user)
+    if result is False:
+        return "False"
+    return json.dumps(result)
+
+
+@OPERATION_BP.route('/set_last_used', methods=["POST"])
+@verify_user
+def set_last_used():
+    op_id = request.form.get('op_id', None)
+    user = g.user
+    days_ago = int(request.form.get('days', 0))
+    if days_ago > 99999:
+        days_ago = 99999
+    elif days_ago < -99999:
+        days_ago = -99999
+    from mslib.mscolab.server import getConfig
+    fm = getConfig()[3]
+    fm.update_operation(int(op_id), 'last_used',
+                        datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(days=days_ago),
+                        user)
+    return jsonify({"success": True}), 200
+
+
+
+
+
+@OPERATION_BP.route("/creator_of_operation", methods=["GET"])
+@verify_user
+def get_creator_of_operation():
+    from mslib.mscolab.server import getConfig
+    fm = getConfig()[3]
+    op_id = request.args.get('op_id', request.form.get('op_id', None))
+    u_id = g.user.id
+    creator_name = fm.fetch_operation_creator(op_id, u_id)
+    if creator_name is False:
+        return jsonify({"success": False, "message": "You don't have access to this data"}), 403
+    return jsonify({"success": True, "username": creator_name}), 200
+
+
+@OPERATION_BP.route("/users_without_permission", methods=["GET"])
+@verify_user
+def get_users_without_permission():
+    from mslib.mscolab.server import getConfig
+    fm = getConfig()[3]
+    op_id = request.args.get('op_id', request.form.get('op_id', None))
+    u_id = g.user.id
+    users = fm.fetch_users_without_permission(int(op_id), u_id)
+    if users is False:
+        return jsonify({"success": False, "message": "You don't have access to this data"}), 403
+
+    return jsonify({"success": True, "users": users}), 200
+
+
+@OPERATION_BP.route("/users_with_permission", methods=["GET"])
+@verify_user
+def get_users_with_permission():
+    from mslib.mscolab.server import getConfig
+    fm = getConfig()[3]
+    op_id = request.args.get('op_id', request.form.get('op_id', None))
+    u_id = g.user.id
+    users = fm.fetch_users_with_permission(int(op_id), u_id)
+    if users is False:
+        return jsonify({"success": False, "message": "You don't have access to this data"}), 403
+
+    return jsonify({"success": True, "users": users}), 200
+
+
+@OPERATION_BP.route("/add_bulk_permissions", methods=["POST"])
+@verify_user
+def add_bulk_permissions():
+    from mslib.mscolab.server import getConfig
+    fm = getConfig()[3]
+    op_id = int(request.form.get('op_id'))
+    new_u_ids = json.loads(request.form.get('selected_userids', []))
+    access_level = request.form.get('selected_access_level')
+    user = g.user
+    success = fm.add_bulk_permission(op_id, user, new_u_ids, access_level)
+    if success:
+        from mslib.mscolab.server import getConfig
+        sockio = getConfig()[1]
+        for u_id in new_u_ids:
+            sockio.sm.emit_new_permission(u_id, op_id)
+        sockio.sm.emit_operation_permissions_updated(user.id, op_id)
+        return jsonify({"success": True, "message": "Users successfully added!"})
+
+    return jsonify({"success": False, "message": "Some error occurred. Please try again."})
+
+
+@OPERATION_BP.route("/modify_bulk_permissions", methods=["POST"])
+@verify_user
+def modify_bulk_permissions():
+    from mslib.mscolab.server import getConfig
+    fm = getConfig()[3]
+    op_id = int(request.form.get('op_id'))
+    u_ids = json.loads(request.form.get('selected_userids', []))
+    new_access_level = request.form.get('selected_access_level')
+    user = g.user
+    success = fm.modify_bulk_permission(op_id, user, u_ids, new_access_level)
+    if success:
+        from mslib.mscolab.server import getConfig
+        sockio = getConfig()[1]
+        for u_id in u_ids:
+            sockio.sm.emit_update_permission(u_id, op_id, access_level=new_access_level)
+        sockio.sm.emit_operation_permissions_updated(user.id, op_id)
+        return jsonify({"success": True, "message": "User permissions successfully updated!"})
+
+    return jsonify({"success": False, "message": "Some error occurred. Please try again."})
+
+
+@OPERATION_BP.route("/delete_bulk_permissions", methods=["POST"])
+@verify_user
+def delete_bulk_permissions():
+    from mslib.mscolab.server import getConfig
+    fm = getConfig()[3]
+    op_id = int(request.form.get('op_id'))
+    u_ids = json.loads(request.form.get('selected_userids', []))
+    user = g.user
+    success = fm.delete_bulk_permission(op_id, user, u_ids)
+    if success:
+        sockio = getConfig()[1]
+        for u_id in u_ids:
+            sockio.sm.remove_active_user_id_from_specific_operation(u_id, op_id)
+            sockio.sm.emit_revoke_permission(u_id, op_id)
+        sockio.sm.emit_operation_permissions_updated(user.id, op_id)
+        return jsonify({"success": True, "message": "User permissions successfully deleted!"})
+
+    return jsonify({"success": False, "message": "Some error occurred. Please try again."})
+
+
+@OPERATION_BP.route('/import_permissions', methods=['POST'])
+@verify_user
+def import_permissions():
+    from mslib.mscolab.server import getConfig
+    fm = getConfig()[3]
+    import_op_id = int(request.form.get('import_op_id'))
+    current_op_id = int(request.form.get('current_op_id'))
+    user = g.user
+    success, users, message = fm.import_permissions(import_op_id, current_op_id, user.id)
+    if success:
+        sockio = getConfig()[1]
+        for u_id in users["add_users"]:
+            sockio.sm.emit_new_permission(u_id, current_op_id)
+        for u_id in users["modify_users"]:
+            # changes navigation for viewer/collaborator
+            sockio.sm.emit_update_permission(u_id, current_op_id)
+        for u_id in users["delete_users"]:
+            # invalidate waypoint table, title of windows
+            sockio.sm.emit_revoke_permission(u_id, current_op_id)
+
+        token = request.args.get('token', request.form.get('token', False))
+        json_config = {"token": token}
+        sockio.sm.update_operation_list(json_config)
+
+        sockio.sm.emit_operation_permissions_updated(user.id, current_op_id)
+        return jsonify({"success": True})
+
+    return jsonify({"success": False,
+                    "message": message})

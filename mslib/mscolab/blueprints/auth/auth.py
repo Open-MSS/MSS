@@ -1,0 +1,429 @@
+import datetime
+import functools
+import json
+import logging
+import secrets
+
+import sqlalchemy
+from email_validator import validate_email
+from flask import Blueprint, request, url_for, render_template, jsonify, flash, redirect, abort, g
+from flask_httpauth import HTTPBasicAuth
+from flask_mail import Message
+from flask.wrappers import Response
+from itsdangerous import URLSafeTimedSerializer, BadSignature
+from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
+from saml2.metadata import create_metadata_string
+
+from mslib.mscolab.conf import setup_saml2_backend
+from mslib.mscolab.forms import ResetPasswordForm, ResetRequestForm
+from mslib.mscolab.models import User
+from mslib.mscolab.app import APP
+from mslib.utils import conditional_decorator, auth
+
+
+def check_login(emailid, password):
+    try:
+        user = User.query.filter_by(emailid=str(emailid)).first()
+    except sqlalchemy.exc.OperationalError as ex:
+        logging.debug("Problem in the database (%ex), likely version client different", ex)
+        return False
+    if user is not None:
+        if APP.config['MAIL_ENABLED']:
+            if user.confirmed:
+                if user.verify_password(password):
+                    return user
+        else:
+            if user.verify_password(password):
+                return user
+    return False
+
+def register_user(email, password, username, fullname):
+    if len(str(email.strip())) == 0 or len(str(username.strip())) == 0:
+        return {"success": False, "message": "Your username or email cannot be empty"}
+    is_valid_username = True if username.find("@") == -1 else False
+    is_valid_email = validate_email(email)
+    if not is_valid_email:
+        return {"success": False, "message": "Your email ID is not valid!"}
+    if not is_valid_username:
+        return {"success": False, "message": "Your username cannot contain @ symbol!"}
+    user_exists = User.query.filter_by(emailid=str(email)).first()
+    if user_exists:
+        return {"success": False, "message": "This email ID is already taken!"}
+    user_exists = User.query.filter_by(username=str(username)).first()
+    if user_exists:
+        return {"success": False, "message": "This username is already registered"}
+    from mslib.mscolab.server import getConfig
+    fm = getConfig()[3]
+    user = User(email, username, password, fullname)
+    result = fm.modify_user(user, action="create")
+    return {"success": result}
+
+def generate_confirmation_token(email):
+    serializer = URLSafeTimedSerializer(APP.config['SECRET_KEY'])
+    return serializer.dumps(email, salt=APP.config['SECURITY_PASSWORD_SALT'])
+
+def send_email(to, subject, template):
+    if APP.config['MAIL_DEFAULT_SENDER'] is not None:
+        msg = Message(
+            subject,
+            recipients=[to],
+            html=template,
+            sender=APP.config['MAIL_DEFAULT_SENDER']
+        )
+        try:
+            from mslib.mscolab.server import getConfig
+            mail = getConfig()[4]
+            mail.send(msg)
+        except IOError:
+            logging.error("Can't send email to %s", to)
+    else:
+        logging.debug("setup user verification by email")
+
+def confirm_token(token, expiration=3600):
+    serializer = URLSafeTimedSerializer(APP.config['SECRET_KEY'])
+    try:
+        email = serializer.loads(
+            token,
+            salt=APP.config['SECURITY_PASSWORD_SALT'],
+            max_age=expiration
+        )
+    except (IOError, BadSignature):
+        return False
+    return email
+
+def get_idp_entity_id(selected_idp):
+    """
+    Finds the entity_id from the configured IDPs
+    :return: the entity_id of the idp or None
+    """
+    for config in setup_saml2_backend.CONFIGURED_IDPS:
+        if selected_idp == config['idp_identity_name']:
+            idps = config['idp_data']['saml2client'].metadata.identity_providers()
+            only_idp = idps[0]
+            entity_id = only_idp
+            return entity_id
+    return None
+
+def create_or_update_idp_user(email, username, token, authentication_backend):
+    """
+    Creates or updates an idp user in the system based on the provided email,
+     username, token, and authentication backend.
+    :param email: idp users email
+    :param username: idp users username
+    :param token: authentication token
+    :param authentication_backend: authenticated identity providers name
+    :return: bool : query success or not
+    """
+    from mslib.mscolab.server import getConfig
+    fm = getConfig()[3]
+    user = User.query.filter_by(emailid=email).first()
+    if not user:
+        # using an IDP for a new account/profile, e-mail is already verified by the IDP
+        confirm_time = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=1)
+        user = User(email, username, password=token, confirmed=True, confirmed_on=confirm_time,
+                    authentication_backend=authentication_backend)
+        result = fm.modify_user(user, action="create")
+    else:
+        user.authentication_backend = authentication_backend
+        user.hash_password(token)
+        result = fm.modify_user(user, action="update_idp_user")
+    return result
+
+def verify_user(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            user = User.verify_auth_token(request.args.get('token', request.form.get('token', False)))
+        except TypeError:
+            logging.debug("no token in request form")
+            abort(404)
+        if not user:
+            return "False"
+        else:
+            # saving user details in flask.g
+            if APP.config['MAIL_ENABLED']:
+                if user.confirmed:
+                    g.user = user
+                    return func(*args, **kwargs)
+                else:
+                    return "False"
+            else:
+                g.user = user
+                return func(*args, **kwargs)
+    return wrapper
+
+AUTH_BP = Blueprint('auth', __name__)
+auth = HTTPBasicAuth()
+@AUTH_BP.route('/token', methods=["POST"])
+@conditional_decorator(auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
+def get_auth_token():
+    emailid = request.form['email']
+    password = request.form['password']
+    user = check_login(emailid, password)
+    if user is not False:
+        if APP.config['MAIL_ENABLED']:
+            if user.confirmed:
+                token = user.generate_auth_token()
+                return json.dumps({
+                    'token': token,
+                    'user': {'username': user.username, 'id': user.id, 'fullname': user.fullname}})
+            else:
+                return "False"
+        else:
+            token = user.generate_auth_token()
+            return json.dumps({
+                'token': token,
+                'user': {'username': user.username, 'id': user.id, 'fullname': user.fullname}})
+    else:
+        logging.debug("Unauthorized user: %s", emailid)
+        return "False"
+
+@AUTH_BP.route('/test_authorized')
+def authorized():
+    token = request.args.get('token', request.form.get('token'))
+    user = User.verify_auth_token(token)
+    if user is not None:
+        if APP.config['MAIL_ENABLED']:
+            if user.confirmed is False:
+                return "False"
+            else:
+                return "True"
+        else:
+            return "True"
+    else:
+        return "False"
+
+@AUTH_BP.route("/register", methods=["POST"])
+@conditional_decorator(auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
+def user_register_handler():
+    email = request.form['email']
+    password = request.form['password']
+    username = request.form['username']
+    fullname = request.form['fullname']
+    result = register_user(email, password, username, fullname)
+    status_code = 200
+    try:
+        if result["success"]:
+            status_code = 201
+            if APP.config['MAIL_ENABLED']:
+                status_code = 204
+                token = generate_confirmation_token(email)
+                confirm_url = url_for('docs.confirm_email', token=token, _external=True)
+                html = render_template('user/activate.html', username=username, confirm_url=confirm_url)
+                subject = "MSColab Please confirm your email"
+                send_email(email, subject, html)
+    except TypeError:
+        result, status_code = {"success": False}, 401
+    return jsonify(result), status_code
+
+@AUTH_BP.route('/confirm/<token>')
+def confirm_email(token):
+    if APP.config['MAIL_ENABLED']:
+        try:
+            email = confirm_token(token)
+        except TypeError:
+            return jsonify({"success": False}), 401
+        if email is False:
+            return jsonify({"success": False}), 401
+        user = User.query.filter_by(emailid=email).first_or_404()
+        if user.confirmed:
+            return render_template('user/confirmed.html', username=user.username)
+        else:
+            from mslib.mscolab.server import getConfig
+            fm = getConfig()[3]
+            fm.modify_user(user, attribute="confirmed_on", value=datetime.datetime.now(tz=datetime.timezone.utc))
+            fm.modify_user(user, attribute="confirmed", value=True)
+            return render_template('user/confirmed.html', username=user.username)
+
+@AUTH_BP.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    try:
+        email = confirm_token(token, expiration=86400)
+    except TypeError:
+        return jsonify({"success": False}), 401
+    if email is False:
+        flash("Sorry, your token has expired or is invalid! We will need to resend your authentication email",
+              'category_info')
+        return render_template('user/status.html', uri={"path": "reset_request", "name": "Resend authentication email"})
+    user = User.query.filter_by(emailid=email).first_or_404()
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        try:
+            from mslib.mscolab.server import getConfig
+            fm = getConfig()[3]
+            user.hash_password(form.confirm_password.data)
+            fm.modify_user(user, "confirmed", True)
+            flash('Password reset Success. Please login by the user interface.', 'category_success')
+            return render_template('user/status.html')
+        except IOError:
+            flash('Password reset failed. Please try again later', 'category_danger')
+    return render_template('user/reset_password.html', form=form)
+
+@AUTH_BP.route("/reset_request", methods=['GET', 'POST'])
+def reset_request():
+    if APP.config['MAIL_ENABLED']:
+        form = ResetRequestForm()
+        if form.validate_on_submit():
+            # Check whether user exists or not based on the db
+            user = User.query.filter_by(emailid=form.email.data).first()
+            if user:
+                try:
+                    username = user.username
+                    token = generate_confirmation_token(form.email.data)
+                    reset_password_url = url_for('docs.reset_password', token=token, _external=True)
+                    html = render_template('user/reset_confirmation.html',
+                                           reset_password_url=reset_password_url, username=username)
+                    subject = "MSColab Password reset request"
+                    send_email(form.email.data, subject, html)
+                    flash('An email was sent if this user account exists', 'category_success')
+                    return render_template('user/status.html')
+                except IOError:
+                    flash('''We apologize, but it seems that there was an issue sending
+                    your request email. Please try again later.''', 'category_info')
+            else:
+                flash('An email was sent if this user account exists', 'category_success')
+                return render_template('user/status.html')
+        return render_template('user/reset_request.html', form=form)
+    else:
+        logging.warning("To send emails, the value of `MAIL_ENABLED` in `conf.py` should be set to True.")
+        return render_template('errors/403.html'), 403
+
+if APP.config['USE_SAML2']:
+    # setup idp login config
+    setup_saml2_backend()
+
+    # set routes for SSO
+    @AUTH_BP.route('/available_idps/', methods=['GET'])
+    def available_idps():
+        """
+        This function checks if IDP (Identity Provider) is enabled in the mscolab_settings module.
+        If IDP is enabled, it retrieves the configured IDPs from setup_saml2_backend.CONFIGURED_IDPS
+        and renders the 'idp/available_idps.html' template with the list of configured IDPs.
+        """
+        configured_idps = setup_saml2_backend.CONFIGURED_IDPS
+        return render_template('idp/available_idps.html', configured_idps=configured_idps), 200
+
+    @AUTH_BP.route("/idp_login/", methods=['POST'])
+    def idp_login():
+        """Handle the login process for the user by selected IDP"""
+        selected_idp = request.form.get('selectedIdentityProvider')
+        sp_config = None
+        for config in setup_saml2_backend.CONFIGURED_IDPS:
+            if selected_idp == config['idp_identity_name']:
+                sp_config = config['idp_data']['saml2client']
+                break
+
+        try:
+            _, response_binding = sp_config.config.getattr("endpoints", "sp")[
+                "assertion_consumer_service"
+            ][0]
+            entity_id = get_idp_entity_id(selected_idp)
+            _, binding, http_args = sp_config.prepare_for_negotiated_authenticate(
+                entityid=entity_id,
+                response_binding=response_binding,
+            )
+            if binding == BINDING_HTTP_REDIRECT:
+                headers = dict(http_args["headers"])
+                return redirect(str(headers["Location"]), code=303)
+            return Response(http_args["data"], headers=http_args["headers"])
+        except (NameError, AttributeError):
+            return render_template('errors/403.html'), 403
+
+    def create_acs_post_handler(config):
+        """
+        Create acs_post_handler function for the given idp_config.
+        """
+        def acs_post_handler():
+            """
+            Function to handle SAML authentication response.
+            """
+            try:
+                outstanding_queries = {}
+                binding = BINDING_HTTP_POST
+                authn_response = config['idp_data']['saml2client'].parse_authn_request_response(
+                    request.form["SAMLResponse"], binding, outstanding=outstanding_queries
+                )
+                email = None
+                username = None
+
+                try:
+                    email = authn_response.ava["email"][0]
+                    username = authn_response.ava["givenName"][0]
+                    token = generate_confirmation_token(email)
+                except (NameError, AttributeError, KeyError):
+                    try:
+                        # Initialize an empty dictionary to store attribute values
+                        attributes = {}
+
+                        # Loop through attribute statements
+                        for attribute_statement in authn_response.assertion.attribute_statement:
+                            for attribute in attribute_statement.attribute:
+                                attribute_name = attribute.name
+                                attribute_value = \
+                                    attribute.attribute_value[0].text if attribute.attribute_value else None
+                                attributes[attribute_name] = attribute_value
+
+                        # Extract the email and givenname attributes
+                        email = attributes["email"]
+                        username = attributes["givenName"]
+                        token = generate_confirmation_token(email)
+                    except (NameError, AttributeError, KeyError):
+                        return render_template('errors/403.html'), 403
+
+                if email is not None and username is not None:
+                    idp_user_db_state = create_or_update_idp_user(email,
+                                                                  username, token, idp_config['idp_identity_name'])
+                    if idp_user_db_state:
+                        return render_template('idp/idp_login_success.html', token=token), 200
+                    return render_template('errors/500.html'), 500
+                return render_template('errors/500.html'), 500
+            except (NameError, AttributeError, KeyError):
+                return render_template('errors/403.html'), 403
+        return acs_post_handler
+
+    # Implementation for handling configured SAML assertion consumer endpoints
+    for idp_config in setup_saml2_backend.CONFIGURED_IDPS:
+        try:
+            for assertion_consumer_endpoint in idp_config['idp_data']['assertion_consumer_endpoints']:
+                # Dynamically add the route for the current endpoint
+                APP.add_url_rule(f'/{assertion_consumer_endpoint}/', assertion_consumer_endpoint,
+                                 create_acs_post_handler(idp_config), methods=['POST'])
+        except (NameError, AttributeError, KeyError) as ex:
+            logging.warning("USE_SAML2 is %s, Failure is: %s", APP.config['USE_SAML2'], ex)
+
+    @AUTH_BP.route('/idp_login_auth/', methods=['POST'])
+    def idp_login_auth():
+        """Handle the SAML authentication validation of client application."""
+        try:
+            data = request.get_json()
+            token = data.get('token')
+            email = confirm_token(token, expiration=1200)
+            if email:
+                user = check_login(email, token)
+                if user:
+                    from mslib.mscolab.server import getConfig
+                    fm = getConfig()[3]
+                    random_token = secrets.token_hex(16)
+                    user.hash_password(random_token)
+                    fm.modify_user(user, action="update_idp_user")
+                    return json.dumps({
+                        "success": True,
+                        'token': random_token,
+                        'user': {'username': user.username, 'id': user.id, 'emailid': user.emailid}
+                    })
+                return jsonify({"success": False}), 401
+            return jsonify({"success": False}), 401
+        except TypeError:
+            return jsonify({"success": False}), 401
+
+    @AUTH_BP.route("/metadata/<idp_identity_name>", methods=['GET'])
+    def metadata(idp_identity_name):
+        """Return the SAML metadata XML for the requested IDP"""
+        for config in setup_saml2_backend.CONFIGURED_IDPS:
+            if idp_identity_name == config['idp_identity_name']:
+                sp_config = config['idp_data']['saml2client']
+                metadata_string = create_metadata_string(
+                    None, sp_config.config, 4, None, None, None, None, None
+                ).decode("utf-8")
+                return Response(metadata_string, mimetype="text/xml")
+        return render_template('errors/404.html'), 404

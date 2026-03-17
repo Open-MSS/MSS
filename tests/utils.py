@@ -28,8 +28,10 @@
 import requests
 
 from urllib.parse import urljoin
-from mslib.mscolab.server import register_user
+
 from flask import json
+
+from mslib.mscolab.blueprints.auth.auth import register_user
 from tests.constants import MSUI_CONFIG_FILE_PATH
 from mslib.mscolab.seed import XML_CONTENT_INIT
 

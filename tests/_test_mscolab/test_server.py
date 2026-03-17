@@ -33,8 +33,9 @@ import os
 from PIL import Image
 
 from mslib.mscolab.app import APP
+from mslib.mscolab.blueprints.auth.auth import register_user, check_login
 from mslib.mscolab.models import User, Operation
-from mslib.mscolab.server import check_login, register_user
+
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
 from tests.utils import XML_CONTENT1, XML_CONTENT2
