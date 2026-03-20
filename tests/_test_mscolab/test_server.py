@@ -47,7 +47,7 @@ class Test_Server:
     def setup(self, mscolab_app, mscolab_managers):
         self.app = mscolab_app
         self.sockio, _, self.fm = mscolab_managers
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
+        self.userdata = 'UV10@uv10.de', 'UV10', 'uv10.de', 'User UV'
         with self.app.app_context():
             yield
 
@@ -102,7 +102,7 @@ class Test_Server:
             user = User.query.filter_by(emailid=str(self.userdata[0])).first()
             assert user is not None
             assert result == user
-            result = check_login('UV20@uv20', self.userdata[1])
+            result = check_login('UV20@uv20.de', self.userdata[1])
             assert result is False
 
     def test_get_auth_token(self):

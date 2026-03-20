@@ -5,6 +5,8 @@ import logging
 import secrets
 
 import sqlalchemy
+import email_validator
+# Todo use the name email_validator
 from email_validator import validate_email
 from flask import Blueprint, request, url_for, render_template, jsonify, flash, redirect, abort, g
 from flask_httpauth import HTTPBasicAuth
@@ -18,7 +20,7 @@ from mslib.mscolab.conf import setup_saml2_backend
 from mslib.mscolab.forms import ResetPasswordForm, ResetRequestForm
 from mslib.mscolab.models import User
 from mslib.mscolab.app import APP
-from mslib.utils import conditional_decorator, auth
+from mslib.utils import conditional_decorator
 
 
 def check_login(emailid, password):
@@ -42,8 +44,10 @@ def register_user(email, password, username, fullname):
     if len(str(email.strip())) == 0 or len(str(username.strip())) == 0:
         return {"success": False, "message": "Your username or email cannot be empty"}
     is_valid_username = True if username.find("@") == -1 else False
-    is_valid_email = validate_email(email)
-    if not is_valid_email:
+    try:
+        # ToDo verify what changed for check_deliverability
+        validate_email(email, check_deliverability=APP.config['MAIL_ENABLED'])
+    except (email_validator.exceptions.EmailSyntaxError):
         return {"success": False, "message": "Your email ID is not valid!"}
     if not is_valid_username:
         return {"success": False, "message": "Your username cannot contain @ symbol!"}
@@ -161,10 +165,11 @@ def verify_user(func):
 
 
 AUTH_BP = Blueprint('auth', __name__)
-auth = HTTPBasicAuth()
+auth_basic_auth = HTTPBasicAuth()
+
 
 @AUTH_BP.route('/token', methods=["POST"])
-@conditional_decorator(auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
+@conditional_decorator(auth_basic_auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
 def get_auth_token():
     emailid = request.form['email']
     password = request.form['password']
@@ -205,7 +210,7 @@ def authorized():
 
 
 @AUTH_BP.route("/register", methods=["POST"])
-@conditional_decorator(auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
+@conditional_decorator(auth_basic_auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
 def user_register_handler():
     email = request.form['email']
     password = request.form['password']
