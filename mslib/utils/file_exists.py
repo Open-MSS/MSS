@@ -2,9 +2,9 @@
 """
 
     mslib.utils.file_exists
-    ~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~
 
-    function for app
+    verifies a given filepath is a file
 
     This file is part of MSS.
 

@@ -1,30 +1,39 @@
+# -*- coding: utf-8 -*-
+"""
+
+    mslib.mscolab.blueprints.chat.chat
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Chat Blueprint for server for mscolab module
+
+    This file is part of MSS.
+
+    :copyright: Copyright 2019 Shivashis Padhi
+    :copyright: Copyright 2019-2026 by the MSS team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+"""
+
 import json
 
 from flask import Blueprint, request, g, jsonify
 
 from mslib.mscolab.message_type import MessageType
-from mslib.mscolab.models import Change
 from mslib.mscolab.utils import get_message_dict
-from mslib.mscolab.blueprints.auth.auth import verify_user
+from mslib.utils.auth import verify_user
 
 CHAT_BP = Blueprint('chat', __name__)
-
-
-@CHAT_BP.route('/undo_changes', methods=["POST"])
-@verify_user
-def undo_changes():
-    from mslib.mscolab.server import getConfig
-    fm = getConfig()[3]
-    ch_id = request.form.get('ch_id', -1)
-    ch_id = int(ch_id)
-    user = g.user
-    result = fm.undo_changes(ch_id, user)
-    # get op_id from change
-    ch = Change.query.filter_by(id=ch_id).first()
-    if result is True:
-        sockio = getConfig()[1]
-        sockio.sm.emit_file_change(ch.op_id)
-    return str(result)
 
 
 @CHAT_BP.route("/messages", methods=["GET"])
@@ -71,46 +80,3 @@ def message_attachment():
         return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
     # normal use case never gets to this
     return "False"
-
-
-@CHAT_BP.route('/get_all_changes', methods=['GET'])
-@verify_user
-def get_all_changes():
-    from mslib.mscolab.server import getConfig
-    fm = getConfig()[3]
-    op_id = request.args.get('op_id', request.form.get('op_id', None))
-    named_version = request.args.get('named_version') == "True"
-    user = g.user
-    result = fm.get_all_changes(int(op_id), user, named_version)
-    if result is False:
-        jsonify({"success": False, "message": "Some error occurred!"})
-    return jsonify({"success": True, "changes": result})
-
-
-@CHAT_BP.route('/get_change_content', methods=['GET'])
-@verify_user
-def get_change_content():
-    from mslib.mscolab.server import getConfig
-    fm = getConfig()[3]
-    ch_id = int(request.args.get('ch_id', request.form.get('ch_id', 0)))
-    user = g.user
-    result = fm.get_change_content(ch_id, user)
-    if result is False:
-        return "False"
-    return jsonify({"content": result})
-
-
-@CHAT_BP.route('/set_version_name', methods=['POST'])
-@verify_user
-def set_version_name():
-    from mslib.mscolab.server import getConfig
-    fm = getConfig()[3]
-    ch_id = int(request.form.get('ch_id', 0))
-    op_id = int(request.form.get('op_id', 0))
-    version_name = request.form.get('version_name', None)
-    u_id = g.user.id
-    success = fm.set_version_name(ch_id, op_id, u_id, version_name)
-    if success is False:
-        return jsonify({"success": False, "message": "Some error occurred!"})
-
-    return jsonify({"success": True, "message": "Successfully set version name"})

@@ -29,8 +29,8 @@ import datetime
 import textwrap
 from zoneinfo import ZoneInfo
 
-from mslib.mscolab.blueprints.auth.auth import register_user
 from mslib.mscolab.models import AwareDateTime, User, Permission, Operation, Message, MessageType, Change
+from mslib.utils.auth import register_user
 
 
 def test_aware_datetime_conversion():
