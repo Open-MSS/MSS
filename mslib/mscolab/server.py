@@ -40,10 +40,10 @@ from flask_mail import Mail
 from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth
 
-from mslib.mscolab.blueprints.auth.auth import AUTH_BP
-from mslib.mscolab.blueprints.chat.chat import CHAT_BP
-from mslib.mscolab.blueprints.operation.operation import OPERATION_BP
-from mslib.mscolab.blueprints.user.user import USER_BP
+from mslib.mscolab.blueprints.auth import AUTH_BP
+from mslib.mscolab.blueprints.chat import CHAT_BP
+from mslib.mscolab.blueprints.operation import OPERATION_BP
+from mslib.mscolab.blueprints.user import USER_BP
 from mslib.mscolab.app import create_app, APP
 from mslib.mscolab.models import User
 from mslib.mscolab.sockets_manager import _setup_managers
@@ -216,7 +216,7 @@ def getConfig():
 @APP.route('/')
 @conditional_decorator(auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
 def home():
-    return render_template("/index.html")
+    return render_template("docs/index.html")
 
 
 @APP.route("/status")

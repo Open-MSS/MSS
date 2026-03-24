@@ -959,7 +959,7 @@ def application():
         # without query parameter show index page
         query = request.args
         if len(query) == 0:
-            return render_template("/index.html")
+            return render_template("docs/index.html")
 
         # communicate request errors back to client user
         logging.error("Unexpected error: %s: %s\nTraceback:\n%s",
@@ -983,7 +983,7 @@ def plots():
                   "<b>gallery --help</b> command line parameter of mswms.<br>" \
                   "An example of the gallery can be seen " \
                   "<a href=\"https://mss.readthedocs.io/en/stable/gallery/index.html\">here</a>"
-    return render_template("/content.html", act="plots", content=content)
+    return render_template("docs/content.html", act="plots", content=content)
 
 
 @APP.route("/mss/code/<path:filename>")
@@ -994,7 +994,7 @@ def code(filename):
         abort(404)
     content = get_content(_file)
     if not download:
-        return render_template("/content.html", act="code", content=content)
+        return render_template("docs/content.html", act="code", content=content)
     else:
         if not os.path.isfile(_file):
             abort(404)

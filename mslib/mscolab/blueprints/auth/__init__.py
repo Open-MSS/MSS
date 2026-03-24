@@ -44,7 +44,8 @@ from mslib.utils import conditional_decorator
 from mslib.utils.auth import check_login, register_user, generate_confirmation_token, send_email, confirm_token, \
     get_idp_entity_id, create_or_update_idp_user
 
-AUTH_BP = Blueprint('auth', __name__)
+AUTH_BP = Blueprint('auth', __name__, template_folder='templates')
+
 auth_basic_auth = HTTPBasicAuth()
 
 

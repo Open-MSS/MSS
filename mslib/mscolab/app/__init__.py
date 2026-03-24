@@ -36,7 +36,7 @@ import mslib
 from flask import url_for
 from flask_sqlalchemy import SQLAlchemy
 
-from mslib.mscolab.blueprints.docs.docs import DOCS_BP
+from mslib.mscolab.blueprints.docs import DOCS_BP
 from mslib.mscolab.conf import mscolab_settings
 from mslib.utils import prefix_route, release_info
 from mslib.utils.file_exists import file_exists

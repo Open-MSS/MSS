@@ -37,8 +37,8 @@ DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
 DOCS_STATIC_DIR = os.path.join(DOCS_SERVER_PATH, 'static')
 DOCS_IMG_DIR = os.path.join(DOCS_STATIC_DIR, 'img')
 DOCS_DOCS_DIR = os.path.join(DOCS_STATIC_DIR, 'docs')
-DOCS_TEMPLATES_DIR = os.path.join(DOCS_STATIC_DIR, 'templates')
-DOCS_BP = Blueprint("docs", __name__, template_folder=os.path.join(DOCS_TEMPLATES_DIR))
+
+DOCS_BP = Blueprint("docs", __name__, template_folder='templates')
 
 
 @DOCS_BP.route('/xstatic/<name>/<path:filename>')
@@ -60,7 +60,7 @@ def mss_theme(filename):
 
 @DOCS_BP.route("/index")
 def index():
-    return render_template("/index.html")
+    return render_template("docs/index.html")
 
 
 @DOCS_BP.route("/mss/about")
@@ -73,14 +73,14 @@ def about():
     html_overrides = ('<img alt="image" src="/mss/overview.png" />',
                       '<img class="mx-auto d-block img-fluid" alt="image" src="/mss/overview.png" />')
     content = get_content(_file, md_overrides=md_overrides, html_overrides=html_overrides)
-    return render_template("/content.html", act="about", content=content)
+    return render_template("docs/content.html", act="about", content=content)
 
 
 @DOCS_BP.route("/mss/install")
 def install():
     _file = os.path.join(DOCS_DOCS_DIR, 'installation.md')
     content = get_content(_file)
-    return render_template("/content.html", act="install", content=content)
+    return render_template("docs/content.html", act="install", content=content)
 
 
 @DOCS_BP.route("/mss/help")
@@ -91,14 +91,14 @@ def help():  # noqa: A001
                       '<img  class="mx-auto d-block img-fluid" alt="Waypoint Tutorial" '
                       'src="https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.gif" />')
     content = get_content(_file, html_overrides=html_overrides)
-    return render_template("/content.html", act="help", content=content)
+    return render_template("docs/content.html", act="help", content=content)
 
 
 @DOCS_BP.route("/mss/imprint")
 def imprint(imprint_file=None):
     if file_exists(imprint_file):
         content = get_content(imprint_file)
-        return render_template("/content.html", act="imprint", content=content)
+        return render_template("docs/content.html", act="imprint", content=content)
     else:
         return ""
 
@@ -107,7 +107,7 @@ def imprint(imprint_file=None):
 def gdpr(gdpr_file=None):
     if file_exists(gdpr_file):
         content = get_content(gdpr_file)
-        return render_template("/content.html", act="gdpr", content=content)
+        return render_template("docs/content.html", act="gdpr", content=content)
     else:
         return ""
 
