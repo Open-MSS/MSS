@@ -32,7 +32,7 @@ import sqlalchemy.exc
 import flask_migrate
 
 
-from flask import jsonify, request, render_template
+from flask import jsonify, request
 from flask_mail import Mail
 from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth
@@ -45,7 +45,6 @@ from mslib.mscolab.app import create_app, APP
 from mslib.mscolab.models import User
 from mslib.mscolab.sockets_manager import _setup_managers
 from mslib.mscolab.utils import create_files
-from mslib.utils import conditional_decorator
 from mslib.mscolab import migrations
 
 
@@ -208,12 +207,6 @@ def check_login(emailid, password):
 
 def getConfig():
     return _app, sockio, cm, fm, mail
-
-
-@APP.route('/')
-@conditional_decorator(auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
-def home():
-    return render_template("docs/index.html")
 
 
 # 413: Payload Too Large
