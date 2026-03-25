@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab.blueprints.auth.auth
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    mslib.mscolab.blueprints.auth
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Auth Blueprint for server for mscolab module
 
@@ -143,7 +143,7 @@ def reset_password(token):
     if email is False:
         flash("Sorry, your token has expired or is invalid! We will need to resend your authentication email",
               'category_info')
-        return render_template('user/status.html', uri={"path": "reset_request", "name": "Resend authentication email"})
+        return render_template('user/status_password.html', uri={"path": "reset_request", "name": "Resend authentication email"})
     user = User.query.filter_by(emailid=email).first_or_404()
     form = ResetPasswordForm()
     if form.validate_on_submit():
@@ -153,7 +153,7 @@ def reset_password(token):
             user.hash_password(form.confirm_password.data)
             fm.modify_user(user, "confirmed", True)
             flash('Password reset Success. Please login by the user interface.', 'category_success')
-            return render_template('user/status.html')
+            return render_template('user/status_password.html')
         except IOError:
             flash('Password reset failed. Please try again later', 'category_danger')
     return render_template('user/reset_password.html', form=form)
@@ -176,13 +176,13 @@ def reset_request():
                     subject = "MSColab Password reset request"
                     send_email(form.email.data, subject, html)
                     flash('An email was sent if this user account exists', 'category_success')
-                    return render_template('user/status.html')
+                    return render_template('user/status_password.html')
                 except IOError:
                     flash('''We apologize, but it seems that there was an issue sending
                     your request email. Please try again later.''', 'category_info')
             else:
                 flash('An email was sent if this user account exists', 'category_success')
-                return render_template('user/status.html')
+                return render_template('user/status_password.html')
         return render_template('user/reset_request.html', form=form)
     else:
         logging.warning("To send emails, the value of `MAIL_ENABLED` in `conf.py` should be set to True.")

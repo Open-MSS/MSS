@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab.blueprints.chat.chat
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    mslib.mscolab.blueprints.chat
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Chat Blueprint for server for mscolab module
 

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab.blueprints.docs.docs
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    mslib.mscolab.blueprints.docs
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Docs Blueprint for app module of mscolab
 

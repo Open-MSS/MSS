@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab.blueprints.operation.operation
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    mslib.mscolab.blueprints.operation
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Operation Blueprint for server for mscolab module
 

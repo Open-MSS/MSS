@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab.blueprints.user.user
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    mslib.mscolab.blueprints.user
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     User Blueprint for server for mscolab module
 
