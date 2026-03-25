@@ -4,7 +4,7 @@
     mslib.mswms.blueprints.docs
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    app module of mswms
+    Docs Blueprint for app module of mswms
 
     This file is part of MSS.
 
