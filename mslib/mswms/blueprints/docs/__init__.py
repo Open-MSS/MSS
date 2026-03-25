@@ -23,13 +23,18 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
+import logging
 import os
+import traceback
+import urllib.parse
 
-from flask import Blueprint, abort, send_from_directory, render_template, url_for, send_file
+from flask import Blueprint, abort, send_from_directory, render_template, url_for, send_file, request, make_response
+from flask_httpauth import HTTPBasicAuth
+from multidict import CIMultiDict
 
 import mslib
 from mslib.msui.icons import icons
+from mslib.utils import conditional_decorator
 from mslib.utils.file_exists import file_exists
 from mslib.utils.get_content import get_content
 
@@ -40,6 +45,66 @@ DOCS_DOCS_DIR = os.path.join(DOCS_STATIC_DIR, 'docs')
 DOCS_TEMPLATES_DIR = os.path.join(DOCS_STATIC_DIR, 'templates')
 
 DOCS_BP = Blueprint("docs", __name__, template_folder='templates')
+auth_basic_auth = HTTPBasicAuth()
+
+
+@DOCS_BP.route('/')
+def application():
+    from mslib.mswms.app import mswms_settings
+    view_func = conditional_decorator(auth_basic_auth.login_required,
+                                      mswms_settings.enable_basic_http_authentication)(_application_impl)
+    return view_func()
+
+
+def _application_impl():
+    try:
+        # Request info
+        query = CIMultiDict(request.args)
+        # Processing
+        # ToDo Refactor
+        request_type = query.get('request')
+        if request_type is None:  # request_type may *actually* be set to None
+            request_type = ''
+        request_type = request_type.lower()
+        request_service = query.get('service', '')
+        request_service = request_service.lower()
+        request_version = query.get('version', '')
+
+        url = request.url
+        server_url = urllib.parse.urljoin(url, urllib.parse.urlparse(url).path)
+
+        from mslib.mswms.wms import server
+        if (request_type in ('getcapabilities', 'capabilities') and
+                request_service == 'wms' and request_version in ('1.1.1', '1.3.0', '')):
+            return_data, mime_type = server.get_capabilities(query, server_url)
+        elif request_type in ('getmap', 'getvsec', 'getlsec') and request_version in ('1.1.1', '1.3.0', ''):
+            return_data, mime_type = server.produce_plot(query, request_type)
+        else:
+            logging.debug("Request type '%s' is not valid.", request)
+            raise RuntimeError("Request type is not valid.")
+
+        res = make_response(return_data, 200)
+        response_headers = [('Content-type', mime_type), ('Content-Length', str(len(return_data)))]
+        for response_header in response_headers:
+            res.headers[response_header[0]] = response_header[1]
+
+        return res
+
+    except Exception as ex:
+        # without query parameter show index page
+        query = request.args
+        if len(query) == 0:
+            return render_template("docs/index.html")
+
+        # communicate request errors back to client user
+        logging.error("Unexpected error: %s: %s\nTraceback:\n%s",
+                      type(ex), ex, traceback.format_exc())
+        error_message = "{}: {}\n".format(type(ex), ex)
+        response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(error_message)))]
+        res = make_response(error_message, 404)
+        for response_header in response_headers:
+            res.headers[response_header[0]] = response_header[1]
+        return res
 
 
 @DOCS_BP.route('/xstatic/<name>/<path:filename>')

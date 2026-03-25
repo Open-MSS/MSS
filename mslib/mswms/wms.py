@@ -49,20 +49,17 @@ import logging
 import shutil
 import tempfile
 import traceback
-import urllib.parse
 
 from defusedxml import ElementTree
 from chameleon import PageTemplateLoader
 from owslib.crs import axisorder_yx
 from PIL import Image
 import numpy as np
-from flask import request, make_response, render_template
+from flask import request
 from flask_httpauth import HTTPBasicAuth
-from multidict import CIMultiDict
 from mslib.mswms.app import create_app
 
 from mslib.mswms.app import mswms_settings
-from mslib.utils import conditional_decorator
 from mslib.utils.time import parse_iso_datetime
 from mslib.mswms.gallery_builder import add_image, write_html, add_levels, add_times, \
     write_doc_index, write_code_pages, STATIC_LOCATION, DOCS_LOCATION
@@ -916,55 +913,3 @@ class WMSServer:
 
 
 server = WMSServer()
-
-
-@APP.route('/')
-@conditional_decorator(auth.login_required, mswms_settings.enable_basic_http_authentication)
-def application():
-    try:
-        # Request info
-        query = CIMultiDict(request.args)
-        # Processing
-        # ToDo Refactor
-        request_type = query.get('request')
-        if request_type is None:  # request_type may *actually* be set to None
-            request_type = ''
-        request_type = request_type.lower()
-        request_service = query.get('service', '')
-        request_service = request_service.lower()
-        request_version = query.get('version', '')
-
-        url = request.url
-        server_url = urllib.parse.urljoin(url, urllib.parse.urlparse(url).path)
-
-        if (request_type in ('getcapabilities', 'capabilities') and
-                request_service == 'wms' and request_version in ('1.1.1', '1.3.0', '')):
-            return_data, mime_type = server.get_capabilities(query, server_url)
-        elif request_type in ('getmap', 'getvsec', 'getlsec') and request_version in ('1.1.1', '1.3.0', ''):
-            return_data, mime_type = server.produce_plot(query, request_type)
-        else:
-            logging.debug("Request type '%s' is not valid.", request)
-            raise RuntimeError("Request type is not valid.")
-
-        res = make_response(return_data, 200)
-        response_headers = [('Content-type', mime_type), ('Content-Length', str(len(return_data)))]
-        for response_header in response_headers:
-            res.headers[response_header[0]] = response_header[1]
-
-        return res
-
-    except Exception as ex:
-        # without query parameter show index page
-        query = request.args
-        if len(query) == 0:
-            return render_template("docs/index.html")
-
-        # communicate request errors back to client user
-        logging.error("Unexpected error: %s: %s\nTraceback:\n%s",
-                      type(ex), ex, traceback.format_exc())
-        error_message = "{}: {}\n".format(type(ex), ex)
-        response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(error_message)))]
-        res = make_response(error_message, 404)
-        for response_header in response_headers:
-            res.headers[response_header[0]] = response_header[1]
-        return res
