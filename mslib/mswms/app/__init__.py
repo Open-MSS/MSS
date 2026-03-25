@@ -31,6 +31,7 @@ import mslib
 from flask import Flask, url_for
 from xstatic.main import XStatic
 from mslib.mswms.blueprints.docs import DOCS_BP
+from mslib.mswms.blueprints.gallery import GALLERY_BP
 
 from mslib.mswms.gallery_builder import STATIC_LOCATION
 from mslib.utils import prefix_route, release_info
@@ -132,4 +133,5 @@ def create_app(name="", imprint=None, gdpr=None):
     APP.jinja_env.globals.update(get_topmenu=get_topmenu)
 
     APP.register_blueprint(DOCS_BP)
+    APP.register_blueprint(GALLERY_BP)
     return APP

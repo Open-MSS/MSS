@@ -27,8 +27,10 @@
 
 import json
 
-from flask import Blueprint, request, g, jsonify
+import werkzeug
+from flask import Blueprint, request, g, jsonify, abort, send_from_directory
 
+from mslib.mscolab.app import APP
 from mslib.mscolab.message_type import MessageType
 from mslib.mscolab.utils import get_message_dict
 from mslib.utils.auth import verify_user
@@ -80,3 +82,13 @@ def message_attachment():
         return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
     # normal use case never gets to this
     return "False"
+
+
+@CHAT_BP.route('/uploads/<name>/<path:filename>', methods=["GET"])
+def uploads(name=None, filename=None):
+    base_path = APP.config['UPLOAD_FOLDER']
+    if name is None:
+        abort(404)
+    if filename is None:
+        abort(404)
+    return send_from_directory(base_path, werkzeug.security.safe_join("", name, filename))

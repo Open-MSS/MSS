@@ -49,6 +49,30 @@ AUTH_BP = Blueprint('auth', __name__, template_folder='templates')
 auth_basic_auth = HTTPBasicAuth()
 
 
+@AUTH_BP.route("/status")
+@conditional_decorator(auth_basic_auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
+def hello():
+    if request.authorization is not None:
+        if APP.__dict__.get('enable_basic_http_authentication', False):
+            auth_basic_auth.login_required()
+            return json.dumps({
+                'message': "Mscolab server",
+                'use_saml2': APP.config['USE_SAML2'],
+                'direct_login': APP.DIRECT_LOGIN
+            })
+        return json.dumps({
+            'message': "Mscolab server",
+            'use_saml2': APP.config['USE_SAML2'],
+            'direct_login': APP.config['DIRECT_LOGIN']
+        })
+    else:
+        return json.dumps({
+            'message': "Mscolab server",
+            'use_saml2': APP.config['USE_SAML2'],
+            'direct_login': APP.config['DIRECT_LOGIN']
+        })
+
+
 @AUTH_BP.route('/token', methods=["POST"])
 @conditional_decorator(auth_basic_auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
 def get_auth_token():
@@ -143,7 +167,9 @@ def reset_password(token):
     if email is False:
         flash("Sorry, your token has expired or is invalid! We will need to resend your authentication email",
               'category_info')
-        return render_template('user/status_password.html', uri={"path": "reset_request", "name": "Resend authentication email"})
+        return render_template('user/status_password.html', uri={"path": "reset_request", "name": "Resend "
+                                                                                                  "authentication "
+                                                                                                  "email"})
     user = User.query.filter_by(emailid=email).first_or_404()
     form = ResetPasswordForm()
     if form.validate_on_submit():

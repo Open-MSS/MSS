@@ -25,17 +25,14 @@
     limitations under the License.
 """
 import sys
-import json
 import logging
 import datetime
 import socketio
 import sqlalchemy.exc
-import werkzeug
 import flask_migrate
 
 
 from flask import jsonify, request, render_template
-from flask import send_from_directory, abort
 from flask_mail import Mail
 from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth
@@ -217,40 +214,6 @@ def getConfig():
 @conditional_decorator(auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
 def home():
     return render_template("docs/index.html")
-
-
-@APP.route("/status")
-@conditional_decorator(auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
-def hello():
-    if request.authorization is not None:
-        if APP.__dict__.get('enable_basic_http_authentication', False):
-            auth.login_required()
-            return json.dumps({
-                'message': "Mscolab server",
-                'use_saml2': APP.config['USE_SAML2'],
-                'direct_login': APP.DIRECT_LOGIN
-            })
-        return json.dumps({
-            'message': "Mscolab server",
-            'use_saml2': APP.config['USE_SAML2'],
-            'direct_login': APP.config['DIRECT_LOGIN']
-        })
-    else:
-        return json.dumps({
-            'message': "Mscolab server",
-            'use_saml2': APP.config['USE_SAML2'],
-            'direct_login': APP.config['DIRECT_LOGIN']
-        })
-
-
-@APP.route('/uploads/<name>/<path:filename>', methods=["GET"])
-def uploads(name=None, filename=None):
-    base_path = APP.config['UPLOAD_FOLDER']
-    if name is None:
-        abort(404)
-    if filename is None:
-        abort(404)
-    return send_from_directory(base_path, werkzeug.security.safe_join("", name, filename))
 
 
 # 413: Payload Too Large
