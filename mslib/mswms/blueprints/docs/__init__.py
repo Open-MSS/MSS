@@ -38,13 +38,13 @@ from mslib.utils import conditional_decorator
 from mslib.utils.file_exists import file_exists
 from mslib.utils.get_content import get_content
 
-DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
+DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(__file__))
 DOCS_STATIC_DIR = os.path.join(DOCS_SERVER_PATH, 'static')
 DOCS_IMG_DIR = os.path.join(DOCS_STATIC_DIR, 'img')
 DOCS_DOCS_DIR = os.path.join(DOCS_STATIC_DIR, 'docs')
 DOCS_TEMPLATES_DIR = os.path.join(DOCS_STATIC_DIR, 'templates')
 
-DOCS_BP = Blueprint("docs", __name__, template_folder='templates')
+DOCS_BP = Blueprint("docs", __name__, template_folder='templates', static_folder='static', static_url_path='/static')
 auth_basic_auth = HTTPBasicAuth()
 
 
@@ -126,7 +126,7 @@ def mss_theme(filename):
 
 @DOCS_BP.route("/index")
 def index():
-    return render_template("/index.html")
+    return render_template("docs/index.html")
 
 
 @DOCS_BP.route("/mss/about")

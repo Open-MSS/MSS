@@ -44,7 +44,8 @@ from xstatic.main import XStatic
 
 
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
-DOCS_STATIC_DIR = os.path.join(DOCS_SERVER_PATH, 'static')
+DOCS_BLUEPRINTS_DIR = os.path.join(DOCS_SERVER_PATH, 'blueprints')
+DOCS_STATIC_DIR = os.path.join(DOCS_BLUEPRINTS_DIR, 'static')
 DOCS_IMG_DIR = os.path.join(DOCS_STATIC_DIR, 'img')
 DOCS_DOCS_DIR = os.path.join(DOCS_STATIC_DIR, 'docs')
 DOCS_TEMPLATES_DIR = os.path.join(DOCS_STATIC_DIR, 'templates')
