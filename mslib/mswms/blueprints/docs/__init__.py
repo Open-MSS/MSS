@@ -28,7 +28,8 @@ import os
 import traceback
 import urllib.parse
 
-from flask import Blueprint, abort, send_from_directory, render_template, url_for, send_file, request, make_response
+from flask import Blueprint, abort, send_from_directory, render_template, url_for, send_file, request, make_response, \
+    current_app
 from flask_httpauth import HTTPBasicAuth
 from multidict import CIMultiDict
 
@@ -160,8 +161,9 @@ def help():  # noqa: A001
 
 
 @DOCS_BP.route("/mss/imprint")
-def imprint(imprint_file=None):
-    if file_exists(imprint_file):
+def imprint():
+    imprint_file = current_app.config.get('IMPRINT', None)
+    if  imprint_file is not None and file_exists(imprint_file):
         content = get_content(imprint_file)
         return render_template("docs/content.html", act="imprint", content=content)
     else:
@@ -170,7 +172,8 @@ def imprint(imprint_file=None):
 
 @DOCS_BP.route("/mss/gdpr")
 def gdpr(gdpr_file=None):
-    if file_exists(gdpr_file):
+    gdpr_file = current_app.config.get('GDPR', None)
+    if gdpr_file is not None and file_exists(gdpr_file):
         content = get_content(gdpr_file)
         return render_template("docs/content.html", act="gdpr", content=content)
     else:

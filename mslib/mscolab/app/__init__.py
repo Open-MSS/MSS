@@ -29,7 +29,7 @@ import logging
 import sqlalchemy
 
 from flask_migrate import Migrate
-from flask import Flask
+from flask import Flask, current_app
 
 import mslib
 
