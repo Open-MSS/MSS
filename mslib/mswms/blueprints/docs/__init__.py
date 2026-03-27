@@ -32,7 +32,6 @@ from flask import Blueprint, abort, send_from_directory, render_template, url_fo
 from flask_httpauth import HTTPBasicAuth
 from multidict import CIMultiDict
 
-import mslib
 from mslib.msui.icons import icons
 from mslib.utils import conditional_decorator
 from mslib.utils.file_exists import file_exists
@@ -152,11 +151,11 @@ def install():
 @DOCS_BP.route("/mss/help")
 def help():  # noqa: A001
     _file = os.path.join(DOCS_DOCS_DIR, 'help.md')
-    html_overrides = ('<img alt="Waypoint Tutorial" '
-                      'src="https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.gif" />',
-                      '<img  class="mx-auto d-block img-fluid" alt="Waypoint Tutorial" '
-                      'src="https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.gif" />')
-    content = get_content(_file, html_overrides=html_overrides)
+    md_overrides = ('![Waypoint Tutorial](https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.mp4)',
+                    '<video class="mx-auto d-block img-fluid" controls preload="metadata">'
+                    '<source src="https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.mp4" '
+                    'type="video/mp4">Your browser does not support the video tag.</video>')
+    content = get_content(_file, md_overrides=md_overrides)
     return render_template("docs/content.html", act="help", content=content)
 
 

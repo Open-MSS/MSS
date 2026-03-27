@@ -30,7 +30,6 @@ from functools import wraps
 from flask import Blueprint, abort, send_from_directory, render_template, url_for, send_file, current_app
 from flask_httpauth import HTTPBasicAuth
 
-import mslib
 from mslib.msui.icons import icons
 from mslib.utils.file_exists import file_exists
 from mslib.utils.get_content import get_content
@@ -50,6 +49,7 @@ def optional_auth(f):
         if current_app.config.get('enable_basic_http_authentication', False):
             return auth_basic_auth.login_required(f)(*args, **kwargs)
         return f(*args, **kwargs)
+
     return decorated
 
 

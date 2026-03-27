@@ -116,6 +116,7 @@ def get_topmenu():
         (url_for('docs.index'), 'Mission Support System',
          ((url_for('docs.about'), 'About'),
           (url_for('docs.install'), 'Install'),
+          (url_for("gallery.plots"), 'Gallery'),
           (url_for('docs.help'), 'Help'),
           )),
     ]
