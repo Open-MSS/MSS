@@ -32,7 +32,7 @@ from flask import Blueprint, render_template, request, abort, Response
 from mslib.mswms.gallery_builder import STATIC_LOCATION
 from mslib.utils.get_content import get_content
 
-GALLERY_BP = Blueprint('gallery', __name__, template_folder='templates')
+GALLERY_BP = Blueprint('gallery', __name__, template_folder='templates', static_url_path='/static', static_folder=STATIC_LOCATION)
 
 
 @GALLERY_BP.route("/mss/plots")

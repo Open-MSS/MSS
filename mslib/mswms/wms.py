@@ -396,12 +396,15 @@ class WMSServer:
 
             if clear and os.path.exists(os.path.join(path, "plots")):
                 shutil.rmtree(os.path.join(path, "plots"))
+                os.makedirs(os.path.join(path, "plots"))
             if os.path.exists(os.path.join(path, "plots")):
                 for fn in glob.glob(os.path.join(tmp_path, "plots", "*")):
                     if not os.path.exists(os.path.join(path, "plots", os.path.basename(fn))):
                         shutil.move(fn, os.path.join(path, "plots"))
             else:
-                shutil.move(os.path.join(tmp_path, "plots"), path)
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                shutil.move(os.path.join(tmp_path, "plots"), os.path.join(path, "plots"))
             if os.path.exists(os.path.join(path, "code")):
                 shutil.rmtree(os.path.join(path, "code"))
             if os.path.exists(os.path.join(tmp_path, "code")):

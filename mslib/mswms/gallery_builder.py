@@ -434,23 +434,28 @@ def write_code_pages(path, sphinx=False, url_prefix=None):
 
 def write_html(path, sphinx=False, plot_types=None):
     if plot_types is None:
-        plot_types = plots.keys()
+        plot_types = list(plots.keys())
+    else:
+        plot_types = list(plot_types)
     """
     Writes the plots.html file containing the gallery
     """
     section = []
-    for name in plot_types:
-        section.append(f""""<button class="tablinks active" """
-                       f"""onclick="openTab(event, "{name}-View')">{name} Views</button>""")
-    section = ".\n".join(section)
+    for index, name in enumerate(plot_types):
+        classes = "tablinks active" if index == 0 else "tablinks"
+        section.append(
+            f"""<button class="{classes}" onclick="openTab(event, '{name}-View')">{name} Views</button>"""
+        )
+    section = "\n".join(section)
     html = begin.format(section=section)
     if sphinx:
         html = html.replace("<h3>Plot Gallery</h3>", "")
 
+    default_plot_type = plot_types[0] if len(plot_types) > 0 else None
     for l_type in plots:
         if l_type in plot_types:
             style = ""
-            if l_type == "Top":
+            if l_type == default_plot_type:
                 style = "style=\"display: block;\""
             html += f"<div id=\"{l_type}-View\" class=\"tabcontent\" {style}>"
             html += "\n".join(plots[l_type])
@@ -706,8 +711,9 @@ def add_image(path, plot, plot_object, generate_code=False, sphinx=False, url_pr
 
         end = end.replace("files = [", f"files = [\"{filename}.png\",")\
             .replace(",];", "];")
+        static_prefix = url_prefix if url_prefix else SCRIPT_NAME.rstrip("/")
         img_path = f"../_static/{filename}.png" if sphinx \
-            else f"{url_prefix}/static/plots/{filename}.png"
+            else f"{static_prefix}/static/plots/{filename}.png"
         code_path = f"code/{l_type}_{dataset}{plot_object.name}.html" if sphinx \
             else f"{url_prefix if url_prefix else ''}{SCRIPT_NAME}mss/code/{l_type}_{dataset}{plot_object.name}.md"
 
