@@ -35,6 +35,7 @@ from flask_httpauth import HTTPBasicAuth
 from flask.wrappers import Response
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from saml2.metadata import create_metadata_string
+from setuptools.command.develop import develop
 
 from mslib.mscolab.conf import setup_saml2_backend
 from mslib.mscolab.forms import ResetPasswordForm, ResetRequestForm
@@ -130,7 +131,7 @@ def user_register_handler():
                 status_code = 204
                 token = generate_confirmation_token(email)
                 confirm_url = url_for('docs.confirm_email', token=token, _external=True)
-                html = render_template('user/activate.html', username=username, confirm_url=confirm_url)
+                html = render_template('auth/user/activate.html', username=username, confirm_url=confirm_url)
                 subject = "MSColab Please confirm your email"
                 send_email(email, subject, html)
     except TypeError:
@@ -149,13 +150,16 @@ def confirm_email(token):
             return jsonify({"success": False}), 401
         user = User.query.filter_by(emailid=email).first_or_404()
         if user.confirmed:
-            return render_template('user/confirmed.html', username=user.username)
+            return render_template('auth/user/confirmed.html', username=user.username)
+        elif develop.confirmed:
+            logging.warning("To send emails, the value of MAIL_ENABLED in conf.py should be set to True.")
+            return render_template('auth/errors/403.html'), 403
         else:
             from mslib.mscolab.server import getConfig
             fm = getConfig()[3]
             fm.modify_user(user, attribute="confirmed_on", value=datetime.datetime.now(tz=datetime.timezone.utc))
             fm.modify_user(user, attribute="confirmed", value=True)
-            return render_template('user/confirmed.html', username=user.username)
+            return render_template('auth/user/confirmed.html', username=user.username)
 
 
 @AUTH_BP.route('/reset_password/<token>', methods=['GET', 'POST'])
@@ -167,7 +171,7 @@ def reset_password(token):
     if email is False:
         flash("Sorry, your token has expired or is invalid! We will need to resend your authentication email",
               'category_info')
-        return render_template('user/status_password.html', uri={"path": "reset_request", "name": "Resend "
+        return render_template('auth/user/status_password.html', uri={"path": "reset_request", "name": "Resend "
                                                                                                   "authentication "
                                                                                                   "email"})
     user = User.query.filter_by(emailid=email).first_or_404()
@@ -179,10 +183,10 @@ def reset_password(token):
             user.hash_password(form.confirm_password.data)
             fm.modify_user(user, "confirmed", True)
             flash('Password reset Success. Please login by the user interface.', 'category_success')
-            return render_template('user/status_password.html')
+            return render_template('auth/user/status_password.html')
         except IOError:
             flash('Password reset failed. Please try again later', 'category_danger')
-    return render_template('user/reset_password.html', form=form)
+    return render_template('auth/user/reset_password.html', form=form)
 
 
 @AUTH_BP.route("/reset_request", methods=['GET', 'POST'])
@@ -197,22 +201,22 @@ def reset_request():
                     username = user.username
                     token = generate_confirmation_token(form.email.data)
                     reset_password_url = url_for('docs.reset_password', token=token, _external=True)
-                    html = render_template('user/reset_confirmation.html',
+                    html = render_template('auth/user/reset_confirmation.html',
                                            reset_password_url=reset_password_url, username=username)
                     subject = "MSColab Password reset request"
                     send_email(form.email.data, subject, html)
                     flash('An email was sent if this user account exists', 'category_success')
-                    return render_template('user/status_password.html')
+                    return render_template('auth/user/status_password.html')
                 except IOError:
                     flash('''We apologize, but it seems that there was an issue sending
                     your request email. Please try again later.''', 'category_info')
             else:
                 flash('An email was sent if this user account exists', 'category_success')
-                return render_template('user/status_password.html')
-        return render_template('user/reset_request.html', form=form)
+                return render_template('auth/user/status_password.html')
+        return render_template('auth/user/reset_request.html', form=form)
     else:
         logging.warning("To send emails, the value of `MAIL_ENABLED` in `conf.py` should be set to True.")
-        return render_template('errors/403.html'), 403
+        return render_template('auth/errors/403.html'), 403
 
 
 if APP.config['USE_SAML2']:
@@ -228,7 +232,7 @@ if APP.config['USE_SAML2']:
         and renders the 'idp/available_idps.html' template with the list of configured IDPs.
         """
         configured_idps = setup_saml2_backend.CONFIGURED_IDPS
-        return render_template('idp/available_idps.html', configured_idps=configured_idps), 200
+        return render_template('auth/idp/available_idps.html', configured_idps=configured_idps), 200
 
     @AUTH_BP.route("/idp_login/", methods=['POST'])
     def idp_login():
@@ -254,7 +258,7 @@ if APP.config['USE_SAML2']:
                 return redirect(str(headers["Location"]), code=303)
             return Response(http_args["data"], headers=http_args["headers"])
         except (NameError, AttributeError):
-            return render_template('errors/403.html'), 403
+            return render_template('auth/errors/403.html'), 403
 
     def create_acs_post_handler(config):
         """
@@ -295,17 +299,17 @@ if APP.config['USE_SAML2']:
                         username = attributes["givenName"]
                         token = generate_confirmation_token(email)
                     except (NameError, AttributeError, KeyError):
-                        return render_template('errors/403.html'), 403
+                        return render_template('auth/errors/403.html'), 403
 
                 if email is not None and username is not None:
                     idp_user_db_state = create_or_update_idp_user(email,
                                                                   username, token, idp_config['idp_identity_name'])
                     if idp_user_db_state:
-                        return render_template('idp/idp_login_success.html', token=token), 200
-                    return render_template('errors/500.html'), 500
-                return render_template('errors/500.html'), 500
+                        return render_template('auth/idp/idp_login_success.html', token=token), 200
+                    return render_template('auth/errors/500.html'), 500
+                return render_template('auth/errors/500.html'), 500
             except (NameError, AttributeError, KeyError):
-                return render_template('errors/403.html'), 403
+                return render_template('auth/errors/403.html'), 403
         return acs_post_handler
 
     # Implementation for handling configured SAML assertion consumer endpoints
@@ -353,4 +357,4 @@ if APP.config['USE_SAML2']:
                     None, sp_config.config, 4, None, None, None, None, None
                 ).decode("utf-8")
                 return Response(metadata_string, mimetype="text/xml")
-        return render_template('errors/404.html'), 404
+        return render_template('auth/errors/404.html'), 404
