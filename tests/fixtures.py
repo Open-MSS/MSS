@@ -30,8 +30,7 @@ import time
 import urllib
 import socketio
 import mslib.mswms.mswms
-import eventlet
-import eventlet.wsgi
+from werkzeug.serving import make_server
 
 from PyQt5 import QtWidgets
 from contextlib import contextmanager
@@ -125,7 +124,7 @@ def mscolab_session_server(mscolab_session_app, mscolab_session_managers):
     This fixture should not be used in tests. Instead use :func:`mscolab_server`, which
     handles per-test cleanup as well.
     """
-    with _running_eventlet_server(mscolab_session_app) as url:
+    with _running_server(mscolab_session_app) as url:
         # Wait until the Flask-SocketIO server is ready for connections
         sio = socketio.Client()
         sio.connect(url, retry=True, wait_timeout=60)
@@ -186,23 +185,23 @@ def mswms_server(mswms_app):
 
     :returns: The URL where the server is running.
     """
-    with _running_eventlet_server(mswms_app) as url:
+    with _running_server(mswms_app) as url:
         yield url
 
 
-def _start_eventlet_server(host, port_queue, app):
+def _start_server(host, port_queue, app):
     """
-    Starts the Eventlet server and sends the chosen port back to the parent process.
+    Starts a werkzeug server and sends the chosen port back to the parent process.
     """
-    sock = eventlet.listen((host, 0))
-    port = sock.getsockname()[1]
+    srv = make_server(host, 0, app, threaded=True)
+    port = srv.server_address[1]
     port_queue.put(port)
-    eventlet.wsgi.server(sock, app, log_output=False)
+    srv.serve_forever()
 
 
 @contextmanager
-def _running_eventlet_server(app):
-    """Context manager that starts the app in an eventlet server and returns its URL."""
+def _running_server(app):
+    """Context manager that starts the app in a werkzeug server and returns its URL."""
     scheme = "http"
     host = "127.0.0.1"
 
@@ -213,7 +212,7 @@ def _running_eventlet_server(app):
     # We are using a queue to retrieve the port selected in the child process.
     port_queue = ctx.Queue()
 
-    process = ctx.Process(target=_start_eventlet_server, args=(host, port_queue, app), daemon=True)
+    process = ctx.Process(target=_start_server, args=(host, port_queue, app), daemon=True)
     try:
         process.start()
         # Retrieve the port from the queue
