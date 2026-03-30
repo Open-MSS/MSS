@@ -38,12 +38,12 @@ from mslib.mscolab.message_type import MessageType
 
 
 PH = PasswordHasher(
-            time_cost=3,
-            memory_cost=102400,
-            parallelism=8,
-            hash_len=32,
-            salt_len=16
-        )
+    time_cost=3,
+    memory_cost=102400,
+    parallelism=8,
+    hash_len=32,
+    salt_len=16
+)
 
 
 class AwareDateTime(sqlalchemy.types.TypeDecorator):
