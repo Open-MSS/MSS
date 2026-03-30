@@ -29,11 +29,21 @@ import datetime
 import logging
 import jwt
 
-from passlib.apps import custom_app_context as pwd_context
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 import sqlalchemy.types
 
 from mslib.mscolab.app import db
 from mslib.mscolab.message_type import MessageType
+
+
+PH = PasswordHasher(
+            time_cost=3,
+            memory_cost=102400,
+            parallelism=8,
+            hash_len=32,
+            salt_len=16
+        )
 
 
 class AwareDateTime(sqlalchemy.types.TypeDecorator):
@@ -82,10 +92,13 @@ class User(db.Model):
         return f'<User {self.username}>'
 
     def hash_password(self, password):
-        self.password = pwd_context.hash(password)
+        self.password = PH.hash(password)
 
     def verify_password(self, password_):
-        return pwd_context.verify(password_, self.password)
+        try:
+            return PH.verify(self.password, password_)
+        except VerifyMismatchError:
+            return False
 
     def generate_auth_token(self, expiration=None):
         # Importing conf here to avoid loading settings on opening chat window
