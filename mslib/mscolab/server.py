@@ -204,9 +204,8 @@ def check_login(emailid, password):
                 return user
     return False
 
-
-def getConfig():
-    return _app, sockio, cm, fm, mail
+def get_mail():
+    return mail
 
 
 # 413: Payload Too Large
@@ -214,6 +213,7 @@ def getConfig():
 def error413(error):
     upload_limit = APP.config['MAX_CONTENT_LENGTH'] / 1024 / 1024
     return jsonify({"success": False, "message": f"File size too large. Upload limit is {upload_limit}MB"}), 413
+
 
 
 def start_server(app, sockio, cm, fm, port=8083):
