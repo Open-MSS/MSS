@@ -509,13 +509,10 @@ def messages():
 def message_attachment():
     user = g.user
     op_id = request.form.get("op_id", None)
-    if fm.is_member(user.id, op_id):
+    if fm.is_member(user.id, op_id) and not fm.is_viewer(user.id, op_id):
         file = request.files['file']
         message_type = MessageType(int(request.form.get("message_type")))
         user = g.user
-        users = fm.fetch_users_without_permission(int(op_id), user.id)
-        if users is False:
-            return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
         if file is not None:
             static_file_path = fm.upload_file(file, subfolder=str(op_id), include_prefix=True)
             if static_file_path is not None:
