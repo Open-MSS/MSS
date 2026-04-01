@@ -587,6 +587,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         # disable category until connected/login into mscolab
         self.filterCategoryCb.setEnabled(False)
         self.actionOpenManageView.setEnabled(False)
+        if not config_loader(dataset="restore_views"):
+            self.shareViewGroupBox.hide()
         self.shareViewGroupBox.setEnabled(False)
         self.mscolab.signal_unarchive_operation.connect(self.activate_operation_slot)
         self.mscolab.signal_operation_added.connect(self.add_operation_slot)
