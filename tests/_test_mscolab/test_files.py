@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,7 @@
 import os
 import pytest
 
-from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.app import APP
 from mslib.mscolab.models import User, Operation, Permission, Change, Message
 from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.utils import get_recent_op_id
@@ -65,7 +65,7 @@ class Test_Files:
             # test for '/' in path
             assert self.fm.create_operation('test/path', 'sth', self.user, content=XML_CONTENT_INIT) is False
             # check file existence
-            assert os.path.exists(os.path.join(mscolab_settings.OPERATIONS_DATA, 'test_path')) is True
+            assert os.path.exists(os.path.join(APP.config['OPERATIONS_DATA'], 'test_path')) is True
             # check creation in db
             p = Operation.query.filter_by(path="test_path").first()
             assert p is not None
@@ -167,7 +167,7 @@ class Test_Files:
             assert self.fm.update_operation(op_id, 'path', 'dummy wrong', self.user) is False
             assert self.fm.update_operation(op_id, 'path', 'dummy/wrong', self.user) is False
             assert self.fm.update_operation(op_id, 'path', 'dummy', self.user) is True
-            assert os.path.exists(os.path.join(mscolab_settings.OPERATIONS_DATA, 'dummy'))
+            assert os.path.exists(os.path.join(APP.config['OPERATIONS_DATA'], 'dummy'))
             assert self.fm.update_operation(op_id, 'description', 'dummy', self.user) is True
 
     def test_delete_operation(self):

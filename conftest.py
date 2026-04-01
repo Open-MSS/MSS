@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -94,7 +94,7 @@ def generate_initial_config():
 
     if not constants.MSCOLAB_SERVER_CONFIG_FILE_PATH.exists():
         config_string = f'''
-# SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
+# SQLALCHEMY_DATABASE_URI = 'mysql://user:pass@127.0.0.1/mscolab'
 import os
 import logging
 import secrets
@@ -147,7 +147,7 @@ MAIL_DEFAULT_SENDER = 'MSS@localhost'
 # enable verification by Mail
 MAIL_ENABLED = False
 
-SQLALCHEMY_DB_URI = 'sqlite:///' + urljoin(DATA_DIR, 'mscolab.db')
+SQLALCHEMY_DATABASE_URI = 'sqlite:///' + urljoin(DATA_DIR, 'mscolab.db')
 
 # enable SQLALCHEMY_ECHO
 SQLALCHEMY_ECHO = False

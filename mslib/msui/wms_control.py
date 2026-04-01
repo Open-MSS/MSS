@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -401,6 +401,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     signal_disable_cbs = QtCore.pyqtSignal(name="disable_cbs")
     signal_enable_cbs = QtCore.pyqtSignal(name="enable_cbs")
     image_displayed = QtCore.pyqtSignal()
+    legend_displayed = QtCore.pyqtSignal()
     base_url_changed = QtCore.pyqtSignal(str)
     layer_changed = QtCore.pyqtSignal(Layer)
     on_level_changed = QtCore.pyqtSignal(str)
@@ -408,6 +409,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     itime_changed = QtCore.pyqtSignal(str)
     vtime_changed = QtCore.pyqtSignal(str)
     vtime_data = QtCore.pyqtSignal([list])
+    metadata_displayed = QtCore.pyqtSignal()
 
     def __init__(self, parent=None, default_WMS=None, wms_cache=None, view=None):
         """
@@ -528,6 +530,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Progress dialog to inform the user about ongoing capability requests.
         self.capabilities_worker = Worker(None)
+        self.capabilities_request_worker = None
         self.cpdlg = QtWidgets.QProgressDialog(
             "retrieving wms capabilities...", "Cancel", 0, 10, parent=self.multilayers)
         self.cpdlg.canceled.connect(self.stop_capabilities_retrieval)

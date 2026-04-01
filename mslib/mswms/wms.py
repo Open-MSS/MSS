@@ -25,7 +25,7 @@
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr), Omar Qunsul (oq)
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -60,46 +60,17 @@ import numpy as np
 from flask import request, make_response, render_template, Response, abort
 from flask_httpauth import HTTPBasicAuth
 from multidict import CIMultiDict
+from mslib.mswms.app import create_app
+
+from mslib.mswms.app import mswms_settings
 from mslib.utils import conditional_decorator
 from mslib.utils.get_content import get_content
 from mslib.utils.time import parse_iso_datetime
-from mslib.index import create_app
 from mslib.mswms.gallery_builder import add_image, write_html, add_levels, add_times, \
     write_doc_index, write_code_pages, STATIC_LOCATION, DOCS_LOCATION
 
 # Flask basic auth's documentation
 # https://flask-basicauth.readthedocs.io/en/latest/#flask.ext.basicauth.BasicAuth.check_credentials
-
-
-class default_mswms_settings:
-    base_dir = os.path.abspath(os.path.dirname(__file__))
-    xml_template_location = os.path.join(base_dir, "xml_templates")
-    service_name = "OGC:WMS"
-    service_title = "Mission Support System Web Map Service"
-    service_abstract = ""
-    service_contact_person = ""
-    service_contact_organisation = ""
-    service_contact_position = ""
-    service_address_type = ""
-    service_address = ""
-    service_city = ""
-    service_state_or_province = ""
-    service_post_code = ""
-    service_country = ""
-    service_fees = ""
-    service_email = ""
-    service_access_constraints = "This service is intended for research purposes only."
-    register_horizontal_layers = []
-    register_vertical_layers = []
-    register_linear_layers = []
-    imprint = ""
-    gdpr = ""
-    data = {}
-    enable_basic_http_authentication = False
-    __file__ = None
-
-
-mswms_settings = default_mswms_settings()
 
 try:
     import mswms_settings as user_settings
@@ -107,11 +78,11 @@ try:
 except ImportError as ex:
     logging.warning("Couldn't import mswms_settings (ImportError:'%s'), Using dummy config.", ex)
 
-app = create_app(__name__, imprint=mswms_settings.imprint, gdpr=mswms_settings.gdpr)
+APP = create_app(__name__, imprint=mswms_settings.imprint, gdpr=mswms_settings.gdpr)
 auth = HTTPBasicAuth()
 
 realm = 'Mission Support Web Map Service'
-app.config['realm'] = realm
+APP.config['realm'] = realm
 
 try:
     import mswms_auth
@@ -949,7 +920,7 @@ class WMSServer:
 server = WMSServer()
 
 
-@app.route('/')
+@APP.route('/')
 @conditional_decorator(auth.login_required, mswms_settings.enable_basic_http_authentication)
 def application():
     try:
@@ -1001,7 +972,7 @@ def application():
         return res
 
 
-@app.route("/mss/plots")
+@APP.route("/mss/plots")
 def plots():
     if STATIC_LOCATION != "" and os.path.exists(os.path.join(STATIC_LOCATION, 'plots.html')):
         _file = os.path.join(STATIC_LOCATION, 'plots.html')
@@ -1015,7 +986,7 @@ def plots():
     return render_template("/content.html", act="plots", content=content)
 
 
-@app.route("/mss/code/<path:filename>")
+@APP.route("/mss/code/<path:filename>")
 def code(filename):
     download = request.args.get("download", False)
     _file = werkzeug.security.safe_join(STATIC_LOCATION, "code", filename)

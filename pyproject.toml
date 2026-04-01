@@ -1,6 +1,6 @@
 [project]
 name = "open-mss"
-version = "10.2.0"
+version = "11.0.0"
 description = "MSS - Mission Support System"
 readme = "README.md"
 classifiers = [
@@ -30,7 +30,7 @@ mswms = "mslib.mswms.mswms:main"
 msui = "mslib.msui.msui:main"
 
 [build-system]
-requires = ["setuptools >= 61.0"]
+requires = ["setuptools >=61.0,<81"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]

@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -702,6 +702,7 @@ class LinearViewPlotter(ViewPlotter):
         self.fig.clf()
         self.ax = self.fig.add_subplot(111, zorder=99)
         self.ax.figure.patch.set_visible(False)
+        self.vertical_lines = []
         self.fig.canvas.draw()
 
     def redraw_xaxis(self, lats, lons):

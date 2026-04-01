@@ -16,7 +16,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -271,7 +271,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
             condition = first_waypoint.lat != last_waypoint.lat or first_waypoint.lon != last_waypoint.lon or \
                 first_waypoint.flightlevel != last_waypoint.flightlevel
 
-        return condition
+        return bool(condition)
 
     def update_roundtrip_enabled(self):
         self.btRoundtrip.setEnabled(self.is_roundtrip_possible())

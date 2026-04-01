@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2017-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,6 +29,7 @@
 import re
 import mock
 import os
+import sys
 import argparse
 import pytest
 import json
@@ -41,7 +42,7 @@ from tests.constants import ROOT_DIR, MSUI_CONFIG_PATH, MSUI_CONFIG_FILE_PATH
 from mslib.msui import msui
 from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
-from mslib.utils.config import read_config_file, config_loader
+from mslib.utils.config import config_loader, read_config_file
 from mslib.msui import flighttrack as ft
 from mslib.msui.topview import MSUITopViewWindow
 from mslib.msui.msui_mainwindow import QActiveViewsListWidgetItem
@@ -56,9 +57,12 @@ def test_main():
 
 
 def test_keep_config_file(qtbot):
-    # in conftest we reset always the config file to an empty dict
+    # in conftest we set always the mss_dir in the config file
+    mss_dir = config_loader(dataset="mss_dir")
     _config = MSUI_CONFIG_FILE_PATH.read_text()
-    assert _config == "{}"
+    assert _config == f'''{{
+    "mss_dir": "{mss_dir}"
+}}'''
     config = """{
             "MSCOLAB_skip_archived_operations": true
 }"""
@@ -72,6 +76,10 @@ def test_keep_config_file(qtbot):
     assert _config == config
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("linux") and os.getenv("GITHUB_ACTIONS") == "true",
+    reason="skip on GitHub Actions Linux runners because of flush and sync issue",
+)
 def test_multiple_times_save_filename(qtbot, tmp_path):
     msui = msui_mw.MSUIMainWindow()
     msui.show()
@@ -81,13 +89,18 @@ def test_multiple_times_save_filename(qtbot, tmp_path):
     # verify that we can save the file multiple times
     msui.save_flight_track(filename)
     assert os.path.exists(filename)
-    first_timestamp = os.path.getmtime(filename)
+    first_timestamp = os.stat(filename).st_mtime_ns
+    assert filename == msui.active_flight_track.get_filename()
     msui.save_handler()
-    second_timestamp = os.path.getmtime(filename)
+
+    def assert_():
+        second_timestamp = os.stat(filename).st_mtime_ns
+        assert second_timestamp > first_timestamp
+    qtbot.wait_until(assert_)
+
     with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
         msui.close()
     # check that the second save is newer than the first one
-    assert second_timestamp > first_timestamp
     assert os.path.exists(filename)
 
 

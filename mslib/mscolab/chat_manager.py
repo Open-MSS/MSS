@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,7 @@
 import datetime
 from pathlib import Path
 
-from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.app import APP
 from mslib.mscolab.models import db, Message, MessageType
 from mslib.mscolab.utils import get_message_dict
 
@@ -88,7 +88,7 @@ class ChatManager:
         message = Message.query.filter(Message.id == message_id).first()
         if message.message_type == MessageType.IMAGE or message.message_type == MessageType.DOCUMENT:
             file_name = Path(message.text).name
-            upload_path = Path(mscolab_settings.UPLOAD_FOLDER) / str(message.op_id) / file_name
+            upload_path = Path(APP.config['UPLOAD_FOLDER']) / str(message.op_id) / file_name
             upload_path.unlink()
         db.session.delete(message)
         db.session.commit()

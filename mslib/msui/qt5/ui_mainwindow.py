@@ -119,7 +119,6 @@ class Ui_MSUIMainWindow(object):
         self.verticalLayout_4.addWidget(self.listView)
         self.pushButton = QtWidgets.QPushButton(self.shareViewGroupBox)
         self.pushButton.setObjectName("pushButton")
-        self.pushButton.hide()
         self.verticalLayout_4.addWidget(self.pushButton)
         self.verticalLayout_5.addWidget(self.shareViewGroupBox)
         self.horizontalLayout.addLayout(self.verticalLayout_5)

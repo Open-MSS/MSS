@@ -18,7 +18,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,12 +52,9 @@ from mslib.utils.find_location import find_location
 from mslib.utils import thermolib
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
-from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.qt import variant_to_string, variant_to_float
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 
-from mslib.utils import writexml
-xml.dom.minidom.Element.writexml = writexml  # nosec, we take care of writing correct XML
 # Constants for identifying the table columns when the WaypointsTableModel is
 # used with a QTableWidget.
 LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE = list(range(5))
@@ -183,7 +180,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     # Signal emitted when a waypoint is moved, inserted or deleted
     changeMessageSignal = QtCore.pyqtSignal(str)
 
-    def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False, data_dir=mss_default.mss_dir,
+    def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False,
+                 data_dir=config_loader(dataset="mss_dir"),
                  xml_content=None):
         super().__init__()
         self.name = name  # a name for this flight track

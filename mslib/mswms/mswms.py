@@ -9,7 +9,7 @@
     python mswms.py.
 
     :copyright: Copyright 2016 Reimar Bauer
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@ from pathlib import Path
 
 from mslib import __version__
 from mslib.utils import setup_logging
-from mslib.mswms.wms import app as application
+from mslib.mswms.wms import APP as application
 from mslib.mswms.seed import DataFiles
 
 

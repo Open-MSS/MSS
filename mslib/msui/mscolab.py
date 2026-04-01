@@ -14,7 +14,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019- Shivashis Padhi
-    :copyright: Copyright 2019-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,14 +38,12 @@ import types
 import functools
 import requests
 import re
-import webbrowser
 import mimetypes
 import urllib.request
 from urllib.parse import urljoin
 from pathlib import Path
 
 from PIL import Image, UnidentifiedImageError
-from keyring.errors import NoKeyringError, PasswordSetError, InitError
 import socketio
 
 from mslib.msui import flighttrack as ft
@@ -54,24 +52,24 @@ from mslib.msui import mscolab_admin_window as maw
 from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import socket_control as sc
 from mslib.msui.mscolab_exceptions import MSColabConnectionError
+from mslib.msui.mscolab_archive_browser import MSColab_OperationArchiveBrowser
+from mslib.msui.mscolab_connect_dialog import MSColab_ConnectDialog
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox
 from PyQt5.QtGui import QPixmap
 
-from mslib.utils.auth import get_password_from_keyring, save_password_to_keyring, del_password_from_keyring
+from mslib.utils.auth import del_password_from_keyring
 from mslib.utils.verify_user_token import verify_user_token as _verify_user_token
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.utils.qt import get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup
 from mslib.msui.qt5 import ui_mscolab_help_dialog as msc_help_dialog
 from mslib.msui.qt5 import ui_mscolab_add_operation_dialog as msc_add_operation_ui
 from mslib.msui.qt5 import ui_mscolab_merge_waypoints_dialog as merge_wp_ui
-from mslib.msui.qt5 import ui_mscolab_connect_dialog as ui_conn
 from mslib.msui.qt5 import ui_mscolab_profile_dialog as ui_profile
-from mslib.msui.qt5 import ui_operation_archive as ui_opar
 from mslib.msui.qt5 import ui_manageView_dialog as ui_manage_view
 from mslib.msui import constants
-from mslib.utils.config import config_loader, modify_config_file
+from mslib.utils.config import config_loader
 
 
 def verify_user_token(func):
@@ -101,398 +99,66 @@ def verify_user_token(func):
     return wrapper
 
 
-class MSColab_OperationArchiveBrowser(QDialog, ui_opar.Ui_OperationArchiveBrowser):
-    def __init__(self, parent=None, mscolab=None):
+class ManageViewDialog(QtWidgets.QDialog):
+    def __init__(self, mscolab, parent=None):
         super().__init__(parent)
-        self.setupUi(self)
-        self.parent = parent
-        self.mscolab = mscolab
-        self.pbClose.clicked.connect(self.hide)
-        self.pbUnarchiveOperation.setEnabled(False)
-        self.pbUnarchiveOperation.clicked.connect(self.unarchive_operation)
-        self.listArchivedOperations.itemClicked.connect(self.select_archived_operation)
-        self.setModal(True)
-
-    def select_archived_operation(self, item):
-        logging.debug('select_inactive_operation')
-        if item.access_level in ["creator", "admin"]:
-            self.archived_op_id = item.op_id
-            self.pbUnarchiveOperation.setEnabled(True)
-        else:
-            self.archived_op_id = None
-            self.pbUnarchiveOperation.setEnabled(False)
-
-    def unarchive_operation(self):
-        if _verify_user_token(self.mscolab.mscolab_server_url, self.mscolab.token):
-            logging.debug('unarchive_operation')
-            try:
-                res = self.mscolab.conn.request_post(
-                    "update_operation",
-                    {"op_id": self.archived_op_id,
-                     "attribute": "active",
-                     "value": "True"}, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-            except requests.exceptions.RequestException as e:
-                logging.debug(e)
-                show_popup(self.parent, "Error", "Some error occurred! Could not unarchive operation.")
-                self.logout()
-            else:
-                if res.text == "True":
-                    self.mscolab.reload_operations()
-                else:
-                    show_popup(self.parent, "Error", "Session expired, new login required")
-                    self.mscolab.logout()
-        else:
-            show_popup(self.parent, "Error", "Your Connection is expired. New Login required!")
-            self.mscolab.logout()
-
-
-class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
-    """MSColab connect window class. Provides user interface elements to connect/disconnect,
-       login, add new user to an MSColab Server. Also implements HTTP Server Authentication prompt.
-    """
-
-    def __init__(self, parent=None, mscolab=None):
-        """
-        Arguments:
-        parent -- Qt widget that is parent to this widget.
-        """
-        super().__init__(parent)
-        self.setupUi(self)
-        self.parent = parent
+        self.ui = ui_manage_view.Ui_Form()
+        self.ui.setupUi(self)
+        self.ui.listView.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.setModal(False)
+        self.setWindowFlags(QtCore.Qt.Dialog | QtCore.Qt.WindowCloseButtonHint)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
         self.mscolab = mscolab
 
-        # initialize server url as none
-        self.mscolab_server_url = None
-        self.auth = None
+     
+        self.setWindowTitle("Manage Views")
+        self.model = QtGui.QStandardItemModel()
+        self.model = QtGui.QStandardItemModel()
+        self.ui.listView.setModel(self.model)
 
-        self.setFixedSize(self.size())
-        self.stackedWidget.setCurrentWidget(self.httpAuthPage)
+        self.ui.pushButton.clicked.connect(self.apply_selected_view)
+        self.refresh_shared_views()
 
-        # disable widgets in login frame
-        self.loginEmailLe.setEnabled(False)
-        self.loginPasswordLe.setEnabled(False)
-        self.loginBtn.setEnabled(False)
-        self.addUserBtn.setEnabled(False)
-
-        # add urls from settings to the combobox
-        self.add_mscolab_urls()
-        self.mscolab_url_changed(self.urlCb.currentText())
-
-        # connect login, adduser, connect, login with idp, auth token submit buttons
-        self.connectBtn.clicked.connect(self.connect_handler)
-        self.connectBtn.setFocus()
-        self.disconnectBtn.clicked.connect(self.disconnect_handler)
-        self.disconnectBtn.hide()
-        self.loginBtn.clicked.connect(self.login_handler)
-        self.loginWithIDPBtn.clicked.connect(self.idp_login_handler)
-        self.idpAuthTokenSubmitBtn.clicked.connect(self.idp_auth_token_submit_handler)
-        self.addUserBtn.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.newuserPage))
-
-        # enable login button only if email and password are entered
-        self.loginEmailLe.textChanged[str].connect(self.mscolab_login_changed)
-        self.loginPasswordLe.textChanged[str].connect(self.enable_login_btn)
-
-        self.urlCb.editTextChanged.connect(self.mscolab_url_changed)
-
-        # connect new user dialogbutton
-        self.newUserBb.accepted.connect(self.new_user_handler)
-        self.newUserBb.rejected.connect(lambda: self.stackedWidget.setCurrentWidget(self.loginPage))
-
-        # connecting slot to clear all input widgets while switching tabs
-        self.stackedWidget.currentChanged.connect(self.page_switched)
-
-    def mscolab_url_changed(self, text):
-        self.httpPasswordLe.setText(
-            get_password_from_keyring("MSCOLAB_AUTH_" + text, config_loader(dataset="MSCOLAB_auth_user_name")))
-
-    def mscolab_login_changed(self, text):
-        self.loginPasswordLe.setText(
-            get_password_from_keyring(self.mscolab_server_url, text))
-
-    def page_switched(self, index):
-        # clear all text in add user widget
-        self.newUsernameLe.setText("")
-        self.newEmailLe.setText("")
-        self.newPasswordLe.setText("")
-        self.newConfirmPasswordLe.setText("")
-
-    def set_status(self, _type="Error", msg=""):
-        if _type == "Error":
-            _msg = f"⚠ {msg}"
-            self.statusLabel.setOpenExternalLinks(True)
-            self.statusLabel.setStyleSheet("color: red;")
-        elif _type == "Success":
-            self.statusLabel.setStyleSheet("color: green;")
-            _msg = f"✓ {msg}"
-        else:
-            self.statusLabel.setStyleSheet("")
-            _msg = f"ⓘ {msg}"
-        self.statusLabel.setText(_msg)
-        # windows can have a cp1252 encoding, don't use special chars
-        logging.debug("set_status: %s", msg)
-        QtWidgets.QApplication.processEvents()
-
-    def add_mscolab_urls(self):
-        url_list = config_loader(dataset="default_MSCOLAB")
-        combo_box_urls = [self.urlCb.itemText(_i) for _i in range(self.urlCb.count())]
-        for url in (_url for _url in url_list if _url not in combo_box_urls):
-            self.urlCb.addItem(url)
-
-    def enable_login_btn(self):
-        self.loginBtn.setEnabled(self.loginEmailLe.text() != "" and self.loginPasswordLe.text() != "")
-
-    def connect_handler(self):
-        try:
-            url = str(self.urlCb.currentText())
-            auth = config_loader(dataset="MSCOLAB_auth_user_name"), self.httpPasswordLe.text()
-            session = requests.Session()
-            session.auth = auth
-            session.headers.update({'x-test': 'true'})
-            response = session.get(
-                urljoin(url, 'status'), timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-            if response.status_code == 401:
-                self.set_status("Error", 'Server authentication data were incorrect.')
-            elif response.status_code == 200:
-                self.stackedWidget.setCurrentWidget(self.loginPage)
-                self.set_status("Success", "Successfully connected to MSColab server.")
-                # disable url input
-                self.urlCb.setEnabled(False)
-
-                # enable/disable appropriate widgets in login frame
-                self.loginBtn.setEnabled(False)
-                self.addUserBtn.setEnabled(True)
-                self.loginEmailLe.setEnabled(True)
-                self.loginPasswordLe.setEnabled(True)
-
-                try:
-                    idp_enabled = json.loads(response.text)["use_saml2"]
-                except (json.decoder.JSONDecodeError, KeyError):
-                    idp_enabled = False
-
-                try:
-                    direct_login = json.loads(response.text)["direct_login"]
-                except (json.decoder.JSONDecodeError, KeyError):
-                    direct_login = True
-
-                if not direct_login:
-                    # Hide user creation when this is disabled on the server
-                    self.addUserBtn.setHidden(True)
-                    self.clickNewUserLabel.setHidden(True)
-
-                if not idp_enabled:
-                    # Hide login by identity provider if IDP login disabled
-                    self.loginWithIDPBtn.setHidden(True)
-
-                self.mscolab_server_url = url
-                self.auth = auth
-                save_password_to_keyring("MSCOLAB_AUTH_" + url, auth[0], auth[1])
-
-                url_list = config_loader(dataset="default_MSCOLAB")
-                if self.mscolab_server_url not in url_list:
-                    ret = QMessageBox.question(
-                        self, self.tr("Update Server List"),
-                        self.tr("You are using a new MSColab server. "
-                                "Should your settings file be updated by adding the new server?"),
-                        QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                    if ret == QMessageBox.Yes:
-                        url_list = [self.mscolab_server_url] + url_list
-                        modify_config_file({"default_MSCOLAB": url_list,
-                                            "mscolab_server_url": self.mscolab_server_url})
-
-                # Fill Email and Password fields from config
-                self.loginEmailLe.setText(
-                    config_loader(dataset="MSS_auth").get(self.mscolab_server_url))
-                self.mscolab_login_changed(self.loginEmailLe.text())
-                self.enable_login_btn()
-                self.loginBtn.setFocus()
-
-                # Change connect button text and connect disconnect handler
-                self.connectBtn.hide()
-                self.disconnectBtn.show()
-            else:
-                logging.error("Error %s", response)
-                self.set_status("Error", "Some unexpected error occurred. Please try again.")
-        except requests.exceptions.SSLError:
-            logging.debug("Certificate Verification Failed")
-            self.set_status("Error", "Certificate Verification Failed.")
-        except requests.exceptions.InvalidSchema:
-            logging.debug("invalid schema of url")
-            self.set_status("Error", "Invalid Url Scheme.")
-        except requests.exceptions.InvalidURL:
-            logging.debug("invalid url")
-            self.set_status("Error", "Invalid URL.")
-        except requests.exceptions.ConnectionError:
-            logging.debug("MSColab server isn't active")
-            self.set_status("Error", "MSColab server isn't active.")
-        except Exception as ex:
-            logging.error("Error %s %s", type(ex), str(ex))
-            self.set_status("Error", "Some unexpected error occurred. Please try again.")
-
-    def disconnect_handler(self):
-        self.mscolab.close_external_windows()
-        self.urlCb.setEnabled(True)
-
-        # enable/disable appropriate widgets in login frame
-        self.loginBtn.setEnabled(False)
-        self.addUserBtn.setEnabled(False)
-        self.loginEmailLe.setEnabled(False)
-        self.loginPasswordLe.setEnabled(False)
-
-        # clear text
-        self.stackedWidget.setCurrentWidget(self.httpAuthPage)
-
-        self.mscolab_server_url = None
-        self.auth = None
-
-        self.connectBtn.show()
-        self.connectBtn.setFocus()
-        self.disconnectBtn.hide()
-        self.set_status("Info", 'Disconnected from server.')
-
-    def login_handler(self):
-        self.loginBtn.setEnabled(False)
-        data = {
-            "email": self.loginEmailLe.text(),
-            "password": self.loginPasswordLe.text()
-        }
-        session = requests.Session()
-        session.auth = self.auth
-        session.headers.update({'x-test': 'true'})
-        url = urljoin(self.mscolab_server_url, "token")
-        url_recover_password = urljoin(self.mscolab_server_url, "reset_request")
-        try:
-            response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-            response.raise_for_status()
-        except requests.exceptions.RequestException as ex:
-            logging.error("unexpected error: %s %s %s", type(ex), url, ex)
-            self.set_status(
-                "Error",
-                f'Failed to establish a new connection to "{self.mscolab_server_url}". Try again in a moment.',
-            )
-            self.disconnect_handler()
-        else:
-            if response.text == "False":
-                # show status indicating about wrong credentials
-                self.set_status("Error", 'Invalid credentials. Fix them, create a new user, or '
-                                f'<a href="{url_recover_password}">recover your password</a>.')
-                self.loginBtn.setEnabled(True)
-            else:
-                self.save_user_credentials_to_config_file(data["email"], data["password"])
-                self.mscolab.after_login(data["email"], self.mscolab_server_url, response)
-
-    def idp_login_handler(self):
-        """Handle IDP login Button"""
-        url_idp_login = urljoin(self.mscolab_server_url, "available_idps")
-        webbrowser.open(url_idp_login, new=2)
-        self.stackedWidget.setCurrentWidget(self.idpAuthPage)
-
-    def idp_auth_token_submit_handler(self):
-        """Handle IDP authentication token submission"""
-        url_idp_login_auth = urljoin(self.mscolab_server_url, "idp_login_auth")
-        user_token = self.idpAuthPasswordLe.text()
-
-        try:
-            data = {'token': user_token}
-            response = requests.post(url_idp_login_auth, json=data,
-                                     timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-            if response.status_code == 401:
-                self.set_status("Error", 'Invalid token or token expired. Please try again')
-                self.stackedWidget.setCurrentWidget(self.loginPage)
-
-            elif response.status_code == 200:
-                _json = response.json()
-                token = _json["token"]
-                user = _json["user"]
-
-                data = {
-                    "email": user["emailid"],
-                    "password": token,
-                }
-
-                session = requests.Session()
-                session.auth = self.auth
-                session.headers.update({'x-test': 'true'})
-                url = urljoin(self.mscolab_server_url, "token")
-
-                response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-                response.raise_for_status()
-                if response.text == "False":
-                    # show status indicating about wrong credentials
-                    self.set_status("Error", 'Invalid token. Please enter correct token')
-                else:
-                    self.mscolab.after_login(data["email"], self.mscolab_server_url, response)
-                    self.set_status("Success", 'Succesfully logged into mscolab server')
-
-        except requests.exceptions.RequestException as error:
-            logging.error("unexpected error: %s %s %s", type(error), url, error)
-
-    def save_user_credentials_to_config_file(self, emailid, password):
-        try:
-            save_password_to_keyring(service_name=self.mscolab_server_url, username=emailid, password=password)
-        except (NoKeyringError, PasswordSetError, InitError) as ex:
-            logging.warning("Can't use Keyring on your system:  %s" % ex)
-        mss_auth = config_loader(dataset="MSS_auth")
-        if mss_auth.get(self.mscolab_server_url) != emailid:
-            ret = QMessageBox.question(
-                self, self.tr("Update Credentials"),
-                self.tr("You are using new credentials. "
-                        "Should your settings file be updated with the new credentials?"),
-                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if ret == QMessageBox.Yes:
-                mss_auth[self.mscolab_server_url] = emailid
-                modify_config_file({"MSS_auth": mss_auth})
-
-    def new_user_handler(self):
-        # get mscolab /token http auth credentials from cache
-        emailid = self.newEmailLe.text()
-        password = self.newPasswordLe.text()
-        re_password = self.newConfirmPasswordLe.text()
-        username = self.newUsernameLe.text()
-        fullname = self.newFullnameLe.text()
-        if password != re_password:
-            self.set_status("Error", 'Your passwords don\'t match.')
+    def apply_selected_view(self):
+        """Apply settings for selected views in listView."""
+        selected_indexes = self.ui.listView.selectedIndexes()
+        if not selected_indexes:
+            QtWidgets.QMessageBox.warning(self, "No Selection", "Please select at least one shared view to apply.")
             return
+        index = selected_indexes[0]
+        for index in selected_indexes:
+            item = self.ui.listView.model().itemFromIndex(index)
+            if not item:
+                continue
+            data = item.data(QtCore.Qt.UserRole)
+            view_name = data['view_name']
+            op_id = data['op_id']
+            view_settings = self.mscolab.get_sharedView_settings(view_name, op_id)
+            view_type = view_settings.get("view_type")
+            if view_settings is None:
+                QtWidgets.QMessageBox.warning(self, "Error",
+                                              f"Failed to retrieve settings for {view_name} by user {data['username']}")
+                continue
+            self.mscolab.ui.create_view(view_type, model=self.mscolab.waypoints_model, restore_settings=view_settings)
+            item = QtWidgets.QListWidgetItem(view_name)
+            self.ui.listWidget.addItem(item)
 
-        data = {
-            "email": emailid,
-            "password": password,
-            "username": username,
-            "fullname": fullname
-        }
-        session = requests.Session()
-        session.auth = self.auth
-        session.headers.update({'x-test': 'true'})
-        url = urljoin(self.mscolab_server_url, "register")
-        try:
-            response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-        except requests.exceptions.RequestException as ex:
-            logging.error("unexpected error: %s %s %s", type(ex), url, ex)
-            self.set_status(
-                "Error",
-                f'Failed to establish a new connection to "{self.mscolab_server_url}". Try again in a moment.',
-            )
-            self.disconnect_handler()
-            return
-
-        if response.status_code == 204:
-            self.set_status("Success", 'You are registered, confirm your email before logging in.')
-            self.save_user_credentials_to_config_file(emailid, password)
-            self.stackedWidget.setCurrentWidget(self.loginPage)
-            self.loginEmailLe.setText(emailid)
-            self.loginPasswordLe.setText(password)
-        elif response.status_code == 201:
-            self.set_status("Success", 'You are registered.')
-            self.save_user_credentials_to_config_file(emailid, password)
-            self.loginEmailLe.setText(emailid)
-            self.loginPasswordLe.setText(password)
-            self.login_handler()
+    def refresh_shared_views(self):
+        url = urljoin(self.mscolab.mscolab_server_url, "get_views_name")
+        data = {"op_id": self.mscolab.active_op_id, "token": self.mscolab.token}
+        if hasattr(self.mscolab, 'auth') and self.mscolab.auth:
+            response = requests.get(url, params=data, auth=self.mscolab.auth, timeout=(5, 30))
         else:
-            try:
-                error_msg = response.json()["message"]
-            except Exception as e:
-                logging.debug("Unexpected error occurred %s", e)
-                error_msg = "Unexpected error occurred. Please try again."
-            self.set_status("Error", error_msg)
+            response = requests.get(url, params=data, timeout=(5, 30))
+        response.raise_for_status()
+        views = response.json().get("views", [])
+        self.model.clear()
+        for view in views:
+            item = QtGui.QStandardItem(f"{view['view_name']} (by {view['username']})")
+            item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+            item.setData(view, QtCore.Qt.UserRole)
+            self.model.appendRow(item)
+        return True
 
 
 class ManageViewDialog(QtWidgets.QDialog):

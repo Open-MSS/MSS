@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -455,7 +455,7 @@ class WatchModificationDataAccess(DefaultDataAccess):
         except (KeyError, OSError) as ex:
             if reload:
                 self.setup()
-                self._determine_filename(self, variable, vartype, init_time, valid_time, reload=False)
+                return self._determine_filename(variable, vartype, init_time, valid_time, reload=False)
             else:
                 logging.error("Could not identify filename. %s %s %s %s %s %s",
                               variable, vartype, init_time, valid_time, type(ex), ex)

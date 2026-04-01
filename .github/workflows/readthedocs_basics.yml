@@ -1,10 +1,10 @@
-name: Build Gallery
+name: RTFD env basics
 
 on:
   pull_request:
 
 jobs:
-  Test-MSS-docs:
+  Test-RTFD:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
@@ -12,9 +12,8 @@ jobs:
       with:
         pixi-version: latest
         cache: true
-        environments: dev
-    - name: Create gallery
-      timeout-minutes: 5
+        environments: docs
+    - name: try sphinx build
+      timeout-minutes: 20
       run: |
-        cd docs
-        pixi run -e dev python conf.py
+        pixi run -e docs sphinx-build -T -b html docs docs/html

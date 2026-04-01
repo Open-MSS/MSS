@@ -7,13 +7,14 @@ This chapter will get you started with MSS development.
 
 MSS is written in Python.
 
-Once a stable release is published we do only bug fixes in stable and release regularly
-new minor versions. If a fix needs a API change or it is likely more a new feature you have
-to make a pull request to the develop branch. Documentation of changes is done by using our
-`issue tracker <https://github.com/Open-MSS/MSS/issues>`_.
+Development work is exclusively performed on the **develop** branch.
+Bug fixes are backported to the `stable` branch whenever feasible.
+If a bug fix cannot be backported, corresponding updates will be made to the develop branch.
+We release new minor versions on a regular basis.
+New features should be submitted as pull requests against the develop branch.
+Changes and documentation are managed through our `issue tracker <https://github.com/Open-MSS/MSS/issues>`__.
 
 When it is ready the developer version becomes the next stable.
-
 
 The stable version of MSS is tracked on `BLACK DUCK Open Hub <https://www.openhub.net/p/mss>`_
 
@@ -171,10 +172,10 @@ You can view the default configuration of MSColab in the file `mslib/mscolab/con
 If you want to change any values of the configuration, please take a look at the "Configuring Your MSColab Server"
 section in :ref:`mscolab`
 
-When using for the first time you need to initialise your database. Use the command :code:`mscolab db --init`
+When using for the first time you need to initialise your database. Use the command :code:`mscolab start`
 to initialise it. The default database is a sqlite3 database.
-You can add some dummy data to your database by using the command :code:`mscolab db --seed`.
-The content of the dummy data can be found in the file `mslib/mscolab/seed.py`.
+If you want to play around with example data, you can import it using `mscolab db --seed`.
+The content of the example data can be found in the file `mslib/mscolab/seed.py`.
 
 To start your server use the command :code:`mscolab start`. This would start the MSColab server on port 8083.
 Going to http://localhost:8083/status should now show "MSColab server". This means your server has started successfully.
@@ -456,34 +457,20 @@ After filling the template completely click on Pull request
 
 
 
-Merging stable into develop
----------------------------
+Creating a new minor, patch level release
+-----------------------------------------
 
-Bug fixes we have done in stable we need to merge regularly into develop too::
+The stable branch will only receive critical bug fixes, and security patches. These patches must either address a bug that is only present on stable, be a backport of a patch that was already merged into develop, or there must simultaneously be a PR addressing the same issue on develop.
 
-   git checkout stable
-   git pull git@github.com:Open-MSS/MSS.git stable
-   git checkout develop
-   git pull git@github.com:Open-MSS/MSS.git develop
-   git checkout -b merge_stable_to_develop
-   git merge stable
-   git push git@github.com:Open-MSS/MSS.git merge_stable_to_develop
+We will review changes for both branches when there is no backport from develop possible.
 
-
-Then create the proposed merge request. The merge request must *not* be squashed or rebased.
-To allow the merging, the requirement for a linear-history must be disabled *temporarily*
-for the develop branch and one needs to ensure that the merge request is accepted with a
-regular merge with merge commit. Remove the merge_stable_to_develop branch if still present.
-
-
-Creating a new release
-----------------------
+For a new minor/patch release
 
 * make sure all issues for this milestone are closed or moved to the next milestone
 * update CHANGES.rst, based on git log
-* check version number of upcoming release in CHANGES.rst
-* verify that version.py, MANIFEST.in and setup.py are complete
-* for a new stable release merge from develop to stable
+* check version number of upcoming release in pyproject.toml
+* verify that pyproject.toml, MANIFEST.in are complete
+* Update the version in the lock file by `pixi lock`
 * tag the release::
 
    git tag -s -m "tagged/signed release X.Y.Z" X.Y.Z
@@ -494,7 +481,30 @@ Creating a new release
 * announce on:
 
   * Mailing list
-  * Twitter (follow @TheMSSystem for these tweets)
+  * Mastodon (follow https://fosstodon.org/@MSS)
+
+
+
+Creating a new major release
+----------------------------
+
+* make sure all issues for this milestone are closed or moved to the next milestone
+* update CHANGES.rst, based on git log
+* check version number of upcoming release in pyproject.toml
+* verify that pyproject.toml, MANIFEST.in are complete
+* Update the version in the lock file by `pixi lock`
+* for a new major release rename the existing stable branch to oldstable and recreate it from the develop branch
+* tag the release::
+
+   git tag -s -m "tagged/signed release X.Y.Z" X.Y.Z
+   git push origin X.Y.Z
+
+* write a release information on https://github.com/Open-MSS/MSS/releases
+* create a release on anaconda conda-forge
+* announce on:
+
+  * Mailing list
+  * Mastodon (follow https://fosstodon.org/@MSS)
 
 
 
@@ -516,6 +526,12 @@ Google Summer of Code(TM)
 
 MSS takes part in `Google Summer of Code <https://summerofcode.withgoogle.com/>`_
 as a `sub-organization of Python Software Foundation (PSF) <https://python-gsoc.org/>`_.
+
+
+GSoC'25 Projects
+................
+
+- `Annapurna Gupta: Mission support system : View Layout and Storing : GSOC2025 <https://github.com/Open-MSS/MSS/wiki/Annapurna-Gupta:-Mission-support-system-:-View-Layout-and-Storing-:-GSOC2025>`_
 
 
 GSoC'24 Projects
