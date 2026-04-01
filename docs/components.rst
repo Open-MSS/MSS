@@ -11,6 +11,7 @@ Components
    mswms
    mscolab
    gentutorials
+   view_layout_and_restoring
    mssautoplot
    autoplot_dock_widget
    conf_sso_test_msscolab
