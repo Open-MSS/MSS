@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,12 +26,12 @@
     limitations under the License.
 """
 import requests
-import fs
 
 from urllib.parse import urljoin
 from mslib.mscolab.server import register_user
 from flask import json
-from tests.constants import MSUI_CONFIG_PATH
+from tests.constants import MSUI_CONFIG_FILE_PATH
+from mslib.mscolab.seed import XML_CONTENT_INIT
 
 
 XML_CONTENT1 = """<?xml version="1.0" encoding="utf-8"?>
@@ -192,10 +192,11 @@ def mscolab_delete_all_operations(app, msc_url, email, password, username, fulln
         response = app.test_client().post(url, data=data)
 
 
-def mscolab_create_operation(app, msc_url, response, path='f', description='description'):
+def mscolab_create_operation(app, msc_url, response, path='f', description='description', content=XML_CONTENT_INIT):
     data = json.loads(response.get_data(as_text=True))
     data["path"] = path
     data['description'] = description
+    data['content'] = content
     url = urljoin(msc_url, 'create_operation')
     response = app.test_client().post(url, data=data)
     return data, response
@@ -213,13 +214,12 @@ def mscolab_get_operation_id(app, msc_url, email, password, username, fullname, 
 
 
 def create_msui_settings_file(content):
-    with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
-        file_dir.writetext("msui_settings.json", content)
+    MSUI_CONFIG_FILE_PATH.write_text(content)
 
 
 def is_url_response_ok(url):
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=2)
         return response.status_code == 200
     except:  # noqa: E722
         return False

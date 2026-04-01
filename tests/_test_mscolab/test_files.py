@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,11 +28,12 @@
 import os
 import pytest
 
-from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.app import APP
 from mslib.mscolab.models import User, Operation, Permission, Change, Message
 from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.utils import get_recent_op_id
 from tests.utils import XML_CONTENT1, XML_CONTENT2, XML_CONTENT3
+from mslib.mscolab.seed import XML_CONTENT_INIT
 
 
 class Test_Files:
@@ -58,13 +59,13 @@ class Test_Files:
     def test_create_operation(self):
         with self.app.test_client():
             # test for blank character in path
-            assert self.fm.create_operation('test path', 'test desc.', self.user) is False
+            assert self.fm.create_operation('test path', 'test desc.', self.user, content=XML_CONTENT_INIT) is False
             # test for normal path
-            assert self.fm.create_operation('test_path', 'test desc.', self.user) is True
+            assert self.fm.create_operation('test_path', 'test desc.', self.user, content=XML_CONTENT_INIT) is True
             # test for '/' in path
-            assert self.fm.create_operation('test/path', 'sth', self.user) is False
+            assert self.fm.create_operation('test/path', 'sth', self.user, content=XML_CONTENT_INIT) is False
             # check file existence
-            assert os.path.exists(os.path.join(mscolab_settings.OPERATIONS_DATA, 'test_path')) is True
+            assert os.path.exists(os.path.join(APP.config['OPERATIONS_DATA'], 'test_path')) is True
             # check creation in db
             p = Operation.query.filter_by(path="test_path").first()
             assert p is not None
@@ -77,13 +78,13 @@ class Test_Files:
         with self.app.test_client():
             operations = self.fm.list_operations(self.user)
             assert len(operations) == 0
-            assert self.fm.create_operation('test_path', 'test desc.', self.user) is True
+            assert self.fm.create_operation('test_path', 'test desc.', self.user, content=XML_CONTENT_INIT) is True
             operations = self.fm.list_operations(self.user)
             assert len(operations) == 1
 
     def test_is_creator(self):
         with self.app.test_client():
-            assert self.fm.create_operation('test_path', 'test desc.', self.user) is True
+            assert self.fm.create_operation('test_path', 'test desc.', self.user, content=XML_CONTENT_INIT) is True
             op_id = get_recent_op_id(self.fm, self.user)
             u_id = self.user.id
             assert self.fm.is_creator(u_id, op_id) is True
@@ -125,12 +126,12 @@ class Test_Files:
   </FlightTrack>"""
             assert self.fm.save_file(operation.id, incomplete, self.user) is False
 
-    def test_stub_data(self):
+    def test_xml_content_data(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operationstub")
             content = self.fm.get_file(operation.id, self.user)
             assert flight_path == "operationstub"
-            assert content == mscolab_settings.STUB_CODE
+            assert content == XML_CONTENT_INIT
 
     def test_undo(self):
         with self.app.test_client():
@@ -166,7 +167,7 @@ class Test_Files:
             assert self.fm.update_operation(op_id, 'path', 'dummy wrong', self.user) is False
             assert self.fm.update_operation(op_id, 'path', 'dummy/wrong', self.user) is False
             assert self.fm.update_operation(op_id, 'path', 'dummy', self.user) is True
-            assert os.path.exists(os.path.join(mscolab_settings.OPERATIONS_DATA, 'dummy'))
+            assert os.path.exists(os.path.join(APP.config['OPERATIONS_DATA'], 'dummy'))
             assert self.fm.update_operation(op_id, 'description', 'dummy', self.user) is True
 
     def test_delete_operation(self):
@@ -220,7 +221,7 @@ class Test_Files:
           </ListOfWaypoints>
       </FlightTrack>"""
 
-    def _create_operation(self, flight_path="firstflight", user=None, content=None):
+    def _create_operation(self, flight_path="firstflight", user=None, content=XML_CONTENT_INIT):
         if user is None:
             user = self.user
         self.fm.create_operation(flight_path, f"info about {flight_path}", user, content=content)

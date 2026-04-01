@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +36,7 @@ from saml2.config import SPConfig
 from urllib.parse import urlparse
 
 
-class default_mscolab_settings:
+class DefaultSettings:
     # expire token in seconds
     # EXPIRATION = 86400
 
@@ -72,10 +72,10 @@ class default_mscolab_settings:
     SSO_SSL_CERT_VERIFICATION = True
 
     # MYSQL CONNECTION STRING: "mysql+pymysql://<username>:<password>@<host>:<port>/<db_name>?charset=utf8mb4"
-    SQLALCHEMY_DB_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'mscolab.db')
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'mscolab.db')
 
     # SQLAlchemy connection string to migrate data from, if set
-    SQLALCHEMY_DB_URI_TO_MIGRATE_FROM = None
+    SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM = None
 
     # Set to True for testing and False for production
     SQLALCHEMY_ECHO = False
@@ -89,19 +89,6 @@ class default_mscolab_settings:
 
     # used to generate the password token
     SECURITY_PASSWORD_SALT = secrets.token_urlsafe(16)
-
-    STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
-    <FlightTrack version="1.7.6">
-      <ListOfWaypoints>
-        <Waypoint flightlevel="250" lat="67.821" location="Kiruna" lon="20.336">
-          <Comments></Comments>
-        </Waypoint>
-        <Waypoint flightlevel="250" lat="78.928" location="Ny-Alesund" lon="11.986">
-          <Comments></Comments>
-        </Waypoint>
-      </ListOfWaypoints>
-    </FlightTrack>
-    """
 
     # looks for a given category forn a operation ending with GROUP_POSTFIX
     # e.g. category = Tex will look for TexGroup
@@ -138,7 +125,7 @@ class default_mscolab_settings:
     DIRECT_LOGIN = True
 
 
-mscolab_settings = default_mscolab_settings()
+mscolab_settings = DefaultSettings()
 
 try:
     import mscolab_settings as user_settings

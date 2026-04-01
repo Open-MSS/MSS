@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,21 +27,20 @@
 import os
 import io
 import sys
-import fs
-import fs.errors
-import fs.opener.errors
+from pathlib import Path
 import requests.exceptions
 import mock
 import pytest
 
 from PIL import Image
 
-from tests.constants import ROOT_DIR
+from tests.constants import ROOT_DIR, MSCOLAB_DATA_DIR
+from tests import constants
 import mslib.utils.auth
 from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
 from PyQt5 import QtCore, QtTest, QtWidgets
-from mslib.utils.config import read_config_file, config_loader, modify_config_file
+from mslib.utils.config import MSUIDefaultConfig, read_config_file, config_loader, modify_config_file
 from tests.utils import create_msui_settings_file, ExceptionMock
 from mslib.msui import msui
 from mslib.msui import mscolab
@@ -299,6 +298,43 @@ class Test_Mscolab:
         # close all hanging operation option windows
         self.window.mscolab.close_external_windows()
 
+    @pytest.mark.parametrize("input_list, expected_list", [([5, 12], [5, 12]),
+                                                           ([5.1, 12.1], MSUIDefaultConfig.MSCOLAB_timeout),
+                                                           ([1, 2, 3, 4], MSUIDefaultConfig.MSCOLAB_timeout),
+                                                           ([4], MSUIDefaultConfig.MSCOLAB_timeout)
+                                                           ])
+    def test_modify_fixed_list_options(self, input_list, expected_list, qtbot):
+        data = {"MSCOLAB_timeout": input_list}
+        modify_config_file(data)
+        self.window.open_config_editor()
+        assert self.window.config_editor.last_saved["MSCOLAB_timeout"] == expected_list
+
+    @pytest.mark.parametrize("input_dict, expected_dict", [({"validtime_fwd": 0, "validtime_bck": 1,
+                                                             "level_up": 2, "level_down": 3},
+                                                            {"validtime_fwd": 0, "validtime_bck": 1,
+                                                             "level_up": 2, "level_down": 3}),
+                                                           ({"validtime_fwd": 0.0, "validtime_bck": 1.0,
+                                                            "level_up": 2.0, "level_down": 3.0},
+                                                           MSUIDefaultConfig.wms_prefetch),
+                                                           ({"validtime_fwd": 0, "validtime_bck": 1},
+                                                            MSUIDefaultConfig.wms_prefetch)
+                                                           ])
+    def test_modify_fixed_dict_options(self, input_dict, expected_dict, qtbot):
+        data = {"wms_prefetch": input_dict}
+        modify_config_file(data)
+        self.window.open_config_editor()
+        assert self.window.config_editor.last_saved["wms_prefetch"] == expected_dict
+
+    @pytest.mark.parametrize("input_value, expected_value", [(20, 20),
+                                                             ((1, 2), MSUIDefaultConfig.num_labels),
+                                                             (1.3435, MSUIDefaultConfig.num_labels)
+                                                             ])
+    def test_modify_value(self, input_value, expected_value, qtbot):
+        data = {"num_labels": input_value}
+        modify_config_file(data)
+        self.window.open_config_editor()
+        assert self.window.config_editor.last_saved["num_labels"] == expected_value
+
     def test_activate_operation(self, qtbot):
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
@@ -555,7 +591,7 @@ class Test_Mscolab:
         # ToDo verify all operations disabled again without a visual check
 
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
-                return_value=(fs.path.join(ROOT_DIR, 'test_export.ftml'),
+                return_value=(os.path.join(constants.MSCOLAB_DATA_DIR, 'test_export.ftml'),
                               "Flight track (*.ftml)"))
     def test_handle_export(self, mockbox, qtbot):
         self._connect_to_mscolab(qtbot)
@@ -563,8 +599,8 @@ class Test_Mscolab:
         self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
         self._activate_operation_at_index(0)
         self.window.actionExportFlightTrackFTML.trigger()
-        exported_waypoints = WaypointsTableModel(filename=fs.path.join(self.window.mscolab.data_dir,
-                                                                       'test_export.ftml'))
+        export_file_path = str(Path(self.window.mscolab.data_dir) / 'mscolab' / 'filedata' / 'test_export.ftml')
+        exported_waypoints = WaypointsTableModel(filename=export_file_path)
         wp_count = len(self.window.mscolab.waypoints_model.waypoints)
         assert wp_count == 2
         for i in range(wp_count):
@@ -582,7 +618,7 @@ class Test_Mscolab:
         self.window.remove_plugins()
         with mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
-        file_path = fs.path.join(self.sample_path, name[0])
+        file_path = str(Path(self.sample_path) / name[0])
         with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=[file_path]) as mockopen:
             self._connect_to_mscolab(qtbot)
             modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
@@ -687,7 +723,8 @@ class Test_Mscolab:
         operation_name = "flight7"
         self._create_operation(qtbot, operation_name, "Description flight7")
         # check for operation dir is created on server
-        assert os.path.isdir(os.path.join(ROOT_DIR, 'colabTestData', 'filedata', operation_name))
+        assert os.path.isdir(os.path.join(MSCOLAB_DATA_DIR, operation_name))
+
         self._activate_operation_at_index(0)
         op_id = self.window.mscolab.get_recent_op_id()
         assert op_id is not None
@@ -703,7 +740,7 @@ class Test_Mscolab:
         op_id = self.window.mscolab.get_recent_op_id()
         assert op_id is None
         # check operation dir name removed
-        assert os.path.isdir(os.path.join(ROOT_DIR, operation_name)) is False
+        assert os.path.isdir(os.path.join(MSCOLAB_DATA_DIR, operation_name)) is False
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_handle_leave_operation(self, mockmessage, qtbot):
@@ -924,23 +961,6 @@ class Test_Mscolab:
         def assert_():
             assert self.window.mscolab.help_dialog is None
         qtbot.wait_until(assert_)
-
-    def test_create_dir_exceptions(self):
-        with mock.patch("fs.open_fs", new=ExceptionMock(fs.errors.CreateFailed).raise_exc), \
-                mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critbox, \
-                mock.patch("sys.exit") as mockexit:
-            self.window.mscolab.data_dir = "://"
-            self.window.mscolab.create_dir()
-            critbox.assert_called_once()
-            mockexit.assert_called_once()
-
-        with mock.patch("fs.open_fs", new=ExceptionMock(fs.opener.errors.UnsupportedProtocol).raise_exc), \
-                mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critbox, \
-                mock.patch("sys.exit") as mockexit:
-            self.window.mscolab.data_dir = "://"
-            self.window.mscolab.create_dir()
-            critbox.assert_called_once()
-            mockexit.assert_called_once()
 
     def test_profile_dialog(self, qtbot):
         self._connect_to_mscolab(qtbot)

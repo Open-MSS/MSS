@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,8 +28,7 @@
 
 import logging
 import codecs
-import os
-from fs import open_fs
+from pathlib import Path
 
 import mslib.msui.flighttrack as ft
 from mslib.utils.units import units
@@ -66,11 +65,10 @@ def save_to_txt(filename, name, waypoints):
 
 
 def load_from_txt(filename):
-    name = os.path.basename(filename.replace(".txt", "").strip())
+    path = Path(filename)
+    name = path.stem.strip()
     waypoints = []
-    _dirname, _name = os.path.split(filename)
-    _fs = open_fs(_dirname)
-    with _fs.open(_name, "r") as in_file:
+    with path.open("r") as in_file:
         pos = []
         for line in in_file:
             if line.startswith("#"):

@@ -19,6 +19,15 @@ interface (top view and side view).
 
 .. _msui-configuration:
 
+HINT Changes Version 11
+-----------------------
+
+We have removed the `fs` library and the `conda-forge` package `fs_filepicker` by version 11.
+Internally, we are now using `Pathlib` and `os.path`.
+
+The change does not affect directories that use `~` to represent the home directory.
+But we have dropped support for FS_URLs.
+
 Configuration of MSUI
 ---------------------
 
@@ -45,66 +54,9 @@ by the environment variable MSUI_SETTINGS pointing to your msui_settings.json.
 File I/O
 ........
 
-For storage capabilities mss uses the `PyFilesystem2 <http://pyfilesystem2.readthedocs.io>`__ approach.
-The default data dir is predefined as a directory: `~/mssdata` which is the same as `osfs://~/mssdata`.
+The default data dir is predefined as a directory: `~/mssdata`.
 
 
-PyFilesystem can open a filesystem via an *FS URL*, which is similar to a URL you might enter in to a
-browser. FS URLs are useful if you want to specify a filesystem dynamically, such as in a conf file or
-from the command line.
-
-We have internally implemented `PyFilesystem2 <http://pyfilesystem2.readthedocs.io>`__
-
-
-FS URLs are formatted in the following way::
-
-    <protocol>://<username>:<password>@<resource>
-
-The components are as follows:
-
-* ``<protocol>`` Identifies the type of filesystem to create. e.g. ``osfs``, ``ftp``.
-* ``<username>`` Optional username.
-* ``<password>`` Optional password.
-* ``<resource>`` A *resource*, which may be a domain, path, or both.
-
-Here are a few examples::
-
-    osfs://~/projects
-    osfs://c://system32
-    ftp://ftp.example.org/pub
-    mem://
-    ftp://[user[:password]@]host[:port]/[directory]
-    webdav://[user[:password]@]host[:port]/[directory]
-    ssh://[user[:password]@]host[:port]/[directory]
-
-
-
-File picker dialogue
-~~~~~~~~~~~~~~~~~~~~
-
-MSS supports the use of a general file picker to access locations on remote machines
-facilitating collaboration on campaigns. To enable this feature apply
-
-.. code:: text
-
-    "filepicker_default": "fs",
-
-to your configuration file. The allowed values are "qt" for QT-based dialogues, "fs" for
-fs_file_picker-based dialogues supporting remote locations, or "default" for the default
-dialogues. The default is currently identical to "qt", but may change in upcoming releases.
-
-
-With using the "filepicker_default": "fs" setting you can enable any implemented
-`PyFilesystem2 <http://pyfilesystem2.readthedocs.io/en/latest/openers.html>`_ fs url.
-Additional to the builtin fs urls we have added optional the `webdavfs <https://github.com/PyFilesystem/webdavfs>`_
-and `sshfs <https://github.com/libfuse/sshfs>`_ service.
-
-
-With setting the option "filepicker_default": "default" you can only access local storages.
-
-.. code:: text
-
-  "data_dir": "~/mssdata",
 
 Battery Mode
 ............

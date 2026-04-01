@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@ def save_to_kml(filename, name, waypoints):
     if not filename:
         raise ValueError("filename to save flight track cannot be None")
     header = f"""<?xml version="1.0" encoding="UTF-8" ?>
-<kml xmlns="http://earth.google.com/kml/2.2">
+<kml xmlns="http://www.opengis.net/kml/2.2">
 <Document>
 <name>{name}</name>
 <open>1</open>

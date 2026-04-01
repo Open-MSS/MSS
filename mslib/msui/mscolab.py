@@ -14,7 +14,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019- Shivashis Padhi
-    :copyright: Copyright 2019-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,23 +31,18 @@
 """
 import os
 import io
-import sys
 import json
 import hashlib
 import logging
 import types
-import fs
 import functools
 import requests
 import re
-import webbrowser
 import mimetypes
 import urllib.request
-from urllib.parse import urljoin
+from pathlib import Path
 
-from fs import open_fs
 from PIL import Image, UnidentifiedImageError
-from keyring.errors import NoKeyringError, PasswordSetError, InitError
 import socketio
 
 from mslib.msui import flighttrack as ft
@@ -56,23 +51,23 @@ from mslib.msui import mscolab_admin_window as maw
 from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import socket_control as sc
 from mslib.msui.mscolab_exceptions import MSColabConnectionError
+from mslib.msui.mscolab_archive_browser import MSColab_OperationArchiveBrowser
+from mslib.msui.mscolab_connect_dialog import MSColab_ConnectDialog
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox
 from PyQt5.QtGui import QPixmap
 
-from mslib.utils.auth import get_password_from_keyring, save_password_to_keyring, del_password_from_keyring
+from mslib.utils.auth import del_password_from_keyring
 from mslib.utils.verify_user_token import verify_user_token as _verify_user_token
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.utils.qt import get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup
 from mslib.msui.qt5 import ui_mscolab_help_dialog as msc_help_dialog
-from mslib.msui.qt5 import ui_add_operation_dialog as add_operation_ui
+from mslib.msui.qt5 import ui_mscolab_add_operation_dialog as msc_add_operation_ui
 from mslib.msui.qt5 import ui_mscolab_merge_waypoints_dialog as merge_wp_ui
-from mslib.msui.qt5 import ui_mscolab_connect_dialog as ui_conn
 from mslib.msui.qt5 import ui_mscolab_profile_dialog as ui_profile
-from mslib.msui.qt5 import ui_operation_archive as ui_opar
 from mslib.msui import constants
-from mslib.utils.config import config_loader, modify_config_file
+from mslib.utils.config import config_loader
 
 
 def verify_user_token(func):
@@ -82,7 +77,7 @@ def verify_user_token(func):
     @functools.wraps(func)
     def wrapper(self, *args, **vargs):
         if self.mscolab_server_url is None:
-            # in case of a forecd logout some QT events may still trigger MSCOLAB functions
+            # in case of a forced logout some QT events may still trigger MSCOLAB functions
             return
         verify_user_token.depth += 1
         try:
@@ -100,397 +95,6 @@ def verify_user_token(func):
         finally:
             verify_user_token.depth -= 1
     return wrapper
-
-
-class MSColab_OperationArchiveBrowser(QDialog, ui_opar.Ui_OperationArchiveBrowser):
-    def __init__(self, parent=None, mscolab=None):
-        super().__init__(parent)
-        self.setupUi(self)
-        self.parent = parent
-        self.mscolab = mscolab
-        self.pbClose.clicked.connect(self.hide)
-        self.pbUnarchiveOperation.setEnabled(False)
-        self.pbUnarchiveOperation.clicked.connect(self.unarchive_operation)
-        self.listArchivedOperations.itemClicked.connect(self.select_archived_operation)
-        self.setModal(True)
-
-    def select_archived_operation(self, item):
-        logging.debug('select_inactive_operation')
-        if item.access_level in ["creator", "admin"]:
-            self.archived_op_id = item.op_id
-            self.pbUnarchiveOperation.setEnabled(True)
-        else:
-            self.archived_op_id = None
-            self.pbUnarchiveOperation.setEnabled(False)
-
-    def unarchive_operation(self):
-        if _verify_user_token(self.mscolab.mscolab_server_url, self.mscolab.token):
-            logging.debug('unarchive_operation')
-            try:
-                res = self.mscolab.conn.request_post(
-                    "update_operation",
-                    {"op_id": self.archived_op_id,
-                     "attribute": "active",
-                     "value": "True"})
-            except requests.exceptions.RequestException as e:
-                logging.debug(e)
-                show_popup(self.parent, "Error", "Some error occurred! Could not unarchive operation.")
-                self.logout()
-            else:
-                if res.text == "True":
-                    self.mscolab.reload_operations()
-                else:
-                    show_popup(self.parent, "Error", "Session expired, new login required")
-                    self.mscolab.logout()
-        else:
-            show_popup(self.parent, "Error", "Your Connection is expired. New Login required!")
-            self.mscolab.logout()
-
-
-class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
-    """MSColab connect window class. Provides user interface elements to connect/disconnect,
-       login, add new user to an MSColab Server. Also implements HTTP Server Authentication prompt.
-    """
-
-    def __init__(self, parent=None, mscolab=None):
-        """
-        Arguments:
-        parent -- Qt widget that is parent to this widget.
-        """
-        super().__init__(parent)
-        self.setupUi(self)
-        self.parent = parent
-        self.mscolab = mscolab
-
-        # initialize server url as none
-        self.mscolab_server_url = None
-        self.auth = None
-
-        self.setFixedSize(self.size())
-        self.stackedWidget.setCurrentWidget(self.httpAuthPage)
-
-        # disable widgets in login frame
-        self.loginEmailLe.setEnabled(False)
-        self.loginPasswordLe.setEnabled(False)
-        self.loginBtn.setEnabled(False)
-        self.addUserBtn.setEnabled(False)
-
-        # add urls from settings to the combobox
-        self.add_mscolab_urls()
-        self.mscolab_url_changed(self.urlCb.currentText())
-
-        # connect login, adduser, connect, login with idp, auth token submit buttons
-        self.connectBtn.clicked.connect(self.connect_handler)
-        self.connectBtn.setFocus()
-        self.disconnectBtn.clicked.connect(self.disconnect_handler)
-        self.disconnectBtn.hide()
-        self.loginBtn.clicked.connect(self.login_handler)
-        self.loginWithIDPBtn.clicked.connect(self.idp_login_handler)
-        self.idpAuthTokenSubmitBtn.clicked.connect(self.idp_auth_token_submit_handler)
-        self.addUserBtn.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.newuserPage))
-
-        # enable login button only if email and password are entered
-        self.loginEmailLe.textChanged[str].connect(self.mscolab_login_changed)
-        self.loginPasswordLe.textChanged[str].connect(self.enable_login_btn)
-
-        self.urlCb.editTextChanged.connect(self.mscolab_url_changed)
-
-        # connect new user dialogbutton
-        self.newUserBb.accepted.connect(self.new_user_handler)
-        self.newUserBb.rejected.connect(lambda: self.stackedWidget.setCurrentWidget(self.loginPage))
-
-        # connecting slot to clear all input widgets while switching tabs
-        self.stackedWidget.currentChanged.connect(self.page_switched)
-
-    def mscolab_url_changed(self, text):
-        self.httpPasswordLe.setText(
-            get_password_from_keyring("MSCOLAB_AUTH_" + text, config_loader(dataset="MSCOLAB_auth_user_name")))
-
-    def mscolab_login_changed(self, text):
-        self.loginPasswordLe.setText(
-            get_password_from_keyring(self.mscolab_server_url, text))
-
-    def page_switched(self, index):
-        # clear all text in add user widget
-        self.newUsernameLe.setText("")
-        self.newEmailLe.setText("")
-        self.newPasswordLe.setText("")
-        self.newConfirmPasswordLe.setText("")
-
-    def set_status(self, _type="Error", msg=""):
-        if _type == "Error":
-            _msg = f"⚠ {msg}"
-            self.statusLabel.setOpenExternalLinks(True)
-            self.statusLabel.setStyleSheet("color: red;")
-        elif _type == "Success":
-            self.statusLabel.setStyleSheet("color: green;")
-            _msg = f"✓ {msg}"
-        else:
-            self.statusLabel.setStyleSheet("")
-            _msg = f"ⓘ {msg}"
-        self.statusLabel.setText(_msg)
-        # windows can have a cp1252 encoding, don't use special chars
-        logging.debug("set_status: %s", msg)
-        QtWidgets.QApplication.processEvents()
-
-    def add_mscolab_urls(self):
-        url_list = config_loader(dataset="default_MSCOLAB")
-        combo_box_urls = [self.urlCb.itemText(_i) for _i in range(self.urlCb.count())]
-        for url in (_url for _url in url_list if _url not in combo_box_urls):
-            self.urlCb.addItem(url)
-
-    def enable_login_btn(self):
-        self.loginBtn.setEnabled(self.loginEmailLe.text() != "" and self.loginPasswordLe.text() != "")
-
-    def connect_handler(self):
-        try:
-            url = str(self.urlCb.currentText())
-            auth = config_loader(dataset="MSCOLAB_auth_user_name"), self.httpPasswordLe.text()
-            session = requests.Session()
-            session.auth = auth
-            session.headers.update({'x-test': 'true'})
-            response = session.get(
-                urljoin(url, 'status'), timeout=tuple(tuple(config_loader(dataset="MSCOLAB_timeout"))))
-            if response.status_code == 401:
-                self.set_status("Error", 'Server authentication data were incorrect.')
-            elif response.status_code == 200:
-                self.stackedWidget.setCurrentWidget(self.loginPage)
-                self.set_status("Success", "Successfully connected to MSColab server.")
-                # disable url input
-                self.urlCb.setEnabled(False)
-
-                # enable/disable appropriate widgets in login frame
-                self.loginBtn.setEnabled(False)
-                self.addUserBtn.setEnabled(True)
-                self.loginEmailLe.setEnabled(True)
-                self.loginPasswordLe.setEnabled(True)
-
-                try:
-                    idp_enabled = json.loads(response.text)["use_saml2"]
-                except (json.decoder.JSONDecodeError, KeyError):
-                    idp_enabled = False
-
-                try:
-                    direct_login = json.loads(response.text)["direct_login"]
-                except (json.decoder.JSONDecodeError, KeyError):
-                    direct_login = True
-
-                if not direct_login:
-                    # Hide user creation when this is disabled on the server
-                    self.addUserBtn.setHidden(True)
-                    self.clickNewUserLabel.setHidden(True)
-
-                if not idp_enabled:
-                    # Hide login by identity provider if IDP login disabled
-                    self.loginWithIDPBtn.setHidden(True)
-
-                self.mscolab_server_url = url
-                self.auth = auth
-                save_password_to_keyring("MSCOLAB_AUTH_" + url, auth[0], auth[1])
-
-                url_list = config_loader(dataset="default_MSCOLAB")
-                if self.mscolab_server_url not in url_list:
-                    ret = QMessageBox.question(
-                        self, self.tr("Update Server List"),
-                        self.tr("You are using a new MSColab server. "
-                                "Should your settings file be updated by adding the new server?"),
-                        QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                    if ret == QMessageBox.Yes:
-                        url_list = [self.mscolab_server_url] + url_list
-                        modify_config_file({"default_MSCOLAB": url_list})
-
-                # Fill Email and Password fields from config
-                self.loginEmailLe.setText(
-                    config_loader(dataset="MSS_auth").get(self.mscolab_server_url))
-                self.mscolab_login_changed(self.loginEmailLe.text())
-                self.enable_login_btn()
-                self.loginBtn.setFocus()
-
-                # Change connect button text and connect disconnect handler
-                self.connectBtn.hide()
-                self.disconnectBtn.show()
-            else:
-                logging.error("Error %s", response)
-                self.set_status("Error", "Some unexpected error occurred. Please try again.")
-        except requests.exceptions.SSLError:
-            logging.debug("Certificate Verification Failed")
-            self.set_status("Error", "Certificate Verification Failed.")
-        except requests.exceptions.InvalidSchema:
-            logging.debug("invalid schema of url")
-            self.set_status("Error", "Invalid Url Scheme.")
-        except requests.exceptions.InvalidURL:
-            logging.debug("invalid url")
-            self.set_status("Error", "Invalid URL.")
-        except requests.exceptions.ConnectionError:
-            logging.debug("MSColab server isn't active")
-            self.set_status("Error", "MSColab server isn't active.")
-        except Exception as ex:
-            logging.error("Error %s %s", type(ex), str(ex))
-            self.set_status("Error", "Some unexpected error occurred. Please try again.")
-
-    def disconnect_handler(self):
-        self.urlCb.setEnabled(True)
-
-        # enable/disable appropriate widgets in login frame
-        self.loginBtn.setEnabled(False)
-        self.addUserBtn.setEnabled(False)
-        self.loginEmailLe.setEnabled(False)
-        self.loginPasswordLe.setEnabled(False)
-
-        # clear text
-        self.stackedWidget.setCurrentWidget(self.httpAuthPage)
-
-        self.mscolab_server_url = None
-        self.auth = None
-
-        self.connectBtn.show()
-        self.connectBtn.setFocus()
-        self.disconnectBtn.hide()
-        self.set_status("Info", 'Disconnected from server.')
-
-    def login_handler(self):
-        self.loginBtn.setEnabled(False)
-        data = {
-            "email": self.loginEmailLe.text(),
-            "password": self.loginPasswordLe.text()
-        }
-        session = requests.Session()
-        session.auth = self.auth
-        session.headers.update({'x-test': 'true'})
-        url = urljoin(self.mscolab_server_url, "token")
-        url_recover_password = urljoin(self.mscolab_server_url, "reset_request")
-        try:
-            response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-            response.raise_for_status()
-        except requests.exceptions.RequestException as ex:
-            logging.error("unexpected error: %s %s %s", type(ex), url, ex)
-            self.set_status(
-                "Error",
-                f'Failed to establish a new connection to "{self.mscolab_server_url}". Try again in a moment.',
-            )
-            self.disconnect_handler()
-        else:
-            if response.text == "False":
-                # show status indicating about wrong credentials
-                self.set_status("Error", 'Invalid credentials. Fix them, create a new user, or '
-                                f'<a href="{url_recover_password}">recover your password</a>.')
-                self.loginBtn.setEnabled(True)
-            else:
-                self.save_user_credentials_to_config_file(data["email"], data["password"])
-                self.mscolab.after_login(data["email"], self.mscolab_server_url, response)
-
-    def idp_login_handler(self):
-        """Handle IDP login Button"""
-        url_idp_login = urljoin(self.mscolab_server_url, "available_idps")
-        webbrowser.open(url_idp_login, new=2)
-        self.stackedWidget.setCurrentWidget(self.idpAuthPage)
-
-    def idp_auth_token_submit_handler(self):
-        """Handle IDP authentication token submission"""
-        url_idp_login_auth = urljoin(self.mscolab_server_url, "idp_login_auth")
-        user_token = self.idpAuthPasswordLe.text()
-
-        try:
-            data = {'token': user_token}
-            response = requests.post(url_idp_login_auth, json=data, timeout=(2, 10))
-            if response.status_code == 401:
-                self.set_status("Error", 'Invalid token or token expired. Please try again')
-                self.stackedWidget.setCurrentWidget(self.loginPage)
-
-            elif response.status_code == 200:
-                _json = response.json()
-                token = _json["token"]
-                user = _json["user"]
-
-                data = {
-                    "email": user["emailid"],
-                    "password": token,
-                }
-
-                session = requests.Session()
-                session.auth = self.auth
-                session.headers.update({'x-test': 'true'})
-                url = urljoin(self.mscolab_server_url, "token")
-
-                response = session.post(url, data=data, timeout=(2, 10))
-                response.raise_for_status()
-                if response.text == "False":
-                    # show status indicating about wrong credentials
-                    self.set_status("Error", 'Invalid token. Please enter correct token')
-                else:
-                    self.mscolab.after_login(data["email"], self.mscolab_server_url, response)
-                    self.set_status("Success", 'Succesfully logged into mscolab server')
-
-        except requests.exceptions.RequestException as error:
-            logging.error("unexpected error: %s %s %s", type(error), url, error)
-
-    def save_user_credentials_to_config_file(self, emailid, password):
-        try:
-            save_password_to_keyring(service_name=self.mscolab_server_url, username=emailid, password=password)
-        except (NoKeyringError, PasswordSetError, InitError) as ex:
-            logging.warning("Can't use Keyring on your system:  %s" % ex)
-        mss_auth = config_loader(dataset="MSS_auth")
-        if mss_auth.get(self.mscolab_server_url) != emailid:
-            ret = QMessageBox.question(
-                self, self.tr("Update Credentials"),
-                self.tr("You are using new credentials. "
-                        "Should your settings file be updated with the new credentials?"),
-                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            if ret == QMessageBox.Yes:
-                mss_auth[self.mscolab_server_url] = emailid
-                modify_config_file({"MSS_auth": mss_auth})
-
-    def new_user_handler(self):
-        # get mscolab /token http auth credentials from cache
-        emailid = self.newEmailLe.text()
-        password = self.newPasswordLe.text()
-        re_password = self.newConfirmPasswordLe.text()
-        username = self.newUsernameLe.text()
-        fullname = self.newFullnameLe.text()
-        if password != re_password:
-            self.set_status("Error", 'Your passwords don\'t match.')
-            return
-
-        data = {
-            "email": emailid,
-            "password": password,
-            "username": username,
-            "fullname": fullname
-        }
-        session = requests.Session()
-        session.auth = self.auth
-        session.headers.update({'x-test': 'true'})
-        url = urljoin(self.mscolab_server_url, "register")
-        try:
-            response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-        except requests.exceptions.RequestException as ex:
-            logging.error("unexpected error: %s %s %s", type(ex), url, ex)
-            self.set_status(
-                "Error",
-                f'Failed to establish a new connection to "{self.mscolab_server_url}". Try again in a moment.',
-            )
-            self.disconnect_handler()
-            return
-
-        if response.status_code == 204:
-            self.set_status("Success", 'You are registered, confirm your email before logging in.')
-            self.save_user_credentials_to_config_file(emailid, password)
-            self.stackedWidget.setCurrentWidget(self.loginPage)
-            self.loginEmailLe.setText(emailid)
-            self.loginPasswordLe.setText(password)
-        elif response.status_code == 201:
-            self.set_status("Success", 'You are registered.')
-            self.save_user_credentials_to_config_file(emailid, password)
-            self.loginEmailLe.setText(emailid)
-            self.loginPasswordLe.setText(password)
-            self.login_handler()
-        else:
-            try:
-                error_msg = response.json()["message"]
-            except Exception as e:
-                logging.debug("Unexpected error occurred %s", e)
-                error_msg = "Unexpected error occurred. Please try again."
-            self.set_status("Error", error_msg)
 
 
 class MSUIMscolab(QtCore.QObject):
@@ -524,6 +128,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.usernameLabel.hide()
         self.ui.userOptionsTb.hide()
         self.ui.actionAddOperation.setEnabled(False)
+        self.ui.actionCopyIntoNewMSColabOperation.setEnabled(False)
         self.ui.activeOperationDesc.setHidden(True)
         self.hide_operation_options()
 
@@ -608,9 +213,9 @@ class MSUIMscolab(QtCore.QObject):
 
         # set data dir, uri
         if local_operations_data is None:
-            self.data_dir = config_loader(dataset="mss_dir")
+            self.data_dir = Path(config_loader(dataset="mss_dir"))
         else:
-            self.data_dir = local_operations_data
+            self.data_dir = Path(local_operations_data)
         self.create_dir()
 
     def _handle_font_bolding(self, item=None):
@@ -647,22 +252,8 @@ class MSUIMscolab(QtCore.QObject):
         self.operation_archive_browser.show()
 
     def create_dir(self):
-        # ToDo this needs to be done earlier
-        if '://' in self.data_dir:
-            try:
-                _ = fs.open_fs(self.data_dir)
-            except fs.errors.CreateFailed:
-                logging.error('Make sure that the FS url "%s" exists', self.data_dir)
-                show_popup(self.ui, "Error", f'FS Url: "{self.data_dir}" does not exist!')
-                sys.exit()
-            except fs.opener.errors.UnsupportedProtocol:
-                logging.error('FS url "%s" not supported', self.data_dir)
-                show_popup(self.ui, "Error", f'FS Url: "{self.data_dir}" not supported!')
-                sys.exit()
-        else:
-            _dir = os.path.expanduser(self.data_dir)
-            if not os.path.exists(_dir):
-                os.makedirs(_dir)
+        if not Path(self.data_dir).exists():
+            Path(self.data_dir).mkdir(parents=True)
 
     def close_help_dialog(self):
         self.help_dialog = None
@@ -732,6 +323,7 @@ class MSUIMscolab(QtCore.QObject):
             self.fetch_profile_image()
             # enable add operation menu action
             self.ui.actionAddOperation.setEnabled(True)
+            self.ui.actionCopyIntoNewMSColabOperation.setEnabled(True)
 
             # Populate open operations list
             ops = self.add_operations_to_ui()
@@ -774,34 +366,22 @@ class MSUIMscolab(QtCore.QObject):
         # Display default gravatar if custom profile image is not set
         email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
         email_in_config = self.email in config_loader(dataset="gravatar_ids")
-        gravatar_img_path = fs.path.join(constants.GRAVATAR_DIR_PATH, f"{email_hash}.png")
-        config_fs = fs.open_fs(constants.MSUI_CONFIG_PATH)
+        constants.GRAVATAR_DIR_PATH.mkdir(parents=True, exist_ok=True)
+        gravatar_img_path = constants.GRAVATAR_DIR_PATH / f"{email_hash}.png"
 
         # refresh is used to fetch new gravatar associated with the email
         if refresh or email_in_config:
-            # create directory to store cached gravatar images
-            if not config_fs.exists("gravatars"):
-                try:
-                    config_fs.makedirs("gravatars")
-                except fs.errors.CreateFailed:
-                    logging.error('Creation of gravatar directory failed')
-                    return
-                except fs.opener.errors.UnsupportedProtocol:
-                    logging.error('FS url not supported')
-                    return
-
             # use cached image if refresh not requested
-            if not refresh and email_in_config and \
-                    config_fs.exists(fs.path.join("gravatars", f"{email_hash}.png")):
-                self.set_gravatar(gravatar_img_path)
+            if not refresh and email_in_config and gravatar_img_path.exists():
+                self.set_gravatar(str(gravatar_img_path))
                 return
 
             # fetch gravatar image
             gravatar_url = f"https://www.gravatar.com/avatar/{email_hash}.png?s=80&d=404"
             try:
-                urllib.request.urlretrieve(gravatar_url, gravatar_img_path)
-                img = Image.open(gravatar_img_path)
-                img.save(gravatar_img_path)
+                urllib.request.urlretrieve(gravatar_url, str(gravatar_img_path))
+                img = Image.open(str(gravatar_img_path))
+                img.save(str(gravatar_img_path))
             except urllib.error.HTTPError:
                 if refresh:
                     show_popup(self.prof_diag, "Error", "Gravatar not found")
@@ -819,13 +399,13 @@ class MSUIMscolab(QtCore.QObject):
                 "msui_settings.json to automatically fetch your gravatar",
                 icon=1, )
 
-        self.set_gravatar(gravatar_img_path)
+        self.set_gravatar(str(gravatar_img_path))
 
     def set_gravatar(self, gravatar=None):
         self.gravatar = gravatar
         pixmap = QtGui.QPixmap(self.gravatar)
         # check if pixmap has correct image
-        if pixmap.isNull():
+        if not os.path.exists(self.gravatar) or pixmap.isNull():
             user_name = self.user["username"]
             try:
                 # find the first alphabet in the user name to set appropriate gravatar
@@ -848,20 +428,19 @@ class MSUIMscolab(QtCore.QObject):
     def remove_gravatar(self):
         if self.gravatar is None:
             return
+        email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
+        gravatar_img_path = constants.GRAVATAR_DIR_PATH / f"{email_hash}.png"
 
         # remove cached gravatar image if not found in config
-        config_fs = fs.open_fs(constants.MSUI_CONFIG_PATH)
-        if config_fs.exists("gravatars"):
-            if fs.open_fs(constants.GRAVATAR_DIR_PATH).exists(fs.path.basename(self.gravatar)):
-                fs.open_fs(constants.GRAVATAR_DIR_PATH).remove(fs.path.basename(self.gravatar))
-                if self.email in config_loader(dataset="gravatar_ids"):
-                    show_popup(
-                        self.prof_diag,
-                        "Information",
-                        "Please remove your email from gravatar_ids section in your "
-                        "msui_settings.json to not fetch gravatar automatically",
-                        icon=1, )
-
+        if gravatar_img_path.exists():
+            gravatar_img_path.unlink()
+            if self.email in config_loader(dataset="gravatar_ids"):
+                show_popup(
+                    self.prof_diag,
+                    "Information",
+                    "Please remove your email from gravatar_ids section in your "
+                    "msui_settings.json to not fetch gravatar automatically",
+                    icon=1, )
         self.set_gravatar()
 
     def open_profile_window(self):
@@ -952,8 +531,11 @@ class MSUIMscolab(QtCore.QObject):
             if response.status_code == 200 and response.json()["success"] is True:
                 self.logout()
 
-    @verify_user_token
     def add_operation_handler(self, _=None):
+        self.add_operation_dialog()
+
+    @verify_user_token
+    def add_operation_dialog(self, name=None, description=None, xml=None):
         def check_and_enable_operation_accept():
             if (self.add_proj_dialog.path.text() != "" and
                     self.add_proj_dialog.description.toPlainText() != "" and
@@ -971,10 +553,10 @@ class MSUIMscolab(QtCore.QObject):
             file_path = get_open_filename(
                 self.ui, "Open Flighttrack file", "", ';;'.join(file_type))
             if file_path is not None:
-                file_name = fs.path.basename(file_path)
+                file_name = Path(file_path).name
                 if file_path.endswith('ftml'):
-                    with open_fs(fs.path.dirname(file_path)) as file_dir:
-                        file_content = file_dir.readtext(file_name)
+                    with open(Path(file_path).parent / file_name, 'r') as f:
+                        file_content = f.read()
                 else:
                     function = self.ui.import_plugins[import_type][0]
                     ft_name, waypoints = function(file_path)
@@ -985,29 +567,42 @@ class MSUIMscolab(QtCore.QObject):
                 self.add_proj_dialog.selectedFile.setText(file_name)
 
         self.proj_diag = QDialog()
-        self.add_proj_dialog = add_operation_ui.Ui_addOperationDialog()
+        self.add_proj_dialog = msc_add_operation_ui.Ui_addOperationDialog()
         self.add_proj_dialog.setupUi(self.proj_diag)
         self.add_proj_dialog.f_content = None
-        self.add_proj_dialog.buttonBox.accepted.connect(self.add_operation)
+        self.add_proj_dialog.buttonBox.accepted.connect(self.add_operation_from_new_dialog)
         self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
         self.add_proj_dialog.path.textChanged.connect(check_and_enable_operation_accept)
         self.add_proj_dialog.description.textChanged.connect(check_and_enable_operation_accept)
         self.add_proj_dialog.category.textChanged.connect(check_and_enable_operation_accept)
         self.add_proj_dialog.browse.clicked.connect(browse)
         self.add_proj_dialog.category.setText(config_loader(dataset="MSCOLAB_category"))
+        if name is not None:
+            self.add_proj_dialog.path.setText(name)
+        if description is not None:
+            self.add_proj_dialog.description.setText(name)
+        if xml is not None:
+            self.add_proj_dialog.f_content = xml
+            self.add_proj_dialog.optFileBox.setHidden(True)
 
         # sets types from defined import menu
         import_menu = self.ui.menuImportFlightTrack
         for im_action in import_menu.actions():
-            self.add_proj_dialog.cb_ImportType.addItem(im_action.text())
+            if im_action.text() != "From Selected":
+                self.add_proj_dialog.cb_ImportType.addItem(im_action.text())
         self.proj_diag.show()
 
+    def add_operation_from_new_dialog(self):
+        logging.debug("add_operation_from_dialog")
+        self.add_operation(
+            self.add_proj_dialog.path.text(),
+            self.add_proj_dialog.description.toPlainText(),
+            self.add_proj_dialog.category.text(),
+            self.add_proj_dialog.f_content)
+
     @verify_user_token
-    def add_operation(self):
+    def add_operation(self, path, description, category, f_content):
         logging.debug("add_operation")
-        path = self.add_proj_dialog.path.text()
-        description = self.add_proj_dialog.description.toPlainText()
-        category = self.add_proj_dialog.category.text()
         if not path:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Path can\'t be empty')
@@ -1026,12 +621,21 @@ class MSUIMscolab(QtCore.QObject):
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Path can\'t contain spaces or special characters')
             return
-
+        waypoints = config_loader(dataset="new_flighttrack_template", default=False)
+        waypoints_model = ft.WaypointsTableModel(waypoints=[
+            ft.Waypoint(location=loc, lat=0.0, lon=0.0)
+            for loc in waypoints
+        ])
+        default_content = waypoints_model.get_xml_content()
         data = {"path": path,
                 "description": description,
-                "category": category}
+                "category": category
+                }
+        data["content"] = default_content
         if self.add_proj_dialog.f_content is not None:
             data["content"] = self.add_proj_dialog.f_content
+        if f_content is not None:
+            data["content"] = f_content
         try:
             response = self.conn.request_post("create_operation", data)
         except requests.exceptions.RequestException as ex:
@@ -1352,11 +956,12 @@ class MSUIMscolab(QtCore.QObject):
             if self.version_window is not None:
                 self.version_window.close()
             self.create_local_operation_file()
-            self.local_ftml_file = fs.path.combine(
-                self.data_dir,
-                fs.path.join(
-                    "local_colabdata", self.user["username"],
-                    self.active_operation_name, "mscolab_operation.ftml"),
+            self.local_ftml_file = str(
+                Path(self.data_dir) /
+                "local_colabdata" /
+                self.user["username"] /
+                self.active_operation_name /
+                "mscolab_operation.ftml"
             )
             self.ui.workingStatusLabel.setText(
                 self.ui.tr(
@@ -1379,14 +984,17 @@ class MSUIMscolab(QtCore.QObject):
         self.reload_view_windows()
 
     def create_local_operation_file(self):
-        with open_fs(self.data_dir) as mss_dir:
-            rel_file_path = fs.path.join('local_colabdata', self.user['username'],
-                                         self.active_operation_name, 'mscolab_operation.ftml')
-            if mss_dir.exists(rel_file_path) is True:
-                return
-            mss_dir.makedirs(fs.path.dirname(rel_file_path))
-            server_data = self.waypoints_model.get_xml_content()
-            mss_dir.writetext(rel_file_path, server_data)
+        local_data_dir = self.data_dir / "local_colabdata" / self.user['username'] / self.active_operation_name
+        ftml_file = local_data_dir / "mscolab_operation.ftml"
+
+        if ftml_file.exists():
+            return
+
+        local_data_dir.mkdir(parents=True, exist_ok=True)
+        server_data = self.waypoints_model.get_xml_content()
+
+        with open(ftml_file, "w") as f:
+            f.write(server_data)
 
     def reload_local_wp(self):
         self.waypoints_model = ft.WaypointsTableModel(filename=self.local_ftml_file, data_dir=self.data_dir)
@@ -1647,7 +1255,7 @@ class MSUIMscolab(QtCore.QObject):
             operations = response["operations"]
             self.ui.filterCategoryCb.currentIndexChanged.disconnect(self.operation_category_handler)
             self.ui.filterCategoryCb.clear()
-            categories = set(["*ANY*"])
+            categories = {"*ANY*"}
             for operation in operations:
                 categories.add(operation["category"])
             categories.remove("*ANY*")
@@ -1878,9 +1486,11 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.workingStatusLabel.setText(self.ui.tr("\n\nNo Operation Selected"))
 
     @verify_user_token
-    def request_wps_from_server(self):
+    def request_wps_from_server(self, op_id=None):
+        if op_id is None:
+            op_id = self.active_op_id
         response = self.conn.request_get(
-            "get_operation_by_id", {"op_id": self.active_op_id})
+            "get_operation_by_id", {"op_id": op_id})
         if response.text != "False":
             xml_content = response.json()["content"]
             return xml_content
@@ -1946,17 +1556,16 @@ class MSUIMscolab(QtCore.QObject):
             return
         if file_path is None:
             return
-        dir_path, file_name = fs.path.split(file_path)
-        file_name = fs.path.basename(file_path)
+        dir_path = Path(file_path).parent
+        file_name = Path(file_path).name
         if function is None:
-            with open_fs(dir_path) as file_dir:
-                xml_content = file_dir.readtext(file_name)
+            try:
+                xml_content = dir_path.joinpath(file_name).read_text()
                 if not verify_waypoint_data(xml_content):
                     show_popup(self.ui, "Import Failed", f"The file - {file_name}, does not contain valid XML")
                     return
-            try:
                 model = ft.WaypointsTableModel(xml_content=xml_content)
-            except SyntaxError:
+            except (SyntaxError, FileNotFoundError):
                 show_popup(self.ui, "Import Failed", f"The file - {file_name}, does not contain valid XML")
                 return
         else:
@@ -1982,7 +1591,7 @@ class MSUIMscolab(QtCore.QObject):
         if self.active_op_id is None:
             return
 
-        # Setting default filename path for filedialogue
+        # Setting default filename path for filedialog
         default_filename = f'{self.active_operation_name}.{extension}'
         file_name = get_save_filename(
             self.ui, "Export From Server",
@@ -1992,11 +1601,11 @@ class MSUIMscolab(QtCore.QObject):
             return
         if function is None:
             xml_doc = self.waypoints_model.get_xml_doc()
-            dir_path, file_name = fs.path.split(file_name)
-            with open_fs(dir_path).open(file_name, 'w') as file:
-                xml_doc.writexml(file, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
+            dir_path = Path(file_name).parent
+            file_name = Path(file_name).name
+            xml_doc.writexml(open(dir_path / file_name, 'w'), indent="  ", addindent="  ", newl="\n", encoding="utf-8")
         else:
-            name = fs.path.basename(file_name)
+            name = Path(file_name).name
             function(file_name, name, self.waypoints_model.waypoints)
             show_popup(self.ui, "Export Success", f"The file - {file_name}, was exported successfully!", 1)
 
@@ -2044,6 +1653,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.connectBtn.setFocus()
         self.ui.openOperationsGb.hide()
         self.ui.actionAddOperation.setEnabled(False)
+        self.ui.actionCopyIntoNewMSColabOperation.setEnabled(False)
         # hide operation description
         self.ui.activeOperationDesc.setHidden(True)
         # reset description label text
@@ -2056,11 +1666,13 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.workLocallyCheckbox.blockSignals(False)
 
         # remove temporary gravatar image
-        config_fs = fs.open_fs(constants.MSUI_CONFIG_PATH)
-        if config_fs.exists("gravatars") and self.gravatar is not None:
-            if self.email not in config_loader(dataset="gravatar_ids") and \
-                    fs.open_fs(constants.GRAVATAR_DIR_PATH).exists(fs.path.basename(self.gravatar)):
-                fs.open_fs(constants.GRAVATAR_DIR_PATH).remove(fs.path.basename(self.gravatar))
+        config_path = Path(constants.MSUI_CONFIG_PATH)
+        gravatar_path = Path(constants.GRAVATAR_DIR_PATH)
+        # ToDo simplify
+        if (config_path / "gravatars").exists() and self.gravatar is not None:
+            if (self.email not in config_loader(dataset="gravatar_ids") and
+                    (gravatar_path / Path(self.gravatar).name).exists()):
+                (gravatar_path / Path(self.gravatar).name).unlink()
         # clear gravatar image path
         self.gravatar = None
         # clear user email

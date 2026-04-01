@@ -10,7 +10,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2017-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,8 +29,6 @@
 import mock
 import os
 import pytest
-import shutil
-import tempfile
 from PyQt5 import QtTest, QtCore, QtGui, QtWidgets
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
@@ -189,10 +187,10 @@ class Test_MSSSideViewWindow:
 
 class Test_SideViewWMS:
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot, mswms_server):
+    def setup(self, qtbot, mswms_server, tmp_path):
         mainwindow = MSUIMainWindow()
         self.url = mswms_server
-        self.tempdir = tempfile.mkdtemp()
+        self.tempdir = tmp_path
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
 
@@ -208,7 +206,6 @@ class Test_SideViewWMS:
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
         yield
         self.window.hide()
-        shutil.rmtree(self.tempdir)
 
     def query_server(self, qtbot, url):
         QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)

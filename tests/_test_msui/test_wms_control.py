@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2017-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,13 +27,13 @@
 
 import os
 import mock
-import shutil
-import tempfile
 import pytest
 import hashlib
 import urllib
+import eventlet
 from PyQt5 import QtCore, QtTest
 from mslib.msui import flighttrack as ft
+from mslib.utils.service_manager import WMSServiceManager
 import mslib.msui.wms_control as wc
 
 
@@ -56,15 +56,14 @@ class WMSControlWidgetSetup:
         parsed_url = urllib.parse.urlparse(self.url)
         self.scheme, self.host, self.port = parsed_url.scheme, parsed_url.hostname, parsed_url.port
 
-    def _setup(self, widget_type):
-        wc.WMS_SERVICE_CACHE = {}
+    def _setup(self, widget_type, tmp_path):
+        self.service_manager = WMSServiceManager()
+        self.service_manager.clear_cache()
         if widget_type == "hsec":
             self.view = HSecViewMockup()
         else:
             self.view = VSecViewMockup()
-        self.tempdir = tempfile.mkdtemp()
-        if not os.path.exists(self.tempdir):
-            os.mkdir(self.tempdir)
+        self.tempdir = tmp_path
         if widget_type == "hsec":
             self.window = wc.HSecWMSControlWidget(view=self.view, wms_cache=self.tempdir)
         else:
@@ -85,7 +84,6 @@ class WMSControlWidgetSetup:
 
     def _teardown(self):
         self.window.hide()
-        shutil.rmtree(self.tempdir)
 
     def query_server(self, qtbot, url):
         while len(self.window.multilayers.cbWMS_URL.currentText()) > 0:
@@ -97,8 +95,8 @@ class WMSControlWidgetSetup:
 
 class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot):
-        self._setup("hsec")
+    def setup(self, qtbot, tmp_path):
+        self._setup("hsec", tmp_path)
         yield
         self._teardown()
 
@@ -106,9 +104,13 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that a message box informs about server troubles
         """
+        # get a free port which we haven't used
+        sock = eventlet.listen((self.host, 0))
+        port = sock.getsockname()[1]
+        sock.close()
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
-            self.query_server(qtbot, f"{self.scheme}://{self.host}:{self.port - 1}")
-            mock_critical.assert_called_once()
+            self.query_server(qtbot, f"{self.scheme}://{self.host}:{port}")
+            qtbot.wait_until(mock_critical.assert_called_once)
 
     def test_no_schema(self, qtbot):
         """
@@ -116,7 +118,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"{self.host}:{self.port}")
-            mock_critical.assert_called_once()
+            qtbot.wait_until(mock_critical.assert_called_once)
 
     def test_invalid_schema(self, qtbot):
         """
@@ -124,7 +126,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"hppd://{self.host}:{self.port}")
-            mock_critical.assert_called_once()
+            qtbot.wait_until(mock_critical.assert_called_once)
 
     def test_invalid_url(self, qtbot):
         """
@@ -132,7 +134,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"{self.scheme}://???{self.host}:{self.port}")
-            mock_critical.assert_called_once()
+            qtbot.wait_until(mock_critical.assert_called_once)
 
     def test_connection_error(self, qtbot):
         """
@@ -140,7 +142,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"{self.scheme}://.....{self.host}:{self.port}")
-            mock_critical.assert_called_once()
+            qtbot.wait_until(mock_critical.assert_called_once)
 
     @pytest.mark.skip("Breaks other tests in this class because of a lingering message box, for some reason")
     def test_forward_backward_clicks(self, qtbot):
@@ -409,8 +411,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
 class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot):
-        self._setup("vsec")
+    def setup(self, qtbot, tmp_path):
+        self._setup("vsec", tmp_path)
         yield
         self._teardown()
 
@@ -419,7 +421,8 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         assert that a getmap call to a WMS server displays an image
         """
         self.query_server(qtbot, self.url)
-        with qtbot.wait_signal(self.window.image_displayed):
+
+        with qtbot.wait_signal(self.window.image_displayed, timeout=10000):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
@@ -433,7 +436,8 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(qtbot, self.url)
         server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                               QtCore.Qt.MatchFixedString)[0]
-        with qtbot.wait_signal(self.window.image_displayed):
+
+        with qtbot.wait_signal(self.window.image_displayed, timeout=10000):
             server.child(0).draw()
 
 
@@ -495,9 +499,12 @@ class TestWMSControlWidgetSetupSimple:
         <Extent name="ELEVATION" default="900.0"> 500.0,600.0,700.0,900.0 </Extent>"""
 
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot):
+    def setup(self, tmp_path, qtbot):
+        self.service_manager = WMSServiceManager()
+        self.service_manager.clear_cache()
         self.view = HSecViewMockup()
-        self.window = wc.HSecWMSControlWidget(view=self.view)
+        self.tempdir = tmp_path
+        self.window = wc.HSecWMSControlWidget(view=self.view, wms_cache=self.tempdir)
         self.window.show()
 
         # Remove all previous cached URLs
@@ -507,6 +514,11 @@ class TestWMSControlWidgetSetupSimple:
 
         yield
         self.window.hide()
+
+    def test_wms_cache_tmp(self):
+        assert self.window.wms_cache is not None
+        # wms_cache has an ending path separator
+        assert str(self.tempdir) == self.window.wms_cache[:-1]
 
     def test_xml(self):
         testxml = self.xml.format("", self.srs_base, self.dimext_time + self.dimext_inittime + self.dimext_elevation)
@@ -527,7 +539,6 @@ class TestWMSControlWidgetSetupSimple:
             <Extent name="TIME"> 2014-10-17T12:00:00Z/current/P1Y </Extent>"""
         testxml = self.xml.format("", self.srs_base, dimext_time + self.dimext_inittime + self.dimext_elevation)
         self.window.activate_wms(wc.MSUIWebMapService(None, version='1.1.1', xml=testxml))
-        print([self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())])
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())][:4] == \
             ['2014-10-17T12:00:00Z', '2015-10-17T12:00:00Z', '2016-10-17T12:00:00Z', '2017-10-17T12:00:00Z']
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \

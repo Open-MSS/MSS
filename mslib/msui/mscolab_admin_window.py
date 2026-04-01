@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: 2020 Tanish Grover
-    :copyright: Copyright 2020-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2020-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -88,7 +88,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.load_import_operations()
         self.load_users_without_permission()
         self.load_users_with_permission()
-        categories = set(["ANY"])
+        categories = {"ANY"}
         for operation in self.operations:
             categories.add(operation["category"])
         categories.remove("ANY")

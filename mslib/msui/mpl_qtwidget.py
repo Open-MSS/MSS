@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,12 +32,8 @@
 from datetime import datetime
 import enum
 import os
-import six
 import logging
 import numpy as np
-import matplotlib
-from fs import open_fs
-from fslib.fs_filepicker import getSaveFileNameAndFilter
 from matplotlib import cbook, figure
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT, FigureCanvasQTAgg
 import matplotlib.backend_bases
@@ -45,7 +41,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from matplotlib.lines import Line2D
 
 from mslib.utils.thermolib import convert_pressure_to_vertical_axis_measure
-from mslib.utils import thermolib, FatalUserError
+from mslib.utils import thermolib
 from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
 from mslib.utils.units import units
 from mslib.msui import mpl_pathinteractor as mpl_pi
@@ -386,11 +382,10 @@ class TopViewPlotter(ViewPlotter):
 
 
 class SideViewPlotter(ViewPlotter):
-    _pres_maj = np.concatenate([np.arange(top * 10, top, -top) for top in (10000, 1000, 100, 10)] + [[10]])
-    _pres_min = np.concatenate([np.arange(top * 10, top, -top // 10) for top in (10000, 1000, 100, 10)] + [[10]])
-
-    _pres_maj = np.concatenate([np.arange(top * 10, top, -top) for top in (10000, 1000, 100, 10)] + [[10]])
-    _pres_min = np.concatenate([np.arange(top * 10, top, -top // 10) for top in (10000, 1000, 100, 10)] + [[10]])
+    _pres_maj = np.concatenate([np.arange(top * 10, top, -top) for top in (10000, 1000, 100, 10, 1, 0.1)] +
+                               [[0.1]])
+    _pres_min = np.concatenate([np.arange(top * 10, top, -top // 10) for top in (10000, 1000, 100, 10, 1, 0.1)] +
+                               [[0.1]])
 
     def __init__(self, fig=None, ax=None, settings=None, numlabels=None, num_interpolation_points=None):
         """
@@ -434,23 +429,29 @@ class SideViewPlotter(ViewPlotter):
             # Compute the position of major and minor ticks. Major ticks are labelled.
             major_ticks = self._pres_maj[(self._pres_maj <= self.p_bot) & (self._pres_maj >= self.p_top)]
             minor_ticks = self._pres_min[(self._pres_min <= self.p_bot) & (self._pres_min >= self.p_top)]
-            labels = [f"{int(_x / 100)}"
-                      if (_x / 100) - int(_x / 100) == 0 else f"{float(_x / 100)}" for _x in major_ticks]
-            if len(labels) > 20:
-                labels = ["" if x.split(".")[-1][0] in "975" else x for x in labels]
+            labels = [f"{_x / 100:.0f}" if _x / 100 >= 1 else (
+                      f"{_x / 100:.1f}" if _x / 100 >= 0.1 else (
+                          f"{_x / 100:.2f}" if _x / 100 >= 0.01 else (
+                              f"{_x / 100:.3f}"))) for _x in major_ticks]
+            if len(labels) > 40:
+                labels = ["" if any(y in x for y in "9865") else x for x in labels]
+            elif len(labels) > 20:
+                labels = ["" if any(y in x for y in "975") else x for x in labels]
             elif len(labels) > 10:
-                labels = ["" if x.split(".")[-1][0] in "9" else x for x in labels]
+                labels = ["" if "9" in x else x for x in labels]
             ylabel = "pressure (hPa)"
         elif typ == "pressure altitude":
             bot_km = thermolib.pressure2flightlevel(self.p_bot * units.Pa).to(units.km).magnitude
             top_km = thermolib.pressure2flightlevel(self.p_top * units.Pa).to(units.km).magnitude
-            ma_dist, mi_dist = 4, 1.0
+            ma_dist, mi_dist = 5, 1.0
             if (top_km - bot_km) <= 20:
                 ma_dist, mi_dist = 1, 0.5
             elif (top_km - bot_km) <= 40:
                 ma_dist, mi_dist = 2, 0.5
-            major_heights = np.arange(0, top_km + 1, ma_dist)
-            minor_heights = np.arange(0, top_km + 1, mi_dist)
+            elif (top_km - bot_km) <= 60:
+                ma_dist, mi_dist = 4, 1.0
+            major_heights = np.arange(0, top_km + 0.1, ma_dist)
+            minor_heights = np.arange(0, top_km + 0.1, mi_dist)
             major_ticks = thermolib.flightlevel2pressure(major_heights * units.km).magnitude
             minor_ticks = thermolib.flightlevel2pressure(minor_heights * units.km).magnitude
             labels = major_heights
@@ -458,13 +459,15 @@ class SideViewPlotter(ViewPlotter):
         elif typ == "flight level":
             bot_km = thermolib.pressure2flightlevel(self.p_bot * units.Pa).to(units.km).magnitude
             top_km = thermolib.pressure2flightlevel(self.p_top * units.Pa).to(units.km).magnitude
-            ma_dist, mi_dist = 50, 10
+            ma_dist, mi_dist = 100, 20
             if (top_km - bot_km) <= 10:
                 ma_dist, mi_dist = 20, 10
             elif (top_km - bot_km) <= 40:
                 ma_dist, mi_dist = 40, 10
-            major_fl = np.arange(0, 2132, ma_dist)
-            minor_fl = np.arange(0, 2132, mi_dist)
+            elif (top_km - bot_km) <= 60:
+                ma_dist, mi_dist = 50, 10
+            major_fl = np.arange(0, 3248, ma_dist)
+            minor_fl = np.arange(0, 3248, mi_dist)
             major_ticks = thermolib.flightlevel2pressure(major_fl * units.hft).magnitude
             minor_ticks = thermolib.flightlevel2pressure(minor_fl * units.hft).magnitude
             labels = major_fl
@@ -699,6 +702,7 @@ class LinearViewPlotter(ViewPlotter):
         self.fig.clf()
         self.ax = self.fig.add_subplot(111, zorder=99)
         self.ax.figure.patch.set_visible(False)
+        self.vertical_lines = []
         self.fig.canvas.draw()
 
     def redraw_xaxis(self, lats, lons):
@@ -850,66 +854,6 @@ class MplCanvas(FigureCanvasQTAgg):
         self.plotter.set_settings(settings, save)
 
 
-def _getSaveFileName(parent, title="Choose a filename to save to", filename="test.png",
-                     filters=" Images (*.png)"):
-    _dirname, _name = os.path.split(filename)
-    _dirname = os.path.join(_dirname, "")
-    return getSaveFileNameAndFilter(parent, fs_url=_dirname, file_pattern=filters,
-                                    title=title, default_filename=_name, show_save_action=True)
-
-
-save_figure_original = NavigationToolbar2QT.save_figure
-
-
-def save_figure(self, *args):
-    """
-    saves the figure dependent to the filepicker_default
-    """
-    picker_type = config_loader(dataset="filepicker_default")
-    if picker_type in ["default", "qt"]:
-        save_figure_original(self, *args)
-    elif picker_type == "fs":
-        filetypes = self.canvas.get_supported_filetypes_grouped()
-        sorted_filetypes = sorted(six.iteritems(filetypes))
-        startpath = matplotlib.rcParams.get('savefig.directory', LAST_SAVE_DIRECTORY)
-        startpath = os.path.expanduser(startpath)
-        start = os.path.join(startpath, self.canvas.get_default_filename())
-        filters = []
-        for name, exts in sorted_filetypes:
-            exts_list = " ".join(['*.%s' % ext for ext in exts])
-            filter_value = '%s (%s)' % (name, exts_list)
-            filters.append(filter_value)
-
-        fname, filter_value = _getSaveFileName(self.parent,
-                                               title="Choose a filename to save to",
-                                               filename=start, filters=filters)
-        if fname is not None:
-            if not fname.endswith(filter[1:]):
-                fname = filter.replace('*', fname)
-            if startpath == '':
-                # explicitly missing key or empty str signals to use cwd
-                matplotlib.rcParams['savefig.directory'] = startpath
-            else:
-                # save dir for next time
-                savefig_dir = os.path.dirname(six.text_type(fname))
-                matplotlib.rcParams['savefig.directory'] = savefig_dir
-            try:
-                _dirname, _name = os.path.split(fname)
-                _fs = open_fs(_dirname)
-                with _fs.open(_name, 'wb') as source:
-                    self.canvas.print_figure(source, format=filter.replace('*.', ''))
-            except Exception as e:
-                QtWidgets.QMessageBox.critical(
-                    self, "Error saving file", six.text_type(e),
-                    QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.NoButton)
-    else:
-        raise FatalUserError(f"Unknown file picker type '{picker_type}'")
-
-
-# Patch matplotlib function
-NavigationToolbar2QT.save_figure = save_figure
-
-
 class _Mode(str, enum.Enum):
     """
     Override _Mode of backend_base to include our tools.
@@ -980,7 +924,7 @@ class NavigationToolbar(NavigationToolbar2QT):
         if os.path.exists(myname):
             return QtGui.QIcon(myname)
         else:
-            return super()._icon(name, *args)
+            return super()._icon(name)
 
     def _zoom_pan_handler(self, event):
         """

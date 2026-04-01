@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,14 +35,13 @@ import secrets
 import subprocess
 import git
 import flask_migrate
-import pathlib
+from pathlib import Path
 
 from mslib import __version__
 from mslib.mscolab import migrations
-from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.app import APP
 from mslib.mscolab.seed import seed_data, add_user, add_all_users_default_operation, \
     add_all_users_to_all_operations, delete_user
-from mslib.mscolab.server import APP
 from mslib.mscolab.utils import create_files
 from mslib.utils import setup_logging
 
@@ -58,7 +57,10 @@ def handle_start(args=None):
     start_server(APP, sockio, cm, fm)
 
 
-def confirm_action(confirmation_prompt):
+def confirm_action(confirmation_prompt, assume_yes=False):
+    if assume_yes:
+        return True
+
     while True:
         confirmation = input(confirmation_prompt).lower()
         if confirmation == "n" or confirmation == "":
@@ -70,24 +72,42 @@ def confirm_action(confirmation_prompt):
 
 
 def handle_db_reset(verbose=True):
-    if mscolab_settings.SQLALCHEMY_DB_URI.startswith("sqlite:///") and (
-        db_path := pathlib.Path(mscolab_settings.SQLALCHEMY_DB_URI.removeprefix("sqlite:///"))
-    ).is_relative_to(mscolab_settings.DATA_DIR):
+    alembic_loggers = (logging.getLogger("alembic"), logging.getLogger("alembic.runtime.migration"))
+    previous_levels = None
+    if not verbose:
+        previous_levels = [logger.level for logger in alembic_loggers]
+        for logger in alembic_loggers:
+            logger.setLevel(logging.WARNING)
+    if APP.config['SQLALCHEMY_DATABASE_URI'].startswith("sqlite:///") and (
+        db_path := Path(APP.config['SQLALCHEMY_DATABASE_URI'].removeprefix("sqlite:///"))
+    ).is_relative_to(APP.config['DATA_DIR']):
         # Don't remove the database file
         # This would be easier if the database wasn't stored in DATA_DIR...
-        p = pathlib.Path(mscolab_settings.DATA_DIR)
+        p = Path(APP.config['DATA_DIR'])
         for root, dirs, files in os.walk(p, topdown=False):
             for name in files:
-                full_file_path = pathlib.Path(root) / name
+                full_file_path = Path(root) / name
                 if full_file_path != db_path:
                     full_file_path.unlink()
             for name in dirs:
-                (pathlib.Path(root) / name).rmdir()
-    elif os.path.exists(mscolab_settings.DATA_DIR):
-        shutil.rmtree(mscolab_settings.DATA_DIR)
+                dir_path = Path(root) / name
+                try:
+
+                    dir_path.rmdir()
+                except (OSError, FileNotFoundError):
+
+                    # Directory might not be empty or already removed
+                    pass
+    elif Path(APP.config['DATA_DIR']).exists():
+        shutil.rmtree(APP.config['DATA_DIR'])
     create_files()
-    flask_migrate.downgrade(directory=migrations.__path__[0], revision="base")
-    flask_migrate.upgrade(directory=migrations.__path__[0])
+    try:
+        flask_migrate.downgrade(directory=migrations.__path__[0], revision="base")
+        flask_migrate.upgrade(directory=migrations.__path__[0])
+    finally:
+        if previous_levels is not None:
+            for logger, level in zip(alembic_loggers, previous_levels):
+                logger.setLevel(level)
     if verbose is True:
         print("Database has been reset successfully!")
 
@@ -103,9 +123,9 @@ def handle_mscolab_certificate_init():
 
     try:
         cmd = ["openssl", "req", "-newkey", "rsa:4096", "-keyout",
-               os.path.join(mscolab_settings.SSO_DIR, "key_mscolab.key"),
+               os.path.join(APP.config['SSO_DIR'], "key_mscolab.key"),
                "-nodes", "-x509", "-days", "365", "-batch", "-subj",
-               "/CN=localhost", "-out", os.path.join(mscolab_settings.SSO_DIR,
+               "/CN=localhost", "-out", os.path.join(APP.config['SSO_DIR'],
                                                      "crt_mscolab.crt")]
         subprocess.run(cmd, check=True)
         logging.info("generated CRTs for the mscolab server.")
@@ -120,9 +140,9 @@ def handle_local_idp_certificate_init():
 
     try:
         cmd = ["openssl", "req", "-newkey", "rsa:4096", "-keyout",
-               os.path.join(mscolab_settings.SSO_DIR, "key_local_idp.key"),
+               os.path.join(APP.config['SSO_DIR'], "key_local_idp.key"),
                "-nodes", "-x509", "-days", "365", "-batch", "-subj",
-               "/CN=localhost", "-out", os.path.join(mscolab_settings.SSO_DIR, "crt_local_idp.crt")]
+               "/CN=localhost", "-out", os.path.join(APP.config['SSO_DIR'], "crt_local_idp.crt")]
         subprocess.run(cmd, check=True)
         logging.info("generated CRTs for the local identity provider")
         return True
@@ -253,7 +273,7 @@ config:
   #       name_id_format_allow_create: true
 """
     try:
-        file_path = os.path.join(mscolab_settings.SSO_DIR, "mss_saml2_backend.yaml")
+        file_path = os.path.join(APP.config['SSO_DIR'], "mss_saml2_backend.yaml")
         with open(file_path, "w", encoding="utf-8") as file:
             file.write(saml_2_backend_yaml_content)
         return True
@@ -279,7 +299,7 @@ def handle_mscolab_metadata_init(repo_exists):
         process = subprocess.Popen(command)
         cmd_curl = ["curl", "--retry", "5", "--retry-connrefused", "--retry-delay", "3",
                     "http://localhost:8083/metadata/localhost_test_idp",
-                    "-o", os.path.join(mscolab_settings.SSO_DIR, "metadata_sp.xml")]
+                    "-o", os.path.join(APP.config['SSO_DIR'], "metadata_sp.xml")]
         subprocess.run(cmd_curl, check=True)
         process.terminate()
         logging.info('mscolab metadata file generated succesfully')
@@ -294,8 +314,8 @@ def handle_local_idp_metadata_init(repo_exists):
     print('generating metadata for localhost identity provider')
 
     try:
-        if os.path.exists(os.path.join(mscolab_settings.SSO_DIR, "idp.xml")):
-            os.remove(os.path.join(mscolab_settings.SSO_DIR, "idp.xml"))
+        if os.path.exists(os.path.join(APP.config['SSO_DIR'], "idp.xml")):
+            os.remove(os.path.join(APP.config['SSO_DIR'], "idp.xml"))
 
         idp_conf_path = os.path.join("mslib", "msidp", "idp_conf.py")
 
@@ -306,15 +326,15 @@ def handle_local_idp_metadata_init(repo_exists):
 
         cmd = ["make_metadata", idp_conf_path]
 
-        with open(os.path.join(mscolab_settings.SSO_DIR, "idp.xml"),
+        with open(os.path.join(APP.config['SSO_DIR'], "idp.xml"),
                   "w", encoding="utf-8") as output_file:
             subprocess.run(cmd, stdout=output_file, check=True)
         logging.info("idp metadata file generated successfully")
         return True
     except subprocess.CalledProcessError as error:
         # Delete the idp.xml file when the subprocess fails
-        if os.path.exists(os.path.join(mscolab_settings.SSO_DIR, "idp.xml")):
-            os.remove(os.path.join(mscolab_settings.SSO_DIR, "idp.xml"))
+        if os.path.exists(os.path.join(APP.config['SSO_DIR'], "idp.xml")):
+            os.remove(os.path.join(APP.config['SSO_DIR'], "idp.xml"))
         print(f"Error while generating metadata for localhost identity provider: {error}")
         return False
 
@@ -324,8 +344,8 @@ def handle_sso_crts_init():
         This will generate necessary CRTs files for sso in mscolab through localhost idp
     """
     print("\n\nmscolab sso conf initiating......")
-    if os.path.exists(mscolab_settings.SSO_DIR):
-        shutil.rmtree(mscolab_settings.SSO_DIR)
+    if os.path.exists(APP.config['SSO_DIR']):
+        shutil.rmtree(APP.config['SSO_DIR'])
     create_files()
     if not handle_mscolab_certificate_init():
         print('Error while handling mscolab certificate.')
@@ -368,17 +388,27 @@ def main():
                                default=None)
 
     database_parser = subparsers.add_parser("db", help="Manage mscolab database")
-    database_parser = database_parser.add_mutually_exclusive_group(required=True)
-    database_parser.add_argument("--reset", help="Reset database", action="store_true")
-    database_parser.add_argument("--seed", help="Seed database", action="store_true")
-    database_parser.add_argument("--users_by_file", type=argparse.FileType('r'),
-                                 help="adds users into database, fileformat: suggested_username  name   <email>")
-    database_parser.add_argument("--delete_users_by_file", type=argparse.FileType('r'),
-                                 help="removes users from the database, fileformat: email")
-    database_parser.add_argument("--default_operation", help="adds all users into a default TEMPLATE operation",
-                                 action="store_true")
-    database_parser.add_argument("--add_all_to_all_operation", help="adds all users into all other operations",
-                                 action="store_true")
+
+    db_actions = database_parser.add_mutually_exclusive_group(required=True)
+    db_actions.add_argument("--reset", help="Reset database", action="store_true")
+    db_actions.add_argument("--seed", help="Seed database", action="store_true")
+    db_actions.add_argument("--users_by_file", type=argparse.FileType("r"),
+                            help="adds users into database, fileformat: suggested_username  name   <email>")
+    db_actions.add_argument("--delete_users_by_file", type=argparse.FileType("r"),
+                            help="removes users from the database, fileformat: email")
+    db_actions.add_argument("--default_operation",
+                            help="adds all users into a default TEMPLATE operation",
+                            action="store_true")
+    db_actions.add_argument("--add_all_to_all_operation",
+                            help="adds all users into all other operations",
+                            action="store_true")
+
+    database_parser.add_argument(
+        "-y", "--yes",
+        action="store_true",
+        help="Skip confirmation prompt"
+    )
+
     sso_conf_parser = subparsers.add_parser("sso_conf", help="single sign on process configurations")
     sso_conf_parser = sso_conf_parser.add_mutually_exclusive_group(required=True)
     sso_conf_parser.add_argument("--init_sso_crts",
@@ -411,20 +441,26 @@ def main():
 
     elif args.action == "db":
         if args.reset:
-            confirmation = confirm_action("Are you sure you want to reset the database? This would delete "
-                                          "all your data! (y/[n]):")
+            confirmation = confirm_action(
+                "Are you sure you want to reset the database? This would delete "
+                "all your data! (y/[n]):",
+                assume_yes=args.yes)
             if confirmation is True:
                 with APP.app_context():
                     handle_db_reset()
         elif args.seed:
-            confirmation = confirm_action("Are you sure you want to seed the database? Seeding will delete all your "
-                                          "existing data and replace it with seed data (y/[n]):")
+            confirmation = confirm_action(
+                "Are you sure you want to seed the database? Seeding will delete all your "
+                "existing data and replace it with seed data (y/[n]):",
+                assume_yes=args.yes)
             if confirmation is True:
                 with APP.app_context():
                     handle_db_seed()
         elif args.users_by_file is not None:
             # fileformat: suggested_username  name   <email>
-            confirmation = confirm_action("Are you sure you want to add users to the database? (y/[n]):")
+            confirmation = confirm_action(
+                "Are you sure you want to add users to the database? (y/[n]):",
+                assume_yes=args.yes)
             if confirmation is True:
                 for line in args.users_by_file.readlines():
                     info = line.split()
@@ -435,19 +471,22 @@ def main():
                     add_user(emailid, username, password, fullname)
         elif args.default_operation:
             confirmation = confirm_action(
-                "Are you sure you want to add users to the default TEMPLATE operation? (y/[n]):")
+                "Are you sure you want to add users to the default TEMPLATE operation? (y/[n]):",
+                assume_yes=args.yes)
             if confirmation is True:
                 # adds all users as collaborator on the operation TEMPLATE if not added, command can be repeated
                 add_all_users_default_operation(access_level='admin')
         elif args.add_all_to_all_operation:
             confirmation = confirm_action(
-                "Are you sure you want to add users to the ALL operations? (y/[n]):")
+                "Are you sure you want to add users to the ALL operations? (y/[n]):",
+                assume_yes=args.yes)
             if confirmation is True:
                 # adds all users to all Operations
                 add_all_users_to_all_operations()
         elif args.delete_users_by_file:
             confirmation = confirm_action(
-                "Are you sure you want to delete a user? (y/[n]):")
+                "Are you sure you want to delete a user? (y/[n]):",
+                assume_yes=args.yes)
             if confirmation is True:
                 # deletes users from the db
                 for email in args.delete_users_by_file.readlines():

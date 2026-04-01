@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,13 +33,13 @@ from mslib.utils.netCDF4tools import (
     identify_variable, identify_CF_lonlat,
     identify_vertical_axis, identify_CF_time, num2date, get_latlon_data
 )
-from tests.constants import DATA_DIR
+from tests.constants import MSWMS_DATA_DIR
 
-DATA_FILE_ML = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.CC.EUR_LL015.036.ml.nc")
-DATA_FILE_PL = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.PRESSURE_LEVELS.EUR_LL015.036.pl.nc")
-DATA_FILE_PV = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.PVU.EUR_LL015.036.pv.nc")
-DATA_FILE_TL = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.THETA_LEVELS.EUR_LL015.036.tl.nc")
-DATA_FILE_AL = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.ALTITUDE_LEVELS.EUR_LL015.036.al.nc")
+DATA_FILE_ML = os.path.join(MSWMS_DATA_DIR, "20121017_12_ecmwf_forecast.CC.EUR_LL015.036.ml.nc")
+DATA_FILE_PL = os.path.join(MSWMS_DATA_DIR, "20121017_12_ecmwf_forecast.PRESSURE_LEVELS.EUR_LL015.036.pl.nc")
+DATA_FILE_PV = os.path.join(MSWMS_DATA_DIR, "20121017_12_ecmwf_forecast.PVU.EUR_LL015.036.pv.nc")
+DATA_FILE_TL = os.path.join(MSWMS_DATA_DIR, "20121017_12_ecmwf_forecast.THETA_LEVELS.EUR_LL015.036.tl.nc")
+DATA_FILE_AL = os.path.join(MSWMS_DATA_DIR, "20121017_12_ecmwf_forecast.ALTITUDE_LEVELS.EUR_LL015.036.al.nc")
 
 
 class Test_netCDF4tools:
@@ -119,8 +119,9 @@ class Test_netCDF4tools:
         assert time_name == "time"
         assert time_var.size == 7
 
+    @pytest.mark.skip(reason="no demodata available yet")
     def test_identify_CF_ensemble(self):
-        pytest.skip("no demodata available yet")
+        pass
 
     def test_get_latlon_data(self):
         lat_data, lon_data, lat_order = get_latlon_data(self.ncfile_pl)

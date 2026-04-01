@@ -49,6 +49,7 @@ class Ui_SideViewOptionsDialog(object):
         self.sbPtop.setSizePolicy(sizePolicy)
         self.sbPtop.setMinimum(0.0)
         self.sbPtop.setMaximum(2132.0)
+        self.sbPtop.setDecimals(4)
         self.sbPtop.setProperty("value", 200.0)
         self.sbPtop.setObjectName("sbPtop")
         self.horizontalLayout.addWidget(self.sbPtop)

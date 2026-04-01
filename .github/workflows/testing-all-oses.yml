@@ -18,10 +18,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["macos-13", "macos-14", "ubuntu-latest"]
+        os: ["macos-14", "macos-15", "ubuntu-latest"]
     steps:
-    - uses: actions/checkout@v4
-    - uses: prefix-dev/setup-pixi@v0.8.3
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
+    - uses: prefix-dev/setup-pixi@a0af7a228712d6121d37aba47adf55c1332c9c2e # v0.9.4
       with:
         pixi-version: latest
         cache: true
@@ -29,3 +29,23 @@ jobs:
     - name: Run tests
       timeout-minutes: 40
       run: pixi run -e dev env QT_QPA_PLATFORM=offscreen pytest -v -n logical --durations=20 --cov=mslib tests
+    - run: pixi run -e dev coverage xml
+    - name: Send coverage to Coveralls (parallel)
+      uses: coverallsapp/github-action@5cbfd81b66ca5d10c19b062c04de0199c215fb6e # v2.3.7
+      with:
+        fail-on-error: false
+        debug: true
+        parallel: true
+        format: cobertura
+        flag-name: ${{ join(matrix.*, ' - ') }}
+
+  finish:
+    needs: test
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    steps:
+      - name: Close parallel build
+        uses: coverallsapp/github-action@5cbfd81b66ca5d10c19b062c04de0199c215fb6e # v2.3.7
+        with:
+          fail-on-error: false
+          parallel-finished: true

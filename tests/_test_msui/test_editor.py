@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2020 Vaibhav Mehra <veb7vmehra@gmail.com>
-    :copyright: Copyright 2020-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2020-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,10 +27,9 @@
 import pytest
 import mock
 import os
-import fs
 from PyQt5 import QtWidgets
 from mslib.msui import editor
-from tests.constants import ROOT_DIR
+from tests import constants
 
 
 @pytest.mark.skip("To be done for new UI")
@@ -38,7 +37,7 @@ class Test_Editor:
     sample_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "msui_settings.json"))
     sample_file = sample_file.replace('\\', '/')
 
-    save_file_name = fs.path.join(ROOT_DIR, "testeditor_save.json")
+    save_file_name = constants.MSUI_CONFIG_PATH / "testeditor_save.json"
 
     @pytest.fixture(autouse=True)
     def setup(self, qtbot):
@@ -56,9 +55,9 @@ class Test_Editor:
         self.window.file_open()
         assert "location" in self.window.file_content
 
+    @pytest.mark.skip("needs to be run isolated! With the restart of MSS the config for all other tests is changed")
     @mock.patch("mslib.msui.editor.get_open_filename", return_value=sample_file)
     def test_file_save_and_quit(self, mockfile):
-        pytest.skip('needs to be run isolated! With the restart of MSS the config for all other tests is changed')
         self.window.file_open()
         self.window.path = self.save_file_name
         self.window.editor.setPlainText(self.window.editor.toPlainText() + " ")

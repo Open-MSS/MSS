@@ -7,7 +7,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2021 May Bär
-    :copyright: Copyright 2021-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2021-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,6 +36,8 @@ from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
 from mslib.mswms.mpl_lsec import AbstractLinearSectionStyle
 
 STATIC_LOCATION = ""
+SCRIPT_NAME = os.environ.get('SCRIPT_NAME', '/')
+
 try:
     import mswms_settings
     if hasattr(mswms_settings, "_gallerypath"):
@@ -51,7 +53,7 @@ DOCS_LOCATION = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "
 code_header = """\"\"\"
     This file is part of MSS.
 
-    :copyright: Copyright 2021-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2021-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -419,7 +421,6 @@ def write_code_pages(path, sphinx=False, url_prefix=None):
     """
     Writes the .html, .rst or .md files containing the code examples for the plots
     """
-    from mslib.index import SCRIPT_NAME
     for layer in plot_htmls:
         code_path = f"code/{layer}.html" if sphinx \
             else f"{url_prefix if url_prefix else ''}{SCRIPT_NAME}mss/code/{layer}.md"
@@ -682,8 +683,6 @@ def add_image(path, plot, plot_object, generate_code=False, sphinx=False, url_pr
         plot_types = plots.keys()
 
     global end
-    # Import here due to some circular import issue if imported too soon
-    from mslib.index import SCRIPT_NAME
 
     if not os.path.exists(path) and not sphinx:
         os.mkdir(path)

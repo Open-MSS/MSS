@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2022 Jatin Jain
-    :copyright: Copyright 2022-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2022-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -738,8 +738,6 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             else:
                 self.cbLineStyle.setCurrentText("Solid")
 
-            print(wp_model != self.active_flight_track,
-                  self.list_flighttrack.currentItem().checkState() != QtCore.Qt.Checked)
             self.enable_disable_line_style_buttons(
                 wp_model != self.active_flight_track and self.list_flighttrack.currentItem().
                 checkState() == QtCore.Qt.Checked)
@@ -803,7 +801,7 @@ class MultipleFlightpathOperations:
             "skip_archived": skip_archived
         }
         url = urljoin(self.mscolab_server_url, "operations")
-        r = requests.get(url, data=data, timeout=(2, 10))
+        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         if r.text != "False":
             _json = json.loads(r.text)
             operations = _json["operations"]
@@ -819,7 +817,7 @@ class MultipleFlightpathOperations:
                 "op_id": op_id
             }
             url = urljoin(self.mscolab_server_url, "get_operation_by_id")
-            r = requests.get(url, data=data, timeout=(2, 10))
+            r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if r.text != "False":
                 xml_content = json.loads(r.text)["content"]
                 return xml_content

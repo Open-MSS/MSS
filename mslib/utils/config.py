@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,8 +30,8 @@ from PyQt5 import QtCore
 import copy
 import json
 import logging
-import fs
 import os
+from pathlib import Path
 
 from mslib.utils import FatalUserError
 from mslib.msui import constants
@@ -59,11 +59,11 @@ class MSUIDefaultConfig:
     # this skips the verification of the user token on each mscolab request
     mscolab_skip_verify_user_token = True
 
-    # Default for general filepicker. Pick "default", "qt", or "fs"
+    # Default for general filepicker. Pick "default", "qt"
     filepicker_default = "default"
 
     # dir where msui output files are stored
-    data_dir = "~/mssdata"
+    data_dir = str(Path.home() / "mssdata")
 
     # layout of different views, with immutable they can't resized
     layout = {"topview": [963, 702],
@@ -309,6 +309,8 @@ class MSUIDefaultConfig:
 
     # Dictionary options with fixed key/value pairs
     fixed_dict_options = ["layout", "wms_prefetch", "topview", "sideview", "linearview"]
+    # List options with fixed length
+    fixed_list_options = ["MSCOLAB_timeout", ]
 
     # Fixed key/value pair options
     key_value_options = [
@@ -366,7 +368,7 @@ class MSUIDefaultConfig:
         "new_flighttrack_template": ["new-location"],
         "gravatar_ids": ["example@email.com"],
         "WMS_preload": ["https://wms-preload-url.com"],
-        "MSCOLAB_timeout": [[2, 10]],
+        "MSCOLAB_timeout": [0, 0],
         "automated_plotting_flights": [["", "", "", "", "", ""]],
         "automated_plotting_hsecs": [["http://www.your-wms-server.de", "", "", ""]],
         "automated_plotting_vsecs": [["http://www.your-wms-server.de", "", "", ""]],
@@ -374,7 +376,7 @@ class MSUIDefaultConfig:
     }
 
     config_descriptions = {
-        "filepicker_default": "Defines the type of file-picker to be used. Can be 'default', 'qt', or 'fs'",
+        "filepicker_default": "Defines the type of file-picker to be used. Can be 'default', 'qt'",
         "data_dir": "Directory where MSUI output files are stored",
         "predefined_map_sections": "Dictionary containing predefined map sections with their settings",
         "num_interpolation_points": "Number of interpolation points used for vertical cross section requests",
@@ -418,6 +420,7 @@ for key in [
     "__dict__",
     "__weakref__",
     "fixed_dict_options",
+    "fixed_list_options",
     "dict_option_structure",
     "list_option_structure",
     "key_value_options",
@@ -440,25 +443,23 @@ def read_config_file(path=constants.MSUI_SETTINGS):
     Note:
         sole purpose of the path argument is to be able to test with example config files
     """
-    path = path.replace("\\", "/")
-    dir_name, file_name = fs.path.split(path)
-    json_file_data = {}
-    with fs.open_fs(dir_name) as _fs:
-        if _fs.exists(file_name):
-            file_content = _fs.readtext(file_name)
-            try:
-                json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
-            except json.JSONDecodeError as e:
-                logging.error("Error while loading json file %s", e)
-                error_message = f"Unexpected error while loading config\n{e}"
-                raise FatalUserError(error_message)
-            except ValueError as e:
-                logging.error("Error while loading json file %s", e)
-                error_message = f"Invalid keys detected in config\n{e}"
-                raise FatalUserError(error_message)
-        else:
-            error_message = f"MSS config File '{path}' not found"
-            raise FileNotFoundError(error_message)
+    path = Path(path).resolve()
+    if path.exists():
+        json_file_data = {}
+        file_content = path.read_text()
+        try:
+            json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
+        except json.JSONDecodeError as e:
+            logging.error("Error while loading json file %s", e)
+            error_message = f"Unexpected error while loading config\n{e}"
+            raise FatalUserError(error_message)
+        except ValueError as e:
+            logging.error("Error while loading json file %s", e)
+            error_message = f"Invalid keys detected in config\n{e}"
+            raise FatalUserError(error_message)
+    else:
+        error_message = f"MSS config File '{path}' not found"
+        raise FileNotFoundError(error_message)
 
     global user_options
     if json_file_data:
@@ -480,33 +481,31 @@ def modify_config_file(data, path=constants.MSUI_SETTINGS):
     Note:
         sole purpose of the path argument is to be able to test with example config files
     """
-    path = path.replace("\\", "/")
-    dir_name, file_name = fs.path.split(path)
-    json_file_data = {}
-    with fs.open_fs(dir_name) as _fs:
-        if _fs.exists(file_name):
-            try:
-                file_content = _fs.readtext(file_name)
-                json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
-                json_file_data_copy = copy.deepcopy(json_file_data)
-                for key in data:
-                    if key not in json_file_data:
-                        json_file_data_copy[key] = config_loader(dataset=key, default=True)
-                modified_data = merge_dict(json_file_data_copy, data)
-                logging.debug("Merged default and user settings")
-                _fs.writetext(file_name, json.dumps(modified_data, indent=4))
-                read_config_file()
-            except json.JSONDecodeError as e:
-                logging.error("Error while loading json file %s", e)
-                error_message = f"Unexpected error while loading config\n{e}"
-                raise FatalUserError(error_message)
-            except ValueError as e:
-                logging.error("Error while loading json file %s", e)
-                error_message = f"Invalid keys detected in config\n{e}"
-                raise FatalUserError(error_message)
-        else:
-            error_message = f"MSS config File '{path}' not found"
-            raise FileNotFoundError(error_message)
+    path = Path(path)
+    if path.exists():
+        json_file_data = {}
+        try:
+            file_content = path.read_text()
+            json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
+            json_file_data_copy = copy.deepcopy(json_file_data)
+            for key in data:
+                if key not in json_file_data:
+                    json_file_data_copy[key] = config_loader(dataset=key, default=True)
+            modified_data = merge_dict(json_file_data_copy, data)
+            logging.debug("Merged default and user settings")
+            path.write_text(json.dumps(modified_data, indent=4))
+            read_config_file()
+        except json.JSONDecodeError as e:
+            logging.error("Error while loading json file %s", e)
+            error_message = f"Unexpected error while loading config\n{e}"
+            raise FatalUserError(error_message)
+        except ValueError as e:
+            logging.error("Error while loading json file %s", e)
+            error_message = f"Invalid keys detected in config\n{e}"
+            raise FatalUserError(error_message)
+    else:
+        error_message = f"MSS config File '{path}' not found"
+        raise FileNotFoundError(error_message)
 
 
 def config_loader(dataset=None, default=False):
@@ -580,8 +579,8 @@ def load_settings_qsettings(tag, default_settings=None):
     try:
         settings = q_settings.value(tag)
     except Exception as ex:
-        logging.error("Problems reloading stored %s settings (%s: %s). Switching to default",
-                      tag, type(ex), ex)
+        logging.warning("Problems reloading stored %s settings (%s: %s). Switching to default",
+                        tag, type(ex), ex)
     if isinstance(settings, dict):
         default_settings.update(settings)
     return default_settings
@@ -597,7 +596,7 @@ def merge_dict(existing_dict, new_dict):
     new_dict -- Dict with new values
     """
     # Check if dictionary options with fixed key/value pairs match data types from default
-    for key in MSUIDefaultConfig.fixed_dict_options:
+    for key in MSUIDefaultConfig.fixed_dict_options + MSUIDefaultConfig.fixed_list_options:
         if key in new_dict:
             existing_dict[key] = compare_data(
                 existing_dict[key], new_dict[key]
@@ -615,6 +614,8 @@ def merge_dict(existing_dict, new_dict):
             for option_key in new_dict[key]:
                 for dos_key_key in dos[key]:
                     data, match = compare_data(dos[key][dos_key_key], new_dict[key][option_key])
+                    if key in MSUIDefaultConfig.fixed_list_options:
+                        match = len(dos[key][dos_key_key]) == len(new_dict[key][option_key])
                     if match:
                         temp_data[option_key] = new_dict[key][option_key]
                         break
@@ -626,14 +627,15 @@ def merge_dict(existing_dict, new_dict):
     for key in los:
         if key in new_dict:
             temp_data = []
-            for i in range(len(new_dict[key])):
-                for los_key_item in los[key]:
-                    data, match = compare_data(los_key_item, new_dict[key][i])
-                    if match:
-                        temp_data.append(data)
-                        break
-            if temp_data != []:
-                existing_dict[key] = temp_data
+            if key not in MSUIDefaultConfig.fixed_list_options:
+                for i in range(len(new_dict[key])):
+                    for los_key_item in los[key]:
+                        data, match = compare_data(los_key_item, new_dict[key][i])
+                        if match:
+                            temp_data.append(data)
+                            break
+                if temp_data != []:
+                    existing_dict[key] = temp_data
 
     # Check if options with fixed key/value pair structure match data types from default
     for key in MSUIDefaultConfig.key_value_options:

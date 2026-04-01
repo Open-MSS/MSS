@@ -2,15 +2,15 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mswms.demodata
-    ~~~~~~~~~~~~~~~~~~~~
+    mslib.mswms.seed
+    ~~~~~~~~~~~~~~~~
 
     creates netCDF test data files and also a mswms_settings for accessing this data
 
     This file is part of MSS.
 
     :copyright: Copyright 2017 Jens-Uwe Grooss, Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2017-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,13 +26,11 @@
     limitations under the License.
 """
 
-import argparse
+
 import os
-import sys
+
 import netCDF4 as nc
 import numpy as np
-import fs
-from mslib import __version__
 
 
 _SURFACE_TEXT = """\
@@ -840,7 +838,7 @@ class DataFiles:
 
     dimensions = {
         "latitude": ("lat", "degrees_north", ""),
-        "longitude": ("lon", "degrees_north", ""),
+        "longitude": ("lon", "degrees_east", ""),
         "hybrid": ("hybrid", None, None),
         "atmosphere_pressure_coordinate": ("isobaric", "hPa", "down"),
         "atmosphere_potential_temperature_coordinate": ("isentropic", "K", ""),
@@ -849,12 +847,11 @@ class DataFiles:
         "time": ("time", "hours since 2012-10-17T12:00:00.000Z", "")
     }
 
-    def __init__(self, data_fs=None, server_config_fs=None):
-        self.data_fs = data_fs
-        self.server_config_fs = server_config_fs
+    def __init__(self, mswms_data_dir=None, mswms_server_config_dir=None):
+        self.data_dir = mswms_data_dir
+        self.server_config_dir = mswms_server_config_dir
         self.server_config_file = "mswms_settings.py"
         self.server_auth_config_file = "mswms_auth.py"
-        # define file dimension / geographical  range
 
     def create_server_config(self, detailed_information=False):
         simple_auth_config = '''# -*- coding: utf-8 -*-
@@ -870,7 +867,7 @@ class DataFiles:
     :copyright: 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: 2011-2014 Marc Rautenhaus
     :copyright: Copyright 2017 Jens-Uwe Grooss, Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2017-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -910,7 +907,7 @@ allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
     :copyright: 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: 2011-2014 Marc Rautenhaus
     :copyright: Copyright 2017 Jens-Uwe Grooss, Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2017-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -986,8 +983,8 @@ import mslib.mswms
 #base_dir = os.path.abspath(os.path.dirname(mslib.mswms.__file__))
 #xml_template_location = os.path.join(base_dir, "xml_templates")
 
-_gallerypath = r"{os.path.abspath(os.path.join(self.data_fs.root_path, "..", "gallery"))}"
-_datapath = r"{self.data_fs.root_path}"
+_gallerypath = r"{os.path.abspath(os.path.join(self.data_dir, "..", "gallery"))}"
+_datapath = r"{self.data_dir}"
 
 data = {{
     "ecmwf_EUR_LL015": mslib.mswms.dataaccess.DefaultDataAccess(_datapath, "EUR_LL015"),
@@ -1071,22 +1068,21 @@ if mpl_lsec_styles is not None:
             simple_server_config = '''"""
 simple server config for demodata
 """
-from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
+from mslib.mswms.seed import (data, epsg_to_mpl_basemap_table,
                                   register_horizontal_layers, register_vertical_layers, register_linear_layers)
 '''
 
-        if not self.server_config_fs.exists(self.server_config_file):
-            fid = self.server_config_fs.open(self.server_config_file, 'w')
-            fid.write(simple_server_config)
-            fid.close()
+        mswms_server_config_file = self.server_config_dir / self.server_config_file
+        if not mswms_server_config_file.exists():
+            with mswms_server_config_file.open("w") as fp:
+                fp.write(simple_server_config)
         else:
             print(f'''
 /!\\ existing server config: "{self.server_config_file}" for demodata not overwritten!
             ''')
-        if not self.server_config_fs.exists(self.server_auth_config_file):
-            fid = self.server_config_fs.open(self.server_auth_config_file, 'w')
-            fid.write(simple_auth_config)
-            fid.close()
+        mswms_auth_config_file = self.server_config_dir / self.server_auth_config_file
+        if not mswms_auth_config_file.exists():
+            mswms_auth_config_file.write_text(simple_auth_config)
         else:
             print(f'''
 /!\\ existing server auth config: "{self.server_auth_config_file}" for demodata not overwritten!
@@ -1103,9 +1099,7 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
         :param variables: list of standard_names of variables to write into file
         """
         # ToDo nc.Dataset needs fileobject like access
-
-        filename_out = os.path.join(
-            self.data_fs.root_path, f"20121017_12_ecmwf_forecast.{label}.EUR_LL015.036.{leveltype}.nc")
+        filename_out = self.data_dir / f"20121017_12_ecmwf_forecast.{label}.EUR_LL015.036.{leveltype}.nc"
         ecmwf = nc.Dataset(filename_out, 'w', format='NETCDF4_CLASSIC')
 
         for dim, values in dimvals:
@@ -1227,35 +1221,3 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
             ["vertically_integrated_probability_of_wcb_occurrence"])
         self.generate_file(
             None, "SEA", "sfc", (("time", times), ("latitude", lats), ("longitude", lons)), ["solar_elevation_angle"])
-
-
-def main():
-    """
-    creates various test data files and also the server configuration
-    """
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
-    parser.add_argument("-s", "--seed", help="creates demodata for the mswms server",
-                        action="store_true", default=False)
-    args = parser.parse_args()
-    if args.version:
-        print("***********************************************************************")
-        print("\n            Mission Support System (MSS) \n")
-        print("***********************************************************************")
-        print("Documentation: http://mss.rtfd.io")
-        print("Version:", __version__)
-        sys.exit()
-    if args.seed:
-        root_fs = fs.open_fs("~/")
-        if not root_fs.exists("mss/testdata"):
-            root_fs.makedirs("mss/testdata")
-
-        examples = DataFiles(data_fs=fs.open_fs("~/mss/testdata"),
-                             server_config_fs=fs.open_fs("~/mss"))
-        examples.create_server_config(detailed_information=True)
-        examples.create_data()
-        print("\nTo use this setup you need the mswms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")
-
-
-if __name__ == '__main__':
-    main()

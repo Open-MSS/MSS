@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2026 by the MSS team, see AUTHORS.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -23,11 +23,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import fs
-import os
-import logging
-
-from mslib.mscolab.conf import mscolab_settings
+from pathlib import Path
+from mslib.mscolab.app import APP
 
 
 def get_recent_op_id(fm, user):
@@ -67,21 +64,7 @@ def get_message_dict(message):
     }
 
 
-def os_fs_create_dir(directory_path):
-    if '://' in directory_path:
-        try:
-            _ = fs.open_fs(directory_path)
-        except fs.errors.CreateFailed:
-            logging.error('Make sure that the FS url "%s" exists', directory_path)
-        except fs.opener.errors.UnsupportedProtocol:
-            logging.error('FS url "%s" not supported', directory_path)
-    else:
-        _dir = os.path.expanduser(directory_path)
-        if not os.path.exists(_dir):
-            os.makedirs(_dir)
-
-
 def create_files():
-    os_fs_create_dir(mscolab_settings.OPERATIONS_DATA)
-    os_fs_create_dir(mscolab_settings.UPLOAD_FOLDER)
-    os_fs_create_dir(mscolab_settings.SSO_DIR)
+    Path(APP.config['OPERATIONS_DATA']).mkdir(parents=True, exist_ok=True)
+    Path(APP.config['UPLOAD_FOLDER']).mkdir(parents=True, exist_ok=True)
+    Path(APP.config['SSO_DIR']).mkdir(parents=True, exist_ok=True)

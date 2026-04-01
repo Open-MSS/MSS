@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2021 May Bär
-    :copyright: Copyright 2021-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2021-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -796,6 +796,10 @@ class Layer(QtWidgets.QTreeWidgetItem):
         """
         Persistently saves the currently selected style of the layer, if it is not the first one
         """
+        if not self.styles:
+            self.style = None
+            return
+
         if self.style != self.styles[0]:
             self.parent.settings["saved_styles"][str(self)] = self.style
         else:

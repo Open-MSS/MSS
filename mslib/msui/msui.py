@@ -13,7 +13,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,7 +34,6 @@ import logging
 import os
 import platform
 import sys
-import fs
 
 from packaging import version
 from mslib import __version__
@@ -77,13 +76,10 @@ def main(tutorial_mode=False):
     logging.info("MSS Version: %s", __version__)
     logging.info("Python Version: %s", sys.version)
     logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
-
-    try:
-        read_config_file()
-    except (FileNotFoundError, fs.errors.CreateFailed, fs.errors.FileExpected) as ex:
-        message = f'\n\nFix the setup of your "MSUI_SETTINGS" configuration.\n{ex}'
-        logging.error(message)
-        sys.exit()
+    logging.info("Log file location: %s", args.logfile)
+    logging.info("Started from : %s", os.getcwd())
+    logging.info("Executable location: %s", os.path.abspath(sys.argv[0]))
+    logging.info("Command line arguments: %s", sys.argv)
 
     application = QtWidgets.QApplication(sys.argv)
     mainwindow = None

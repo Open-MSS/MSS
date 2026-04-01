@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2017-2018 Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2017-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,6 @@ import platform
 import sys
 import traceback
 
-from fslib.fs_filepicker import getSaveFileName, getOpenFileName
 from PyQt5 import QtCore, QtWidgets, QtGui  # noqa
 
 from mslib.utils.config import config_loader
@@ -67,19 +66,14 @@ def get_save_filename_qt(*args):
 def get_pickertype(pickertype=None):
     if pickertype is None:
         return config_loader(dataset="filepicker_default")
-    if pickertype not in ["qt", "default", "fs"]:
+    if pickertype not in ["qt", "default"]:
         raise FatalUserError(f"Unknown file picker type '{pickertype}'.")
     return pickertype
 
 
 def get_open_filename(parent, title, dirname, filt, pickertype=None):
     pickertype = get_pickertype(pickertype)
-    if pickertype == "fs":
-        # fs filepicker takes file filters as a list
-        if not isinstance(filt, list):
-            filt = filt.split(';;')
-        filename = getOpenFileName(parent, dirname, filt, title="Import Flight Track")
-    elif pickertype in ["qt", "default"]:
+    if pickertype in ["qt", "default"]:
         # qt filepicker takes file filters separated by ';;'
         filename = get_open_filename_qt(parent, title, os.path.expanduser(dirname), filt)
     else:
@@ -108,11 +102,7 @@ def get_open_filenames(parent, title, dirname, filt, pickertype=None):
 
 def get_save_filename(parent, title, filename, filt, pickertype=None):
     pickertype = get_pickertype(pickertype)
-    if pickertype == "fs":
-        dirname, filename = os.path.split(filename)
-        filename = getSaveFileName(
-            parent, dirname, filt, title=title, default_filename=filename, show_save_action=True)
-    elif pickertype in ["qt", "default"]:
+    if pickertype in ["qt", "default"]:
         filename = get_save_filename_qt(parent, title, os.path.expanduser(filename), filt)
     else:
         raise FatalUserError(f"Unknown file picker type '{pickertype}'.")

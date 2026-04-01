@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -126,6 +126,7 @@ def omega_to_w(omega, p, t):
 
 # Values according to the 1976 U.S. Standard atmosphere [NOAA1976]_.
 # List of tuples (height, temperature, pressure, temperature gradient)
+# Added a value for 100km roughly based on CIRA
 _STANDARD_ATMOSPHERE = [
     (0 * units.km, 288.15 * units.K, 101325 * units.Pa, 0.0065 * units.K / units.m),
     (11 * units.km, 216.65 * units.K, 22632.1 * units.Pa, 0 * units.K / units.m),
@@ -133,7 +134,9 @@ _STANDARD_ATMOSPHERE = [
     (32 * units.km, 228.65 * units.K, 868.019 * units.Pa, -0.0028 * units.K / units.m),
     (47 * units.km, 270.65 * units.K, 110.906 * units.Pa, 0 * units.K / units.m),
     (51 * units.km, 270.65 * units.K, 66.9389 * units.Pa, 0.0028 * units.K / units.m),
-    (71 * units.km, 214.65 * units.K, 3.95642 * units.Pa, np.nan * units.K / units.m)
+    (71 * units.km, 214.65 * units.K, 3.95642 * units.Pa, 0.002 * units.K / units.m),
+    (84.852 * units.km, 186.95 * units.K, 0.3734 * units.Pa, 0 * units.K / units.m),
+    (100 * units.km, 186.95 * units.K, 0.0238725468 * units.Pa, np.nan * units.K / units.m),
 ]
 _HEIGHT, _TEMPERATURE, _PRESSURE, _TEMPERATURE_GRADIENT = 0, 1, 2, 3
 
@@ -183,8 +186,8 @@ def flightlevel2pressure(height):
             p[indices] = p0 * np.exp(-g * (height[indices] - z0) / (Rd * t0))
 
     if np.isnan(p).any():
-        raise ValueError("flight level to pressure conversion not "
-                         "implemented for z > 71km")
+        raise ValueError("flight level to pressure conversion not implemented for z >= 100km " +
+                         str(np.max(height)))
 
     return p if is_array else p[0]
 
@@ -235,8 +238,8 @@ def pressure2flightlevel(pressure):
             z[indices] = z0 - (Rd * t0) / g * np.log(pressure[indices] / p0)
 
     if np.isnan(z).any():
-        raise ValueError("flight level to pressure conversion not "
-                         "implemented for z > 71km")
+        raise ValueError("pressure to flight level conversion not implemented for p <= 0.0238725468 Pa " +
+                         str(np.min(pressure)))
 
     return z if is_array else z[0]
 
@@ -261,8 +264,8 @@ def isa_temperature(height):
         if ((i == 0) and (height < z0)) or (z0 <= height < z1):
             return t0 - gamma * (height - z0)
 
-    raise ValueError("ISA temperature from flight level not "
-                     "implemented for z > 71km")
+    raise ValueError("ISA temperature from flight level not implemented for z >= 100 km " +
+                     str(np.max(height)))
 
 
 def convert_pressure_to_vertical_axis_measure(vertical_axis, pressure):

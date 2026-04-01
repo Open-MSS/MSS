@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2020 Reimar Bauer
-    :copyright: Copyright 2020-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2020-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,11 +25,11 @@
     limitations under the License.
 """
 import pytest
-import fs
+from pathlib import Path
 from packaging import version
 
 from mslib.utils import auth
-from mslib.version import __version__
+from mslib import __version__
 from mslib.msui.constants import MSUI_SETTINGS
 from tests.utils import create_msui_settings_file
 
@@ -74,12 +74,11 @@ class TestMigration:
             new_version = JsonConversion()
             # converting and storing
             new_version.change_parameters()
-            filename = MSUI_SETTINGS.replace('\\', '/')
-            dir_name, file_name = fs.path.split(filename)
+            dir_name = Path(MSUI_SETTINGS).parent
+            file_name = Path(MSUI_SETTINGS).name
             # check that we have a backup file
-            bak_file = f"{file_name}.bak"
-            _fs = fs.open_fs(dir_name)
-            assert _fs.exists(bak_file)
+            bak_file = dir_name / f"{file_name}.bak"
+            assert bak_file.exists()
 
             # using current configuration
             from mslib.utils.config import read_config_file, config_loader
@@ -141,12 +140,11 @@ class TestMigration:
             new_version = JsonConversion()
             # converting and storing
             new_version.change_parameters()
-            filename = MSUI_SETTINGS.replace('\\', '/')
-            dir_name, file_name = fs.path.split(filename)
+            dir_name = Path(MSUI_SETTINGS).parent
+            file_name = Path(MSUI_SETTINGS).name
             # check that we have a backup file
-            bak_file = f"{file_name}.bak"
-            _fs = fs.open_fs(dir_name)
-            assert _fs.exists(bak_file)
+            bak_file = dir_name / f"{file_name}.bak"
+            assert bak_file.exists()
 
             # using current configuration
             from mslib.utils.config import read_config_file, config_loader

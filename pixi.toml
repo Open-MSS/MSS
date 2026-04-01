@@ -1,4 +1,4 @@
-[project]
+[workspace]
 name = "MSS"
 channels = ["conda-forge"]
 platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
@@ -15,7 +15,7 @@ chameleon = "*"
 defusedxml = "*"
 email_validator = "*"
 execnet = "*"
-fastkml = ">=0.11"
+fastkml = ">=1.1.0,<2"
 flask = ">=2.3.2"
 flask-cors = "*"
 flask-httpauth = "*"
@@ -25,7 +25,6 @@ flask-migrate = "*"
 flask-socketio = ">=5.1.0"
 flask-sqlalchemy = ">=3.0.0"
 flask-wtf = "*"
-fs_filepicker = "*"
 git = "*"
 gitpython = "*"
 gpxpy = ">=1.4.2"
@@ -33,6 +32,7 @@ hdf4 = "*"
 isodate = "*"
 itsdangerous = "*"
 keyring = "*"
+libgfortran5 = ">=14"
 libtiff = "*"
 lxml = "*"
 markdown = "*"
@@ -40,14 +40,13 @@ matplotlib = ">=3.5.3"
 metpy = "*"
 multidict = "*"
 netcdf4 = "*"
-numpy = ">=2"
+numpy = ">=2.2.4"
 owslib = ">=0.24"
 passlib = "*"
 pillow = "*"
 pint = "*"
 psycopg2 = "*"
 pycountry = "*"
-pygeoif = "<1.0.0"
 pyjwt = "*"
 pymysql = ">=0.9.3"
 pyqt = ">=5.15.0"
@@ -59,17 +58,17 @@ python-socketio = ">=5"
 qt = ">=5.15.0"
 requests = ">=2.31.0"
 scipy = "*"
-shapely = ">=2.0.0"
 skyfield = ">=1.12"
-skyfield-data = ">=6"
+skyfield-data = ">=7"
 tk = "*"
 unicodecsv = "*"
 validate_email = "*"
 websocket-client = "*"
 werkzeug = ">=2.2.3, <3.0.0"
-xstatic = "*"
+xstatic = "<2.0.0"
 xstatic-bootstrap = "*"
 xstatic-jquery = "*"
+humanfriendly = ">=10.0,<11"
 
 [target.linux-64.dependencies]
 dbus-python = "*"
@@ -95,7 +94,6 @@ dnspython = ">=2.0.0, <2.3.0"
 eventlet = ">0.30.2"
 flake8 = "*"
 flake8-builtins = "*"
-gitpython = "*"
 gsl = "==2.7.0"
 mock = "*"
 py = "*"
@@ -105,12 +103,9 @@ pytest-cov = "*"
 pytest-qt = "*"
 pytest-randomly = "*"
 pytest-xdist = "*"
-sphinx = "*"
-sphinx_rtd_theme = "*"
-sphinxcontrib-video = "*"
 
 [feature.tutorials]
-platforms = ["linux-64"]
+platforms = ["win-64", "linux-64", "osx-64"]
 
 [feature.tutorials.dependencies]
 mouseinfo = "*"
@@ -119,7 +114,16 @@ pyautogui = "*"
 pyscreeze = "*"
 python-mss = "*"
 
+[feature.docs]
+platforms = ["win-64", "linux-64", "osx-64"]
+
+[feature.docs.dependencies]
+sphinx = "*"
+sphinx_rtd_theme = "*"
+sphinxcontrib-video = ">=0.2.1"
+
 [environments]
 addons = ["addons"]
-dev = ["dev"]
+dev = ["dev", "docs"]
 tutorials = ["tutorials"]
+docs = ["docs"]

@@ -18,7 +18,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,8 +37,8 @@
 import datetime
 import logging
 import os
+from pathlib import Path
 
-import fs
 import xml.dom.minidom
 import defusedxml.minidom
 from defusedxml import DefusedXmlException
@@ -52,12 +52,9 @@ from mslib.utils.find_location import find_location
 from mslib.utils import thermolib
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
-from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.qt import variant_to_string, variant_to_float
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 
-from mslib.utils import writexml
-xml.dom.minidom.Element.writexml = writexml  # nosec, we take care of writing correct XML
 # Constants for identifying the table columns when the WaypointsTableModel is
 # used with a QTableWidget.
 LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE = list(range(5))
@@ -183,7 +180,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     # Signal emitted when a waypoint is moved, inserted or deleted
     changeMessageSignal = QtCore.pyqtSignal(str)
 
-    def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False, data_dir=mss_default.mss_dir,
+    def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False,
+                 data_dir=config_loader(dataset="mss_dir"),
                  xml_content=None):
         super().__init__()
         self.name = name  # a name for this flight track
@@ -213,7 +211,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         """
         Load settings from the file self.settingsfile.
         """
-        self.performance_settings = load_settings_qsettings(self.settings_tag, DEFAULT_PERFORMANCE)
+        settings = load_settings_qsettings(self.settings_tag, DEFAULT_PERFORMANCE)
+        # Ensure we have a dictionary. If QSettings returns a string/garbage, reset to default.
+        if not isinstance(settings, dict):
+            settings = DEFAULT_PERFORMANCE
+        self.performance_settings = settings
 
     def save_settings(self):
         """
@@ -437,7 +439,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         return False
 
     def insertRows(self, position, rows=1, index=QtCore.QModelIndex(),
-                   waypoints=None, hexagonCreated=False):
+                   waypoints=None, hexagonCreated=False, data_copied=False):
         """
         Insert waypoint; overrides the corresponding QAbstractTableModel
         method.
@@ -447,7 +449,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         assert len(waypoints) == rows, (waypoints, rows)
 
-        savedChangeMessage = "Hexagon created." if hexagonCreated else ("Inserted a new waypoint.")
+        savedChangeMessage = "Inserted a new waypoint."
+        if hexagonCreated:
+            savedChangeMessage = "Hexagon created."
+        elif data_copied:
+            savedChangeMessage = "Imported from another flight track"
         self.changeMessageSignal.emit(savedChangeMessage)
 
         self.beginInsertRows(QtCore.QModelIndex(), position,
@@ -609,7 +615,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
     def replace_waypoints(self, new_waypoints):
         self.waypoints = []
-        self.insertRows(0, rows=len(new_waypoints), waypoints=new_waypoints)
+        self.insertRows(0, rows=len(new_waypoints), waypoints=new_waypoints, data_copied=True)
 
     def save_to_ftml(self, filename=None):
         """
@@ -624,13 +630,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             raise ValueError("filename to save flight track cannot be None or empty")
 
         self.filename = filename
-        self.name = fs.path.basename(filename.replace(".ftml", "").strip())
         doc = self.get_xml_doc()
-        dirname, name = fs.path.split(self.filename)
-        file_dir = fs.open_fs(dirname)
-        with file_dir.open(name, 'w') as file_object:
+        with open(filename, "w") as file_object:
             doc.writexml(file_object, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
-        file_dir.close()
+        self.name = os.path.basename(self.filename).replace(".ftml", "").strip()
 
     def get_xml_doc(self):
         doc = xml.dom.minidom.Document()  # nosec, we take care of writing correct XML
@@ -660,10 +663,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         """
         Load a flight track from an XML file at <filename>.
         """
-        _dirname, _name = os.path.split(filename)
-        _fs = fs.open_fs(_dirname)
-        xml_content = _fs.readtext(_name)
-        name = os.path.basename(filename.replace(".ftml", "").strip())
+        xml_content = Path(filename).read_text()
+        name = Path(filename).stem.replace(".ftml", "").strip()
         self.load_from_xml_data(xml_content, name)
 
     def load_from_xml_data(self, xml_content, name="Flight track"):

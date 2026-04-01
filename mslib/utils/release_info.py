@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2024 Reimar Bauer
-    :copyright: Copyright 2024-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2024-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,7 +29,7 @@ import datetime
 import logging
 import requests
 
-from mslib.version import __version__ as installed_version
+from mslib import __version__ as installed_version
 
 
 def get_latest_release():

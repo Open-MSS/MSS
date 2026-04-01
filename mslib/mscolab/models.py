@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -89,8 +89,8 @@ class User(db.Model):
 
     def generate_auth_token(self, expiration=None):
         # Importing conf here to avoid loading settings on opening chat window
-        from mslib.mscolab.conf import mscolab_settings
-        expiration = mscolab_settings.__dict__.get('EXPIRATION', expiration)
+        from mslib.mscolab.app import APP
+        expiration = APP.__dict__.get('EXPIRATION', expiration)
         if expiration is None:
             expiration = 864000
             token = jwt.encode(
@@ -98,7 +98,7 @@ class User(db.Model):
                     "id": self.id,
                     "exp": datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=expiration)
                 },
-                mscolab_settings.SECRET_KEY,
+                APP.config['SECRET_KEY'],
                 algorithm="HS256"
             )
             return token

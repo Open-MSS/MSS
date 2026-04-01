@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,7 @@ import mock
 import pytest
 
 from PyQt5 import QtCore, QtTest, QtWidgets
-from tests.constants import ROOT_DIR
+from tests import constants
 from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
@@ -58,7 +58,7 @@ class Test_MscolabAdminWindow:
         assert add_operation("tokyo", "test tokyo")
         assert add_user_to_operation(path="tokyo", emailid=self.userdata[0], access_level="creator")
 
-        self.window = msui.MSUIMainWindow(local_operations_data=ROOT_DIR)
+        self.window = msui.MSUIMainWindow(local_operations_data=constants.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()
         self.window.show()
         # connect and login to mscolab

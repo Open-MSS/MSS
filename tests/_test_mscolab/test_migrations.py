@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2024 Matthias Riße
-    :copyright: Copyright 2024-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2024-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,9 +30,8 @@ import flask
 import flask_migrate
 import sqlalchemy
 import mslib.mscolab.migrations
-import mslib.index
 from mslib.mscolab.app import db, migrate
-from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.app import APP
 
 
 def test_migrations(mscolab_app):
@@ -98,7 +97,7 @@ def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
         del expected_data["alembic_version"]  # the alembic_version table will be different, but that is expected
 
     try:
-        mscolab_settings.SQLALCHEMY_DB_URI_TO_MIGRATE_FROM = app.config["SQLALCHEMY_DATABASE_URI"]
+        APP.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'] = app.config["SQLALCHEMY_DATABASE_URI"]
         with mscolab_app.app_context():
             db.drop_all()
             db.session.execute(sqlalchemy.text("DROP TABLE alembic_version"))
@@ -135,4 +134,4 @@ def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
             flask_migrate.upgrade(directory=migrations_path)
             assert mslib.mscolab.seed.add_user('test123@test456', 'test123', 'test456', 'User test789')
     finally:
-        mscolab_settings.SQLALCHEMY_DB_URI_TO_MIGRATE_FROM = None
+        APP.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'] = None

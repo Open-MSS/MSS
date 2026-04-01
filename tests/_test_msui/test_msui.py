@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2017-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,17 +28,19 @@
 
 import mock
 import os
-import fs
+import sys
 import argparse
 import pytest
+from pathlib import Path
 from urllib.request import urlopen
 from PyQt5 import QtWidgets, QtTest
 from mslib import __version__
-from tests.constants import ROOT_DIR, MSUI_CONFIG_PATH
+from tests.constants import ROOT_DIR, MSUI_CONFIG_PATH, MSUI_CONFIG_FILE_PATH
 from mslib.msui import msui
 from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
-from mslib.utils.config import read_config_file
+from mslib.utils.config import read_config_file, config_loader
+import re
 
 
 def test_main():
@@ -47,6 +49,54 @@ def test_main():
                         return_value=argparse.Namespace(version=True)):
             msui.main()
         assert pytest_wrapped_e.typename == "SystemExit"
+
+
+def test_keep_config_file(qtbot):
+    # in conftest we set always the mss_dir in the config file
+    mss_dir = config_loader(dataset="mss_dir")
+    _config = MSUI_CONFIG_FILE_PATH.read_text()
+    assert _config == f'''{{
+    "mss_dir": "{mss_dir}"
+}}'''
+    config = """{
+            "MSCOLAB_skip_archived_operations": true
+}"""
+    MSUI_CONFIG_FILE_PATH.write_text(config)
+    assert MSUI_CONFIG_FILE_PATH.exists()
+    msui = msui_mw.MSUIMainWindow()
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+        msui.close()
+    # after closing the window the config file should be the same as before
+    _config = MSUI_CONFIG_FILE_PATH.read_text()
+    assert _config == config
+
+
+@pytest.mark.skipif(
+    sys.platform.startswith("linux") and os.getenv("GITHUB_ACTIONS") == "true",
+    reason="skip on GitHub Actions Linux runners because of flush and sync issue",
+)
+def test_multiple_times_save_filename(qtbot, tmp_path):
+    msui = msui_mw.MSUIMainWindow()
+    msui.show()
+    msui.create_new_flight_track()
+    filename = os.path.join(tmp_path, "example.ftml")
+    assert os.path.exists(filename) is False
+    # verify that we can save the file multiple times
+    msui.save_flight_track(filename)
+    assert os.path.exists(filename)
+    first_timestamp = os.stat(filename).st_mtime_ns
+    assert filename == msui.active_flight_track.get_filename()
+    msui.save_handler()
+
+    def assert_():
+        second_timestamp = os.stat(filename).st_mtime_ns
+        assert second_timestamp > first_timestamp
+    qtbot.wait_until(assert_)
+
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+        msui.close()
+    # check that the second save is newer than the first one
+    assert os.path.exists(filename)
 
 
 class Test_MSS_TutorialMode:
@@ -59,22 +109,21 @@ class Test_MSS_TutorialMode:
         self.main_window.shortcuts_dlg = msui_mw.MSUI_ShortcutsDialog(
             tutorial_mode=True)
         self.main_window.show_shortcuts(search_mode=True)
-        self.tutorial_dir = fs.path.combine(MSUI_CONFIG_PATH, 'tutorial_images')
+        self.tutorial_dir = Path(MSUI_CONFIG_PATH) / 'tutorial_images'
         yield
         self.main_window.hide()
 
     def test_tutorial_dir(self):
-        dir_name, name = fs.path.split(self.tutorial_dir)
-        with fs.open_fs(dir_name) as _fs:
-            assert _fs.exists(name)
+        dir_path = Path(self.tutorial_dir)
+        assert dir_path.parent.exists()
+        assert dir_path.name in [x.name for x in dir_path.parent.iterdir()]
         # seems we don't have a window manager in the test environment on github
         # checking only for a few
-        with (fs.open_fs(self.tutorial_dir) as _fs):
-            common_images = _fs.listdir('/')
-            assert 'menufile-file.png' in common_images
-            assert 'msuimainwindow-operation-archive.png' in common_images
-            assert 'msuimainwindow-work-asynchronously.png' in common_images
-            assert 'msuimainwindow-connect.png' in common_images
+        common_images = [x.name for x in dir_path.iterdir()]
+        assert 'menufile-file.png' in common_images
+        assert 'msuimainwindow-operation-archive.png' in common_images
+        assert 'msuimainwindow-work-asynchronously.png' in common_images
+        assert 'msuimainwindow-connect.png' in common_images
 
 
 class Test_MSS_AboutDialog:
@@ -86,9 +135,10 @@ class Test_MSS_AboutDialog:
 
     def test_milestone_url(self):
         with urlopen(self.window.milestone_url) as f:
-            text = f.read()
-        pattern = f'value="is:closed milestone:{__version__[:-1]}"'
-        assert pattern in text.decode('utf-8')
+            text = f.read().decode("utf-8")
+        expected_version = __version__
+        pattern = rf'value="is:closed milestone:{re.escape(expected_version)}"'
+        assert re.search(pattern, text), f"Expected milestone format not found: {expected_version}"
 
 
 class Test_MSS_ShortcutDialog:
@@ -237,7 +287,7 @@ class Test_MSSSideViewWindow:
         with mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
         assert self.window.listFlightTracks.count() == 1
-        file_path = fs.path.join(self.sample_path, name[0])
+        file_path = str(Path(self.sample_path) / name[0])
         with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=[file_path]) as mockopen:
             for action in self.window.menuImportFlightTrack.actions():
                 if action.objectName() == name[1]:
@@ -268,7 +318,7 @@ class Test_MSSSideViewWindow:
 
     @mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=export_plugins)
     def test_add_plugins(self, mockopen):
-        assert len(self.window.menuImportFlightTrack.actions()) == 2
+        assert len(self.window.menuImportFlightTrack.actions()) == 3
         assert len(self.window.menuExportActiveFlightTrack.actions()) == 2
         assert len(self.window.import_plugins) == 0
         assert len(self.window.export_plugins) == 0
@@ -278,7 +328,7 @@ class Test_MSSSideViewWindow:
         self.window.add_export_plugins("qt")
         assert len(self.window.import_plugins) == 1
         assert len(self.window.export_plugins) == 1
-        assert len(self.window.menuImportFlightTrack.actions()) == 3
+        assert len(self.window.menuImportFlightTrack.actions()) == 4
         assert len(self.window.menuExportActiveFlightTrack.actions()) == 3
 
         self.window.remove_plugins()
@@ -300,7 +350,7 @@ class Test_MSSSideViewWindow:
         self.window.remove_plugins()
         assert len(self.window.import_plugins) == 0
         assert len(self.window.export_plugins) == 0
-        assert len(self.window.menuImportFlightTrack.actions()) == 2
+        assert len(self.window.menuImportFlightTrack.actions()) == 3
         assert len(self.window.menuExportActiveFlightTrack.actions()) == 2
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes)

@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2020 Vaibhav Mehra <veb7vmehra@gmail.com>
-    :copyright: Copyright 2020-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2020-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,9 +26,9 @@
 """
 import collections.abc
 import copy
-import fs
 import logging
 import json
+from pathlib import Path
 
 from mslib.utils.qt import get_open_filename, get_save_filename, show_popup
 from mslib.msui.qt5 import ui_configuration_editor_window as ui_conf
@@ -227,7 +227,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             index = self.json_model.index(r, 0, parent)
             item = self.json_model.itemFromIndex(index)
             item.setEditable(False)
-            if item.text() in mss_default.fixed_dict_options:
+            if item.text() in mss_default.fixed_dict_options + mss_default.fixed_list_options:
                 self.set_noneditable_items(index)
             if item.text() in mss_default.config_descriptions:
                 item.setData(mss_default.config_descriptions[item.text()], QtCore.Qt.ToolTipRole)
@@ -243,7 +243,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             if not index.parent().isValid():
                 move = True
             root_index = get_root_index(index)
-            if root_index.data() not in mss_default.fixed_dict_options + mss_default.key_value_options:
+            if (root_index.data() not in mss_default.fixed_dict_options + mss_default.key_value_options +
+                    mss_default.fixed_list_options):
                 add, move = True, True
 
             # display error message if key has invalid values
@@ -265,8 +266,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             restore_defaults = True
             for index in selection:
                 index = get_root_index(index)
-                if index.data() not in mss_default.fixed_dict_options + mss_default.key_value_options \
-                    and self.proxy_model.rowCount(index) > 0:
+                if index.data() not in mss_default.fixed_dict_options + mss_default.key_value_options  \
+                        + mss_default.fixed_list_options and self.proxy_model.rowCount(index) > 0:
                     remove = True
                     break
 
@@ -331,7 +332,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     duplicate = True
                     color = QtCore.Qt.red
             elif key == 'filepicker_default':
-                if data[key] not in ['default', 'qt', 'fs']:
+                if data[key] not in ['default', 'qt']:
                     invalid = True
                     color = QtCore.Qt.red
 
@@ -430,7 +431,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     if root in removable_indexes:
                         removable_indexes[root].add(index.row())
                     else:
-                        removable_indexes[root] = set([index.row()])
+                        removable_indexes[root] = {index.row()}
                 else:
                     non_removable.append(index)
 
@@ -547,21 +548,19 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         if not file_path:
             return
 
-        # load data from selected file
-        dir_name, file_name = fs.path.split(file_path)
-        with fs.open_fs(dir_name) as _fs:
-            if _fs.exists(file_name):
-                file_content = _fs.readtext(file_name)
-                try:
-                    json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
-                except json.JSONDecodeError as e:
-                    show_popup(self, "Error while loading file", e)
-                    logging.error("Error while loading json file %s", e)
-                    return
-                except ValueError as e:
-                    show_popup(self, "Invalid keys detected", e)
-                    logging.error("Error while loading json file %s", e)
-                    return
+        if Path(file_path).exists():
+            self.statusbar.showMessage("Importing config from path")
+            file_content = Path(file_path).read_text(encoding="utf8")
+            try:
+                json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
+            except json.JSONDecodeError as e:
+                show_popup(self, "Error while loading file", e)
+                logging.error("Error while loading json file %s", e)
+                return
+            except ValueError as e:
+                show_popup(self, "Invalid keys detected", e)
+                logging.error("Error while loading json file %s", e)
+                return
 
         if json_file_data:
             json_model_data = self.json_model.serialize()
@@ -589,10 +588,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             if json_data[key] == default_options[key] or json_data[key] == {} or json_data[key] == []:
                 del save_data[key]
 
-        filename = filename.replace('\\', '/')
-        dir_name, file_name = fs.path.split(filename)
-        with fs.open_fs(dir_name) as _fs:
-            _fs.writetext(file_name, json.dumps(save_data, indent=4))
+        # ToDo check errors keyword
+        Path(filename).write_text(json.dumps(save_data, indent=4), encoding="utf8", errors="ignore")
 
     def validate_data(self):
         epsg_check, dummy = self.problem_in_map_sections()

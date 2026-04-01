@@ -103,7 +103,7 @@ When this is the first time you setup a mscolab server, you have to initialize t
 
 .. code:: text
 
-    $ mscolab db --init
+    $ mscolab start
 
 .. note::
    An existing database maybe needs a migration, have a look for this on our documentation.

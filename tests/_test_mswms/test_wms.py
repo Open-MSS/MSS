@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +36,7 @@ import mslib.mswms.wms
 import mslib.mswms.gallery_builder
 from importlib import reload
 from tests.utils import callback_ok_image, callback_ok_xml, callback_ok_html, callback_404_plain
-from tests.constants import DATA_DIR
+from tests.constants import MSWMS_DATA_DIR
 
 
 class Test_WMS:
@@ -377,8 +377,8 @@ class Test_WMS:
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_ok_xml(result.status, result.headers)
 
+    @pytest.mark.skip(reason="disabled because of reload")
     def test_import_error(self):
-        pytest.skip("disabled because of reload")
         with mock.patch.dict("sys.modules", {"mswms_settings": None, "mswms_auth": None}):
             reload(mslib.mswms.wms)
             assert mslib.mswms.wms.mswms_settings.__file__ is None
@@ -404,24 +404,24 @@ This test fails on macOS 14 and can also fail on Linux when the pytest test orde
                 'request=GetMap&bgcolor=0xFFFFFF&height=376&dim_init_time=2012-10-17T12%3A00%3A00Z&width=479&'
                 'version=1.3.0&bbox=20.0%2C-50.0%2C75.0%2C20.0&time=2012-10-17T12%3A00%3A00Z&'
                 'exceptions=XML&transparent=FALSE'}
-            pl_file = next(file for file in os.listdir(DATA_DIR) if ".pl" in file)
+            pl_file = next(file for file in os.listdir(MSWMS_DATA_DIR) if ".pl" in file)
 
             self.client = self.app.test_client()
             result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
 
             # Assert modified file was reloaded and now looks different
             nco = Nco()
-            nco.ncap2(input=os.path.join(DATA_DIR, pl_file), output=os.path.join(DATA_DIR, pl_file),
+            nco.ncap2(input=os.path.join(MSWMS_DATA_DIR, pl_file), output=os.path.join(MSWMS_DATA_DIR, pl_file),
                       options=["-s \"geopotential_height*=2\""])
             result2 = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
-            nco.ncap2(input=os.path.join(DATA_DIR, pl_file), output=os.path.join(DATA_DIR, pl_file),
+            nco.ncap2(input=os.path.join(MSWMS_DATA_DIR, pl_file), output=os.path.join(MSWMS_DATA_DIR, pl_file),
                       options=["-s \"geopotential_height/=2\""])
             assert result.data != result2.data
 
             # Assert moved file was reloaded and now looks like the first image
-            move(os.path.join(DATA_DIR, pl_file), os.path.join(DATA_DIR, pl_file + "2"))
+            move(os.path.join(MSWMS_DATA_DIR, pl_file), os.path.join(MSWMS_DATA_DIR, pl_file + "2"))
             result3 = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
-            move(os.path.join(DATA_DIR, pl_file + "2"), os.path.join(DATA_DIR, pl_file))
+            move(os.path.join(MSWMS_DATA_DIR, pl_file + "2"), os.path.join(MSWMS_DATA_DIR, pl_file))
             assert result.data == result3.data
 
         with pytest.raises(AssertionError):

@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -148,15 +148,16 @@ class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         self.line_transparency = value / 100
 
     def setBotTopLimits(self, axis_type):
-        bot, top = {
-            "maximum": (0, 2132),
-            "pressure": (0.1, 1050),
-            "pressure altitude": (0, 65),
-            "flight level": (0, 2132),
+        bot, top, dec = {
+            "maximum": (0, 3248, 4),
+            "pressure": (0.0003, 1050, 4),
+            "pressure altitude": (0, 99.9, 1),
+            "flight level": (0, 3248, 0),
         }[axis_type]
         for button in (self.sbPbot, self.sbPtop):
             button.setMinimum(bot)
             button.setMaximum(top)
+            button.setDecimals(dec)
 
     def setColour(self, which):
         """

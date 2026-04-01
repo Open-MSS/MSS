@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,13 +52,10 @@ from mslib.msui.qt5 import ui_wms_password_dialog as ui_pw
 from mslib.utils.qt import Worker
 from mslib.msui.multilayers import Multilayers, Layer
 import mslib.utils.ogcwms as ogcwms
+from mslib.utils.service_manager import WMSServiceManager
 from mslib.utils.time import parse_iso_datetime, parse_iso_duration
 from mslib.utils.auth import save_password_to_keyring, get_auth_from_url_and_name
 from mslib.utils.config import modify_config_file
-
-
-WMS_SERVICE_CACHE = {}
-WMS_URL_LIST = QtGui.QStandardItemModel()
 
 
 def add_wms_urls(combo_box, url_list):
@@ -404,6 +401,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     signal_disable_cbs = QtCore.pyqtSignal(name="disable_cbs")
     signal_enable_cbs = QtCore.pyqtSignal(name="enable_cbs")
     image_displayed = QtCore.pyqtSignal()
+    legend_displayed = QtCore.pyqtSignal()
     base_url_changed = QtCore.pyqtSignal(str)
     layer_changed = QtCore.pyqtSignal(Layer)
     on_level_changed = QtCore.pyqtSignal(str)
@@ -411,6 +409,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     itime_changed = QtCore.pyqtSignal(str)
     vtime_changed = QtCore.pyqtSignal(str)
     vtime_data = QtCore.pyqtSignal([list])
+    metadata_displayed = QtCore.pyqtSignal()
 
     def __init__(self, parent=None, default_WMS=None, wms_cache=None, view=None):
         """
@@ -421,6 +420,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         super().__init__(parent)
         self.setupUi(self)
+
+        self.wms_cache = wms_cache
+        self.service_manager = WMSServiceManager()
 
         self.view = view
         self.layer_name = None
@@ -434,7 +436,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             lambda text: self.multilayers.pbViewCapabilities.setEnabled(text in self.multilayers.layers))
 
         # Initial list of WMS servers.
-        self.multilayers.cbWMS_URL.setModel(WMS_URL_LIST)
+        self.multilayers.cbWMS_URL.setModel(QtGui.QStandardItemModel())
         if default_WMS is not None:
             add_wms_urls(self.multilayers.cbWMS_URL, default_WMS)
         # set last connected url to editable
@@ -528,6 +530,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Progress dialog to inform the user about ongoing capability requests.
         self.capabilities_worker = Worker(None)
+        self.capabilities_request_worker = None
         self.cpdlg = QtWidgets.QProgressDialog(
             "retrieving wms capabilities...", "Cancel", 0, 10, parent=self.multilayers)
         self.cpdlg.canceled.connect(self.stop_capabilities_retrieval)
@@ -600,7 +603,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     self.multilayers.cbWMS_URL.setCurrentIndex(index)
 
             self.multilayers.threads -= 1
-            styles_name = str(styles).strip().split()[0].strip()
+            styles_name = str(styles).strip()
+            styles_name = styles_name.split()[0].strip() if styles_name else "default"
 
             def style_changed(layer):
                 for style in self.current_sel_layer.styles:
@@ -778,7 +782,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     save_settings_qsettings('wms', {'recent_wms_url': base_url})
 
                 self.activate_wms(wms, level=level)
-                WMS_SERVICE_CACHE[wms.url] = wms
+                self.service_manager.cache_service(base_url, wms)
                 self.cpdlg.close()
 
         def on_failure(e):
@@ -854,7 +858,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                       on_success, on_failure)
 
     def wms_url_changed(self, text):
-        wms = WMS_SERVICE_CACHE.get(text)
+        wms = self.service_manager.get_service(text)
         if wms is not None:
             self.activate_wms(wms, cache=True)
 

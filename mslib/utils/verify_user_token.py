@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,7 +41,7 @@ def verify_user_token(mscolab_server_url, token):
     }
     try:
         url = urljoin(mscolab_server_url, "test_authorized")
-        r = requests.get(url, data=data, timeout=(2, 10))
+        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
     except requests.exceptions.SSLError:
         logging.debug("Certificate Verification Failed")
         return False

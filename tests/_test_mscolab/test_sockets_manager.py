@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,7 +29,7 @@ import pytest
 import datetime
 
 from mslib.msui.icons import icons
-from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.app import APP
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation, get_operation
 from mslib.mscolab.models import Permission, User, Message, MessageType
 
@@ -128,8 +128,8 @@ class Test_Socket_Manager:
         assert updated_message_args["op_id"] == self.operation.id
         assert updated_message_args["count"] == 2
 
+    @pytest.mark.skip(reason="unknown how to verify")
     def test_handle_start_event(self):
-        pytest.skip("unknown how to verify")
         sio = self._connect()
         json_config = {"token": self.token}
         assert User.verify_auth_token(self.token) is not False
@@ -277,7 +277,7 @@ class Test_Socket_Manager:
         }
         with self.app.test_client() as c:
             c.post("message_attachment", data=data, content_type="multipart/form-data")
-        upload_dir = os.path.join(mscolab_settings.UPLOAD_FOLDER, str(self.user.id))
+        upload_dir = os.path.join(APP.config['UPLOAD_FOLDER'], str(self.user.id))
         assert os.path.exists(upload_dir)
         file = os.listdir(upload_dir)[0]
         assert 'mss-logo' in file

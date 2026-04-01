@@ -93,8 +93,7 @@ class HS_MSSChemStyle(MPLBasemapHorizontalSectionStyle):
                                colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
             cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fmt='%i')
             if pe:
-                plt.setp(cs_pv.collections, path_effects=[patheffects.withStroke(linewidth=cont_lw + 2,
-                                                                                 foreground="w")])
+                cs_pv.set_path_effects([patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
                 plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
 
         # define position of the colorbar and the orientation of the ticks
@@ -253,11 +252,10 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
             else:
                 cs_pv = ax.contour(curtain_lat, curtain_p, self.data[cont_data], cont_levels,
                                    colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
-                plt.setp(cs_pv.collections,
-                         path_effects=[patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
                 cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fontsize=8, fmt='%i')
-                plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
-
+                if pe:
+                    cs_pv.set_path_effects([patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
+                    plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).

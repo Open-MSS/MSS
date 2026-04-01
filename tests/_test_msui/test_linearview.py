@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2021 May Bär
-    :copyright: Copyright 2021-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2021-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,10 +26,7 @@
 """
 
 import mock
-import os
 import pytest
-import shutil
-import tempfile
 from PyQt5 import QtTest, QtCore
 from mslib.msui import flighttrack as ft
 import mslib.msui.linearview as tv
@@ -88,12 +85,10 @@ class Test_MSSLinearViewWindow:
 
 class Test_LinearViewWMS:
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot, mswms_server):
+    def setup(self, qtbot, mswms_server, tmp_path):
         mainwindow = MSUIMainWindow()
         self.url = mswms_server
-        self.tempdir = tempfile.mkdtemp()
-        if not os.path.exists(self.tempdir):
-            os.mkdir(self.tempdir)
+        self.tempdir = tmp_path
 
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
         waypoints_model = ft.WaypointsTableModel("")
@@ -107,7 +102,6 @@ class Test_LinearViewWMS:
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
         yield
         self.window.hide()
-        shutil.rmtree(self.tempdir)
 
     def query_server(self, qtbot, url):
         QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)

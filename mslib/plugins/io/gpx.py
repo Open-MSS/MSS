@@ -11,7 +11,7 @@
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
     :copyright: Copyright 2021 Johannes Roettenbacher
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,17 +26,14 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
-import os
-from fs import open_fs
+from pathlib import Path
 import gpxpy
 
 
 def save_to_gpx(filename, name, waypoints):
     if not filename:
         raise ValueError("fileexportname to save flight track cannot be None")
-    _dirname, _name = os.path.split(filename)
-    _fs = open_fs(_dirname)
+    filepath = Path(filename)
     gpx = gpxpy.gpx.GPX()
     gpx_track = gpxpy.gpx.GPXTrack()
     gpx.tracks.append(gpx_track)
@@ -53,5 +50,5 @@ def save_to_gpx(filename, name, waypoints):
         wp_name = loc if loc else str(i)
         gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(wp.lat, wp.lon, name=wp_name))
 
-    with _fs.open(_name, "w") as fh:
+    with open(filepath, "w") as fh:
         fh.write(gpx.to_xml())

@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2022 Reimar Bauer
-    :copyright: Copyright 2022-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2022-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,6 +50,6 @@ def test_main():
     with mock.patch("mslib.mswms.mswms.argparse.ArgumentParser.parse_args",
                     return_value=argparse.Namespace(plot_types=None, version=False, update=False, gallery=False,
                                                     debug=False, logfile=None, action=None,
-                                                    host=None, port=None)):
+                                                    host=None, port=None, seed=False)):
         mswms.main()
     assert pytest_wrapped_e.typename == "SystemExit"

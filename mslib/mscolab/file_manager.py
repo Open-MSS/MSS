@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,21 +24,22 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import shutil
 import sys
 import secrets
 import time
 import datetime
-import fs
 import difflib
 import logging
 import git
 import threading
 import mimetypes
+from pathlib import Path
 from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
-from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.app import APP
 
 
 class FileManager:
@@ -70,6 +71,8 @@ class FileManager:
         :param active: The activity status of the operation. Default is True.
         :return: True if the operation is created successfully, False otherwise.
         """
+        if content is None:
+            return False
         if content is not None and not verify_waypoint_data(content):
             return False
         # set codes on these later
@@ -93,19 +96,19 @@ class FileManager:
             db.session.add(perm)
             db.session.commit()
             # here we can import the permissions from Group file
-            if not path.endswith(mscolab_settings.GROUP_POSTFIX):
-                import_op = Operation.query.filter_by(path=f"{category}{mscolab_settings.GROUP_POSTFIX}").first()
+            if not path.endswith(APP.config['GROUP_POSTFIX']):
+                import_op = Operation.query.filter_by(path=f"{category}{APP.config['GROUP_POSTFIX']}").first()
                 if import_op is not None:
                     self.import_permissions(import_op.id, operation_id, user.id)
-            data = fs.open_fs(self.data_dir)
-            data.makedir(operation.path)
-            operation_file = data.open(fs.path.combine(operation.path, 'main.ftml'), 'w')
-            if content is not None:
-                operation_file.write(content)
-            else:
-                operation_file.write(mscolab_settings.STUB_CODE)
-            operation_path = fs.path.combine(self.data_dir, operation.path)
-            r = git.Repo.init(operation_path)
+            data_dir = Path(self.data_dir)
+            operation_dir = data_dir / operation.path
+            operation_dir.mkdir(parents=True, exist_ok=True)
+
+            operation_file_path = operation_dir / 'main.ftml'
+            operation_file_path.write_text(content, encoding='utf-8')
+
+            # Initialize git repository
+            r = git.Repo.init(str(operation_dir))
             r.git.clear_cache()
             r.index.add(['main.ftml'])
             r.index.commit("initial commit")
@@ -260,55 +263,65 @@ class FileManager:
         return True
 
     def delete_user_profile_image(self, image_to_be_deleted):
-        '''
+        """
         This function is called when deleting account or updating the profile picture
-        '''
-        upload_folder = mscolab_settings.UPLOAD_FOLDER
+        """
+        upload_folder = APP.config['UPLOAD_FOLDER']
         if sys.platform.startswith('win'):
             upload_folder = upload_folder.replace('\\', '/')
 
-        with fs.open_fs(upload_folder) as profile_fs:
-            if profile_fs.exists(image_to_be_deleted):
-                profile_fs.remove(image_to_be_deleted)
+        # Construct the full path to the image file
+        full_image_path = Path(upload_folder) / image_to_be_deleted
+
+        # Check if the file exists and delete it
+        if full_image_path.exists() and full_image_path.is_file():
+            try:
+                full_image_path.unlink()  # Delete the file
                 logging.debug(f"Successfully deleted image: {image_to_be_deleted}")
+            except OSError as e:
+                logging.error(f"Failed to delete image {image_to_be_deleted}: {e}")
+        else:
+            logging.debug(f"Image file not found or is not a file: {image_to_be_deleted}")
 
     def upload_file(self, file, subfolder=None, identifier=None, include_prefix=False):
         """
         Generic function to save files securely in any specified directory with unique filename
         and return the relative file path.
         """
-        upload_folder = mscolab_settings.UPLOAD_FOLDER
+        upload_folder = APP.config['UPLOAD_FOLDER']
         if sys.platform.startswith('win'):
             upload_folder = upload_folder.replace('\\', '/')
 
-        subfolder_path = fs.path.join(upload_folder, str(subfolder) if subfolder else "")
-        with fs.open_fs(subfolder_path, create=True) as _fs:
-            # Creating unique and secure filename
-            file_name, _ = file.filename.rsplit('.', 1)
-            mime_type, _ = mimetypes.guess_type(file.filename)
-            file_ext = mimetypes.guess_extension(mime_type) if mime_type else '.unknown'
-            token = secrets.token_urlsafe()
-            timestamp = time.strftime("%Y%m%dT%H%M%S")
+        subfolder_path = Path(upload_folder) / (str(subfolder) if subfolder else "")
+        subfolder_path.mkdir(parents=True, exist_ok=True)
 
-            if identifier:
-                file_name = f'{identifier}-{timestamp}-{token}{file_ext}'
-            else:
-                file_name = f'{file_name}-{timestamp}-{token}{file_ext}'
-            file_name = secure_filename(file_name)
+        # Creating unique and secure filename
+        file_name, _ = file.filename.rsplit('.', 1)
+        mime_type, _ = mimetypes.guess_type(file.filename)
+        file_ext = mimetypes.guess_extension(mime_type) if mime_type else '.unknown'
+        token = secrets.token_urlsafe()
+        timestamp = time.strftime("%Y%m%dT%H%M%S")
 
-            # Saving the file
-            with _fs.open(file_name, mode="wb") as f:
-                file.save(f)
+        if identifier:
+            file_name = f'{identifier}-{timestamp}-{token}{file_ext}'
+        else:
+            file_name = f'{file_name}-{timestamp}-{token}{file_ext}'
+        file_name = secure_filename(file_name)
 
-            # Relative File path
-            if include_prefix:  # ToDo: add a namespace for the chat attachments, similar as for profile images
-                static_dir = fs.path.basename(upload_folder)
-                static_file_path = fs.path.join(static_dir, str(subfolder), file_name)
-            else:
-                static_file_path = fs.path.relativefrom(upload_folder, fs.path.join(subfolder_path, file_name))
+        # Saving the file
+        file_path = subfolder_path / file_name
+        with file_path.open(mode="wb") as f:
+            file.save(f)
 
-            logging.debug(f'Relative Path: {static_file_path}')
-            return static_file_path
+        # Relative File path
+        if include_prefix:  # ToDo: add a namespace for the chat attachments, similar as for profile images
+            static_dir = Path(upload_folder).name
+            static_file_path = str(Path(static_dir) / str(subfolder) / file_name)
+        else:
+            static_file_path = str(Path(file_path).relative_to(Path(upload_folder)))
+
+        logging.debug(f'Relative Path: {static_file_path}')
+        return static_file_path
 
     def save_user_profile_image(self, user_id, image_file):
         """
@@ -316,7 +329,7 @@ class FileManager:
         """
         relative_file_path = self.upload_file(image_file, subfolder='profile', identifier=user_id)
 
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if user:
             if user.profile_image_path:
                 # Delete the previous image
@@ -324,6 +337,18 @@ class FileManager:
             user.profile_image_path = relative_file_path
             db.session.commit()
             return True, "Image uploaded successfully"
+        else:
+            return False, "User not found"
+
+    def get_user_profile_image(self, user_id):
+        """
+        Retrieve the user's profile image from the database.
+        """
+        user = db.session.get(User, user_id)
+        if user:
+            if user.profile_image_path:
+                return True, user.profile_image_path
+            return False, "Profile image not found"
         else:
             return False, "User not found"
 
@@ -340,17 +365,24 @@ class FileManager:
             if value.find("/") != -1 or value.find("\\") != -1 or (" " in value):
                 logging.debug("malicious request: %s", user)
                 return False
-            with fs.open_fs(self.data_dir) as data:
-                if data.exists(value):
-                    return False
-                # will be move when operations are introduced
-                # make a directory, else movedir
-                data.makedir(value)
-                data.movedir(operation.path, value)
-                # when renamed to a Group operation
-            if value.endswith(mscolab_settings.GROUP_POSTFIX):
+
+            data_dir = Path(self.data_dir)
+            new_path = data_dir / value
+            old_path = data_dir / operation.path
+
+            if new_path.exists():
+                return False
+
+            new_path.mkdir(parents=True, exist_ok=True)
+
+            try:
+                old_path.rename(new_path)
+            except OSError:
+                shutil.move(str(old_path), str(new_path))
+
+            if value.endswith(APP.config['GROUP_POSTFIX']):
                 # getting the category
-                category = value.split(mscolab_settings.GROUP_POSTFIX)[0]
+                category = value.split(APP.config['GROUP_POSTFIX'])[0]
                 # all operation with that category
                 ops_category = Operation.query.filter_by(category=category)
                 for ops in ops_category:
@@ -375,8 +407,9 @@ class FileManager:
         Change.query.filter_by(op_id=op_id).delete()
         Message.query.filter_by(op_id=op_id).delete()
         operation = Operation.query.filter_by(id=op_id).first()
-        with fs.open_fs(self.data_dir) as operation_dir:
-            operation_dir.removetree(operation.path)
+        data_dir = Path(self.data_dir)
+        operation_dir = data_dir / operation.path
+        shutil.rmtree(operation_dir)
         db.session.delete(operation)
         db.session.commit()
         return True
@@ -408,21 +441,29 @@ class FileManager:
 
         op_lock = self._get_operation_lock(operation.id)
         with op_lock:
-            with fs.open_fs(self.data_dir) as data:
-                """
-                old file is read, the diff between old and new is calculated and stored
-                as 'Change' in changes table. comment for each change is optional
-                """
-                old_data = data.readtext(fs.path.combine(operation.path, 'main.ftml'))
-                old_data_lines = old_data.splitlines()
-                content_lines = content.splitlines()
-                diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
-                diff_content = '\n'.join(list(diff))
-                data.writetext(fs.path.combine(operation.path, 'main.ftml'), content)
+            data_dir = Path(self.data_dir)
+            operation_file_path = data_dir / operation.path / 'main.ftml'
+            operation_file_path.parent.mkdir(parents=True, exist_ok=True)
+
+            """
+            old file is read, the diff between old and new is calculated and stored
+            as 'Change' in changes table. comment for each change is optional
+            """
+            try:
+                old_data = operation_file_path.read_text(encoding='utf-8')
+            except FileNotFoundError:
+                old_data = ""
+
+            old_data_lines = old_data.splitlines()
+            content_lines = content.splitlines()
+            diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
+            diff_content = '\n'.join(list(diff))
+            operation_file_path.write_text(content, encoding='utf-8')
+
             # commit changes if comment is not None
             if diff_content != "":
                 # commit to git repository
-                operation_path = fs.path.combine(self.data_dir, operation.path)
+                operation_path = Path(self.data_dir) / operation.path
                 repo = git.Repo(operation_path)
                 repo.git.clear_cache()
                 repo.index.add(['main.ftml'])
@@ -447,9 +488,9 @@ class FileManager:
             return False
         op_lock = self._get_operation_lock(op_id)
         with op_lock:
-            with fs.open_fs(self.data_dir) as data:
-                operation_file = data.open(fs.path.combine(operation.path, 'main.ftml'), 'r')
-                operation_data = operation_file.read()
+            operation_path = Path(self.data_dir) / operation.path / 'main.ftml'
+            with operation_path.open() as data:
+                operation_data = data.read()
             return operation_data
 
     def get_all_changes(self, op_id, user, named_version=False):
@@ -501,7 +542,7 @@ class FileManager:
         if not change:
             return False
         operation = Operation.query.filter_by(id=change.op_id).first()
-        operation_path = fs.path.combine(self.data_dir, operation.path)
+        operation_path = Path(self.data_dir) / operation.path
         repo = git.Repo(operation_path)
         change_content = repo.git.show(f'{change.commit_hash}:main.ftml')
         return change_content
@@ -536,13 +577,14 @@ class FileManager:
 
         op_lock = self._get_operation_lock(operation.id)
         with op_lock:
-            operation_path = fs.path.join(self.data_dir, operation.path)
-            repo = git.Repo(operation_path)
+            operation_path = Path(self.data_dir) / operation.path
+            repo = git.Repo(str(operation_path))
             repo.git.clear_cache()
             try:
                 file_content = repo.git.show(f'{ch.commit_hash}:main.ftml')
-                with fs.open_fs(operation_path) as proj_fs:
-                    proj_fs.writetext('main.ftml', file_content)
+                main_ftml_path = operation_path / 'main.ftml'
+                main_ftml_path.write_text(file_content, encoding='utf-8')
+
                 repo.index.add(['main.ftml'])
                 cm = repo.index.commit(f"checkout to {ch.commit_hash}")
                 change = Change(ch.op_id, user.id, cm.hexsha)
@@ -595,14 +637,14 @@ class FileManager:
                 new_permissions.append(Permission(u_id, op_id, access_level))
         db.session.add_all(new_permissions)
         operation = Operation.query.filter_by(id=op_id).first()
-        if operation.path.endswith(mscolab_settings.GROUP_POSTFIX):
+        if operation.path.endswith(APP.config['GROUP_POSTFIX']):
             # the members of this gets added to all others of same category
-            category = operation.path.split(mscolab_settings.GROUP_POSTFIX)[0]
+            category = operation.path.split(APP.config['GROUP_POSTFIX'])[0]
             # all operation with that category
             ops_category = Operation.query.filter_by(category=category)
             new_permissions = []
             for ops in ops_category:
-                if not ops.path.endswith(mscolab_settings.GROUP_POSTFIX):
+                if not ops.path.endswith(APP.config['GROUP_POSTFIX']):
                     new_permissions.append(Permission(u_id, ops.id, access_level))
                 db.session.add_all(new_permissions)
         try:
@@ -623,9 +665,9 @@ class FileManager:
             .update({Permission.access_level: new_access_level}, synchronize_session='fetch')
 
         operation = Operation.query.filter_by(id=op_id).first()
-        if operation.path.endswith(mscolab_settings.GROUP_POSTFIX):
+        if operation.path.endswith(APP.config['GROUP_POSTFIX']):
             # the members of this gets added to all others of same category
-            category = operation.path.split(mscolab_settings.GROUP_POSTFIX)[0]
+            category = operation.path.split(APP.config['GROUP_POSTFIX'])[0]
             # all operation with that category
             ops_category = Operation.query.filter_by(category=category)
             for ops in ops_category:
@@ -664,9 +706,9 @@ class FileManager:
             .delete(synchronize_session='fetch')
 
         operation = Operation.query.filter_by(id=op_id).first()
-        if operation.path.endswith(mscolab_settings.GROUP_POSTFIX):
+        if operation.path.endswith(APP.config['GROUP_POSTFIX']):
             # the members of this gets added to all others of same category
-            category = operation.path.split(mscolab_settings.GROUP_POSTFIX)[0]
+            category = operation.path.split(APP.config['GROUP_POSTFIX'])[0]
             # all operation with that category
             ops_category = Operation.query.filter_by(category=category)
             for ops in ops_category:

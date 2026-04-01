@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2017-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,6 +59,6 @@ class Test_SatelliteDockWidget:
         assert self.window.cbSatelliteOverpasses.count() == 0
         mockbox.assert_called_once_with(
             self.window,
-            "Satellite Overpass Tool",
-            "ERROR:\n<class 'fs.errors.FileExpected'>\npath '' should be a file",
+            'Satellite Overpass Tool',
+            "ERROR:\n<class 'IsADirectoryError'>\n[Errno 21] Is a directory: '.'"
         )

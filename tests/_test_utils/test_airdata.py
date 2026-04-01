@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2022-2022 Reimar Bauer
-    :copyright: Copyright 2022-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2022-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,12 +24,16 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import os
 import mock
+from pathlib import Path
 from PyQt5 import QtWidgets
 from mslib.utils.airdata import download_progress, get_airports, \
     get_available_airspaces, update_airspace, get_airspaces
-from tests.constants import ROOT_DIR
+from tests.constants import MSUI_CONFIG_PATH
+
+
+AIPDIR = Path(MSUI_CONFIG_PATH) / "downloads" / "aip"
+AIPDIR.mkdir(parents=True, exist_ok=True)
 
 
 def _download_progress_airports(path, url):
@@ -43,10 +47,8 @@ def _download_progress_airports(path, url):
 "US-PA","Bensalem","no","00A",,"00A",,,\
 323361,"00AA","small_airport","Aero B Ranch Airport",38.704022,-101.473911,3435,"NA",\
 "US","US-KS","Leoti","no","00AA",,"00AA",,,'''
-    file_path = os.path.join(ROOT_DIR, "downloads", "aip", "airports.csv")
-    os.makedirs(os.path.dirname(file_path))
-    with open(file_path, "w") as f:
-        f.write(text)
+    file_path = AIPDIR / "airports.csv"
+    file_path.write_text(text)
 
 
 def _download_progress_airspace(path, url):
@@ -76,10 +78,8 @@ def _download_progress_airspace(path, url):
 </POLYGON></GEOMETRY></ASP></AIRSPACES>
 </OPENAIP>
 '''
-    file_path = os.path.join(ROOT_DIR, "downloads", "aip", "bg_asp.xml")
-    os.makedirs(os.path.dirname(file_path))
-    with open(file_path, "w") as f:
-        f.write(text)
+    file_path = AIPDIR / "bg_asp.xml"
+    file_path.write_text(text)
 
 
 def _download_incomplete_airspace(path, url):
@@ -95,28 +95,22 @@ def _download_incomplete_airspace(path, url):
 <AIRSPACES></AIRSPACES>
 </OPENAIP>
 '''
-    file_path = os.path.join(ROOT_DIR, "downloads", "aip", "bg_asp.xml")
-    os.makedirs(os.path.dirname(file_path))
-    with open(file_path, "w") as f:
-        f.write(text)
+    file_path = AIPDIR / "bg_asp.xml"
+    file_path.write_text(text)
 
 
 def _cleanup_test_files():
-    file_path = os.path.join(ROOT_DIR, "downloads", "aip", "bg_asp.xml")
-    if "tmp" in file_path:
-        if os.path.exists(file_path):
-            os.remove(file_path)
-    file_path = os.path.join(ROOT_DIR, "downloads", "aip", "airports.csv")
-    if "tmp" in file_path:
-        if os.path.exists(file_path):
-            os.remove(file_path)
+    file_path = [AIPDIR / "bg_asp.xml", AIPDIR / "airports.csv"]
+    for file in file_path:
+        if file.exists():
+            file.unlink()
 
 
 def test_download_progress():
-    file_path = os.path.join(ROOT_DIR, "downloads", "aip", "airdata")
-    os.makedirs(os.path.dirname(file_path))
-    download_progress(file_path, 'http://speedtest.ftp.otenet.gr/files/test100k.db')
-    assert os.path.exists(file_path)
+    file_path = AIPDIR / "download_progress_test.txt"
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    download_progress(str(file_path), 'https://www.examplefile.com/file-download/19')
+    assert file_path.exists()
 
 
 @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
@@ -144,10 +138,9 @@ def test_get_available_airspaces():
 def test_update_airspace(mockbox):
     with mock.patch("mslib.utils.airdata.download_progress", _download_progress_airspace):
         update_airspace(force_download=True, countries=["bg"])
-        example_file = os.path.join(ROOT_DIR, "downloads", "aip", "bg_asp.xml")
-        os.path.exists(example_file)
-        with open(example_file, 'r') as f:
-            text = f.read()
+        example_file = AIPDIR / "bg_asp.xml"
+        assert example_file.exists()
+        text = example_file.read_text()
         assert "<!-- For Testing ONLY -->" in text
 
 

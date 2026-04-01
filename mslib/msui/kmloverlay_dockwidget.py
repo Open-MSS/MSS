@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2017-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,11 +25,14 @@
     limitations under the License.
 """
 import copy
-import fs
 import logging
-from fastkml import kml, geometry, styles
-from lxml import etree as et, objectify
 import os
+
+import pygeoif.geometry as pggeo
+from fastkml import KML, kml, styles
+from fastkml.styles import LineStyle, PolyStyle
+from lxml import etree as et, objectify
+from pathlib import Path
 from matplotlib import patheffects
 
 from mslib.utils.qt import get_open_filenames, get_save_filename
@@ -136,30 +139,31 @@ class KMLPatch:
 
     def parse_geometries(self, placemark):
         name = placemark.name
-        styleurl = placemark.styleUrl
-        if styleurl and len(styleurl) > 0 and styleurl[0] == "#":
+        style = {}
+        styleurl = placemark.style_url
+        if styleurl is not None and len(str(styleurl)) > 0 and str(styleurl)[0] == "#":
             # Remove # at beginning of style marking a locally defined style.
             # general urls for styles are not supported
-            styleurl = styleurl[1:]
-        style = self.parse_local_styles(placemark, self.styles.get(styleurl, {}))
+            styleurl = str(styleurl)[1:]
+            style = self.parse_local_styles(placemark, self.styles.get(styleurl, {}))
         if hasattr(placemark, "geometry"):
-            if isinstance(placemark.geometry, geometry.Point):
+            if isinstance(placemark.geometry, pggeo.Point):
                 self.add_point(placemark, style, name)
-            elif isinstance(placemark.geometry, geometry.LineString):
+            elif isinstance(placemark.geometry, pggeo.LineString):
                 self.add_line(placemark, style, name)
-            elif isinstance(placemark.geometry, geometry.LinearRing):
+            elif isinstance(placemark.geometry, pggeo.LinearRing):
                 self.add_line(placemark, style, name)  # LinearRing can be plotted through LineString
-            elif isinstance(placemark.geometry, geometry.Polygon):
+            elif isinstance(placemark.geometry, pggeo.Polygon):
                 self.add_polygon(placemark, style, name)
-            elif isinstance(placemark.geometry, geometry.MultiPoint):
+            elif isinstance(placemark.geometry, pggeo.MultiPoint):
                 self.add_multipoint(placemark.geometry.geoms, style, name)
-            elif isinstance(placemark.geometry, geometry.MultiLineString):
+            elif isinstance(placemark.geometry, pggeo.MultiLineString):
                 for geom in placemark.geometry.geoms:
                     self.add_multiline(geom, style, name)
-            elif isinstance(placemark.geometry, geometry.MultiPolygon):
+            elif isinstance(placemark.geometry, pggeo.MultiPolygon):
                 for geom in placemark.geometry.geoms:
                     self.add_multipolygon(geom, style, name)
-            elif isinstance(placemark.geometry, geometry.GeometryCollection):
+            elif isinstance(placemark.geometry, pggeo.GeometryCollection):
                 for geom in placemark.geometry.geoms:
                     if geom.geom_type == "Point":
                         self.add_multipoint([geom], style, name)
@@ -177,9 +181,9 @@ class KMLPatch:
                 self.parse_geometries(placemark)
         for feature in document:
             if isinstance(feature, kml.Folder):
-                self.parse_placemarks(list(feature.features()))
+                self.parse_placemarks(list(feature.features))
             if isinstance(feature, kml.Document):  # Document present somewhere inside another doc, not consecutively
-                self.parse_placemarks(list(feature.features()))
+                self.parse_placemarks(list(feature.features))
 
     def get_style_params(self, style, color=None, linewidth=None):
         if color is None:
@@ -203,13 +207,13 @@ class KMLPatch:
     def parse_styles(self, kml_doc):
         # exterior_style : <Style> OUTSIDE placemarks
         # interior_style : within <Style>
-        for exterior_style in kml_doc.styles():
+        for exterior_style in kml_doc.styles:
             if isinstance(exterior_style, styles.Style):
                 name = exterior_style.id
                 if name is None:
                     continue
                 self.styles[name] = {}
-                interior_style = exterior_style.styles()
+                interior_style = exterior_style.styles
                 for style in interior_style:
                     if isinstance(style, styles.LineStyle):
                         self.styles[name]["LineStyle"] = self.get_style_params(style)
@@ -221,10 +225,10 @@ class KMLPatch:
         # interior_style : within <Style>
         logging.debug("styles before %s", default_styles)
         local_styles = copy.deepcopy(default_styles)
-        for exterior_style in placemark.styles():
+        for exterior_style in placemark.styles:
             interior_style = exterior_style.styles()
             for style in interior_style:
-                for supported, supported_type in (('LineStyle', styles.LineStyle), ('PolyStyle', styles.PolyStyle)):
+                for supported, supported_type in (('LineStyle', LineStyle), ('PolyStyle', PolyStyle)):
                     if isinstance(style, supported_type) and supported in local_styles:
                         local_styles[supported] = self.get_style_params(
                             style,
@@ -238,14 +242,13 @@ class KMLPatch:
         """
         Do the actual plotting of the patch.
         """
-        # Plot satellite track.
         self.styles = {}
-        kml_doc = list(self.kml.features())  # All kml files are enclosed in a single root < > and </ >
-        kml_style = kml_doc[0]
-        self.parse_styles(kml_style)
-        self.parse_placemarks(kml_doc)
-
-        self.map.ax.figure.canvas.draw()
+        if hasattr(self.kml, 'features') and len(self.kml.features) > 0:
+            kml_doc = list(self.kml.features)  # All kml files are enclosed in a single root < > and </ >
+            kml_style = kml_doc[0]
+            self.parse_styles(kml_style)
+            self.parse_placemarks(kml_doc)
+            self.map.ax.figure.canvas.draw()
 
     def update(self, color=None, linewidth=None):
         """
@@ -550,23 +553,21 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         for index in range(self.listWidget.count()):
             if hasattr(self.listWidget.item(index), "checkState") and (
                     self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
-                _dirname, _name = os.path.split(self.listWidget.item(index).text())
-                _fs = fs.open_fs(_dirname)
+                kmlfile = self.listWidget.item(index).text()
                 try:
-                    with _fs.open(_name, 'r') as kmlf:
-                        self.kml = kml.KML()  # creates fastkml object
-                        self.kml.from_string(kmlf.read().encode('utf-8'))
-                        if self.listWidget.item(index).text() in self.dict_files:  # just a precautionary check
-                            if self.dict_files[self.listWidget.item(index).text()]["patch"] is not None:  # added before
-                                patch = KMLPatch(self.view.map, self.kml,
-                                                 self.set_color(self.listWidget.item(index).text()),
-                                                 self.set_linewidth(self.listWidget.item(index).text()))
-                            else:  # if new file is being added
-                                patch = KMLPatch(self.view.map, self.kml,
-                                                 self.dict_files[self.listWidget.item(index).text()]["color"],
-                                                 self.dict_files[self.listWidget.item(index).text()]["linewidth"])
-                            self.dict_files[self.listWidget.item(index).text()]["patch"] = patch
+                    self.kml = KML.parse(kmlfile, strict=False)
+                    if self.listWidget.item(index).text() in self.dict_files:  # just a precautionary check
+                        if self.dict_files[self.listWidget.item(index).text()]["patch"] is not None:  # added before
+                            patch = KMLPatch(self.view.map, self.kml,
+                                             self.set_color(self.listWidget.item(index).text()),
+                                             self.set_linewidth(self.listWidget.item(index).text()))
+                        else:  # if new file is being added
+                            patch = KMLPatch(self.view.map, self.kml,
+                                             self.dict_files[self.listWidget.item(index).text()]["color"],
+                                             self.dict_files[self.listWidget.item(index).text()]["linewidth"])
+                        self.dict_files[self.listWidget.item(index).text()]["patch"] = patch
 
+                # ToDo verify exceptions if they are needed
                 except (AttributeError, IOError, TypeError, ValueError, et.XMLSyntaxError, et.XMLSchemaError,
                         et.XMLSchemaParseError, et.XMLSchemaValidateError) as ex:  # catches KML Syntax Errors
                     logging.error("KML Overlay - %s: %s", type(ex), ex)
@@ -590,23 +591,22 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.labelStatusBar.setText("Status: No KML File Found or Selected. Add or Select Files to Merge.")
             return
 
-        default_filename = fs.path.join(self.directory_location, "merged_file" + ".kml")
-        filename = get_save_filename(self, "Merge KML Files", default_filename, "KML Files (*.kml)")
+        default_filename = Path(self.directory_location) / "merged_file.kml"
+        filename = str(get_save_filename(self, "Merge KML Files", str(default_filename), "KML Files (*.kml)"))
         if filename:
-            _dir_name, file_name = fs.path.split(filename)
+            filepath = Path(filename)
             if filename.endswith('.kml'):
                 try:
                     element = []
                     count = 0  # used to count elements in order; see usage below
                     for index in checked_files:  # index is the indices of checked files
-                        _dirname, _name = os.path.split(self.listWidget.item(index).text())
-                        _fs = fs.open_fs(_dirname)
+                        source_path = Path(self.listWidget.item(index).text())
                         # Create a secure XML Parser
                         secure_parser = et.XMLParser(resolve_entities=False, no_network=True)
                         # resolve_entities False, prevents entity expansion
                         # no_network, prevents automatically loading remote documents
                         # https://gist.github.com/jack-om/f2c762f399e6ee652f05320921ece4c9
-                        with _fs.open(_name, 'r') as kmlf:
+                        with source_path.open('r') as kmlf:
                             tree = et.parse(kmlf, parser=secure_parser)  # nosec, parse using the secured parser
                             root = tree.getroot()  # get the root of the file
                             self.remove_ns(root)  # removes <kml> and </kml>
@@ -623,14 +623,13 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
                     logging.debug(et.tostring(super_root, encoding='utf-8').decode('UTF-8'))
                     newkml = et.Element("kml")  # create new <kml> element
-                    newkml.attrib['xmlns'] = 'http://earth.google.com/kml/2.0'  # add xmlns attribute
+                    newkml.attrib['xmlns'] = 'http://www.opengis.net/kml/2.2'  # add xmlns attribute
                     newkml.insert(0, super_root)
                     logging.debug(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
-                    _dirname, _name = os.path.split(filename)
-                    _fs = fs.open_fs(_dirname)
-                    with _fs.open(_name, 'w') as output:  # write file
+                    with filepath.open('w') as output:  # write file
                         output.write(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
-                    self.labelStatusBar.setText("Status: Merged File " + file_name + " stored at " + _dirname)
+                    self.labelStatusBar.setText(
+                        "Status: Merged File " + filepath.name + " stored at " + str(filepath.parent))
                 except (OSError, IOError) as ex:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("Problem while merging KML Files:"),

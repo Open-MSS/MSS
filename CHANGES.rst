@@ -1,6 +1,50 @@
 Changelog
 =========
 
+Version 11.0.0
+~~~~~~~~~~~~~~
+
+This is primarily a refactoring release.
+
+Reimar Bauer has removed our dependency on the pyfilesystem2 (fs) library, replacing it with Pathlib and os.path.
+Matthias Riße and Reimar Bauer have improved the stability of our test setup.
+The generation of demo data has been unified, and various deprecations have been resolved.
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/107?closed=1
+
+Version 10.2.1
+~~~~~~~~~~~~~~
+
+Bug fix release and minor enhancements:
+We improved our setup and tests for Mac Users.
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/115?closed=1
+
+
+Version 10.2.0
+~~~~~~~~~~~~~~
+
+Bug fix release and minor enhancements:
+We've modernized our project build process by switching from `setup.py` to `pyproject.toml`. This eliminates dependencies on the `past` and `future` packages.
+When you launch msui from the command line, the location of the log file will be displayed.
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/113?closed=1
+
+
+Version 10.1.0
+~~~~~~~~~~~~~~
+
+Bug fix release and minor enhancements:
+We added a simpler way of moving flight tracks between local flighttrack / operation.
+See the new menu entries below File - Import and File - Copy Into New
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/114?closed=1
+
+
 Version 10.0.1
 ~~~~~~~~~~~~~~
 Bug fix release:

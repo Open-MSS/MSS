@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2022-2022 Reimar Bauer
-    :copyright: Copyright 2022-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2022-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,40 +32,44 @@ from mslib.plugins.io import kml
 
 
 def test_save_to_kml():
-    filename = os.path.join(ROOT_DIR, "testkmldata.kml")
-    wp = _example_waypoints()
-    name = "testkmldata"
-    kml.save_to_kml(filename, name, wp)
-    with open(filename) as f:
-        data = f.readlines()
-    assert data == ['<?xml version="1.0" encoding="UTF-8" ?>\n',
-                    '<kml xmlns="http://earth.google.com/kml/2.2">\n',
-                    '<Document>\n',
-                    '<name>testkmldata</name>\n',
-                    '<open>1</open>\n',
-                    '<description>MSS flight track export</description>\n',
-                    '<Style id="flighttrack">\n',
-                    '<LineStyle><color>ff000000</color><width>2</width></LineStyle></Style>\n',
-                    '<Placemark><name>testkmldata</name>\n',
-                    '<styleUrl>#flighttrack</styleUrl>\n',
-                    '<LineString>\n',
-                    '<tessellate>1</tessellate><altitudeMode>absolute</altitudeMode>\n',
-                    '<coordinates>-149.960,61.168,10668.000\n',
-                    '-176.646,51.878,10668.000\n',
-                    '</coordinates>\n',
-                    '</LineString></Placemark><Placemark>\n',
-                    '<name>Anchorage</name>\n',
-                    '<Point>\n',
-                    '  <coordinates>-149.960,61.168,10668.000</coordinates>\n',
-                    '</Point>\n',
-                    '</Placemark><Placemark>\n',
-                    '<name>Adak</name>\n',
-                    '<Point>\n',
-                    '  <coordinates>-176.646,51.878,10668.000</coordinates>\n',
-                    '</Point>\n',
-                    '</Placemark></Document>\n',
-                    '</kml>'
-                    ]
+    try:
+        filename = os.path.join(ROOT_DIR, "testkmldata.kml")
+        wp = _example_waypoints()
+        name = "testkmldata"
+        kml.save_to_kml(filename, name, wp)
+        with open(filename) as f:
+            data = f.readlines()
+        assert data == ['<?xml version="1.0" encoding="UTF-8" ?>\n',
+                        '<kml xmlns="http://www.opengis.net/kml/2.2">\n',
+                        '<Document>\n',
+                        '<name>testkmldata</name>\n',
+                        '<open>1</open>\n',
+                        '<description>MSS flight track export</description>\n',
+                        '<Style id="flighttrack">\n',
+                        '<LineStyle><color>ff000000</color><width>2</width></LineStyle></Style>\n',
+                        '<Placemark><name>testkmldata</name>\n',
+                        '<styleUrl>#flighttrack</styleUrl>\n',
+                        '<LineString>\n',
+                        '<tessellate>1</tessellate><altitudeMode>absolute</altitudeMode>\n',
+                        '<coordinates>-149.960,61.168,10668.000\n',
+                        '-176.646,51.878,10668.000\n',
+                        '</coordinates>\n',
+                        '</LineString></Placemark><Placemark>\n',
+                        '<name>Anchorage</name>\n',
+                        '<Point>\n',
+                        '  <coordinates>-149.960,61.168,10668.000</coordinates>\n',
+                        '</Point>\n',
+                        '</Placemark><Placemark>\n',
+                        '<name>Adak</name>\n',
+                        '<Point>\n',
+                        '  <coordinates>-176.646,51.878,10668.000</coordinates>\n',
+                        '</Point>\n',
+                        '</Placemark></Document>\n',
+                        '</kml>'
+                        ]
+    finally:
+        if os.path.exists(filename):
+            os.remove(filename)
 
 
 def _example_waypoints():

@@ -11,7 +11,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2024 Preetam Sundar Das
-    :copyright: Copyright 2024-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2024-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -165,6 +165,15 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 "Cannot download empty treewidget"
             )
             return
+        if self.intv == "":
+            if self.stime and self.etime:
+                QMessageBox.information(
+                    self,
+                    "ERROR",
+                    "Please provide a valid time step value"
+                )
+                return
+
         view = "top"
         intv = 0
         if self.intv != "":

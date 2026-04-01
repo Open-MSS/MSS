@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2022-2022 Reimar Bauer
-    :copyright: Copyright 2022-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2022-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,18 +32,22 @@ from mslib.plugins.io import csv
 
 
 def test_save_to_csv():
-    filename = os.path.join(ROOT_DIR, "testdata.csv")
-    wp = _example_waypoints()
-    name = "testdata"
-    csv.save_to_csv(filename, name, wp)
-    with open(filename) as f:
-        data = f.readlines()
-    assert data == ['testdata\n',
-                    'Index;Location;Lat (+-90);Lon (+-180);Flightlevel;Pressure (hPa);Leg dist. '
-                    '(km);Cum. dist. (km);Comments\n',
-                    '0;Anchorage;61.168;-149.960;350.000;238.416;0.000;0.000;start\n',
-                    '1;Adak;51.878;-176.646;350.000;238.416;0.000;0.000;last\n'
-                    ]
+    try:
+        filename = os.path.join(ROOT_DIR, "testdata.csv")
+        wp = _example_waypoints()
+        name = "testdata"
+        csv.save_to_csv(filename, name, wp)
+        with open(filename) as f:
+            data = f.readlines()
+        assert data == ['testdata\n',
+                        'Index;Location;Lat (+-90);Lon (+-180);Flightlevel;Pressure (hPa);Leg dist. '
+                        '(km);Cum. dist. (km);Comments\n',
+                        '0;Anchorage;61.168;-149.960;350.000;238.416;0.000;0.000;start\n',
+                        '1;Adak;51.878;-176.646;350.000;238.416;0.000;0.000;last\n'
+                        ]
+    finally:
+        if os.path.exists(filename):
+            os.remove(filename)
 
 
 def test_load_from_csv():

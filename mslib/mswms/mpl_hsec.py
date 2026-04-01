@@ -11,7 +11,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -116,12 +116,12 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         Returns a list of the coordinate reference systems supported by
         this style.
         """
-        crs_list = set([
+        crs_list = {
             "EPSG:3031",  # WGS 84 / Antarctic Polar Stereographic
             "EPSG:3995",  # WGS 84 / Arctic Polar Stereographic
             "EPSG:3857",  # WGS 84 / Spherical Mercator
             "EPSG:4326",  # WGS 84 / cylindric
-            "MSS:stere"])
+            "MSS:stere"}
         for code in self.supported_epsg_codes():
             crs_list.add(f"EPSG:{code:d}")
         return sorted(crs_list)

@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,15 +26,15 @@
 """
 import logging
 import mslib.utils.config as config
-import os
-import fs
+
 import pytest
+from pathlib import Path
 
 from mslib import utils
 from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.config import config_loader, read_config_file, modify_config_file
 from mslib.utils.config import merge_dict
-from tests.constants import MSUI_CONFIG_PATH
+from tests.constants import MSUI_CONFIG_PATH, MSUI_CONFIG_FILE_PATH
 from tests.utils import create_msui_settings_file
 
 LOGGER = logging.getLogger(__name__)
@@ -65,18 +65,16 @@ class TestConfigLoader:
     """
 
     def setup_method(self):
-        self.sample_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            '../data')
+        self.sample_path = Path(__file__).parent.parent / 'data'
 
     def teardown_method(self):
-        if fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
-            fs.open_fs(MSUI_CONFIG_PATH).remove("msui_settings.json")
-        config_file = os.path.join(
-            self.sample_path,
-            'empty_msui_settings.json'
-        )
-        read_config_file(config_file)
+        if MSUI_CONFIG_FILE_PATH.exists():
+            MSUI_CONFIG_FILE_PATH.unlink()
+
+        config_file = MSUI_CONFIG_PATH / 'empty_msui_settings.json'
+        if config_file.exists() is False:
+            config_file.write_text("{}")
+        read_config_file(str(config_file))
 
     def test_option_types(self):
         # check if all config options are added to the appropriate type of options
@@ -105,10 +103,7 @@ class TestConfigLoader:
             read_config_file(path="foo.json")
 
     def test_sample_config_file(self):
-        config_file = os.path.join(
-            self.sample_path,
-            'msui_settings.json',
-        )
+        config_file = self.sample_path / 'msui_settings.json'
         read_config_file(path=config_file)
         data = config_loader(dataset="new_flighttrack_flightlevel")
         assert data == 250
@@ -121,12 +116,10 @@ class TestConfigLoader:
         """
         on a user defined empty msui_settings_json this test should return the default value for num_labels
         """
-        with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
-            file_content = file_dir.readtext("msui_settings.json")
+        file_content = MSUI_CONFIG_FILE_PATH.read_text()
         assert ":" not in file_content
         default_data = config_loader(default=True)
-        config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
-        read_config_file(path=config_file)
+        read_config_file(path=str(MSUI_CONFIG_FILE_PATH))
         data = config_loader()
         assert data["num_labels"] == default_data["num_labels"]
         num_labels = config_loader(dataset="num_labels")
@@ -141,11 +134,10 @@ class TestConfigLoader:
         on a user defined msui_settings_json without a defined num_labels this test should return its default value
         """
         create_msui_settings_file('{"num_interpolation_points": 20 }')
-        with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
-            file_content = file_dir.readtext("msui_settings.json")
+        file_content = MSUI_CONFIG_FILE_PATH.read_text()
         assert "num_labels" not in file_content
         default_data = config_loader(default=True)
-        config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
+        config_file = MSUI_CONFIG_FILE_PATH
         read_config_file(path=config_file)
         data = config_loader()
         assert data["num_labels"] == default_data["num_labels"]
@@ -164,10 +156,9 @@ class TestConfigLoader:
         on a user defined msui_settings_json without a defined num_labels this test should return its default value
         """
         create_msui_settings_file('{"num_interpolation_points": 201, "num_labels": 10 }')
-        with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
-            file_content = file_dir.readtext("msui_settings.json")
+        file_content = MSUI_CONFIG_FILE_PATH.read_text()
         assert "num_labels" in file_content
-        config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
+        config_file = MSUI_CONFIG_FILE_PATH
         read_config_file(path=config_file)
         num_labels = config_loader(dataset="num_labels")
         assert num_labels == 10
@@ -181,16 +172,14 @@ class TestConfigLoader:
         on a user defined msui_settings_json with duplicate and empty keys should raise FatalUserError
         """
         create_msui_settings_file('{"num_interpolation_points": 201, "num_interpolation_points": 10 }')
-        with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
-            file_content = file_dir.readtext("msui_settings.json")
+        file_content = MSUI_CONFIG_FILE_PATH.read_text()
         assert "num_interpolation_points" in file_content
-        config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
+        config_file = MSUI_CONFIG_FILE_PATH
         with pytest.raises(utils.FatalUserError):
             read_config_file(path=config_file)
 
         create_msui_settings_file('{"": 201, "num_labels": 10 }')
-        with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
-            file_content = file_dir.readtext("msui_settings.json")
+        file_content = MSUI_CONFIG_FILE_PATH.read_text()
         assert "num_labels" in file_content
         with pytest.raises(utils.FatalUserError):
             read_config_file(path=config_file)
@@ -203,7 +192,7 @@ class TestConfigLoader:
             "num_labels": 20
         }
         modify_config_file(data_to_save_in_config_file)
-        config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
+        config_file = MSUI_CONFIG_FILE_PATH
         read_config_file(path=config_file)
         data = config_loader()
         assert data["num_labels"] == 20
@@ -217,7 +206,7 @@ class TestConfigLoader:
             "num_labels": 20
         }
         modify_config_file(data_to_save_in_config_file)
-        config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
+        config_file = MSUI_CONFIG_FILE_PATH
         read_config_file(path=config_file)
         data = config_loader()
         assert data["num_labels"] == 20

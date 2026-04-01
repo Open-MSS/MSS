@@ -16,7 +16,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,7 +35,6 @@
 import logging
 import copy
 import numpy as np
-from shapely.geometry import Polygon
 import matplotlib
 from matplotlib.cm import get_cmap
 import matplotlib.path as mpath
@@ -350,10 +349,12 @@ class MapCanvas(basemap.Basemap):
             # Update the figure canvas.
             self.ax.figure.canvas.draw()
 
-    def set_draw_airports(self, value, port_type=["small_airport"], reload=True):
+    def set_draw_airports(self, value, port_type=None, reload=True):
         """
         Sets airports to visible or not visible
         """
+        if port_type is None:
+            port_type = ["small_airport"]
         if (reload or not value or len(port_type) == 0) and self.airports:
             self.update_info_text(ourairports="")
             self.airports.remove()
@@ -364,10 +365,12 @@ class MapCanvas(basemap.Basemap):
         if value and len(port_type) > 0:
             self.draw_airports(port_type)
 
-    def set_draw_airspaces(self, value, airspaces=[], range_km=None, reload=True):
+    def set_draw_airspaces(self, value, airspaces=None, range_km=None, reload=True):
         """
         Sets airspaces to visible or not visible
         """
+        if airspaces is None:
+            airspaces = []
         if (reload or not value or len(airspaces) == 0) and self.airspaces:
             self.update_info_text(openaip="")
             self.airspaces.remove()
@@ -379,10 +382,12 @@ class MapCanvas(basemap.Basemap):
             country_codes = [airspace.split(" ")[-1] for airspace in airspaces]
             self.draw_airspaces(country_codes, range_km)
 
-    def draw_airspaces(self, countries=[], range_km=None):
+    def draw_airspaces(self, countries=None, range_km=None):
         """
         Load and draw airspace data
         """
+        if countries is None:
+            countries = []
         if not self.airspaces:
             airspaces = copy.deepcopy(get_airspaces(countries))
             if not airspaces:
@@ -391,11 +396,8 @@ class MapCanvas(basemap.Basemap):
 
             for i, airspace in enumerate(airspaces):
                 airspaces[i]["polygon"] = list(zip(*self.projtran(*list(zip(*airspace["polygon"])))))
-            map_polygon = Polygon([(self.llcrnrx, self.llcrnry), (self.urcrnrx, self.llcrnry),
-                                  (self.urcrnrx, self.urcrnry), (self.llcrnrx, self.urcrnry)])
             airspaces = [airspace for airspace in airspaces if
-                         (not range_km or range_km[0] <= airspace["bottom"] <= range_km[1]) and
-                         Polygon(airspace["polygon"]).intersects(map_polygon)]
+                         (not range_km or range_km[0] <= airspace["bottom"] <= range_km[1])]
             if not airspaces:
                 return
 

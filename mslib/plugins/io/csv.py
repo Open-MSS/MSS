@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,17 +28,16 @@
 
 import unicodecsv as csv
 import os
+from pathlib import Path
 
 import mslib.msui.flighttrack as ft
-from fs import open_fs
 
 
 def save_to_csv(filename, name, waypoints):
     if not filename:
         raise ValueError("fileexportname to save flight track cannot be None")
-    _dirname, _name = os.path.split(filename)
-    _fs = open_fs(_dirname)
-    with _fs.open(_name, "wb") as csvfile:
+    path = Path(filename)
+    with path.open("wb") as csvfile:
         csv_writer = csv.writer(csvfile, dialect='excel', delimiter=";", lineterminator="\n")
         csv_writer.writerow([name])
         csv_writer.writerow(["Index", "Location", "Lat (+-90)", "Lon (+-180)", "Flightlevel", "Pressure (hPa)",
@@ -57,9 +56,8 @@ def save_to_csv(filename, name, waypoints):
 
 def load_from_csv(filename):
     waypoints = []
-    _dirname, _name = os.path.split(filename)
-    _fs = open_fs(_dirname)
-    with _fs.open(_name, "rb") as in_file:
+    path = Path(filename)
+    with path.open("rb") as in_file:
         lines = in_file.readlines()
     if len(lines) < 4:
         raise SyntaxError("CSV file requires at least 4 lines!")
