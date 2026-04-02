@@ -122,9 +122,10 @@ class MSUIWebMapService(ogcwms.WebMapService):
 
         """
         base_url = self.get_redirect_url(method)
-        request = {'version': self.version, 'request': 'GetMap'}
+        request_version = str(self.version)
+        request = {'version': request_version, 'request': 'GetMap'}
 
-        if self.version != "1.3.0":
+        if request_version != "1.3.0":
             exceptions = "application/vnd.ogc.se_xml"
 
         # check layers and styles
@@ -140,7 +141,8 @@ class MSUIWebMapService(ogcwms.WebMapService):
         request['width'] = str(size[0])
         request['height'] = str(size[1])
 
-        request['srs' if self.version != "1.3.0" else "crs"] = str(srs)
+        srs_string = str(srs)
+        request['srs' if request_version != "1.3.0" else "crs"] = srs_string
         request['format'] = str(format)
         request['transparent'] = str(transparent).upper()
         request['bgcolor'] = '0x' + bgcolor[1:7]
@@ -148,7 +150,15 @@ class MSUIWebMapService(ogcwms.WebMapService):
 
         # ++(mss)
         if bbox is not None:
-            request['bbox'] = ','.join([str(x) for x in bbox])
+            bbox_values = tuple(bbox)
+            if request_version == "1.3.0" and srs_string.upper().startswith("EPSG"):
+                try:
+                    epsg_code = int(srs_string.split(":", 1)[1])
+                except (IndexError, ValueError):
+                    epsg_code = None
+                if epsg_code in axisorder_yx:
+                    bbox_values = (bbox_values[1], bbox_values[0], bbox_values[3], bbox_values[2])
+            request['bbox'] = ','.join([str(x) for x in bbox_values])
         if path_str is not None:
             request['path'] = path_str
 
@@ -630,11 +640,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 args = []
                 for i, layer_itr in enumerate(layers):
                     transparent = self.cbTransparent.isChecked() if i == 0 else True
-                    bbox_tmp = tuple(bbox)
-                    wms = self.multilayers.layers[layer_itr.wms_name]["wms"]
-                    if wms.version == "1.3.0" and crs.startswith("EPSG") and int(crs[5:]) in axisorder_yx:
-                        bbox_tmp = (bbox[1], bbox[0], bbox[3], bbox[2])
-                    args.extend(self.retrieve_image(layer_itr, crs, bbox_tmp, None, width, height, transparent))
+                    args.extend(self.retrieve_image(layer_itr, crs, bbox, None, width, height, transparent))
 
                 self.fetch.emit(args)
             elif view_name == "side":
@@ -1861,11 +1867,7 @@ class HSecWMSControlWidget(WMSControlWidget):
         args = []
         for i, layer in enumerate(layers):
             transparent = self.cbTransparent.isChecked() if i == 0 else True
-            bbox_tmp = tuple(bbox)
-            wms = self.multilayers.layers[layer.wms_name]["wms"]
-            if wms.version == "1.3.0" and crs.startswith("EPSG") and int(crs[5:]) in axisorder_yx:
-                bbox_tmp = (bbox[1], bbox[0], bbox[3], bbox[2])
-            args.extend(self.retrieve_image(layer, crs, bbox_tmp, None, width, height, transparent))
+            args.extend(self.retrieve_image(layer, crs, bbox, None, width, height, transparent))
 
         self.fetch.emit(args)
 
