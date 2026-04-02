@@ -374,7 +374,8 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
             if wms_url_combo:
                 wms_url_combo.setCurrentText(url)
                 wms_url_combo.currentTextChanged.emit(url)
-                QtCore.QCoreApplication.processEvents()
+                # Drive URL activation through the control widget API.
+                self.url_val_changed(url)
             else:
                 logging.error("WMS URL combobox 'cbWMS_URL' not found")
                 return
