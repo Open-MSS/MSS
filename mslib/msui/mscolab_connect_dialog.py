@@ -30,7 +30,6 @@ import requests
 import webbrowser
 from urllib.parse import urljoin
 
-from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QDialog, QMessageBox
 
 from mslib.msui.qt5 import ui_mscolab_connect_dialog as ui_conn
@@ -123,7 +122,8 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
         self.statusLabel.setText(_msg)
         # windows can have a cp1252 encoding, don't use special chars
         logging.debug("set_status: %s", msg)
-        QtWidgets.QApplication.processEvents()
+        # Repaint this widget only, without spinning the full Qt event loop.
+        self.statusLabel.repaint()
 
     def add_mscolab_urls(self):
         url_list = config_loader(dataset="default_MSCOLAB")

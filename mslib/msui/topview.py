@@ -531,8 +531,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 return kwargs
 
             logging.debug("switching to map section '%s' - '%s'", current_map_key, kwargs)
-            self.mpl.canvas.redraw_map(kwargs)
-            self.mpl.navbar.clear_history()
+            self.mpl.canvas.redraw_map(kwargs, on_finished=self.mpl.navbar.clear_history)
 
     def setIdentifier(self, identifier):
         super().setIdentifier(identifier)

@@ -53,8 +53,7 @@ import mslib.utils.thermolib
 from mslib.utils.config import config_loader, read_config_file
 from mslib.utils.units import units
 from mslib.msui.wms_control import MSUIWebMapService
-from mslib.msui import constants
-from mslib.msui import mpl_qtwidget as qt
+from mslib.msui import constants, viewplotter
 from mslib.msui import mpl_pathinteractor as mpath
 from mslib.msui import flighttrack as ft
 from mslib.utils import config as conf
@@ -299,7 +298,7 @@ class TopViewPlotting(Plotting):
     def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw=False):
         super(TopViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw)
         self.pdlg = pdlg
-        self.myfig = qt.TopViewPlotter()
+        self.myfig = viewplotter.TopViewPlotter()
         self.myfig.fig.canvas.draw()
         self.fig, self.ax = self.myfig.fig, self.myfig.ax
         matplotlib.backends.backend_agg.FigureCanvasAgg(self.fig)
@@ -368,7 +367,7 @@ class SideViewPlotting(Plotting):
     def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw=False):
         super(SideViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw)
         self.pdlg = pdlg
-        self.myfig = qt.SideViewPlotter()
+        self.myfig = viewplotter.SideViewPlotter()
         self.ax = self.myfig.ax
         self.fig = self.myfig.fig
         self.tick_index_step = self.num_interpolation_points // self.num_labels
@@ -484,7 +483,7 @@ class LinearViewPlotting(Plotting):
     def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw=False):
         super(LinearViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password, raw)
         self.pdlg = pdlg
-        self.myfig = qt.LinearViewPlotter()
+        self.myfig = viewplotter.LinearViewPlotter()
         self.ax = self.myfig.ax
         matplotlib.backends.backend_agg.FigureCanvasAgg(self.myfig.fig)
         self.plotter = mpath.PathV_Plotter(self.myfig.ax)
