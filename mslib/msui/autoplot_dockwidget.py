@@ -280,8 +280,9 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
 
+        config_dir = os.fspath(const.MSUI_CONFIG_PATH)
         fileName, _ = QFileDialog.getOpenFileName(
-            self, "Select .json Config File", const.MSUI_CONFIG_PATH, "JSON Files (*.json)", options=options)
+            self, "Select .json Config File", config_dir, "JSON Files (*.json)", options=options)
 
         if fileName != "":
             self.cpath = fileName
@@ -511,10 +512,11 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
 
+        config_dir = os.fspath(const.MSUI_CONFIG_PATH)
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             "Save JSON File",
-            const.MSUI_CONFIG_PATH,
+            config_dir,
             "JSON Files (*.json);;All Files (*)",
             options=options
         )
