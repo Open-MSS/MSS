@@ -624,7 +624,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
             if cb_url:
                 cb_url.setCurrentText(url)
                 cb_url.currentTextChanged.emit(url)
-                QtCore.QCoreApplication.processEvents()
+                self.url_val_changed(url)
             else:
                 logging.error("WMS URL combobox 'cbWMS_URL' not found")
                 return
