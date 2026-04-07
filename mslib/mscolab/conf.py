@@ -121,7 +121,7 @@ class DefaultSettings:
     # mail accounts
     # MAIL_DEFAULT_SENDER = 'MSS@localhost'
     # filepath to md file with imprint
-    #IMPRINT = None
+    # IMPRINT = None
     # filepath to md file with gdpr
     GDPR = None
 

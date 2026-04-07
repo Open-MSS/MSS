@@ -40,13 +40,13 @@ from saml2.metadata import create_metadata_string
 from mslib.mscolab.conf import setup_saml2_backend
 from mslib.mscolab.forms import ResetPasswordForm, ResetRequestForm
 from mslib.mscolab.models import User
-from mslib.utils import conditional_decorator
 from mslib.utils.auth import check_login, register_user, generate_confirmation_token, send_email, confirm_token, \
     get_idp_entity_id, create_or_update_idp_user
 
 AUTH_BP = Blueprint('auth', __name__, template_folder='templates')
 
 auth_basic_auth = HTTPBasicAuth()
+
 
 def optional_auth(f):
     @wraps(f)
@@ -169,6 +169,7 @@ def confirm_email(token):
         logging.warning("To send emails, the value of MAIL_ENABLED in conf.py should be set to True.")
         return render_template('auth/errors/403.html'), 403
 
+
 @AUTH_BP.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     try:
@@ -178,9 +179,8 @@ def reset_password(token):
     if email is False:
         flash("Sorry, your token has expired or is invalid! We will need to resend your authentication email",
               'category_info')
-        return render_template('auth/user/status_password.html', uri={"path": "auth.reset_request", "name": "Resend "
-                                                                                                  "authentication "
-                                                                                                  "email"})
+        return render_template('auth/user/status_password.html',
+                               uri={"path": "auth.reset_request", "name": "Resend ""authentication ""email"})
     user = User.query.filter_by(emailid=email).first_or_404()
     form = ResetPasswordForm()
     if form.validate_on_submit():
@@ -231,6 +231,7 @@ if has_app_context() and current_app.config['USE_SAML2']:
     setup_saml2_backend()
 
     # set routes for SSO
+
     @AUTH_BP.route('/available_idps/', methods=['GET'])
     def available_idps():
         """
@@ -271,6 +272,7 @@ if has_app_context() and current_app.config['USE_SAML2']:
         """
         Create acs_post_handler function for the given idp_config.
         """
+
         def acs_post_handler():
             """
             Function to handle SAML authentication response.
@@ -317,6 +319,7 @@ if has_app_context() and current_app.config['USE_SAML2']:
                 return render_template('auth/errors/500.html'), 500
             except (NameError, AttributeError, KeyError):
                 return render_template('auth/errors/403.html'), 403
+
         return acs_post_handler
 
     # Implementation for handling configured SAML assertion consumer endpoints
@@ -325,7 +328,7 @@ if has_app_context() and current_app.config['USE_SAML2']:
             for assertion_consumer_endpoint in idp_config['idp_data']['assertion_consumer_endpoints']:
                 # Dynamically add the route for the current endpoint
                 current_app.add_url_rule(f'/{assertion_consumer_endpoint}/', assertion_consumer_endpoint,
-                                 create_acs_post_handler(idp_config), methods=['POST'])
+                                         create_acs_post_handler(idp_config), methods=['POST'])
         except (NameError, AttributeError, KeyError) as ex:
             logging.warning("USE_SAML2 is %s, Failure is: %s", current_app.config['USE_SAML2'], ex)
 

@@ -28,9 +28,8 @@
 import json
 
 import werkzeug
-from flask import Blueprint, request, g, jsonify, abort, send_from_directory
+from flask import Blueprint, request, g, jsonify, abort, send_from_directory, current_app
 
-from mslib.mscolab.app import APP
 from mslib.mscolab.message_type import MessageType
 from mslib.mscolab.utils import get_message_dict
 from mslib.utils.auth import verify_user
@@ -86,7 +85,7 @@ def message_attachment():
 
 @CHAT_BP.route('/uploads/<name>/<path:filename>', methods=["GET"])
 def uploads(name=None, filename=None):
-    base_path = APP.config['UPLOAD_FOLDER']
+    base_path = current_app.config['UPLOAD_FOLDER']
     if name is None:
         abort(404)
     if filename is None:

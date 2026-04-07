@@ -28,7 +28,7 @@ import os
 import logging
 import mslib
 
-from flask import Flask, url_for, current_app
+from flask import Flask, url_for
 from xstatic.main import XStatic
 from mslib.mswms.blueprints.docs import DOCS_BP
 from mslib.mswms.blueprints.gallery import GALLERY_BP

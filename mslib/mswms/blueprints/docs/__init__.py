@@ -163,7 +163,7 @@ def help():  # noqa: A001
 @DOCS_BP.route("/mss/imprint")
 def imprint():
     imprint_file = current_app.config.get('IMPRINT', None)
-    if  imprint_file is not None and file_exists(imprint_file):
+    if imprint_file is not None and file_exists(imprint_file):
         content = get_content(imprint_file)
         return render_template("docs/content.html", act="imprint", content=content)
     else:
