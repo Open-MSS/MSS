@@ -31,8 +31,7 @@ import io
 import os
 
 from PIL import Image
-
-from mslib.mscolab.app import APP
+from flask import current_app
 
 from mslib.mscolab.models import User, Operation
 
@@ -54,7 +53,7 @@ class Test_Server:
 
     def test_initialized_managers(self, mscolab_managers):
         sockio, cm, fm = mscolab_managers
-        assert self.app.config['OPERATIONS_DATA'] == APP.config['OPERATIONS_DATA']
+        assert self.app.config['OPERATIONS_DATA'] == current_app.config['OPERATIONS_DATA']
         assert 'Create a Flask-SocketIO server.' in sockio.__doc__
         assert 'Class with handler functions for chat related functionalities' in cm.__doc__
         assert 'Class with handler functions for file related functionalities' in fm.__doc__
@@ -165,7 +164,7 @@ class Test_Server:
 
             user = get_user(self.userdata[0])
             relative_image_path = user.profile_image_path  # Capture the path before deletion
-            full_image_path = os.path.join(APP.config['UPLOAD_FOLDER'], relative_image_path)
+            full_image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], relative_image_path)
             response = test_client.post('/delete_own_account', data={"token": token})
             assert response.status_code == 200
             assert response.get_json()["success"] is True

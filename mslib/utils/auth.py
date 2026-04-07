@@ -36,11 +36,10 @@ import logging
 import email_validator
 import keyring
 import sqlalchemy
-from flask import request, abort, g
+from flask import request, abort, g, current_app
 from flask_mail import Message
 from itsdangerous import URLSafeTimedSerializer, BadSignature
 
-from mslib.mscolab.app import APP
 from mslib.mscolab.conf import setup_saml2_backend
 from mslib.mscolab.models import User
 
@@ -130,7 +129,7 @@ def check_login(emailid, password):
         logging.debug("Problem in the database (%ex), likely version client different", ex)
         return False
     if user is not None:
-        if APP.config['MAIL_ENABLED']:
+        if current_app.config['MAIL_ENABLED']:
             if user.confirmed:
                 if user.verify_password(password):
                     return user
@@ -146,7 +145,7 @@ def register_user(email, password, username, fullname):
     is_valid_username = True if username.find("@") == -1 else False
     try:
         # ToDo verify what changed for check_deliverability
-        email_validator.validate_email(email, check_deliverability=APP.config['MAIL_ENABLED'])
+        email_validator.validate_email(email, check_deliverability=current_app.config['MAIL_ENABLED'])
     except (email_validator.exceptions.EmailSyntaxError):
         return {"success": False, "message": "Your email ID is not valid!"}
     if not is_valid_username:
@@ -165,17 +164,17 @@ def register_user(email, password, username, fullname):
 
 
 def generate_confirmation_token(email):
-    serializer = URLSafeTimedSerializer(APP.config['SECRET_KEY'])
-    return serializer.dumps(email, salt=APP.config['SECURITY_PASSWORD_SALT'])
+    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+    return serializer.dumps(email, salt=current_app.config['SECURITY_PASSWORD_SALT'])
 
 
 def send_email(to, subject, template):
-    if APP.config['MAIL_DEFAULT_SENDER'] is not None:
+    if current_app.config['MAIL_DEFAULT_SENDER'] is not None:
         msg = Message(
             subject,
             recipients=[to],
             html=template,
-            sender=APP.config['MAIL_DEFAULT_SENDER']
+            sender=current_app.config['MAIL_DEFAULT_SENDER']
         )
         try:
             from mslib.mscolab.server import getConfig
@@ -188,11 +187,11 @@ def send_email(to, subject, template):
 
 
 def confirm_token(token, expiration=3600):
-    serializer = URLSafeTimedSerializer(APP.config['SECRET_KEY'])
+    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
     try:
         email = serializer.loads(
             token,
-            salt=APP.config['SECURITY_PASSWORD_SALT'],
+            salt=current_app.config['SECURITY_PASSWORD_SALT'],
             max_age=expiration
         )
     except (IOError, BadSignature):
@@ -252,7 +251,7 @@ def verify_user(func):
             return "False"
         else:
             # saving user details in flask.g
-            if APP.config['MAIL_ENABLED']:
+            if current_app.config['MAIL_ENABLED']:
                 if user.confirmed:
                     g.user = user
                     return func(*args, **kwargs)
