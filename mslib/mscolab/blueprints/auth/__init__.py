@@ -29,8 +29,9 @@ import datetime
 import json
 import logging
 import secrets
+from functools import wraps
 
-from flask import Blueprint, request, url_for, render_template, jsonify, flash, redirect
+from flask import Blueprint, request, url_for, render_template, jsonify, flash, redirect, current_app, has_app_context
 from flask_httpauth import HTTPBasicAuth
 from flask.wrappers import Response
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
@@ -39,7 +40,6 @@ from saml2.metadata import create_metadata_string
 from mslib.mscolab.conf import setup_saml2_backend
 from mslib.mscolab.forms import ResetPasswordForm, ResetRequestForm
 from mslib.mscolab.models import User
-from mslib.mscolab.app import APP
 from mslib.utils import conditional_decorator
 from mslib.utils.auth import check_login, register_user, generate_confirmation_token, send_email, confirm_token, \
     get_idp_entity_id, create_or_update_idp_user
@@ -48,39 +48,48 @@ AUTH_BP = Blueprint('auth', __name__, template_folder='templates')
 
 auth_basic_auth = HTTPBasicAuth()
 
+def optional_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if current_app.config.get('enable_basic_http_authentication', False):
+            return auth_basic_auth.login_required(f)(*args, **kwargs)
+        return f(*args, **kwargs)
+
+    return decorated
+
 
 @AUTH_BP.route("/status")
-@conditional_decorator(auth_basic_auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
+@optional_auth
 def hello():
     if request.authorization is not None:
-        if APP.__dict__.get('enable_basic_http_authentication', False):
+        if current_app.config.get('enable_basic_http_authentication', False):
             auth_basic_auth.login_required()
             return json.dumps({
                 'message': "Mscolab server",
-                'use_saml2': APP.config['USE_SAML2'],
-                'direct_login': APP.DIRECT_LOGIN
+                'use_saml2': current_app.config['USE_SAML2'],
+                'direct_login': current_app.config['DIRECT_LOGIN']
             })
         return json.dumps({
             'message': "Mscolab server",
-            'use_saml2': APP.config['USE_SAML2'],
-            'direct_login': APP.config['DIRECT_LOGIN']
+            'use_saml2': current_app.config['USE_SAML2'],
+            'direct_login': current_app.config['DIRECT_LOGIN']
         })
     else:
         return json.dumps({
             'message': "Mscolab server",
-            'use_saml2': APP.config['USE_SAML2'],
-            'direct_login': APP.config['DIRECT_LOGIN']
+            'use_saml2': current_app.config['USE_SAML2'],
+            'direct_login': current_app.config['DIRECT_LOGIN']
         })
 
 
 @AUTH_BP.route('/token', methods=["POST"])
-@conditional_decorator(auth_basic_auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
+@optional_auth
 def get_auth_token():
     emailid = request.form['email']
     password = request.form['password']
     user = check_login(emailid, password)
     if user is not False:
-        if APP.config['MAIL_ENABLED']:
+        if current_app.config['MAIL_ENABLED']:
             if user.confirmed:
                 token = user.generate_auth_token()
                 return json.dumps({
@@ -103,7 +112,7 @@ def authorized():
     token = request.args.get('token', request.form.get('token'))
     user = User.verify_auth_token(token)
     if user is not None:
-        if APP.config['MAIL_ENABLED']:
+        if current_app.config['MAIL_ENABLED']:
             if user.confirmed is False:
                 return "False"
             else:
@@ -115,7 +124,7 @@ def authorized():
 
 
 @AUTH_BP.route("/register", methods=["POST"])
-@conditional_decorator(auth_basic_auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
+@optional_auth
 def user_register_handler():
     email = request.form['email']
     password = request.form['password']
@@ -126,7 +135,7 @@ def user_register_handler():
     try:
         if result["success"]:
             status_code = 201
-            if APP.config['MAIL_ENABLED']:
+            if current_app.config['MAIL_ENABLED']:
                 status_code = 204
                 token = generate_confirmation_token(email)
                 confirm_url = url_for('auth.confirm_email', token=token, _external=True)
@@ -140,7 +149,7 @@ def user_register_handler():
 
 @AUTH_BP.route('/confirm/<token>')
 def confirm_email(token):
-    if APP.config['MAIL_ENABLED']:
+    if current_app.config['MAIL_ENABLED']:
         try:
             email = confirm_token(token)
         except TypeError:
@@ -189,7 +198,7 @@ def reset_password(token):
 
 @AUTH_BP.route("/reset_request", methods=['GET', 'POST'])
 def reset_request():
-    if APP.config['MAIL_ENABLED']:
+    if current_app.config['MAIL_ENABLED']:
         form = ResetRequestForm()
         if form.validate_on_submit():
             # Check whether user exists or not based on the db
@@ -217,7 +226,7 @@ def reset_request():
         return render_template('auth/errors/403.html'), 403
 
 
-if APP.config['USE_SAML2']:
+if has_app_context() and current_app.config['USE_SAML2']:
     # setup idp login config
     setup_saml2_backend()
 
@@ -315,10 +324,10 @@ if APP.config['USE_SAML2']:
         try:
             for assertion_consumer_endpoint in idp_config['idp_data']['assertion_consumer_endpoints']:
                 # Dynamically add the route for the current endpoint
-                APP.add_url_rule(f'/{assertion_consumer_endpoint}/', assertion_consumer_endpoint,
+                current_app.add_url_rule(f'/{assertion_consumer_endpoint}/', assertion_consumer_endpoint,
                                  create_acs_post_handler(idp_config), methods=['POST'])
         except (NameError, AttributeError, KeyError) as ex:
-            logging.warning("USE_SAML2 is %s, Failure is: %s", APP.config['USE_SAML2'], ex)
+            logging.warning("USE_SAML2 is %s, Failure is: %s", current_app.config['USE_SAML2'], ex)
 
     @AUTH_BP.route('/idp_login_auth/', methods=['POST'])
     def idp_login_auth():
