@@ -129,7 +129,7 @@ def user_register_handler():
             if APP.config['MAIL_ENABLED']:
                 status_code = 204
                 token = generate_confirmation_token(email)
-                confirm_url = url_for('auth.user.confirm_email', token=token, _external=True)
+                confirm_url = url_for('auth.confirm_email', token=token, _external=True)
                 html = render_template('auth/user/activate.html', username=username, confirm_url=confirm_url)
                 subject = "MSColab Please confirm your email"
                 send_email(email, subject, html)
@@ -169,7 +169,7 @@ def reset_password(token):
     if email is False:
         flash("Sorry, your token has expired or is invalid! We will need to resend your authentication email",
               'category_info')
-        return render_template('auth/user/status_password.html', uri={"path": "reset_request", "name": "Resend "
+        return render_template('auth/user/status_password.html', uri={"path": "auth.reset_request", "name": "Resend "
                                                                                                   "authentication "
                                                                                                   "email"})
     user = User.query.filter_by(emailid=email).first_or_404()
@@ -198,7 +198,7 @@ def reset_request():
                 try:
                     username = user.username
                     token = generate_confirmation_token(form.email.data)
-                    reset_password_url = url_for('auth.user.reset_password', token=token, _external=True)
+                    reset_password_url = url_for('auth.reset_password', token=token, _external=True)
                     html = render_template('auth/user/reset_confirmation.html',
                                            reset_password_url=reset_password_url, username=username)
                     subject = "MSColab Password reset request"
