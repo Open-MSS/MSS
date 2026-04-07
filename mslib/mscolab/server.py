@@ -232,5 +232,6 @@ APP.register_blueprint(AUTH_BP)
 APP.register_blueprint(CHAT_BP)
 APP.register_blueprint(USER_BP)
 APP.register_blueprint(OPERATION_BP)
+
 if __name__ == '__main__':
     main()
