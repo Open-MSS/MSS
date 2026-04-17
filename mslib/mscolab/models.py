@@ -96,7 +96,8 @@ class User(db.Model):
 
     def verify_password(self, password_):
         try:
-            return PH.verify(self.password, password_)
+            PH.verify(self.password, password_)
+            return True
         except VerifyMismatchError:
             return False
 
