@@ -736,3 +736,34 @@ class TestWMSControlWidgetSetupSimple:
         self.window.activate_wms(wc.MSUIWebMapService(None, version='1.1.1', xml=testxml))
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == []
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == []
+
+    def test_getmap_reorders_bbox_for_wms130_epsg4326(self):
+        testxml = self.xml.format("", self.srs_base, self.dimext_time + self.dimext_inittime + self.dimext_elevation)
+        wms = wc.MSUIWebMapService(None, version='1.1.1', xml=testxml)
+        wms.version = "1.3.0"
+        url = wms.getmap(
+            layers=["ecmwf_EUR_LL015.PLTemp01"],
+            styles=[""],
+            srs="EPSG:4326",
+            bbox=(-180, -90, 180, 90),
+            format="image/png",
+            size=(200, 100),
+            return_only_url=True,
+        )
+        query = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)
+        assert query["bbox"][0] == "-90,-180,90,180"
+
+    def test_getmap_preserves_bbox_for_wms111_epsg4326(self):
+        testxml = self.xml.format("", self.srs_base, self.dimext_time + self.dimext_inittime + self.dimext_elevation)
+        wms = wc.MSUIWebMapService(None, version='1.1.1', xml=testxml)
+        url = wms.getmap(
+            layers=["ecmwf_EUR_LL015.PLTemp01"],
+            styles=[""],
+            srs="EPSG:4326",
+            bbox=(-180, -90, 180, 90),
+            format="image/png",
+            size=(200, 100),
+            return_only_url=True,
+        )
+        query = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)
+        assert query["bbox"][0] == "-180,-90,180,90"
