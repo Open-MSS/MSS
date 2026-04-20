@@ -25,12 +25,13 @@
 """
 import pytest
 import mock
-import multiprocessing
+import os
+import subprocess
+import sys
 import time
 import urllib
 import socketio
 import mslib.mswms.mswms
-from werkzeug.serving import make_server
 
 from PyQt5 import QtWidgets
 from contextlib import contextmanager
@@ -38,6 +39,7 @@ from mslib.mscolab.server import APP, sockio, cm, fm
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.utils.config import modify_config_file
 from tests.utils import is_url_response_ok
+import tests.constants as constants
 
 
 @pytest.fixture
@@ -110,13 +112,6 @@ def mscolab_session_managers(mscolab_session_app):
     return sockio, cm, fm
 
 
-# TODO: Having this fixture be autouse is a crutch. It seems like if it is not autouse some tests can bring the pytest
-# processes objects into a state in which the MSColab server will have trouble starting the Flask-SocketIO server once
-# it is forked. With autouse the fork happens first, before any test runs. After that, the pytest process can no longer
-# affect the now-running server, thus mitigating the issue. This is my understanding at time of writing.
-#
-# This issue would also be avoided if the background server process wasn't started with multiprocessing and a fork, but
-# with a real subprocess, which would solve some other issues (e.g. testing on Windows) as well.
 @pytest.fixture(scope="session", autouse=True)
 def mscolab_session_server(mscolab_session_app, mscolab_session_managers):
     """Session-scoped fixture that provides a running MSColab server.
@@ -124,7 +119,8 @@ def mscolab_session_server(mscolab_session_app, mscolab_session_managers):
     This fixture should not be used in tests. Instead use :func:`mscolab_server`, which
     handles per-test cleanup as well.
     """
-    with _running_server(mscolab_session_app) as url:
+    with _running_server(mscolab_session_app, 'mslib.mscolab.server', 'APP',
+                         extra_paths=[str(constants.MSCOLAB_SERVER_CONFIG_DIR)]) as url:
         # Wait until the Flask-SocketIO server is ready for connections
         sio = socketio.Client()
         sio.connect(url, retry=True, wait_timeout=60)
@@ -185,41 +181,34 @@ def mswms_server(mswms_app):
 
     :returns: The URL where the server is running.
     """
-    with _running_server(mswms_app) as url:
+    with _running_server(mswms_app, 'mslib.mswms.mswms', 'application',
+                         extra_paths=[str(constants.MSWMS_SERVER_CONFIG_DIR)]) as url:
         yield url
 
 
-def _start_server(host, port_queue, app):
-    """
-    Starts a werkzeug server and sends the chosen port back to the parent process.
-    """
-    srv = make_server(host, 0, app, threaded=True)
-    port = srv.server_address[1]
-    port_queue.put(port)
-    srv.serve_forever()
-
-
 @contextmanager
-def _running_server(app):
+def _running_server(app, app_module, app_attr, extra_paths=None):
     """Context manager that starts the app in a werkzeug server and returns its URL."""
     scheme = "http"
     host = "127.0.0.1"
-
-    if "fork" not in multiprocessing.get_all_start_methods():
-        pytest.skip("requires the multiprocessing start_method 'fork', which is unavailable on this system")
-
-    ctx = multiprocessing.get_context("fork")
-    # We are using a queue to retrieve the port selected in the child process.
-    port_queue = ctx.Queue()
-
-    process = ctx.Process(target=_start_server, args=(host, port_queue, app), daemon=True)
+    runner = os.path.join(os.path.dirname(__file__), '_server_runner.py')
+    cmd = [sys.executable, runner, app_module, app_attr, host]
+    if extra_paths:
+        cmd.extend(extra_paths)
+    process = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
     try:
-        process.start()
-        # Retrieve the port from the queue
-        try:
-            port = port_queue.get(timeout=10)
-        except multiprocessing.queues.Empty:
-            raise RuntimeError("Could not retrieve port from server process")
+        # Retrieve the port printed by the runner to stdout
+        port_line = process.stdout.readline()
+        if not port_line:
+            stderr_output = process.stderr.read().decode(errors='replace')
+            raise RuntimeError(
+                f"Could not retrieve port from server process. stderr:\n{stderr_output}"
+            )
+        port = int(port_line.strip())
 
         url = f"{scheme}://{host}:{port}"
         app.config['URL'] = url
@@ -230,21 +219,18 @@ def _running_server(app):
         # we check only for the root url, index.html may take longer
         readiness_url = urllib.parse.urljoin(url, "/")
         while not is_url_response_ok(readiness_url):
-            if not process.is_alive():
+            if process.poll() is not None:
                 # show the exitcode for further debugging
-                raise RuntimeError(f"Server process exited early with code {process.exitcode} at {url}")
+                raise RuntimeError(f"Server process exited early with code {process.returncode} at {url}")
             if (time.time() - start_time) > time_out:
                 raise RuntimeError(f"Server did not start within {time_out} seconds at {url}")
             time.sleep(sleep_time)
-            sleep_time *= 2
-            if sleep_time > 1:
-                sleep_time = 1
+            sleep_time = min(sleep_time * 2, 1)
         yield url
     finally:
         process.terminate()
-        process.join(timeout=10)
-        if process.is_alive():
-            # when it is still alive after 10 seconds, kill it
+        try:
+            process.wait(timeout=10)
+        except subprocess.TimeoutExpired:
             process.kill()
-            process.join(timeout=5)
-        process.close()
+            process.wait(timeout=5)

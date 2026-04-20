@@ -55,6 +55,9 @@ MSUI_CONFIG_PATH = ROOT_DIR / "msui"
 os.environ["MSUI_CONFIG_PATH"] = str(MSUI_CONFIG_PATH.resolve())
 MSUI_CONFIG_FILE_PATH = MSUI_CONFIG_PATH / "msui_settings.json"
 
+if not MSUI_CONFIG_PATH.exists():
+    MSUI_CONFIG_PATH.mkdir(parents=True)
+
 _xdg_cache_home_temporary_directory = tempfile.TemporaryDirectory()
 os.environ["XDG_CACHE_HOME"] = _xdg_cache_home_temporary_directory.name
 
