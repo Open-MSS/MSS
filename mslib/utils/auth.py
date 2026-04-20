@@ -146,7 +146,7 @@ def register_user(email, password, username, fullname):
     try:
         # ToDo verify what changed for check_deliverability
         email_validator.validate_email(email, check_deliverability=current_app.config['MAIL_ENABLED'])
-    except (email_validator.exceptions.EmailSyntaxError):
+    except (email_validator.exceptions.EmailSyntaxError or email_validator.exceptions.EmailUndeliverableError):
         return {"success": False, "message": "Your email ID is not valid!"}
     if not is_valid_username:
         return {"success": False, "message": "Your username cannot contain @ symbol!"}
