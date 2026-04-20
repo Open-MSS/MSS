@@ -99,14 +99,7 @@ class DefaultSettings:
     enable_basic_http_authentication = False
 
     # enable verification by Mail
-    MAIL_ENABLED = True
-
-    # mail accounts
-    MAIL_DEFAULT_SENDER = 'mss-mscolab@fz-juelich.de'
-    # mail settings
-    MAIL_SERVER = 'mail.fz-juelich.de'
-    MAIL_PORT = 25
-    IMPRINT = '/home/user/imprint/imprint.md'
+    MAIL_ENABLED = False
 
     # mail settings
     # MAIL_SERVER = 'localhost'
@@ -121,7 +114,7 @@ class DefaultSettings:
     # mail accounts
     # MAIL_DEFAULT_SENDER = 'MSS@localhost'
     # filepath to md file with imprint
-    # IMPRINT = None
+    IMPRINT = None
     # filepath to md file with gdpr
     GDPR = None
 
