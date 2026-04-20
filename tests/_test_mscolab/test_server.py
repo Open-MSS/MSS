@@ -33,11 +33,11 @@ import os
 from PIL import Image
 from flask import current_app
 
+from mslib.mscolab.auth import register_user, check_login
 from mslib.mscolab.models import User, Operation
 
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
-from mslib.utils.auth import register_user, check_login
 from tests.utils import XML_CONTENT1, XML_CONTENT2
 from mslib.mscolab.seed import XML_CONTENT_INIT
 

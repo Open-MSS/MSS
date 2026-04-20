@@ -30,8 +30,8 @@ import json
 
 from flask import Blueprint, request, g, jsonify
 
+from mslib.mscolab.auth import verify_user
 from mslib.mscolab.models import Change
-from mslib.utils.auth import verify_user
 
 OPERATION_BP = Blueprint('operation', __name__)
 

@@ -30,7 +30,7 @@ from pathlib import Path
 
 from flask import Blueprint, g, request, jsonify, send_from_directory, current_app
 
-from mslib.utils.auth import verify_user
+from mslib.mscolab.auth import verify_user
 
 USER_BP = Blueprint('user', __name__)
 

@@ -30,9 +30,9 @@ import json
 import werkzeug
 from flask import Blueprint, request, g, jsonify, abort, send_from_directory, current_app
 
+from mslib.mscolab.auth import verify_user
 from mslib.mscolab.message_type import MessageType
 from mslib.mscolab.utils import get_message_dict
-from mslib.utils.auth import verify_user
 
 CHAT_BP = Blueprint('chat', __name__)
 
