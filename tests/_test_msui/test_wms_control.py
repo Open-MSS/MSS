@@ -30,7 +30,7 @@ import mock
 import pytest
 import hashlib
 import urllib
-import eventlet
+import socket
 from PyQt5 import QtCore, QtTest
 from mslib.msui import flighttrack as ft
 from mslib.utils.service_manager import WMSServiceManager
@@ -105,7 +105,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert that a message box informs about server troubles
         """
         # get a free port which we haven't used
-        sock = eventlet.listen((self.host, 0))
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind((self.host, 0))
         port = sock.getsockname()[1]
         sock.close()
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:

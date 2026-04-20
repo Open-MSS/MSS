@@ -2239,7 +2239,6 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/email-validator-2.3.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/email_validator-2.3.0-hd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/esmf-8.9.1-nompi_h8d4c64c_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/eventlet-0.40.4-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.3.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/execnet-2.1.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fastkml-1.4.0-pyhd8ed1ab_0.conda
@@ -2594,7 +2593,6 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/email-validator-2.3.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/email_validator-2.3.0-hd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/esmf-8.9.1-nompi_heddb8e4_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/eventlet-0.40.4-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.3.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/execnet-2.1.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fastkml-1.4.0-pyhd8ed1ab_0.conda
@@ -2900,7 +2898,6 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/elementpath-4.8.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/email-validator-2.3.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/email_validator-2.3.0-hd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/eventlet-0.40.4-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.3.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/execnet-2.1.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fastkml-1.4.0-pyhd8ed1ab_0.conda
@@ -6768,20 +6765,6 @@ packages:
   purls: []
   size: 24085535
   timestamp: 1767777453164
-- conda: https://conda.anaconda.org/conda-forge/noarch/eventlet-0.40.4-pyhcf101f3_0.conda
-  sha256: 0f5c83df057c0dbb8dfd992350c5335be79ff96c3b8dc2f679cd46d65ed182eb
-  md5: d449200abb424292e69354fb21598836
-  depends:
-  - python >=3.10
-  - greenlet >=1.0
-  - dnspython >=1.15.0
-  - python
-  license: MIT
-  license_family: MIT
-  purls:
-  - pkg:pypi/eventlet?source=hash-mapping
-  size: 325789
-  timestamp: 1764167180184
 - conda: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.3.1-pyhd8ed1ab_0.conda
   sha256: ee6cf346d017d954255bbcbdb424cddea4d14e4ed7e9813e429db1d795d01144
   md5: 8e662bd460bda79b1ea39194e3c4c9ab
