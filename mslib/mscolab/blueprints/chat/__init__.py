@@ -40,13 +40,12 @@ CHAT_BP = Blueprint('chat', __name__)
 @CHAT_BP.route("/messages", methods=["GET"])
 @verify_user
 def messages():
-    from mslib.mscolab.server import getConfig
-    fm = getConfig()[3]
+    fm = current_app.extensions['fm']
     user = g.user
     op_id = request.args.get("op_id", request.form.get("op_id", None))
 
     if fm.is_member(user.id, op_id):
-        cm = getConfig()[2]
+        cm = current_app.extensions['cm']
         timestamp = request.args.get("timestamp", request.form.get("timestamp", "1970-01-01T00:00:00+00:00"))
         chat_messages = cm.get_messages(op_id, timestamp)
         return jsonify({"messages": chat_messages})
@@ -58,8 +57,7 @@ def messages():
 def message_attachment():
     user = g.user
     op_id = request.form.get("op_id", None)
-    from mslib.mscolab.server import getConfig
-    fm = getConfig()[3]
+    fm = current_app.extensions['fm']
     if fm.is_member(user.id, op_id):
         file = request.files['file']
         message_type = MessageType(int(request.form.get("message_type")))
@@ -70,8 +68,8 @@ def message_attachment():
         if file is not None:
             static_file_path = fm.upload_file(file, subfolder=str(op_id), include_prefix=True)
             if static_file_path is not None:
-                cm = getConfig()[2]
-                sockio = getConfig()[1]
+                cm = current_app.extensions['cm']
+                sockio = current_app.extensions['sockio']
                 new_message = cm.add_message(user, static_file_path, op_id, message_type)
                 new_message_dict = get_message_dict(new_message)
                 sockio.emit('chat-message-client', json.dumps(new_message_dict))

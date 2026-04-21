@@ -178,6 +178,9 @@ if APP.__dict__.get('enable_basic_http_authentication', False):
 
 def _initialize_managers(app):
     sockio, cm, fm = _setup_managers(app)
+    app.extensions['cm'] = cm
+    app.extensions['sockio'] = sockio
+    app.extensions['fm'] = fm
     # initializing socketio and db
     app.wsgi_app = socketio.Middleware(socketio.server, app.wsgi_app)
     sockio.init_app(app)
@@ -204,7 +207,8 @@ def check_login(emailid, password):
                 return user
     return False
 
-def get_mail():
+
+def getMail():
     return mail
 
 

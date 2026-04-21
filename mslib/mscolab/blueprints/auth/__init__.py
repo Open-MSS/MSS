@@ -270,8 +270,7 @@ def register_saml_routes():
             if email:
                 user = check_login(email, token)
                 if user:
-                    from mslib.mscolab.server import getConfig
-                    fm = getConfig()[3]
+                    fm = current_app.extensions['fm']
                     random_token = secrets.token_hex(16)
                     user.hash_password(random_token)
                     fm.modify_user(user, action="update_idp_user")
@@ -314,8 +313,7 @@ def confirm_email(token):
         if user.confirmed:
             return render_template('auth/user/confirmed.html', username=user.username)
         else:
-            from mslib.mscolab.server import getConfig
-            fm = getConfig()[3]
+            fm = current_app.extensions['fm']
             fm.modify_user(user, attribute="confirmed_on", value=datetime.datetime.now(tz=datetime.timezone.utc))
             fm.modify_user(user, attribute="confirmed", value=True)
             return render_template('auth/user/confirmed.html', username=user.username)
@@ -339,8 +337,7 @@ def reset_password(token):
     form = ResetPasswordForm()
     if form.validate_on_submit():
         try:
-            from mslib.mscolab.server import getConfig
-            fm = getConfig()[3]
+            fm = current_app.extensions['fm']
             user.hash_password(form.confirm_password.data)
             fm.modify_user(user, "confirmed", True)
             flash('Password reset Success. Please login by the user interface.', 'category_success')

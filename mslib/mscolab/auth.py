@@ -78,8 +78,7 @@ def register_user(email, password, username, fullname):
     user_exists = User.query.filter_by(username=str(username)).first()
     if user_exists:
         return {"success": False, "message": "This username is already registered"}
-    from mslib.mscolab.server import getConfig
-    fm = getConfig()[3]
+    fm = current_app.config['fm']
     user = User(email, username, password, fullname)
     result = fm.modify_user(user, action="create")
     return {"success": result}
@@ -151,8 +150,7 @@ def create_or_update_idp_user(email, username, token, authentication_backend):
     :param authentication_backend: authenticated identity providers name
     :return: bool : query success or not
     """
-    from mslib.mscolab.server import getConfig
-    fm = getConfig()[3]
+    fm = current_app.extensions['fm']
     user = User.query.filter_by(emailid=email).first()
     if not user:
         # using an IDP for a new account/profile, e-mail is already verified by the IDP

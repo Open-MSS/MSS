@@ -125,8 +125,8 @@ def send_email(to, subject, template):
             sender=current_app.config['MAIL_DEFAULT_SENDER']
         )
         try:
-            from mslib.mscolab.server import getConfig
-            mail = getConfig()[4]
+            from mslib.mscolab.server import getMail
+            mail = getMail()
             mail.send(msg)
         except IOError:
             logging.error("Can't send email to %s", to)

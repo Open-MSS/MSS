@@ -52,8 +52,7 @@ def upload_profile_image():
         return jsonify({'message': 'Invalid file type'}), 400
     if file.content_length > current_app.config['MAX_UPLOAD_SIZE']:
         return jsonify({'message': 'File too large'}), 413
-    from mslib.mscolab.server import getConfig
-    fm = getConfig()[3]
+    fm = current_app.extensions['fm']
     success, message = fm.save_user_profile_image(user_id, file)
     if success:
         return jsonify({'message': message}), 200
@@ -64,8 +63,7 @@ def upload_profile_image():
 @USER_BP.route('/fetch_profile_image', methods=["GET"])
 @verify_user
 def fetch_profile_image():
-    from mslib.mscolab.server import getConfig
-    fm = getConfig()[3]
+    fm = current_app.extensions['fm']
     user_id = request.form['user_id']
     success, filename = fm.get_user_profile_image(user_id)
     if success:
@@ -81,8 +79,7 @@ def delete_own_account():
     """
     delete own account
     """
-    from mslib.mscolab.server import getConfig
-    fm = getConfig()[3]
+    fm = current_app.extensions['fm']
     user = g.user
     result = fm.modify_user(user, action="delete")
     return jsonify({"success": result}), 200
