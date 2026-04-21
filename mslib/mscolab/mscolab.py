@@ -375,6 +375,20 @@ def handle_sso_metadata_init(repo_exists):
     print("\n\nALl necessary metadata files generated successfully")
 
 
+def handle_serve_subprocess(app_module, app_attr, host, extra_paths=None):
+    import importlib
+    from werkzeug.serving import make_server
+    for extra_path in (extra_paths or []):
+        if extra_path not in sys.path:
+            sys.path.insert(0, extra_path)
+    module = importlib.import_module(app_module)
+    app = getattr(module, app_attr)
+    srv = make_server(host, 0, app, threaded=True)
+    port = srv.server_address[1]
+    print(port, flush=True)
+    srv.serve_forever()
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
@@ -409,6 +423,12 @@ def main():
         help="Skip confirmation prompt"
     )
 
+    serve_subprocess_parser = subparsers.add_parser("serve_subprocess", help=argparse.SUPPRESS)
+    serve_subprocess_parser.add_argument("app_module")
+    serve_subprocess_parser.add_argument("app_attr")
+    serve_subprocess_parser.add_argument("host")
+    serve_subprocess_parser.add_argument("extra_paths", nargs="*")
+
     sso_conf_parser = subparsers.add_parser("sso_conf", help="single sign on process configurations")
     sso_conf_parser = sso_conf_parser.add_mutually_exclusive_group(required=True)
     sso_conf_parser.add_argument("--init_sso_crts",
@@ -436,7 +456,10 @@ def main():
     except git.exc.InvalidGitRepositoryError:
         repo_exists = False
 
-    if args.action == "start":
+    if args.action == "serve_subprocess":
+        handle_serve_subprocess(args.app_module, args.app_attr, args.host, args.extra_paths)
+
+    elif args.action == "start":
         handle_start(args)
 
     elif args.action == "db":

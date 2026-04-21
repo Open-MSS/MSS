@@ -191,14 +191,21 @@ def _running_server(app, app_module, app_attr, extra_paths=None):
     """Context manager that starts the app in a werkzeug server and returns its URL."""
     scheme = "http"
     host = "127.0.0.1"
-    runner = os.path.join(os.path.dirname(__file__), '_server_runner.py')
-    cmd = [sys.executable, runner, app_module, app_attr, host]
+    cmd = [sys.executable, '-m', 'mslib.mscolab.mscolab', 'serve_subprocess', app_module, app_attr, host]
     if extra_paths:
         cmd.extend(extra_paths)
+    # Pass extra_paths via PYTHONPATH so they are available before any module-level
+    # imports in the subprocess (e.g. mscolab.py imports mslib.mscolab.app at module
+    # level, which reads mscolab_settings before handle_serve_subprocess can add paths).
+    env = os.environ.copy()
+    if extra_paths:
+        existing = env.get('PYTHONPATH', '')
+        env['PYTHONPATH'] = os.pathsep.join(extra_paths) + (os.pathsep + existing if existing else '')
     process = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        env=env,
     )
     try:
         # Retrieve the port printed by the runner to stdout
