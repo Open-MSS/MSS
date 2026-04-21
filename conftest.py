@@ -101,9 +101,9 @@ import secrets
 from pathlib import Path
 from urllib.parse import urljoin
 
-ROOT_DIR = "{constants.ROOT_DIR}"
+ROOT_DIR = "{constants.ROOT_DIR.as_posix()}"
 # directory where mss output files are stored
-DATA_DIR = "{constants.MSCOLAB_DATA_DIR}"
+DATA_DIR = "{constants.MSCOLAB_DATA_DIR.as_posix()}"
 # this will be removed
 OPERATIONS_DATA = Path(DATA_DIR)
 BASE_DIR = ROOT_DIR
