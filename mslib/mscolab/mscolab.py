@@ -47,7 +47,7 @@ from mslib.utils import setup_logging
 
 
 def handle_start(args=None, app_module='mslib.mscolab.server', app_attr='APP',
-                 host='0.0.0.0', port=8083, extra_paths=None):
+                 host='127.0.0.1', port=8083, extra_paths=None):
     import importlib
     from werkzeug.serving import make_server
     for extra_path in (extra_paths or []):
@@ -63,7 +63,12 @@ def handle_start(args=None, app_module='mslib.mscolab.server', app_attr='APP',
     app = getattr(module, app_attr)
     srv = make_server(host, port, app, threaded=True)
     actual_port = srv.server_address[1]
-    print(actual_port, flush=True)
+    if port == 0:
+        # Subprocess/pytest case
+        # Signal the parent process with the chosen port via stdout by print
+        print(actual_port, flush=True)
+    else:
+        logging.info(f"MSColab server available on http://{host}:{actual_port}", flush=True)
     srv.serve_forever()
 
 
