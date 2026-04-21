@@ -46,15 +46,25 @@ from mslib.mscolab.utils import create_files
 from mslib.utils import setup_logging
 
 
-def handle_start(args=None):
-    from mslib.mscolab.server import APP, sockio, cm, fm, start_server
+def handle_start(args=None, app_module='mslib.mscolab.server', app_attr='APP',
+                 host='0.0.0.0', port=8083, extra_paths=None):
+    import importlib
+    from werkzeug.serving import make_server
+    for extra_path in (extra_paths or []):
+        if extra_path not in sys.path:
+            sys.path.insert(0, extra_path)
     if args is not None:
         setup_logging(args)
     logging.info("MSS Version: %s", __version__)
     logging.info("Python Version: %s", sys.version)
     logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
     logging.info("Launching MSColab Server")
-    start_server(APP, sockio, cm, fm)
+    module = importlib.import_module(app_module)
+    app = getattr(module, app_attr)
+    srv = make_server(host, port, app, threaded=True)
+    actual_port = srv.server_address[1]
+    print(actual_port, flush=True)
+    srv.serve_forever()
 
 
 def confirm_action(confirmation_prompt, assume_yes=False):
@@ -375,19 +385,6 @@ def handle_sso_metadata_init(repo_exists):
     print("\n\nALl necessary metadata files generated successfully")
 
 
-def handle_serve_subprocess(app_module, app_attr, host, extra_paths=None):
-    import importlib
-    from werkzeug.serving import make_server
-    for extra_path in (extra_paths or []):
-        if extra_path not in sys.path:
-            sys.path.insert(0, extra_path)
-    module = importlib.import_module(app_module)
-    app = getattr(module, app_attr)
-    srv = make_server(host, 0, app, threaded=True)
-    port = srv.server_address[1]
-    print(port, flush=True)
-    srv.serve_forever()
-
 
 def main():
     parser = argparse.ArgumentParser()
@@ -457,10 +454,11 @@ def main():
         repo_exists = False
 
     if args.action == "serve_subprocess":
-        handle_serve_subprocess(args.app_module, args.app_attr, args.host, args.extra_paths)
+        handle_start(app_module=args.app_module, app_attr=args.app_attr,
+                     host=args.host, port=0, extra_paths=args.extra_paths)
 
     elif args.action == "start":
-        handle_start(args)
+        handle_start(args=args)
 
     elif args.action == "db":
         if args.reset:
