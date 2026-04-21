@@ -28,6 +28,7 @@
 import importlib.util
 import os
 import sys
+import time
 # Disable pyc files
 sys.dont_write_bytecode = True
 
@@ -191,6 +192,22 @@ generate_initial_config()
 from tests.utils import create_msui_settings_file
 
 
+def _rmtree_retry(path, retries=5, delay=0.2):
+    """shutil.rmtree with retry on Windows WinError 32 (file in use)."""
+    def onerror(func, path, exc_info):
+        exc = exc_info[1]
+        if isinstance(exc, PermissionError) and retries > 0:
+            for _ in range(retries):
+                time.sleep(delay)
+                try:
+                    func(path)
+                    return
+                except PermissionError:
+                    pass
+        raise exc
+    shutil.rmtree(path, onerror=onerror)
+
+
 @pytest.fixture(autouse=True)
 def reset_config():
     """Reset the configuration directory used in the tests (tests.constants.ROOT_FS) after every test
@@ -199,7 +216,7 @@ def reset_config():
     # but SQLAlchemy complains if the SQLite file is deleted.
     for item_name in constants.MSCOLAB_SERVER_CONFIG_DIR.iterdir():
         if item_name.is_dir():
-            shutil.rmtree(item_name)
+            _rmtree_retry(item_name)
         else:
             if item_name.name != "mscolab.db":
                 item_name.unlink()
