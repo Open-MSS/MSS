@@ -430,6 +430,8 @@ def main():
     serve_subprocess_parser.add_argument("app_attr")
     serve_subprocess_parser.add_argument("host")
     serve_subprocess_parser.add_argument("extra_paths", nargs="*")
+    subparsers._choices_actions = [a for a in subparsers._choices_actions if a.dest != "serve_subprocess"]
+    subparsers.metavar = "{" + ",".join(a.dest for a in subparsers._choices_actions) + "}"
 
     sso_conf_parser = subparsers.add_parser("sso_conf", help="single sign on process configurations")
     sso_conf_parser = sso_conf_parser.add_mutually_exclusive_group(required=True)
