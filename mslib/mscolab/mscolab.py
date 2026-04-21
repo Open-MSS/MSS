@@ -424,7 +424,7 @@ def main():
         help="Skip confirmation prompt"
     )
 
-    # on CLI not needed - surpress in -h, --help
+    # on CLI not needed - suppress in -h, --help
     serve_subprocess_parser = subparsers.add_parser("serve_subprocess", help=argparse.SUPPRESS)
     serve_subprocess_parser.add_argument("app_module")
     serve_subprocess_parser.add_argument("app_attr")
