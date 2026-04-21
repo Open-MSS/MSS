@@ -390,7 +390,6 @@ def handle_sso_metadata_init(repo_exists):
     print("\n\nALl necessary metadata files generated successfully")
 
 
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
@@ -425,6 +424,7 @@ def main():
         help="Skip confirmation prompt"
     )
 
+    # on CLI not needed - surpress in -h, --help
     serve_subprocess_parser = subparsers.add_parser("serve_subprocess", help=argparse.SUPPRESS)
     serve_subprocess_parser.add_argument("app_module")
     serve_subprocess_parser.add_argument("app_attr")
