@@ -26,12 +26,14 @@
 """
 
 import os
+import sys
 import tempfile
 from pathlib import Path
 
 
 CACHED_CONFIG_FILE = None
-_tmp_dir = tempfile.TemporaryDirectory()
+_tmpdir_kwargs = {"ignore_cleanup_errors": True} if sys.version_info >= (3, 10) else {}
+_tmp_dir = tempfile.TemporaryDirectory(**_tmpdir_kwargs)
 ROOT_DIR = Path(_tmp_dir.name)
 
 MSWMS_SERVER_CONFIG_FILE = "mswms_settings.py"
@@ -58,7 +60,7 @@ MSUI_CONFIG_FILE_PATH = MSUI_CONFIG_PATH / "msui_settings.json"
 if not MSUI_CONFIG_PATH.exists():
     MSUI_CONFIG_PATH.mkdir(parents=True)
 
-_xdg_cache_home_temporary_directory = tempfile.TemporaryDirectory()
+_xdg_cache_home_temporary_directory = tempfile.TemporaryDirectory(**_tmpdir_kwargs)
 os.environ["XDG_CACHE_HOME"] = _xdg_cache_home_temporary_directory.name
 
 # deployed mscolab url
