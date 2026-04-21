@@ -68,7 +68,7 @@ def handle_start(args=None, app_module='mslib.mscolab.server', app_attr='APP',
         # Signal the parent process with the chosen port via stdout by print
         print(actual_port, flush=True)
     else:
-        logging.info(f"MSColab server available on http://{host}:{actual_port}", flush=True)
+        print(f"MSColab server available on http://{host}:{actual_port}", flush=True)
     srv.serve_forever()
 
 
