@@ -112,7 +112,7 @@ def mscolab_session_managers(mscolab_session_app):
     return sockio, cm, fm
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def mscolab_session_server(mscolab_session_app, mscolab_session_managers):
     """Session-scoped fixture that provides a running MSColab server.
 
