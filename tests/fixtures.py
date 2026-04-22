@@ -199,11 +199,6 @@ def _running_server(app, app_module, app_attr, extra_paths=None):
     scheme = "http"
     host = "127.0.0.1"
     cmd = [sys.executable, '-m', 'mslib.mscolab.mscolab', 'serve_subprocess', app_module, app_attr, host]
-    if extra_paths:
-        cmd.extend(extra_paths)
-    # Pass extra_paths via PYTHONPATH so they are available before any module-level
-    # imports in the subprocess (e.g. mscolab.py imports mslib.mscolab.app at module
-    # level, which reads mscolab_settings before handle_serve_subprocess can add paths).
     env = os.environ.copy()
     if extra_paths:
         existing = env.get('PYTHONPATH', '')

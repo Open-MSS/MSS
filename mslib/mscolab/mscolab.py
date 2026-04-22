@@ -47,12 +47,9 @@ from mslib.utils import setup_logging
 
 
 def handle_start(args=None, app_module='mslib.mscolab.server', app_attr='APP',
-                 host='127.0.0.1', port=8083, extra_paths=None):
+                 host='127.0.0.1', port=8083):
     import importlib
     from werkzeug.serving import make_server
-    for extra_path in (extra_paths or []):
-        if extra_path not in sys.path:
-            sys.path.insert(0, extra_path)
     if args is not None:
         setup_logging(args)
     logging.info("MSS Version: %s", __version__)
@@ -429,7 +426,6 @@ def main():
     serve_subprocess_parser.add_argument("app_module")
     serve_subprocess_parser.add_argument("app_attr")
     serve_subprocess_parser.add_argument("host")
-    serve_subprocess_parser.add_argument("extra_paths", nargs="*")
     subparsers._choices_actions = [a for a in subparsers._choices_actions if a.dest != "serve_subprocess"]
     subparsers.metavar = "{" + ",".join(a.dest for a in subparsers._choices_actions) + "}"
 
@@ -462,7 +458,7 @@ def main():
 
     if args.action == "serve_subprocess":
         handle_start(app_module=args.app_module, app_attr=args.app_attr,
-                     host=args.host, port=0, extra_paths=args.extra_paths)
+                     host=args.host, port=0)
 
     elif args.action == "start":
         handle_start(args=args)
