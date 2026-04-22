@@ -119,7 +119,8 @@ def mscolab_session_server(mscolab_session_app, mscolab_session_managers):
     This fixture should not be used in tests. Instead use :func:`mscolab_server`, which
     handles per-test cleanup as well.
     """
-    with _running_server(mscolab_session_app, 'mslib.mscolab.server', 'APP',
+    cmd = [sys.executable, '-m', 'mslib.mscolab.mscolab', 'start', '--host', '127.0.0.1', '--port', '0']
+    with _running_server(mscolab_session_app, cmd,
                          extra_paths=[str(constants.MSCOLAB_SERVER_CONFIG_DIR)]) as url:
         # Wait until the Flask-SocketIO server is ready for connections
         sio = socketio.Client()
@@ -188,17 +189,20 @@ def mswms_server(mswms_app):
 
     :returns: The URL where the server is running.
     """
-    with _running_server(mswms_app, 'mslib.mswms.mswms', 'application',
+    cmd = [sys.executable, '-m', 'mslib.mswms.mswms', '--host', '127.0.0.1', '--port', '0']
+    with _running_server(mswms_app, cmd,
                          extra_paths=[str(constants.MSWMS_SERVER_CONFIG_DIR)]) as url:
         yield url
 
 
 @contextmanager
-def _running_server(app, app_module, app_attr, extra_paths=None):
-    """Context manager that starts the app in a werkzeug server and returns its URL."""
+def _running_server(app, cmd, extra_paths=None):
+    """Context manager that starts the app in a subprocess and returns its URL.
+
+    The subprocess must print the bound port as the first line on stdout.
+    """
     scheme = "http"
     host = "127.0.0.1"
-    cmd = [sys.executable, '-m', 'mslib.mscolab.mscolab', 'serve_subprocess', app_module, app_attr, host]
     env = os.environ.copy()
     if extra_paths:
         existing = env.get('PYTHONPATH', '')

@@ -117,7 +117,15 @@ def main():
 
     logging.info("Configuration File: '%s'", mswms_settings.__file__)
 
-    application.run(args.host, args.port)
+    from werkzeug.serving import make_server
+    port = int(args.port)
+    srv = make_server(args.host, port, application, threaded=True)
+    actual_port = srv.server_address[1]
+    if port == 0:
+        print(actual_port, flush=True)
+    else:
+        print(f"MSS WMS server available on http://{args.host}:{actual_port}", flush=True)
+    srv.serve_forever()
 
 
 if __name__ == '__main__':

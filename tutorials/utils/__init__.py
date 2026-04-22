@@ -88,7 +88,7 @@ def call_mscolab():
     with mscolab.APP.app_context():
         # initialize our seeded example dbase
         mscolab.handle_db_seed()
-    mscolab.handle_start()
+    mscolab.handle_server_start()
 
 
 def finish(close_widgets=3):

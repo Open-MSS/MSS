@@ -46,12 +46,10 @@ from mslib.mscolab.utils import create_files
 from mslib.utils import setup_logging
 
 
-def handle_start(args=None, app_module='mslib.mscolab.server', app_attr='APP',
-                 host='127.0.0.1', port=8083):
+def handle_server_start(app_module='mslib.mscolab.server', app_attr='APP',
+                        host='127.0.0.1', port=8083):
     import importlib
     from werkzeug.serving import make_server
-    if args is not None:
-        setup_logging(args)
     logging.info("MSS Version: %s", __version__)
     logging.info("Python Version: %s", sys.version)
     logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
@@ -398,6 +396,9 @@ def main():
                                default=False)
     server_parser.add_argument("--logfile", help="If set to a name log output goes to that file", dest="logfile",
                                default=None)
+    server_parser.add_argument("--host", help="Host to bind to", default="127.0.0.1")
+    server_parser.add_argument("--port", help="Port to bind to (0 = pick a free port and print it to stdout)",
+                               type=int, default=8083)
 
     database_parser = subparsers.add_parser("db", help="Manage mscolab database")
 
@@ -420,14 +421,6 @@ def main():
         action="store_true",
         help="Skip confirmation prompt"
     )
-
-    # on CLI not needed - suppress in -h, --help
-    serve_subprocess_parser = subparsers.add_parser("serve_subprocess", help=argparse.SUPPRESS)
-    serve_subprocess_parser.add_argument("app_module")
-    serve_subprocess_parser.add_argument("app_attr")
-    serve_subprocess_parser.add_argument("host")
-    subparsers._choices_actions = [a for a in subparsers._choices_actions if a.dest != "serve_subprocess"]
-    subparsers.metavar = "{" + ",".join(a.dest for a in subparsers._choices_actions) + "}"
 
     sso_conf_parser = subparsers.add_parser("sso_conf", help="single sign on process configurations")
     sso_conf_parser = sso_conf_parser.add_mutually_exclusive_group(required=True)
@@ -456,12 +449,9 @@ def main():
     except git.exc.InvalidGitRepositoryError:
         repo_exists = False
 
-    if args.action == "serve_subprocess":
-        handle_start(app_module=args.app_module, app_attr=args.app_attr,
-                     host=args.host, port=0)
-
-    elif args.action == "start":
-        handle_start(args=args)
+    if args.action == "start":
+        setup_logging(args)
+        handle_server_start(host=args.host, port=args.port)
 
     elif args.action == "db":
         if args.reset:
