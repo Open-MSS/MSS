@@ -924,6 +924,10 @@ server = WMSServer()
 @conditional_decorator(auth.login_required, mswms_settings.enable_basic_http_authentication)
 def application():
     try:
+        # without query parameter show index page
+        if not request.args:
+            return render_template("/index.html")
+
         # Request info
         query = CIMultiDict(request.args)
         # Processing
@@ -945,8 +949,13 @@ def application():
         elif request_type in ('getmap', 'getvsec', 'getlsec') and request_version in ('1.1.1', '1.3.0', ''):
             return_data, mime_type = server.produce_plot(query, request_type)
         else:
-            logging.debug("Request type '%s' is not valid.", request)
-            raise RuntimeError("Request type is not valid.")
+            logging.debug("Request type '%s' is not valid.", request_type)
+            error_message = "RuntimeError: Request type is not valid.\n"
+            response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(error_message)))]
+            res = make_response(error_message, 404)
+            for response_header in response_headers:
+                res.headers[response_header[0]] = response_header[1]
+            return res
 
         res = make_response(return_data, 200)
         response_headers = [('Content-type', mime_type), ('Content-Length', str(len(return_data)))]
@@ -956,11 +965,6 @@ def application():
         return res
 
     except Exception as ex:
-        # without query parameter show index page
-        query = request.args
-        if len(query) == 0:
-            return render_template("/index.html")
-
         # communicate request errors back to client user
         logging.error("Unexpected error: %s: %s\nTraceback:\n%s",
                       type(ex), ex, traceback.format_exc())
