@@ -136,9 +136,9 @@ def about():
     img_url = url_for('docs.overview')
     md_overrides = ('![image](/mss/overview.png)', f'![image]({img_url})')
 
-    html_overrrides = ('<img alt="image" src="/mss/overview.png" />',
+    html_overrides = ('<img alt="image" src="/mss/overview.png" />',
                        '<img class="mx-auto d-block img-fluid" alt="image" src="/mss/overview.png" />')
-    content = get_content(_file, md_overrides=md_overrides, html_overrides=html_overrrides)
+    content = get_content(_file, md_overrides=md_overrides, html_overrides=html_overrides)
     return render_template("docs/content.html", act="about", content=content)
 
 
@@ -171,7 +171,7 @@ def imprint():
 
 
 @DOCS_BP.route("/mss/gdpr")
-def gdpr(gdpr_file=None):
+def gdpr():
     gdpr_file = current_app.config.get('GDPR', None)
     if gdpr_file is not None and file_exists(gdpr_file):
         content = get_content(gdpr_file)
