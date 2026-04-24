@@ -37,7 +37,7 @@ class FatalUserError(Exception):
 def setup_logging(args):
     logger = logging.getLogger()
     # this is necessary as "someone" has already initialized logging, preventing basicConfig from doing stuff
-    for ch in logger.handlers:
+    for ch in logger.handlers[:]:
         logger.removeHandler(ch)
 
     debug_formatter = logging.Formatter("%(asctime)s (%(module)s.%(funcName)s:%(lineno)s): %(levelname)s: %(message)s")
