@@ -61,6 +61,8 @@ if update:
 # in memory database for testing
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'
 APP = Flask(__name__, template_folder=os.path.join(DOCS_TEMPLATES_DIR))
+APP.jinja_env.globals.setdefault("imprint", "")
+APP.jinja_env.globals.setdefault("gdpr", "")
 APP.config.from_object(mscolab_settings)
 # Expose docs path for callers/tests and make it part of Flask config for consistency.
 APP.config['DOCS_SERVER_PATH'] = DOCS_SERVER_PATH
@@ -94,8 +96,8 @@ def create_app(imprint=None, gdpr=None):
     gdpr_file = gdpr
 
     APP.jinja_env.globals.update(file_exists=file_exists)
-    APP.jinja_env.globals["imprint"] = imprint_file
-    APP.jinja_env.globals["gdpr"] = gdpr_file
+    APP.jinja_env.globals["imprint"] = imprint_file or ""
+    APP.jinja_env.globals["gdpr"] = gdpr_file or ""
     APP.jinja_env.globals.update(get_topmenu=get_topmenu)
 
     from mslib.mscolab.blueprints.auth import AUTH_BP
