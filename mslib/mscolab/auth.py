@@ -78,7 +78,7 @@ def register_user(email, password, username, fullname):
     user_exists = User.query.filter_by(username=str(username)).first()
     if user_exists:
         return {"success": False, "message": "This username is already registered"}
-    fm = current_app.config['fm']
+    fm = current_app.extensions['fm']
     user = User(email, username, password, fullname)
     result = fm.modify_user(user, action="create")
     return {"success": result}
