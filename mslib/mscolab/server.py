@@ -208,7 +208,7 @@ def check_login(emailid, password):
     return False
 
 
-def getMail():
+def get_mail():
     return mail
 
 
