@@ -332,7 +332,7 @@ def reset_password(token):
         flash("Sorry, your token has expired or is invalid! We will need to resend your authentication email",
               'category_info')
         return render_template('auth/user/status_password.html',
-                               uri={"path": "auth.reset_request", "name": "Resend ""authentication ""email"})
+                               uri={"path": url_for("auth.reset_request"), "name": "Resend ""authentication ""email"})
     user = User.query.filter_by(emailid=email).first_or_404()
     form = ResetPasswordForm()
     if form.validate_on_submit():
