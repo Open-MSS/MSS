@@ -137,7 +137,7 @@ def user_register_handler():
         if result["success"]:
             status_code = 201
             if current_app.config['MAIL_ENABLED']:
-                status_code = 204
+                status_code = 201
                 token = generate_confirmation_token(email)
                 confirm_url = url_for('auth.confirm_email', token=token, _external=True)
                 html = render_template('auth/user/activate.html', username=username, confirm_url=confirm_url)
