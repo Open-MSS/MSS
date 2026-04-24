@@ -137,7 +137,7 @@ def about():
     md_overrides = ('![image](/mss/overview.png)', f'![image]({img_url})')
 
     html_overrides = ('<img alt="image" src="/mss/overview.png" />',
-                       '<img class="mx-auto d-block img-fluid" alt="image" src="/mss/overview.png" />')
+                      '<img class="mx-auto d-block img-fluid" alt="image" src="/mss/overview.png" />')
     content = get_content(_file, md_overrides=md_overrides, html_overrides=html_overrides)
     return render_template("docs/content.html", act="about", content=content)
 
