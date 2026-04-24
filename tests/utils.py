@@ -31,7 +31,7 @@ from urllib.parse import urljoin
 
 from flask import json
 
-from mslib.mscolab.blueprints.auth import register_user
+from mslib.mscolab.auth import register_user
 from tests.constants import MSUI_CONFIG_FILE_PATH
 from mslib.mscolab.seed import XML_CONTENT_INIT
 
