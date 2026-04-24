@@ -151,7 +151,7 @@ class TestMainServerStart:
 
 class TestMainSeed:
     def test_seed_calls_create_server_config_and_data(self, mocker, tmp_path,
-                                                       mock_wms, mock_make_server):
+                                                      mock_wms, mock_make_server):
         mock_examples = mocker.MagicMock()
         mocker.patch("mslib.mswms.mswms.argparse.ArgumentParser.parse_args",
                      return_value=_args(seed=True))
