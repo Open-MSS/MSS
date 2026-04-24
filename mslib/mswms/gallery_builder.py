@@ -451,7 +451,7 @@ def write_html(path, sphinx=False, plot_types=None):
     if sphinx:
         html = html.replace("<h3>Plot Gallery</h3>", "")
 
-    default_plot_type = plot_types[0] if len(plot_types) > 0 else None
+    default_plot_type = "Top" if "Top" in plot_types else (plot_types[0] if plot_types else None)
     for l_type in plots:
         if l_type in plot_types:
             style = ""
