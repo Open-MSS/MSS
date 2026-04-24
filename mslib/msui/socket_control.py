@@ -61,9 +61,11 @@ class ConnectionManager(QtCore.QObject):
         self.mscolab_server_url = mscolab_server_url
         if token is not None:
             logging.getLogger("engineio.client").addFilter(filter=lambda record: token not in record.getMessage())
-        self.sio = socketio.Client(reconnection_attempts=5)
         timeout = tuple(config_loader(dataset="MSCOLAB_timeout"))
-        self.sio.connect(self.mscolab_server_url, wait_timeout=timeout[1] if len(timeout) > 1 else timeout[0])
+        connect_timeout = timeout[0]
+        wait_timeout = timeout[1] if len(timeout) > 1 else timeout[0]
+        self.sio = socketio.Client(reconnection_attempts=5, request_timeout=connect_timeout)
+        self.sio.connect(self.mscolab_server_url, wait_timeout=wait_timeout)
         logging.debug("Transport Layer: %s", self.sio.transport())
 
         self.sio.on('file-changed', handler=self.handle_file_change)
