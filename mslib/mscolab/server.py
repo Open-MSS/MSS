@@ -37,10 +37,6 @@ from flask_mail import Mail
 from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth
 
-from mslib.mscolab.blueprints.auth import AUTH_BP
-from mslib.mscolab.blueprints.chat import CHAT_BP
-from mslib.mscolab.blueprints.operation import OPERATION_BP
-from mslib.mscolab.blueprints.user import USER_BP
 from mslib.mscolab.app import create_app, APP
 from mslib.mscolab.models import User
 from mslib.mscolab.sockets_manager import _setup_managers
@@ -232,10 +228,6 @@ def main():
 # for wsgi
 application = socketio.WSGIApp(sockio)
 
-APP.register_blueprint(AUTH_BP)
-APP.register_blueprint(CHAT_BP)
-APP.register_blueprint(USER_BP)
-APP.register_blueprint(OPERATION_BP)
 
 if __name__ == '__main__':
     main()
