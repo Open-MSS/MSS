@@ -728,6 +728,28 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     def style_changed_now(self, style):
         self.styles_changed.emit(style)
 
+    def cleanup_threads(self):
+        """Properly terminate background threads.
+        """
+        try:
+            if hasattr(self, 'thread_prefetch') and self.thread_prefetch is not None:
+                if self.thread_prefetch.isRunning():
+                    self.thread_prefetch.quit()
+                    if not self.thread_prefetch.wait(3000):
+                        self.thread_prefetch.terminate()
+                        self.thread_prefetch.wait(1000)
+        except Exception:
+            pass
+        try:
+            if hasattr(self, 'thread_fetch') and self.thread_fetch is not None:
+                if self.thread_fetch.isRunning():
+                    self.thread_fetch.quit()
+                    if not self.thread_fetch.wait(3000):
+                        self.thread_fetch.terminate()
+                        self.thread_fetch.wait(1000)
+        except Exception:
+            pass
+
     def __del__(self):
         """Destructor.
         """
@@ -735,10 +757,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if self.wms_cache is not None:
             self.service_cache()
         # properly terminate background threads. wait is necessary!
-        self.thread_prefetch.quit()
-        self.thread_prefetch.wait()
-        self.thread_fetch.quit()
-        self.thread_fetch.wait()
+        self.cleanup_threads()
 
     def get_all_maps(self, disregard_current=False):
         if self.multilayers.cbMultilayering.isChecked():

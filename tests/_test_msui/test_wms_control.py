@@ -80,6 +80,9 @@ class WMSControlWidgetSetup:
         QtTest.QTest.mouseClick(self.window.cbCacheEnabled, QtCore.Qt.LeftButton)
 
     def _teardown(self):
+        # Clean up threads before hiding/closing the window
+        if hasattr(self.window, 'cleanup_threads'):
+            self.window.cleanup_threads()
         self.window.hide()
 
     def query_server(self, qtbot, url):
