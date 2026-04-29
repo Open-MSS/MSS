@@ -185,6 +185,17 @@ class mscolab_auth:
     _load_module("mscolab_settings", constants.MSCOLAB_SERVER_CONFIG_FILE_PATH)
 
 
+def pytest_configure(config):
+    """In xdist workers, give each worker its own log file to avoid closed-stream
+    errors when multiple workers share the same pytest.log file handle."""
+    worker_id = os.environ.get("PYTEST_XDIST_WORKER")
+    if worker_id:
+        log_file = getattr(config.option, "log_file", None)
+        if log_file:
+            base, ext = os.path.splitext(log_file)
+            config.option.log_file = f"{base}_{worker_id}{ext}"
+
+
 generate_initial_config()
 
 
