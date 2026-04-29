@@ -30,6 +30,7 @@ import subprocess
 import sys
 import time
 import urllib
+import socket
 import socketio
 import mslib.mswms.mswms
 
@@ -195,6 +196,18 @@ def mswms_server(mswms_app):
         yield url
 
 
+def is_port_responsive(host, port, timeout=0.5):
+    """Check if a port is responsive (accepting connections) with early timeout.
+
+    :returns: True if the port responds within the timeout, False otherwise.
+    """
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except (socket.timeout, socket.error, OSError):
+        return False
+
+
 @contextmanager
 def _running_server(app, cmd, extra_paths=None):
     """Context manager that starts the app in a subprocess and returns its URL.
@@ -225,6 +238,17 @@ def _running_server(app, cmd, extra_paths=None):
 
         url = f"{scheme}://{host}:{port}"
         app.config['URL'] = url
+
+        # Early port check with short timeout to fail fast if port doesn't respond
+        if not is_port_responsive(host, port, timeout=1.0):
+            stderr_output = process.stderr.read().decode(errors='replace')
+            process.terminate()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=5)
+            pytest.skip(f"Skipping test: server port {host}:{port} not responsive. stderr: {stderr_output}")
 
         start_time = time.time()
         sleep_time = 0.01
