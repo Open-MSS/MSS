@@ -27,8 +27,8 @@
 
 import argparse
 import logging
-import platform
 import os
+import platform
 import shutil
 import sys
 import secrets
@@ -56,7 +56,9 @@ def handle_server_start(app_module='mslib.mscolab.server', app_attr='APP',
     logging.info("Launching MSColab Server")
     module = importlib.import_module(app_module)
     app = getattr(module, app_attr)
+    import socket
     srv = make_server(host, port, app, threaded=True)
+    srv.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     actual_port = srv.server_address[1]
     if port == 0:
         # Subprocess/pytest case

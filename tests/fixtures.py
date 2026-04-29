@@ -120,6 +120,7 @@ def mscolab_session_server(mscolab_session_app, mscolab_session_managers):
     This fixture should not be used in tests. Instead use :func:`mscolab_server`, which
     handles per-test cleanup as well.
     """
+    # Use port 0 to let OS assign available port - early failure if unavailable
     cmd = [sys.executable, '-m', 'mslib.mscolab.mscolab', 'start', '--host', '127.0.0.1', '--port', '0']
     with _running_server(mscolab_session_app, cmd,
                          extra_paths=[str(constants.MSCOLAB_SERVER_CONFIG_DIR)]) as url:
@@ -190,6 +191,7 @@ def mswms_server(mswms_app):
 
     :returns: The URL where the server is running.
     """
+    # Use port 0 to let OS assign available port - early failure if unavailable
     cmd = [sys.executable, '-m', 'mslib.mswms.mswms', '--host', '127.0.0.1', '--port', '0']
     with _running_server(mswms_app, cmd,
                          extra_paths=[str(constants.MSWMS_SERVER_CONFIG_DIR)]) as url:

@@ -26,9 +26,30 @@ jobs:
         pixi-version: latest
         cache: true
         environments: dev
+    - name: Check CI resource limits
+      run: |
+        echo "=== Resource Limits ==="
+        if [ "$(uname)" = "Linux" ]; then
+          echo "Open files: $(ulimit -n)"
+          echo "Max processes: $(ulimit -u)"
+          echo "Port range: $(sysctl -n net.ipv4.ip_local_port_range 2>/dev/null || echo 'N/A')"
+        elif [ "$(uname)" = "Darwin" ]; then
+          echo "Open files: $(ulimit -n)"
+          echo "Max processes: $(ulimit -u)"
+          launchctl limit maxfiles | head -1
+        else
+          echo "Windows: Checking handles..."
+          Get-Process -Id $PID | Select-Object -ExpandProperty HandleCount
+        fi
     - name: Run tests
       timeout-minutes: 40
-      run: mkdir -p /tmp/mpl_cache && pixi run -e dev env QT_QPA_PLATFORM=offscreen MPLCONFIGDIR=/tmp/mpl_cache pytest -v -n logical --durations=20 --cov=mslib tests
+      run: |
+        mkdir -p /tmp/mpl_cache
+        # Set stricter resource limits for tests
+        if [ "$(uname)" = "Linux" ]; then
+          ulimit -n 16384 2>/dev/null || true
+        fi
+        pixi run -e dev env QT_QPA_PLATFORM=offscreen MPLCONFIGDIR=/tmp/mpl_cache pytest -v -n logical --durations=20 --cov=mslib tests
     - run: pixi run -e dev coverage xml
     - name: Send coverage to Coveralls (parallel)
       uses: coverallsapp/github-action@5cbfd81b66ca5d10c19b062c04de0199c215fb6e # v2.3.7

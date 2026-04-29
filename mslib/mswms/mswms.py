@@ -117,9 +117,11 @@ def main():
 
     logging.info("Configuration File: '%s'", mswms_settings.__file__)
 
+    import socket
     from werkzeug.serving import make_server
     port = int(args.port) if args.port is not None else 8081
     srv = make_server(args.host, port, application, threaded=True)
+    srv.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     actual_port = srv.server_address[1]
     if port == 0:
         print(actual_port, flush=True)
