@@ -298,6 +298,7 @@ class WMSMapFetcher(QtCore.QObject):
         fetch_map events may interrupt.
         """
         if len(self.maps) == 0:
+            self.finished.emit(None, None, None, None, None, None, None)
             return
         layer, kwargs, md5_filename, use_cache, legend_kwargs = self.maps[0]
         self.maps = self.maps[1:]
