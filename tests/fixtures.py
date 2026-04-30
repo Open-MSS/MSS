@@ -310,16 +310,10 @@ def reset_gallery_builders():
 @pytest.fixture
 def reset_user_options():
     """Fixture to reset user_options global variable."""
-    from mslib.utils.config import user_options, read_config_file
+    from mslib.utils.config import user_options
     import mslib.utils.config as config_module
-    import tempfile
-    import json
 
     original_options = config_module.copy.deepcopy(user_options)
-
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-        json.dump(original_options, f)
-        temp_config = f.name
 
     try:
         yield

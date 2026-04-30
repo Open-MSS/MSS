@@ -299,9 +299,8 @@ class SocketsManager:
             access_level = perm.access_level
             logging.debug("access_level by database query")
 
-        socketio.emit(SocketEvents.UPDATE_PERMISSION, json.dumps({"op_id": op_id,
-                                                       "u_id": u_id,
-                                                       "access_level": access_level}))
+        socketio.emit(SocketEvents.UPDATE_PERMISSION, json.dumps({"op_id": op_id, "u_id": u_id,
+                                                                  "access_level": access_level}))
 
     def emit_revoke_permission(self, u_id, op_id):
         socketio.emit(SocketEvents.REVOKE_PERMISSION, json.dumps({"op_id": op_id, "u_id": u_id}))

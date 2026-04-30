@@ -38,7 +38,6 @@ from xml.etree import ElementTree
 import io
 from mslib.mswms.mss_plot_driver import VerticalSectionDriver, HorizontalSectionDriver, LinearSectionDriver
 import mswms_settings
-from tests.fixtures import reset_wms_globals, reset_gallery_builders
 import mslib.mswms.mpl_vsec_styles as mpl_vsec_styles
 import mslib.mswms.mpl_hsec_styles as mpl_hsec_styles
 import mslib.mswms.mpl_lsec_styles as mpl_lsec_styles
