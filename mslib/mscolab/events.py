@@ -48,7 +48,8 @@ class SocketEvents:
 
     # Permission events
     ADD_USER_TO_OPERATION = 'add-user-to-operation'
-    UPDATE_OPERATION_LIST = 'update-operation-list'
+    # ToDo rename to same word order
+    UPDATE_OPERATION_LIST = 'operation-list-update'
     OPERATION_SELECTED = 'operation-selected'
 
     # Active user events
