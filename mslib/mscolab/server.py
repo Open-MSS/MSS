@@ -49,6 +49,7 @@ from flask.wrappers import Response
 
 from mslib.mscolab.conf import setup_saml2_backend
 from mslib.mscolab.app import create_app, APP
+from mslib.mscolab.events import SocketEvents
 from mslib.mscolab.models import Change, MessageType, User
 from mslib.mscolab.sockets_manager import _setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
@@ -518,7 +519,7 @@ def message_attachment():
             if static_file_path is not None:
                 new_message = cm.add_message(user, static_file_path, op_id, message_type)
                 new_message_dict = get_message_dict(new_message)
-                sockio.emit('chat-message-client', json.dumps(new_message_dict))
+                sockio.emit(SocketEvents.CHAT_MESSAGE_CLIENT, json.dumps(new_message_dict))
                 return jsonify({"success": True, "path": static_file_path})
             else:
                 return "False"
