@@ -38,6 +38,7 @@ from xml.etree import ElementTree
 import io
 from mslib.mswms.mss_plot_driver import VerticalSectionDriver, HorizontalSectionDriver, LinearSectionDriver
 import mswms_settings
+from tests.fixtures import reset_wms_globals, reset_gallery_builders
 import mslib.mswms.mpl_vsec_styles as mpl_vsec_styles
 import mslib.mswms.mpl_hsec_styles as mpl_hsec_styles
 import mslib.mswms.mpl_lsec_styles as mpl_lsec_styles
@@ -197,7 +198,7 @@ class Test_VSec:
         noframe = self.plot(mpl_vsec_styles.VS_EMACEyja_Style_01(driver=self.vsec), noframe=True)
         assert noframe != img
 
-    def test_VS_gallery_template(self):
+    def test_VS_gallery_template(self, reset_wms_globals, reset_gallery_builders):
         # ToDo Test Data have to be written to a random tmp dir and that may become purged afterwards
         templates_location = os.path.join(mslib.mswms.gallery_builder.DOCS_LOCATION, "plot_examples")
         sys.path.append(templates_location)
@@ -501,7 +502,7 @@ class Test_HSec:
         noframe = self.plot(mpl_hsec_styles.HS_Meteosat_BT108_01(driver=self.hsec), noframe=True)
         assert noframe != img
 
-    def test_HS_gallery_template(self):
+    def test_HS_gallery_template(self, reset_wms_globals, reset_gallery_builders):
         # ToDo Test Data have to be written to a random tmp dir and that may become purged afterwards
         templates_location = os.path.join(mslib.mswms.gallery_builder.DOCS_LOCATION, "plot_examples")
         sys.path.append(templates_location)

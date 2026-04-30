@@ -33,6 +33,8 @@ import urllib
 import socket
 import socketio
 import mslib.mswms.mswms
+import mslib.mswms.wms
+import mslib.mswms.gallery_builder
 
 from PyQt5 import QtWidgets
 from contextlib import contextmanager
@@ -273,3 +275,53 @@ def _running_server(app, cmd, extra_paths=None):
         except subprocess.TimeoutExpired:
             process.kill()
             process.wait(timeout=5)
+
+
+@pytest.fixture
+def reset_wms_globals():
+    """Fixture to reset WMS module-level globals that can affect test isolation."""
+    static_location = mslib.mswms.wms.STATIC_LOCATION
+    docs_location = mslib.mswms.wms.DOCS_LOCATION
+    gallery_static = mslib.mswms.gallery_builder.STATIC_LOCATION
+    gallery_docs = mslib.mswms.gallery_builder.DOCS_LOCATION
+    yield
+    mslib.mswms.wms.STATIC_LOCATION = static_location
+    mslib.mswms.wms.DOCS_LOCATION = docs_location
+    mslib.mswms.gallery_builder.STATIC_LOCATION = gallery_static
+    mslib.mswms.gallery_builder.DOCS_LOCATION = gallery_docs
+
+
+@pytest.fixture
+def reset_gallery_builders():
+    """Fixture to reset gallery_builder module-level mutable state."""
+    plots_copy = {k: v.copy() for k, v in mslib.mswms.gallery_builder.plots.items()}
+    plot_htmls_copy = mslib.mswms.gallery_builder.plot_htmls.copy()
+    begin_copy = mslib.mswms.gallery_builder.begin
+    end_copy = mslib.mswms.gallery_builder.end
+    yield
+    mslib.mswms.gallery_builder.plots.clear()
+    mslib.mswms.gallery_builder.plots.update(plots_copy)
+    mslib.mswms.gallery_builder.plot_htmls.clear()
+    mslib.mswms.gallery_builder.plot_htmls.update(plot_htmls_copy)
+    mslib.mswms.gallery_builder.begin = begin_copy
+    mslib.mswms.gallery_builder.end = end_copy
+
+
+@pytest.fixture
+def reset_user_options():
+    """Fixture to reset user_options global variable."""
+    from mslib.utils.config import user_options, read_config_file
+    import mslib.utils.config as config_module
+    import tempfile
+    import json
+
+    original_options = config_module.copy.deepcopy(user_options)
+
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        json.dump(original_options, f)
+        temp_config = f.name
+
+    try:
+        yield
+    finally:
+        config_module.user_options = config_module.copy.deepcopy(original_options)
