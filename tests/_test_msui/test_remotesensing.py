@@ -33,7 +33,7 @@ from matplotlib.collections import LineCollection
 import pytest
 import skyfield_data
 from mslib.msui.remotesensing_dockwidget import RemoteSensingControlWidget
-from mslib.msui import mpl_qtwidget as qt
+from mslib.msui import viewplotter
 
 
 def test_skyfield_data_expiration(recwarn):
@@ -48,7 +48,7 @@ class Test_RemoteSensingControlWidget:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot):
         self.view = Mock()
-        self.map = qt.TopViewPlotter()
+        self.map = viewplotter.TopViewPlotter()
         self.map.init_map()
         self.bmap = self.map.map
         self.result_test_direction_coordinates = [([79.08, 79.06, 79.03, 79.01, 78.99, 78.97, 78.95,

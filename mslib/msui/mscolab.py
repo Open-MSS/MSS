@@ -277,9 +277,8 @@ class MSUIMscolab(QtCore.QObject):
         logging.debug("after login %s %s", emailid, url)
         # emailid by direct call
         self.email = emailid
-        self.connect_window.close()
+        self.connect_window.done(QDialog.Accepted)
         self.connect_window = None
-        QtWidgets.QApplication.processEvents()
         # fill value of mscolab url if found in QSettings storage
 
         _json = response.json()

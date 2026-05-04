@@ -30,7 +30,7 @@ import pytest
 
 from PyQt5 import QtTest
 import mslib.msui.sideview as tv
-from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
+from mslib.msui.viewplotter import _DEFAULT_SETTINGS_SIDEVIEW
 
 
 class Test_SuffixChange:

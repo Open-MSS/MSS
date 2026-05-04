@@ -32,7 +32,7 @@ import mslib.msui.topview as tv
 from PyQt5 import QtWidgets, QtCore, QtTest, QtGui
 from mslib.msui import flighttrack as ft
 from mslib.msui.msui import MSUIMainWindow
-from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_TOPVIEW
+from mslib.msui.viewplotter import _DEFAULT_SETTINGS_TOPVIEW
 
 
 class Test_MSS_TV_MapAppearanceDialog:

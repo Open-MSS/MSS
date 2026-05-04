@@ -33,7 +33,7 @@ from PyQt5 import QtTest, QtCore, QtGui, QtWidgets
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
 from mslib.msui.msui import MSUIMainWindow
-from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
+from mslib.msui.viewplotter import _DEFAULT_SETTINGS_SIDEVIEW
 
 
 class Test_MSS_SV_OptionsDialog:
