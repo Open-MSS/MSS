@@ -24,6 +24,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
 import sys
 import functools
 import json
@@ -359,6 +360,14 @@ def hello():
             'use_saml2': APP.config['USE_SAML2'],
             'direct_login': APP.config['DIRECT_LOGIN']
         })
+
+
+if os.environ.get("MSCOLAB_TEST_MODE") == "1":
+    @APP.route("/test/reset_socket_state", methods=["POST"])
+    def _test_reset_socket_state():
+        # Test-only: clear in-memory socket bookkeeping that survives db_reset.
+        sockio.sm.clear_state()
+        return jsonify({"success": True})
 
 
 @APP.route('/token', methods=["POST"])

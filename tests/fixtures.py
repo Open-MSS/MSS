@@ -32,6 +32,7 @@ import time
 import urllib
 import socket
 import socketio
+import requests
 import mslib.mswms.mswms
 import mslib.mswms.wms
 import mslib.mswms.gallery_builder
@@ -62,32 +63,37 @@ def fail_if_open_message_boxes_left():
 
 
 @pytest.fixture
-def close_remaining_widgets():
-    yield
-    # Try to close all remaining widgets after each test
-    for qobject in set(QtWidgets.QApplication.topLevelWindows() + QtWidgets.QApplication.topLevelWidgets()):
-        try:
-            qobject.destroy()
-        # Some objects deny permission, pass in that case
-        except RuntimeError:
-            pass
-
-
-@pytest.fixture
 def msui_configs(tmp_path):
     modify_config_file({"mss_dir": str(tmp_path)})
 
 
 @pytest.fixture
-def qtbot(qtbot, fail_if_open_message_boxes_left, close_remaining_widgets, msui_configs):
+def qtbot(qtbot, fail_if_open_message_boxes_left, msui_configs):
     """Fixture that re-defines the qtbot fixture from pytest-qt with additional checks."""
     yield qtbot
-    # Wait for a while after the requesting test has finished. At time of writing this
-    # is required to (mostly) stabilize the coverage reports, because tests don't
-    # properly close their Qt-related stuff and therefore there is no guarantee about
-    # what the Qt event loop has or hasn't done yet. Waiting just gives it a bit more
-    # time to converge on the same result every time the tests are executed. This is a
-    # band-aid fix, the proper fix is to make sure each test cleans up after itself.
+    # Drop any matplotlib figures from Gcf BEFORE scheduling Qt deletion, otherwise
+    # matplotlib's atexit Gcf.destroy_all trips over a dead NavigationToolbar2QT at
+    # worker shutdown ("wrapped C/C++ object has been deleted").
+    try:
+        import matplotlib.pyplot as plt
+        plt.close("all")
+    except ImportError:
+        pass
+    # Schedule destruction of any leftover top-level widgets BEFORE the drain wait
+    # below. Tests often only call hide(), which keeps the widget (and any sockets
+    # it owns) alive. deleteLater() queues destruction without firing close events
+    # (close() would trigger "save changes?" dialogs); the subsequent qtbot.wait
+    # gives the Qt event loop time to actually process the deletions.
+    for qobject in set(QtWidgets.QApplication.topLevelWindows() + QtWidgets.QApplication.topLevelWidgets()):
+        try:
+            delete_later = getattr(qobject, "deleteLater", None)
+            if delete_later is not None:
+                delete_later()
+        # Some objects are already deleted; ignore those.
+        except RuntimeError:
+            pass
+    # Drain the Qt event loop so destruction (and any socket disconnects it triggers)
+    # actually completes before the next test starts.
     qtbot.wait(5000)
 
 
@@ -125,7 +131,8 @@ def mscolab_session_server(mscolab_session_app, mscolab_session_managers):
     # Use port 0 to let OS assign available port - early failure if unavailable
     cmd = [sys.executable, '-m', 'mslib.mscolab.mscolab', 'start', '--host', '127.0.0.1', '--port', '0']
     with _running_server(mscolab_session_app, cmd,
-                         extra_paths=[str(constants.MSCOLAB_SERVER_CONFIG_DIR)]) as url:
+                         extra_paths=[str(constants.MSCOLAB_SERVER_CONFIG_DIR)],
+                         extra_env={"MSCOLAB_TEST_MODE": "1"}) as url:
         # Wait until the Flask-SocketIO server is ready for connections
         sio = socketio.Client()
         sio.connect(url, retry=True, wait_timeout=60)
@@ -143,6 +150,9 @@ def reset_mscolab(mscolab_session_app):
     """
     with mscolab_session_app.app_context():
         handle_db_reset(verbose=False)
+    # In-process socket bookkeeping survives handle_db_reset; clear it so state
+    # does not leak across tests that share the imported server module.
+    sockio.sm.clear_state()
 
 
 @pytest.fixture
@@ -169,6 +179,12 @@ def mscolab_server(mscolab_session_server, reset_mscolab):
 
     :returns: The URL where the server is running.
     """
+    # The subprocess server has its own SocketsManager registries that handle_db_reset
+    # cannot reach. Clear them via the test-only endpoint to avoid cross-test leaks.
+    try:
+        requests.post(urllib.parse.urljoin(mscolab_session_server, "/test/reset_socket_state"), timeout=5)
+    except requests.RequestException:
+        pass
     # Update mscolab URL to avoid "Update Server List" message boxes
     modify_config_file({"default_MSCOLAB": [mscolab_session_server]})
     return mscolab_session_server
@@ -213,7 +229,7 @@ def is_port_responsive(host, port, timeout=0.5):
 
 
 @contextmanager
-def _running_server(app, cmd, extra_paths=None):
+def _running_server(app, cmd, extra_paths=None, extra_env=None):
     """Context manager that starts the app in a subprocess and returns its URL.
 
     The subprocess must print the bound port as the first line on stdout.
@@ -224,6 +240,8 @@ def _running_server(app, cmd, extra_paths=None):
     if extra_paths:
         existing = env.get('PYTHONPATH', '')
         env['PYTHONPATH'] = os.pathsep.join(extra_paths) + (os.pathsep + existing if existing else '')
+    if extra_env:
+        env.update(extra_env)
     process = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,

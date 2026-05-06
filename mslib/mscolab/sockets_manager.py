@@ -60,6 +60,15 @@ class SocketsManager:
     def handle_connect(self):
         logging.debug(request.sid)
 
+    def clear_state(self):
+        """Drop all in-memory socket bookkeeping.
+
+        Used by tests to prevent state leaks across runs that share the same server
+        process — handle_db_reset only resets the database, not these registries.
+        """
+        self.sockets[:] = []
+        self.active_users_per_operation.clear()
+
     def handle_operation_selected(self, json_config):
         logging.debug("Operation selected: {}".format(json_config))
         token = json_config['token']
@@ -166,7 +175,7 @@ class SocketsManager:
                 else:
                     # If no users left, delete the operation key
                     del self.active_users_per_operation[op_id]
-                    socketio.emit('active-user-update', {'op_id': op_id, 'count': 0})
+                    socketio.emit(SocketEvents.ACTIVE_USER_UPDATE, {'op_id': op_id, 'count': 0})
 
     def remove_active_user_id_from_specific_operation(self, user_id, op_id):
         """
@@ -184,7 +193,7 @@ class SocketsManager:
                 else:
                     # If no users left, delete the operation key
                     del self.active_users_per_operation[op_id]
-                    socketio.emit('active-user-update', {'op_id': op_id, 'count': 0})
+                    socketio.emit(SocketEvents.ACTIVE_USER_UPDATE, {'op_id': op_id, 'count': 0})
 
     def handle_message(self, _json):
         """
@@ -274,7 +283,7 @@ class SocketsManager:
                 message_ = f"[service message] **{user.username}** saved changes. {messageText}"
                 new_message = self.cm.add_message(user, message_, str(op_id), message_type=MessageType.SYSTEM_MESSAGE)
                 new_message_dict = get_message_dict(new_message)
-                socketio.emit('chat-message-client', json.dumps(new_message_dict))
+                socketio.emit(SocketEvents.CHAT_MESSAGE_CLIENT, json.dumps(new_message_dict))
                 # emit file-changed event to trigger reload of flight track
                 socketio.emit(SocketEvents.FILE_CHANGED, json.dumps({"op_id": op_id, "u_id": user.id}))
         else:
