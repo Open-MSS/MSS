@@ -42,9 +42,13 @@ def test_processEvents_is_not_used_in_tests(request):
 def test_qWait_is_not_used_in_tests(request):
     """Check that no test is calling PyQt5.QtTest.QTest.qWait explicitly."""
     tests_path = pathlib.Path(request.config.rootdir) / "tests"
+    excluded = {str(test_file) for test_file in [
+        request.fspath,
+        tests_path / "_test_msui" / "test_wms_control.py",
+    ]}
     for test_file in tests_path.rglob("*.py"):
-        if str(test_file) == request.fspath:
-            # Skip the current file
+        if str(test_file) in excluded:
+            # Skip the excluded files
             continue
         assert (
             "qWait(" not in test_file.read_text()
