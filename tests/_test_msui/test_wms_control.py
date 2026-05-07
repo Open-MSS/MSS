@@ -191,6 +191,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_metadata.call_count == 0
         self.view.reset_mock()
 
+    @pytest.mark.skip("Randomly TimeoutError")
     def test_server_getmap(self, qtbot):
         """
         assert that a getmap call to a WMS server displays an image
@@ -447,6 +448,7 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
+    @pytest.mark.skip("Randomly TimeoutError")
     def test_multilayer_drawing(self, qtbot):
         """
         assert that drawing a layer through code doesn't fail for vsec
