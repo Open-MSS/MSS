@@ -222,7 +222,7 @@ def pytest_configure(config):
     errors when multiple workers share the same pytest.log file handle."""
     worker_id = os.environ.get("PYTEST_XDIST_WORKER")
     if worker_id:
-        log_file = getattr(config.option, "log_file", None)
+        log_file = getattr(config.option, "log_file", None) or config.getini("log_file")
         if log_file:
             base, ext = os.path.splitext(log_file)
             config.option.log_file = f"{base}_{worker_id}{ext}"

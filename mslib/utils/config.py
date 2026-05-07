@@ -221,7 +221,7 @@ class MSUIDefaultConfig:
     MSS_auth = {}
 
     # timeout of Url request
-    WMS_request_timeout = 30
+    WMS_request_timeout = 60
 
     WMS_preload = []
 
