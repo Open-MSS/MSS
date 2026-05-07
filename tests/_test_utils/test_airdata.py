@@ -24,15 +24,15 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
 import mock
 from pathlib import Path
 from PyQt5 import QtWidgets
 from mslib.utils.airdata import download_progress, get_airports, \
     get_available_airspaces, update_airspace, get_airspaces
-from tests.constants import MSUI_CONFIG_PATH
 
 
-AIPDIR = Path(MSUI_CONFIG_PATH) / "downloads" / "aip"
+AIPDIR = Path(os.environ["MSUI_CONFIG_PATH"]) / "downloads" / "aip"
 AIPDIR.mkdir(parents=True, exist_ok=True)
 
 

@@ -25,15 +25,15 @@
     limitations under the License.
 """
 
+import os
 import mock
 import pytest
 from pathlib import Path
 from PyQt5 import QtCore, QtTest, QtGui
-from tests.constants import ROOT_DIR
 import mslib.msui.kmloverlay_dockwidget as kd
 
 sample_path = Path(__file__).parent.parent / "data"
-save_kml = ROOT_DIR / "merged_file123.kml"
+save_kml = Path(os.environ["MSUI_CONFIG_PATH"]).parent / "merged_file123.kml"
 
 
 # ToDo refactoring, extract helper methods into functions

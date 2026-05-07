@@ -25,6 +25,7 @@
     limitations under the License.
 """
 import logging
+import os
 import mslib.utils.config as config
 
 import pytest
@@ -34,8 +35,10 @@ from mslib import utils
 from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.config import config_loader, read_config_file, modify_config_file
 from mslib.utils.config import merge_dict
-from tests.constants import MSUI_CONFIG_PATH, MSUI_CONFIG_FILE_PATH
 from tests.utils import create_msui_settings_file
+
+MSUI_CONFIG_PATH = Path(os.environ["MSUI_CONFIG_PATH"])
+MSUI_CONFIG_FILE_PATH = MSUI_CONFIG_PATH / "msui_settings.json"
 
 LOGGER = logging.getLogger(__name__)
 

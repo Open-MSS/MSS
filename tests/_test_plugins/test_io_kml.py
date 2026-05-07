@@ -27,13 +27,12 @@
 import os
 
 import mslib.msui.flighttrack as ft
-from tests.constants import ROOT_DIR
 from mslib.plugins.io import kml
 
 
-def test_save_to_kml():
+def test_save_to_kml(root_dir):
     try:
-        filename = os.path.join(ROOT_DIR, "testkmldata.kml")
+        filename = os.path.join(root_dir, "testkmldata.kml")
         wp = _example_waypoints()
         name = "testkmldata"
         kml.save_to_kml(filename, name, wp)

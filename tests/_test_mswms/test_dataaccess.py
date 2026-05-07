@@ -28,11 +28,13 @@
 
 import os
 from datetime import datetime
+from pathlib import Path
 
 import mock
 
 from mslib.mswms.dataaccess import DefaultDataAccess, CachedDataAccess
-from tests.constants import MSWMS_DATA_DIR
+
+MSWMS_DATA_DIR = Path(os.environ["MSUI_CONFIG_PATH"]).parent / "mswms" / "testdata"
 
 
 class Test_DefaultDataAccess:

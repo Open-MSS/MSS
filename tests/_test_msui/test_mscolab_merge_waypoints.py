@@ -29,7 +29,6 @@ import pytest
 import shutil
 
 import mslib.utils.auth
-from tests.constants import ROOT_DIR
 from mslib.msui import flighttrack as ft
 from PyQt5 import QtCore, QtTest
 from tests.utils import (mscolab_register_and_login, mscolab_create_operation,
@@ -42,13 +41,13 @@ from mslib.mscolab.seed import XML_CONTENT_INIT
 
 class Test_Mscolab_Merge_Waypoints:
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot, mscolab_app, mscolab_server):
+    def setup(self, qtbot, mscolab_app, mscolab_server, root_dir):
         self.app = mscolab_app
         self.url = mscolab_server
-        self.window = msui.MSUIMainWindow(local_operations_data=ROOT_DIR)
+        self.window = msui.MSUIMainWindow(local_operations_data=root_dir)
         self.window.create_new_flight_track()
         self.emailid = 'merge@alpha.org'
-        self.local_mscolab_data = ROOT_DIR / "local_mscolab_data"
+        self.local_mscolab_data = root_dir / "local_mscolab_data"
         yield
         self.window.mscolab.logout()
         mslib.utils.auth.del_password_from_keyring("merge@alpha.org")

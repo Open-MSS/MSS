@@ -26,11 +26,10 @@
 """
 import os
 
-from tests.constants import ROOT_DIR
 from mslib.plugins.io import flitestar
 
 
-def test_load_from_flitestar():
+def test_load_from_flitestar(root_dir):
     try:
         data = ["# FliteStar/FliteMap generated flight plan. \n",
                 "WPT S  WP1A N 49 06.00 W  22 54.00 \n",
@@ -48,7 +47,7 @@ def test_load_from_flitestar():
                 "FWP p v KFV   N 63 58.97 W  22 36.91 179"
                 ]
 
-        filename = os.path.join(ROOT_DIR, "testreaddata.flt")
+        filename = os.path.join(root_dir, "testreaddata.flt")
         with open(filename, 'w') as f:
             f.writelines(data)
         name, wp = flitestar.load_from_flitestar(filename)

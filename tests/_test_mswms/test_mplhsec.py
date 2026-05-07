@@ -27,14 +27,17 @@
 """
 
 import importlib
+import os
+from pathlib import Path
 
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
-from tests import constants
+
+_MSWMS_SERVER_CONFIG_FILE_PATH = Path(os.environ["MSUI_CONFIG_PATH"]).parent / "mswms" / "mswms_settings.py"
 
 
 class TestMPLBasemapHorizontalSectionStyle:
     def setup_method(self):
-        self.mswms_settings = importlib.import_module("mswms_settings", constants.MSWMS_SERVER_CONFIG_FILE_PATH)
+        self.mswms_settings = importlib.import_module("mswms_settings", _MSWMS_SERVER_CONFIG_FILE_PATH)
 
     def test_supported_epsg_codes(self):
         assert list(self.mswms_settings.epsg_to_mpl_basemap_table.keys()) == [4326]

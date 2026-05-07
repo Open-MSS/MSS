@@ -28,7 +28,6 @@ import pytest
 import mock
 
 from PyQt5 import QtCore, QtTest, QtWidgets
-from tests.constants import ROOT_DIR
 from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
@@ -37,7 +36,7 @@ from mslib.utils.config import modify_config_file
 
 class Test_MscolabVersionHistory:
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot, mscolab_server):
+    def setup(self, qtbot, mscolab_server, root_dir):
         self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
         self.operation_name = "europe"
@@ -45,7 +44,7 @@ class Test_MscolabVersionHistory:
         assert add_operation(self.operation_name, "test europe")
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
-        self.window = msui.MSUIMainWindow(local_operations_data=ROOT_DIR)
+        self.window = msui.MSUIMainWindow(local_operations_data=root_dir)
         self.window.create_new_flight_track()
         self.window.show()
         # connect and login to mscolab

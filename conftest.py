@@ -28,15 +28,47 @@
 import importlib.util
 import os
 import sys
+import tempfile
 import time
+from pathlib import Path
 # Disable pyc files
 sys.dont_write_bytecode = True
+
+_tmpdir_kwargs = {"ignore_cleanup_errors": True} if sys.version_info >= (3, 10) else {}
+_tmp_dir = tempfile.TemporaryDirectory(**_tmpdir_kwargs)
+ROOT_DIR = Path(_tmp_dir.name)
+
+MSWMS_SERVER_CONFIG_FILE = "mswms_settings.py"
+MSWMS_SERVER_CONFIG_DIR = ROOT_DIR / "mswms"
+MSWMS_DATA_DIR = MSWMS_SERVER_CONFIG_DIR / "testdata"
+MSWMS_SERVER_CONFIG_FILE_PATH = MSWMS_SERVER_CONFIG_DIR / MSWMS_SERVER_CONFIG_FILE
+
+if not MSWMS_DATA_DIR.exists():
+    MSWMS_DATA_DIR.mkdir(parents=True)
+
+MSCOLAB_CONFIG_FILE = "mscolab_settings.py"
+MSCOLAB_AUTH_FILE = "mscolab_auth.py"
+MSCOLAB_SERVER_CONFIG_DIR = ROOT_DIR / "mscolab"
+MSCOLAB_DATA_DIR = MSCOLAB_SERVER_CONFIG_DIR / "filedata"
+MSCOLAB_SERVER_CONFIG_FILE_PATH = MSCOLAB_SERVER_CONFIG_DIR / MSCOLAB_CONFIG_FILE
+
+if not MSCOLAB_DATA_DIR.exists():
+    MSCOLAB_DATA_DIR.mkdir(parents=True)
+
+MSUI_CONFIG_PATH = ROOT_DIR / "msui"
+os.environ["MSUI_CONFIG_PATH"] = str(MSUI_CONFIG_PATH.resolve())
+MSUI_CONFIG_FILE_PATH = MSUI_CONFIG_PATH / "msui_settings.json"
+
+if not MSUI_CONFIG_PATH.exists():
+    MSUI_CONFIG_PATH.mkdir(parents=True)
+
+_xdg_cache_home_temporary_directory = tempfile.TemporaryDirectory(**_tmpdir_kwargs)
+os.environ["XDG_CACHE_HOME"] = _xdg_cache_home_temporary_directory.name
 
 import pytest
 import shutil
 import keyring
 from mslib.mswms.seed import DataFiles
-import tests.constants as constants
 from mslib.utils.loggerdef import configure_mpl_logger
 
 matplotlib_logger = configure_mpl_logger()
@@ -78,22 +110,22 @@ def keyring_reset():
 
 
 def generate_initial_config():
-    """Generate an initial state for the configuration directory in tests.constants.ROOT_FS
+    """Generate an initial state for the configuration directory in ROOT_DIR.
     """
     # make a copy for mscolab test, so that we read different paths during parallel tests.
     sample_path = os.path.join(os.path.dirname(__file__), "tests", "data")
-    shutil.copy(os.path.join(sample_path, "example.ftml"), constants.ROOT_DIR)
+    shutil.copy(os.path.join(sample_path, "example.ftml"), ROOT_DIR)
 
-    if not constants.MSWMS_SERVER_CONFIG_FILE_PATH.exists():
+    if not MSWMS_SERVER_CONFIG_FILE_PATH.exists():
         print('\n configure testdata')
         # ToDo check pytest tmpdir_factory
-        print(constants.MSWMS_DATA_DIR)
-        examples = DataFiles(mswms_data_dir=constants.MSWMS_DATA_DIR,
-                             mswms_server_config_dir=constants.MSWMS_SERVER_CONFIG_DIR)
+        print(MSWMS_DATA_DIR)
+        examples = DataFiles(mswms_data_dir=MSWMS_DATA_DIR,
+                             mswms_server_config_dir=MSWMS_SERVER_CONFIG_DIR)
         examples.create_server_config(detailed_information=True)
         examples.create_data()
 
-    if not constants.MSCOLAB_SERVER_CONFIG_FILE_PATH.exists():
+    if not MSCOLAB_SERVER_CONFIG_FILE_PATH.exists():
         config_string = f'''
 # SQLALCHEMY_DATABASE_URI = 'mysql://user:pass@127.0.0.1/mscolab'
 import os
@@ -102,9 +134,9 @@ import secrets
 from pathlib import Path
 from urllib.parse import urljoin
 
-ROOT_DIR = "{constants.ROOT_DIR.as_posix()}"
+ROOT_DIR = "{ROOT_DIR.as_posix()}"
 # directory where mss output files are stored
-DATA_DIR = "{constants.MSCOLAB_DATA_DIR.as_posix()}"
+DATA_DIR = "{MSCOLAB_DATA_DIR.as_posix()}"
 # this will be removed
 OPERATIONS_DATA = Path(DATA_DIR)
 BASE_DIR = ROOT_DIR
@@ -162,10 +194,10 @@ enable_basic_http_authentication = False
 # enable login by identity provider
 USE_SAML2 = False
 '''
-        MSCOLAB_CONFIG = constants.MSCOLAB_SERVER_CONFIG_FILE_PATH
+        MSCOLAB_CONFIG = MSCOLAB_SERVER_CONFIG_FILE_PATH
         MSCOLAB_CONFIG.write_text(config_string)
-        MSCOLAB_AUTH_FILE = constants.MSCOLAB_SERVER_CONFIG_DIR / constants.MSCOLAB_AUTH_FILE
-        if not MSCOLAB_AUTH_FILE.exists():
+        mscolab_auth_file = MSCOLAB_SERVER_CONFIG_DIR / MSCOLAB_AUTH_FILE
+        if not mscolab_auth_file.exists():
             config_string = '''
 import hashlib
 
@@ -173,7 +205,7 @@ class mscolab_auth:
      password = "testvaluepassword"
      allowed_users = [("user", hashlib.md5(password.encode('utf-8')).hexdigest())]
 '''
-            MSCOLAB_AUTH_FILE.write_text(config_string)
+            mscolab_auth_file.write_text(config_string)
 
     def _load_module(module_name, path):
         spec = importlib.util.spec_from_file_location(module_name, path)
@@ -181,8 +213,8 @@ class mscolab_auth:
         sys.modules[module_name] = module
         spec.loader.exec_module(module)
 
-    _load_module("mswms_settings", constants.MSWMS_SERVER_CONFIG_FILE_PATH)
-    _load_module("mscolab_settings", constants.MSCOLAB_SERVER_CONFIG_FILE_PATH)
+    _load_module("mswms_settings", MSWMS_SERVER_CONFIG_FILE_PATH)
+    _load_module("mscolab_settings", MSCOLAB_SERVER_CONFIG_FILE_PATH)
 
 
 def pytest_configure(config):
@@ -221,11 +253,10 @@ def _rmtree_retry(path, retries=5, delay=0.2):
 
 @pytest.fixture(autouse=True)
 def reset_config():
-    """Reset the configuration directory used in the tests (tests.constants.ROOT_FS) after every test
-    """
-    # Ideally this would just be shutil.rmtree(constants.MSCOLAB_SERVER_CONFIG_DIR),
+    """Reset the configuration directory used in the tests after every test."""
+    # Ideally this would just be shutil.rmtree(MSCOLAB_SERVER_CONFIG_DIR),
     # but SQLAlchemy complains if the SQLite file is deleted.
-    for item_name in constants.MSCOLAB_SERVER_CONFIG_DIR.iterdir():
+    for item_name in MSCOLAB_SERVER_CONFIG_DIR.iterdir():
         if item_name.is_dir():
             _rmtree_retry(item_name)
         else:
@@ -235,6 +266,51 @@ def reset_config():
     generate_initial_config()
     create_msui_settings_file("{}")
     read_config_file()
+
+
+@pytest.fixture(scope="session")
+def root_dir():
+    return ROOT_DIR
+
+
+@pytest.fixture(scope="session")
+def mswms_server_config_dir():
+    return MSWMS_SERVER_CONFIG_DIR
+
+
+@pytest.fixture(scope="session")
+def mswms_data_dir():
+    return MSWMS_DATA_DIR
+
+
+@pytest.fixture(scope="session")
+def mswms_server_config_file_path():
+    return MSWMS_SERVER_CONFIG_FILE_PATH
+
+
+@pytest.fixture(scope="session")
+def mscolab_server_config_dir():
+    return MSCOLAB_SERVER_CONFIG_DIR
+
+
+@pytest.fixture(scope="session")
+def mscolab_data_dir():
+    return MSCOLAB_DATA_DIR
+
+
+@pytest.fixture(scope="session")
+def mscolab_server_config_file_path():
+    return MSCOLAB_SERVER_CONFIG_FILE_PATH
+
+
+@pytest.fixture(scope="session")
+def msui_config_path():
+    return MSUI_CONFIG_PATH
+
+
+@pytest.fixture(scope="session")
+def msui_config_file_path():
+    return MSUI_CONFIG_FILE_PATH
 
 
 # Make fixtures available everywhere

@@ -27,13 +27,12 @@
 import os
 
 import mslib.msui.flighttrack as ft
-from tests.constants import ROOT_DIR
 from mslib.plugins.io import text
 
 
-def test_save_to_text():
+def test_save_to_text(root_dir):
     try:
-        filename = os.path.join(ROOT_DIR, "testdata.txt")
+        filename = os.path.join(root_dir, "testdata.txt")
         wp = _example_waypoints()
         name = "testdata"
         text.save_to_txt(filename, name, wp)
@@ -53,7 +52,7 @@ def test_save_to_text():
             os.remove(filename)
 
 
-def test_load_from_csv():
+def test_load_from_csv(root_dir):
     data = ['# Do not modify if you plan to import this file again!\n',
             'Track name: testdata\n',
             'Index  Location   Lat (+-90)  Lon (+-180)  Flightlevel  Pressure (hPa)  Leg '
@@ -64,7 +63,7 @@ def test_load_from_csv():
             '238.416             0.0              0.0  last    \n'
             ]
 
-    filename = os.path.join(ROOT_DIR, "testreaddata.txt")
+    filename = os.path.join(root_dir, "testreaddata.txt")
     with open(filename, 'w') as f:
         f.writelines(data)
     name, wp = text.load_from_txt(filename)

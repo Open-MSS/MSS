@@ -27,16 +27,15 @@
 """
 
 import numpy as np
-from tests import constants
 import mslib.mswms.seed as seed
 
 
 class Testseed:
-    def test_data_creation(self):
-        assert constants.MSWMS_SERVER_CONFIG_DIR.exists()
-        assert constants.MSWMS_DATA_DIR.exists()
-        assert constants.MSWMS_SERVER_CONFIG_FILE_PATH.exists()
-        _files = [f for f in constants.MSWMS_DATA_DIR.iterdir() if f.is_file()]
+    def test_data_creation(self, mswms_server_config_dir, mswms_data_dir, mswms_server_config_file_path):
+        assert mswms_server_config_dir.exists()
+        assert mswms_data_dir.exists()
+        assert mswms_server_config_file_path.exists()
+        _files = [f for f in mswms_data_dir.iterdir() if f.is_file()]
         assert len(_files) == 23
 
     def test_get_profile(self):

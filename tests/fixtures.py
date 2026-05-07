@@ -43,7 +43,6 @@ from mslib.mscolab.server import APP, sockio, cm, fm
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.utils.config import modify_config_file
 from tests.utils import is_url_response_ok
-import tests.constants as constants
 
 
 @pytest.fixture
@@ -122,7 +121,7 @@ def mscolab_session_managers(mscolab_session_app):
 
 
 @pytest.fixture(scope="session")
-def mscolab_session_server(mscolab_session_app, mscolab_session_managers):
+def mscolab_session_server(mscolab_session_app, mscolab_session_managers, mscolab_server_config_dir):
     """Session-scoped fixture that provides a running MSColab server.
 
     This fixture should not be used in tests. Instead use :func:`mscolab_server`, which
@@ -131,7 +130,7 @@ def mscolab_session_server(mscolab_session_app, mscolab_session_managers):
     # Use port 0 to let OS assign available port - early failure if unavailable
     cmd = [sys.executable, '-m', 'mslib.mscolab.mscolab', 'start', '--host', '127.0.0.1', '--port', '0']
     with _running_server(mscolab_session_app, cmd,
-                         extra_paths=[str(constants.MSCOLAB_SERVER_CONFIG_DIR)],
+                         extra_paths=[str(mscolab_server_config_dir)],
                          extra_env={"MSCOLAB_TEST_MODE": "1"}) as url:
         # Wait until the Flask-SocketIO server is ready for connections
         sio = socketio.Client()
@@ -204,7 +203,7 @@ def mswms_app():
 
 
 @pytest.fixture(scope="session")
-def mswms_server(mswms_app):
+def mswms_server(mswms_app, mswms_server_config_dir):
     """Fixture that provides a running MSWMS server.
 
     :returns: The URL where the server is running.
@@ -212,7 +211,7 @@ def mswms_server(mswms_app):
     # Use port 0 to let OS assign available port - early failure if unavailable
     cmd = [sys.executable, '-m', 'mslib.mswms.mswms', '--host', '127.0.0.1', '--port', '0']
     with _running_server(mswms_app, cmd,
-                         extra_paths=[str(constants.MSWMS_SERVER_CONFIG_DIR)]) as url:
+                         extra_paths=[str(mswms_server_config_dir)]) as url:
         yield url
 
 

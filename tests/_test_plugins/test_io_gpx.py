@@ -27,12 +27,11 @@
 import os
 
 import mslib.msui.flighttrack as ft
-from tests.constants import ROOT_DIR
 from mslib.plugins.io import gpx
 
 
-def test_save_to_gpx():
-    filename = os.path.join(ROOT_DIR, "testgpxdata.gpx")
+def test_save_to_gpx(root_dir):
+    filename = os.path.join(root_dir, "testgpxdata.gpx")
     try:
         wp = _example_waypoints()
         name = "testgpxdata"

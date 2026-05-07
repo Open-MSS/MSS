@@ -32,11 +32,14 @@ import requests.exceptions
 import mock
 import pytest
 
+from pathlib import Path
+
 from PIL import Image
 
-from tests.constants import ROOT_DIR, MSCOLAB_DATA_DIR
-from tests import constants
 import mslib.utils.auth
+
+_ROOT_DIR = Path(os.environ["MSUI_CONFIG_PATH"]).parent
+_MSCOLAB_DATA_DIR = _ROOT_DIR / "mscolab" / "filedata"
 from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
 from PyQt5 import QtCore, QtTest, QtWidgets
@@ -58,7 +61,7 @@ class Test_Mscolab_connect_window:
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
 
-        self.main_window = msui.MSUIMainWindow(local_operations_data=ROOT_DIR)
+        self.main_window = msui.MSUIMainWindow(local_operations_data=_ROOT_DIR)
         self.main_window.create_new_flight_track()
         self.main_window.show()
         self.window = mscolab.MSColab_ConnectDialog(parent=self.main_window, mscolab=self.main_window.mscolab)
@@ -281,7 +284,7 @@ class Test_Mscolab:
         assert add_user(self.userdata3[0], self.userdata3[1], self.userdata3[2], self.userdata3[3])
         assert add_user_to_operation(path=self.operation_name3, access_level="collaborator", emailid=self.userdata3[0])
 
-        self.window = msui.MSUIMainWindow(local_operations_data=ROOT_DIR)
+        self.window = msui.MSUIMainWindow(local_operations_data=_ROOT_DIR)
         self.window.create_new_flight_track()
         self.window.show()
 
@@ -591,7 +594,7 @@ class Test_Mscolab:
         # ToDo verify all operations disabled again without a visual check
 
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
-                return_value=(os.path.join(constants.MSCOLAB_DATA_DIR, 'test_export.ftml'),
+                return_value=(os.path.join(_MSCOLAB_DATA_DIR, 'test_export.ftml'),
                               "Flight track (*.ftml)"))
     def test_handle_export(self, mockbox, qtbot):
         self._connect_to_mscolab(qtbot)
@@ -723,7 +726,7 @@ class Test_Mscolab:
         operation_name = "flight7"
         self._create_operation(qtbot, operation_name, "Description flight7")
         # check for operation dir is created on server
-        assert os.path.isdir(os.path.join(MSCOLAB_DATA_DIR, operation_name))
+        assert os.path.isdir(os.path.join(_MSCOLAB_DATA_DIR, operation_name))
 
         self._activate_operation_at_index(0)
         op_id = self.window.mscolab.get_recent_op_id()
@@ -740,7 +743,7 @@ class Test_Mscolab:
         op_id = self.window.mscolab.get_recent_op_id()
         assert op_id is None
         # check operation dir name removed
-        assert os.path.isdir(os.path.join(MSCOLAB_DATA_DIR, operation_name)) is False
+        assert os.path.isdir(os.path.join(_MSCOLAB_DATA_DIR, operation_name)) is False
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_handle_leave_operation(self, mockmessage, qtbot):
