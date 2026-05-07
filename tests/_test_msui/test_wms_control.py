@@ -26,6 +26,7 @@
 """
 
 import os
+import time
 import mock
 import pytest
 import hashlib
@@ -33,6 +34,7 @@ import urllib
 import socket
 from PyQt5 import QtCore, QtTest
 from mslib.msui import flighttrack as ft
+from mslib.utils.qt import Worker
 import mslib.msui.wms_control as wc
 
 
@@ -84,12 +86,24 @@ class WMSControlWidgetSetup:
         if hasattr(self.window, 'cleanup_threads'):
             self.window.cleanup_threads()
         self.window.hide()
+        # Drain any outstanding anonymous capability Workers (get_capabilities /
+        # initialise_wms) so they don't hold the WMS server busy when the next
+        # test starts.  Under parallel xdist execution this prevents the new
+        # test's request from queuing behind the previous one, which would push
+        # the total capabilities-loading time past wait_signal's timeout.
+        deadline = time.time() + 10
+        while Worker.workers and time.time() < deadline:
+            QtTest.QTest.qWait(100)
 
     def query_server(self, qtbot, url):
         while len(self.window.multilayers.cbWMS_URL.currentText()) > 0:
             QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
         QtTest.QTest.keyClicks(self.window.multilayers.cbWMS_URL, url)
-        with qtbot.wait_signal(self.window.cpdlg.canceled):
+        # Use a generous timeout: parallel xdist execution puts all workers'
+        # WMS servers under simultaneous CPU load, making the two-step HTTP
+        # chain (requests.get + MSUIWebMapService) occasionally exceed the
+        # default 5 s limit.
+        with qtbot.wait_signal(self.window.cpdlg.canceled, timeout=30000):
             QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
 
@@ -219,7 +233,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(qtbot, self.url)
 
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as qm_critical:
-            with qtbot.wait_signal(self.window.cpdlg.canceled):
+            with qtbot.wait_signal(self.window.cpdlg.canceled, timeout=30000):
                 QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
                 QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
                 QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
@@ -228,7 +242,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_legend.call_count == 0
         assert self.view.draw_metadata.call_count == 0
 
-        with qtbot.wait_signal(self.window.cpdlg.canceled):
+        with qtbot.wait_signal(self.window.cpdlg.canceled, timeout=30000):
             QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, ord(str(self.port)[-1]))
             QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Slash)
             QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
