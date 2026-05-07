@@ -178,10 +178,13 @@ def mscolab_server(mscolab_session_server, reset_mscolab):
 
     :returns: The URL where the server is running.
     """
-    # The subprocess server has its own SocketsManager registries that handle_db_reset
-    # cannot reach. Clear them via the test-only endpoint to avoid cross-test leaks.
+    # Reset the subprocess server's own database and socket bookkeeping so its
+    # SQLAlchemy connection pool sees the freshly migrated schema.  Falling back
+    # to the socket-only reset keeps things working if the endpoint is absent.
     try:
-        requests.post(urllib.parse.urljoin(mscolab_session_server, "/test/reset_socket_state"), timeout=5)
+        r = requests.post(urllib.parse.urljoin(mscolab_session_server, "/test/reset_db"), timeout=10)
+        if r.status_code != 200:
+            requests.post(urllib.parse.urljoin(mscolab_session_server, "/test/reset_socket_state"), timeout=5)
     except requests.RequestException:
         pass
     # Update mscolab URL to avoid "Update Server List" message boxes

@@ -246,8 +246,8 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
             if res.text != "False":
                 res = res.json()
                 if res["success"] is True:
-                    # Remove item if the filter is set to Named version
-                    if self.versionFilterCB.currentIndex() == 0:
+                    # Remove item if the filter is set to Named version only
+                    if self.versionFilterCB.currentIndex() == 1:
                         self.changes.takeItem(self.changes.currentRow())
                     # Remove name from item
                     else:
