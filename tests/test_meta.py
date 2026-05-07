@@ -48,7 +48,7 @@ def test_qWait_is_not_used_in_tests(request):
     ]}
     for test_file in tests_path.rglob("*.py"):
         if str(test_file) in excluded:
-            # Skip the excluded files
+            # Skip the excluded file
             continue
         assert (
             "qWait(" not in test_file.read_text()
