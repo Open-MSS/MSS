@@ -994,11 +994,17 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     requests.exceptions.MissingSchema) as ex:
                 logging.error("Cannot load capabilities document.\n"
                               "No layers can be used in this view.")
-                QtWidgets.QMessageBox.critical(
-                    self.multilayers, self.tr("Web Map Service"),
-                    self.tr(f"ERROR: We cannot load the capability document!\n\\n{type(ex)}\n{ex}"))
+                try:
+                    QtWidgets.QMessageBox.critical(
+                        self.multilayers, self.tr("Web Map Service"),
+                        self.tr(f"ERROR: We cannot load the capability document!\n\\n{type(ex)}\n{ex}"))
+                except RuntimeError:
+                    logging.debug("WMS control widget was deleted before on_failure could show dialog")
             finally:
-                self.cpdlg.close()
+                try:
+                    self.cpdlg.close()
+                except RuntimeError:
+                    pass
 
         self.display_capabilities_dialog()
         Worker.create(lambda: requests.get(base_url, params=params,
