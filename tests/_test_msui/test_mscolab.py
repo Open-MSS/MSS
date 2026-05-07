@@ -31,12 +31,9 @@ from pathlib import Path
 import requests.exceptions
 import mock
 import pytest
-
-from pathlib import Path
-
 from PIL import Image
-
 import mslib.utils.auth
+
 
 _ROOT_DIR = Path(os.environ["MSUI_CONFIG_PATH"]).parent
 _MSCOLAB_DATA_DIR = _ROOT_DIR / "mscolab" / "filedata"
