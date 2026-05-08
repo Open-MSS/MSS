@@ -91,8 +91,11 @@ class WMSControlWidgetSetup:
         # test starts.  Under parallel xdist execution this prevents the new
         # test's request from queuing behind the previous one, which would push
         # the total capabilities-loading time past wait_signal's timeout.
+        # Use isRunning() rather than truthiness of Worker.workers: the set
+        # always contains the un-started capabilities_worker placeholder so a
+        # plain bool check would busy-wait for the full 10 s on every teardown.
         deadline = time.time() + 10
-        while Worker.workers and time.time() < deadline:
+        while any(w.isRunning() for w in list(Worker.workers)) and time.time() < deadline:
             QtTest.QTest.qWait(100)
 
     def query_server(self, qtbot, url):
@@ -107,6 +110,7 @@ class WMSControlWidgetSetup:
             QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
 
+@pytest.mark.xdist_group(name="mswms_server")
 class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
     @pytest.fixture(autouse=True)
     def setup(self, qtbot, tmp_path):
@@ -159,9 +163,12 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
             self.query_server(qtbot, f"{self.scheme}://.....{self.host}:{self.port}")
             qtbot.wait_until(mock_critical.assert_called_once)
 
-    @pytest.mark.skip("Breaks other tests in this class because of a lingering message box, for some reason")
     def test_forward_backward_clicks(self, qtbot):
         self.query_server(qtbot, self.url)
+        # Disable auto-update so navigation clicks don't spawn async GetMap fetches
+        # (which can fail for out-of-range times and leak a QMessageBox into the next test).
+        if self.window.cbAutoUpdate.isChecked():
+            QtTest.QTest.mouseClick(self.window.cbAutoUpdate, QtCore.Qt.LeftButton)
         self.window.init_time_back_click()
         self.window.init_time_fwd_click()
         self.window.valid_time_fwd_click()
@@ -177,42 +184,43 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         except ValueError:
             pass
 
-    @pytest.mark.skip("Has a race condition where the abort might not happen fast enough")
     def test_server_abort_getmap(self, qtbot):
         """
         assert that an aborted getmap call does not change the displayed image
         """
         self.query_server(qtbot, self.url)
-        with qtbot.wait_signal(self.window.image_displayed):
-            QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
-            QtTest.QTest.keyClick(self.window.pdlg, QtCore.Qt.Key_Enter)
+        QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
+        # started_request is emitted before the blocking HTTP call, so pdlg.isVisible()
+        # becomes True while the request is still in-flight — giving us time to cancel.
+        qtbot.wait_until(self.window.pdlg.isVisible, timeout=5000)
+        self.window.pdlg.cancel()
+        # Let the fetch complete; continue_retrieve_image will see wasCanceled=True.
+        QtTest.QTest.qWait(500)
         assert self.view.draw_image.call_count == 0
         assert self.view.draw_legend.call_count == 0
         assert self.view.draw_metadata.call_count == 0
         self.view.reset_mock()
 
-    @pytest.mark.skip("Randomly TimeoutError")
     def test_server_getmap(self, qtbot):
         """
         assert that a getmap call to a WMS server displays an image
         """
         self.query_server(qtbot, self.url)
 
-        with qtbot.wait_signal(self.window.image_displayed):
+        with qtbot.wait_signal(self.window.image_displayed, timeout=30000):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
-    @pytest.mark.skip("Randomly TimeoutError")
     def test_server_getmap_cached(self, qtbot):
         """
         assert that a getmap call to a WMS server displays an image
         """
         self.query_server(qtbot, self.url)
 
-        with qtbot.wait_signal(self.window.image_displayed):
+        with qtbot.wait_signal(self.window.image_displayed, timeout=30000):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
@@ -221,7 +229,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.view.reset_mock()
 
         QtTest.QTest.mouseClick(self.window.cbCacheEnabled, QtCore.Qt.LeftButton)
-        with qtbot.wait_signal(self.window.image_displayed):
+        with qtbot.wait_signal(self.window.image_displayed, timeout=30000):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
@@ -249,7 +257,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
             QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Slash)
             QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
-        with qtbot.wait_signal(self.window.image_displayed):
+        with qtbot.wait_signal(self.window.image_displayed, timeout=30000):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
@@ -291,14 +299,13 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.window.multilayers.listLayers.itemWidget(server.child(0), 2).currentText() == "1"
 
         # Check drawing not causing errors
-        with qtbot.wait_signal(self.window.image_displayed):
+        with qtbot.wait_signal(self.window.image_displayed, timeout=30000):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
-    @pytest.mark.skip("Randomly TimeoutError")
     def test_filter_handling(self, qtbot):
         self.query_server(qtbot, self.url)
         server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
@@ -368,14 +375,13 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.window.lLayerName.text().endswith(server.child(1).text(0))
 
         # Check drawing not causing errors
-        with qtbot.wait_signal(self.window.image_displayed):
+        with qtbot.wait_signal(self.window.image_displayed, timeout=30000):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
-    @pytest.mark.skip("Randomly TimeoutError")
     def test_multilayer_syncing(self, qtbot):
         """
         assert that synced layers share their options
@@ -417,7 +423,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         server.child(0).setCheckState(0, 2)
         server.child(1).setCheckState(0, 2)
 
-        with qtbot.wait_signal(self.window.image_displayed):
+        with qtbot.wait_signal(self.window.image_displayed, timeout=30000):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         urlstr = f"{self.url}/mss/logo.png"
@@ -430,6 +436,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_metadata.call_count == 1
 
 
+@pytest.mark.xdist_group(name="mswms_server")
 class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
     @pytest.fixture(autouse=True)
     def setup(self, qtbot, tmp_path):
@@ -443,14 +450,13 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         """
         self.query_server(qtbot, self.url)
 
-        with qtbot.wait_signal(self.window.image_displayed, timeout=10000):
+        with qtbot.wait_signal(self.window.image_displayed, timeout=30000):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
-    @pytest.mark.skip("Randomly TimeoutError")
     def test_multilayer_drawing(self, qtbot):
         """
         assert that drawing a layer through code doesn't fail for vsec
@@ -459,7 +465,7 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                               QtCore.Qt.MatchFixedString)[0]
 
-        with qtbot.wait_signal(self.window.image_displayed, timeout=10000):
+        with qtbot.wait_signal(self.window.image_displayed, timeout=30000):
             server.child(0).draw()
 
 

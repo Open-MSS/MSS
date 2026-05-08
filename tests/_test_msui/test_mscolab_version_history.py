@@ -90,7 +90,6 @@ class Test_MscolabVersionHistory:
             assert str(self.version_window.changes.currentItem().version_name) == "None"
         qtbot.wait_until(assert_, timeout=15000)
 
-    @pytest.mark.skip("Randomly TimeoutError")
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_undo_changes(self, mockbox, qtbot):
         self._change_version_filter(0)
@@ -99,14 +98,16 @@ class Test_MscolabVersionHistory:
         for i in range(2):
             self.window.mscolab.waypoints_model.invert_direction()
 
-        def assert_():
+        def assert_two_changes():
             assert self.version_window.changes.count() == 2
-        qtbot.wait_until(assert_, timeout=15000)
+        qtbot.wait_until(assert_two_changes, timeout=30000)
         changes_count = self.version_window.changes.count()
         self._activate_change_at_index(1)
         QtTest.QTest.mouseClick(self.version_window.checkoutBtn, QtCore.Qt.LeftButton)
-        new_changes_count = self.version_window.changes.count()
-        assert changes_count + 1 == new_changes_count
+
+        def assert_checkout():
+            assert self.version_window.changes.count() == changes_count + 1
+        qtbot.wait_until(assert_checkout, timeout=30000)
 
     def _connect_to_mscolab(self, qtbot):
         self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)

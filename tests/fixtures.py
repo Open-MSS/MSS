@@ -28,6 +28,7 @@ import mock
 import os
 import subprocess
 import sys
+import threading
 import time
 import urllib
 import socket
@@ -230,6 +231,22 @@ def is_port_responsive(host, port, timeout=0.5):
         return False
 
 
+def _drain_pipe(pipe):
+    """Read and discard all output from a pipe in a daemon thread.
+
+    Prevents the subprocess's pipe buffer from filling up and blocking the
+    server's logging calls (which would cause request-handler threads to stall
+    and produce ReadTimeout errors in tests).
+    """
+    try:
+        while True:
+            chunk = pipe.read(4096)
+            if not chunk:
+                break
+    except Exception:
+        pass
+
+
 @contextmanager
 def _running_server(app, cmd, extra_paths=None, extra_env=None):
     """Context manager that starts the app in a subprocess and returns its URL.
@@ -260,12 +277,21 @@ def _running_server(app, cmd, extra_paths=None, extra_env=None):
             )
         port = int(port_line.strip())
 
+        # Drain stdout and stderr in daemon threads so the subprocess's pipe
+        # buffers never fill up.  Werkzeug logs each request to stderr; after
+        # ~12 GetCapabilities + GetMap calls the accumulated output exceeds the
+        # 64 KB pipe buffer on macOS/Linux, causing logging.info() in the
+        # request-handler thread to block indefinitely and producing ReadTimeout
+        # errors in the next test that tries to contact the server.
+        threading.Thread(target=_drain_pipe, args=(process.stdout,), daemon=True).start()
+        threading.Thread(target=_drain_pipe, args=(process.stderr,), daemon=True).start()
+
         url = f"{scheme}://{host}:{port}"
         app.config['URL'] = url
 
         # Early port check with short timeout to fail fast if port doesn't respond
         if not is_port_responsive(host, port, timeout=1.0):
-            stderr_output = process.stderr.read().decode(errors='replace')
+            stderr_output = "(stderr drained by background thread)"
             process.terminate()
             try:
                 process.wait(timeout=5)

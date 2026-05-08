@@ -303,6 +303,7 @@ class WMSMapFetcher(QtCore.QObject):
         layer, kwargs, md5_filename, use_cache, legend_kwargs = self.maps[0]
         self.maps = self.maps[1:]
         self.long_request = False
+        captured_ex = None
         try:
             self.map_imgs.append(self.fetch_map(layer, kwargs, use_cache, md5_filename))
             self.legend_imgs.append(self.fetch_legend(use_cache=use_cache, **legend_kwargs))
@@ -310,7 +311,10 @@ class WMSMapFetcher(QtCore.QObject):
             logging.error("MapPrefetcher Exception %s - %s.", type(ex), ex)
             # emit finished so progress dialog will be closed
             self.finished.emit(None, None, None, None, None, None, md5_filename)
-            self.exception.emit(ex)
+            # Capture outside the except block to emit below: emitting from within an
+            # except clause causes PyQt5 to treat the cross-thread signal as an
+            # unhandled exception, triggering sys.excepthook in the GUI thread.
+            captured_ex = ex
             self.map_imgs = []
             self.legend_imgs = []
         else:
@@ -322,6 +326,8 @@ class WMSMapFetcher(QtCore.QObject):
                     kwargs["time"], md5_filename)
                 self.map_imgs = []
                 self.legend_imgs = []
+        if captured_ex is not None:
+            self.exception.emit(captured_ex)
 
     def fetch_map(self, layer, kwargs, use_cache, md5_filename):
         """
@@ -732,11 +738,16 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     def cleanup_threads(self):
         """Properly terminate background threads.
         """
+        # Wait up to WMS_request_timeout + 5s for any in-flight GetMap HTTP request to
+        # complete naturally before terminating.  The mswms subprocess renders with
+        # matplotlib, which holds the GIL; terminating the thread early leaves the server
+        # GIL-busy and blocks subsequent GetCapabilities requests in later tests.
+        wms_wait_ms = (config_loader(dataset="WMS_request_timeout") + 5) * 1000
         try:
             if hasattr(self, 'thread_prefetch') and self.thread_prefetch is not None:
                 if self.thread_prefetch.isRunning():
                     self.thread_prefetch.quit()
-                    if not self.thread_prefetch.wait(3000):
+                    if not self.thread_prefetch.wait(wms_wait_ms):
                         self.thread_prefetch.terminate()
                         self.thread_prefetch.wait(1000)
         except Exception:
@@ -745,7 +756,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if hasattr(self, 'thread_fetch') and self.thread_fetch is not None:
                 if self.thread_fetch.isRunning():
                     self.thread_fetch.quit()
-                    if not self.thread_fetch.wait(3000):
+                    if not self.thread_fetch.wait(wms_wait_ms):
                         self.thread_fetch.terminate()
                         self.thread_fetch.wait(1000)
         except Exception:
@@ -766,7 +777,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         else:
             self.get_map([self.multilayers.get_current_layer()])
 
-    def initialise_wms(self, base_url, version="1.3.0", level=None):
+    def initialise_wms(self, base_url, version="1.3.0", level=None, xml=None):
         """Initialises a MSUIWebMapService object with the specified base_url.
 
         If the web server returns a '401 Unauthorized', prompt the user for
@@ -880,7 +891,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.cpdlg.close()
 
         Worker.create(lambda: MSUIWebMapService(base_url, version=version,
-                                                username=auth_username, password=auth_password),
+                                                username=auth_username, password=auth_password,
+                                                xml=xml),
                       on_success, on_failure)
 
     def wms_url_changed(self, text):
@@ -982,7 +994,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             url = url.replace("?service=WMS", "").replace("&service=WMS", "") \
                 .replace("?request=GetCapabilities", "").replace("&request=GetCapabilities", "")
             logging.debug("requesting capabilities from %s", url)
-            self.initialise_wms(url, None, level=level)
+            # Pass the already-fetched XML so MSUIWebMapService skips a second
+            # GetCapabilities round-trip, halving capabilities load time.
+            self.initialise_wms(url, None, level=level, xml=request.content)
 
         def on_failure(e):
             try:
@@ -991,7 +1005,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     requests.exceptions.ConnectionError,
                     requests.exceptions.InvalidURL,
                     requests.exceptions.InvalidSchema,
-                    requests.exceptions.MissingSchema) as ex:
+                    requests.exceptions.MissingSchema,
+                    requests.exceptions.Timeout) as ex:
                 logging.error("Cannot load capabilities document.\n"
                               "No layers can be used in this view.")
                 try:
@@ -1044,6 +1059,15 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.prefetch.disconnect(self.prefetcher.fetch_maps)
         if self.fetcher is not None:
             self.fetch.disconnect(self.fetcher.fetch_maps)
+            for sig, slot in [
+                (self.fetcher.finished, self.continue_retrieve_image),
+                (self.fetcher.exception, self.display_exception),
+                (self.fetcher.started_request, self.display_progress_dialog),
+            ]:
+                try:
+                    sig.disconnect(slot)
+                except (RuntimeError, TypeError):
+                    pass
 
         self.prefetcher = WMSMapFetcher(self.wms_cache)
         self.prefetcher.moveToThread(self.thread_prefetch)

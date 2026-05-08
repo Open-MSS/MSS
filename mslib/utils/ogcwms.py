@@ -372,11 +372,16 @@ class WMSCapabilitiesReader(common.WMSCapabilitiesReader):
         # (mss)
 
     def readString(self, st):
-        """Parse a WMS capabilities document, returning an elementtree instance
-                string should be an XML capabilities document
-                """
+        """Parse a WMS capabilities document, returning an elementtree instance.
+        Accepts bytes or str; stores the raw document in capabilities_document.
+        """
+        # (mss) handle bytes
+        if isinstance(st, bytes):
+            self.capabilities_document = st
+            return etree.fromstring(st)
         if not isinstance(st, str):
-            raise ValueError("String must be of type string, not %s" % type(st))
+            raise ValueError("String must be of type string or bytes, not %s" % type(st))
+        self.capabilities_document = st.encode('utf-8')
         return etree.fromstring(st)
 
 
