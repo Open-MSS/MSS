@@ -28,7 +28,6 @@ import os
 from functools import wraps
 
 from flask import Blueprint, abort, send_from_directory, render_template, url_for, send_file, current_app
-from flask_httpauth import HTTPBasicAuth
 
 from mslib.msui.icons import icons
 from mslib.utils.file_exists import file_exists
@@ -40,13 +39,13 @@ DOCS_IMG_DIR = os.path.join(DOCS_STATIC_DIR, 'img')
 DOCS_DOCS_DIR = os.path.join(DOCS_STATIC_DIR, 'docs')
 
 DOCS_BP = Blueprint("docs", __name__, template_folder='templates', static_folder='static', static_url_path='/static')
-auth_basic_auth = HTTPBasicAuth()
 
 
 def optional_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if current_app.config.get('enable_basic_http_authentication', False):
+            auth_basic_auth = current_app.extensions['basic_auth']
             return auth_basic_auth.login_required(f)(*args, **kwargs)
         return f(*args, **kwargs)
 

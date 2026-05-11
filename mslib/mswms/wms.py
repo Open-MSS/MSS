@@ -55,7 +55,7 @@ from chameleon import PageTemplateLoader
 from owslib.crs import axisorder_yx
 from PIL import Image
 import numpy as np
-from flask import request
+from flask import request, current_app
 from flask_httpauth import HTTPBasicAuth
 from mslib.mswms.app import create_app
 
@@ -107,6 +107,7 @@ if mswms_settings.enable_basic_http_authentication:
             username = auth.username
             password = auth.password
         return authfunc(username, password)
+    current_app.extensions['basic_auth'] = auth
 
 from mslib.mswms import mss_plot_driver
 from mslib.utils.get_projection_params import get_projection_params

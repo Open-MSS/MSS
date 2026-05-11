@@ -32,7 +32,6 @@ import secrets
 from functools import wraps
 
 from flask import Blueprint, request, url_for, render_template, jsonify, flash, redirect, current_app
-from flask_httpauth import HTTPBasicAuth
 from flask.wrappers import Response
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from saml2.metadata import create_metadata_string
@@ -46,13 +45,14 @@ from mslib.utils.auth import send_email
 
 AUTH_BP = Blueprint('auth', __name__, template_folder='templates')
 
-auth_basic_auth = HTTPBasicAuth()
+
 
 
 def optional_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if current_app.config.get('enable_basic_http_authentication', False):
+            auth_basic_auth = current_app.extensions['basic_auth']
             return auth_basic_auth.login_required(f)(*args, **kwargs)
         return f(*args, **kwargs)
 
@@ -64,6 +64,7 @@ def optional_auth(f):
 def hello():
     if request.authorization is not None:
         if current_app.config.get('enable_basic_http_authentication', False):
+            auth_basic_auth = current_app.extensions['basic_auth']
             auth_basic_auth.login_required()
             return json.dumps({
                 'message': "Mscolab server",

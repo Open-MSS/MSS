@@ -30,7 +30,6 @@ import urllib.parse
 
 from flask import Blueprint, abort, send_from_directory, render_template, url_for, send_file, request, make_response, \
     current_app
-from flask_httpauth import HTTPBasicAuth
 from multidict import CIMultiDict
 
 from mslib.msui.icons import icons
@@ -45,12 +44,12 @@ DOCS_DOCS_DIR = os.path.join(DOCS_STATIC_DIR, 'docs')
 DOCS_TEMPLATES_DIR = os.path.join(DOCS_STATIC_DIR, 'templates')
 
 DOCS_BP = Blueprint("docs", __name__, template_folder='templates', static_folder='static', static_url_path='/docs-static')
-auth_basic_auth = HTTPBasicAuth()
 
 
 @DOCS_BP.route('/')
 def application():
     from mslib.mswms.app import mswms_settings
+    auth_basic_auth = current_app.extensions['basic_auth']
     view_func = conditional_decorator(auth_basic_auth.login_required,
                                       mswms_settings.enable_basic_http_authentication)(_application_impl)
     return view_func()

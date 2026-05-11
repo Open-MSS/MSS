@@ -32,7 +32,7 @@ import sqlalchemy.exc
 import flask_migrate
 
 
-from flask import jsonify, request
+from flask import jsonify, request, current_app
 from flask_mail import Mail
 from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth
@@ -170,6 +170,7 @@ if APP.__dict__.get('enable_basic_http_authentication', False):
             username = auth.username
             password = auth.password
         return authfunc(username, password)
+    current_app.extensions["basic_auth"] = auth
 
 
 def _initialize_managers(app):
