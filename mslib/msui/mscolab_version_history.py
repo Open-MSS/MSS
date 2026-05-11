@@ -196,7 +196,6 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
         res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         return res
 
-
     def handle_named_version(self):
         version_name, completed = QtWidgets.QInputDialog.getText(self, 'Version Name Dialog', 'Enter version name:')
         if completed is True:
