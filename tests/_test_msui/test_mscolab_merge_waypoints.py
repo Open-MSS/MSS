@@ -57,6 +57,9 @@ class Test_Mscolab_Merge_Waypoints:
         if self.local_mscolab_data.exists():
             shutil.rmtree(self.local_mscolab_data)
             assert self.local_mscolab_data.exists() is False
+        local_colabdata = root_dir / "local_colabdata"
+        if local_colabdata.exists():
+            shutil.rmtree(local_colabdata)
         if self.window.mscolab.version_window:
             self.window.mscolab.version_window.close()
         if self.window.mscolab.conn:

@@ -607,7 +607,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             if len(wp_comm) == 9 and wp_comm.startswith("Hexagon "):
                 wp_comm = f"Hexagon {(8 - int(wp_comm[-1])):d}"
                 self.waypoints[i].comments = wp_comm
+        # Block signals during update_distances() so its internal dataChanged emission
+        # doesn't trigger a redundant save; we emit a single dataChanged below instead.
+        self.blockSignals(True)
         self.update_distances(position=0, rows=len(self.waypoints))
+        self.blockSignals(False)
         index = self.index(0, 0)
 
         self.layoutChanged.emit()

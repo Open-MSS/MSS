@@ -657,6 +657,13 @@ class Test_Mscolab:
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
         self._activate_operation_at_index(0)
+        # Delete any local file left over from a previous --count iteration so that
+        # create_local_operation_file always initialises from the current server state.
+        local_op_file = (
+            _ROOT_DIR / "local_colabdata" / self.userdata[1] /
+            self.operation_name / "mscolab_operation.ftml"
+        )
+        local_op_file.unlink(missing_ok=True)
         self.window.workLocallyCheckbox.setChecked(True)
         self.window.mscolab.waypoints_model.invert_direction()
         wpdata_local = self.window.mscolab.waypoints_model.waypoint_data(0)

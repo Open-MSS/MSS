@@ -1058,7 +1058,7 @@ class MSUIMscolab(QtCore.QObject):
         if self.merge_dialog.exec_():
             xml_content = self.merge_dialog.get_values()
             if xml_content is not None:
-                self.conn.save_file(self.token, self.active_op_id, xml_content, comment=comment)
+                self.conn.save_file(self.active_op_id, xml_content, comment=comment)
                 self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
                 self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
@@ -1528,7 +1528,7 @@ class MSUIMscolab(QtCore.QObject):
             self.waypoints_model.save_to_ftml(self.local_ftml_file)
         else:
             xml_content = self.waypoints_model.get_xml_content()
-            self.conn.save_file(self.token, self.active_op_id, xml_content, version_name=version_name, comment=None)
+            self.conn.save_file(self.active_op_id, xml_content, comment=None, version_name=version_name)
             # Reset the last change message to make sure that it is used only once
             self.lastChangeMessage = ""
 

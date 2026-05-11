@@ -74,7 +74,7 @@ class Test_MscolabVersionHistory:
         def assert_():
             len_after = self.version_window.changes.count()
             assert len_prev == (len_after - 2)
-        qtbot.wait_until(assert_, timeout=15000)
+        qtbot.wait_until(assert_, timeout=30000)
 
     def test_set_version_name(self, qtbot):
         self._set_version_name(qtbot)

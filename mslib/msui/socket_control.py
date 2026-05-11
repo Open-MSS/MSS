@@ -198,20 +198,18 @@ class ConnectionManager(QtCore.QObject):
         # Emit an event to notify the server of the operation selection.
         self.sio.emit(SocketEvents.OPERATION_SELECTED, {'token': self.token, 'op_id': op_id})
 
-    def save_file(self, token, op_id, content, comment=None, version_name=None, messageText=""):
-        # ToDo refactor API
-        if verify_user_token(self.mscolab_server_url, self.token):
-            logging.debug("saving file")
-            self.sio.emit(SocketEvents.FILE_SAVE, {
-                          "op_id": op_id,
-                          "token": self.token,
-                          "content": content,
-                          "comment": comment,
-                          "version_name": version_name,
-                          "messageText": messageText})
-        else:
-            # this triggers disconnect
-            self.signal_reload.emit(op_id)
+    def save_file(self, op_id, content, comment=None, version_name=None, messageText=""):
+        # Token validity is already checked by the @verify_user_token decorator on the caller
+        # (handle_waypoints_changed) and again server-side. The extra HTTP round-trip here
+        # only adds load under parallel saves and can cause the decorator to trigger logout.
+        logging.debug("saving file")
+        self.sio.emit(SocketEvents.FILE_SAVE, {
+                      "op_id": op_id,
+                      "token": self.token,
+                      "content": content,
+                      "comment": comment,
+                      "version_name": version_name,
+                      "messageText": messageText})
 
     def disconnect(self):
         # Get all pyqtSignals defined in this class and disconnect them from all slots
