@@ -40,10 +40,14 @@ import mslib.mswms.gallery_builder
 
 from PyQt5 import QtWidgets
 from contextlib import contextmanager
+
+from conftest import MSCOLAB_SERVER_CONFIG_DIR, _rmtree_retry, generate_initial_config, ROOT_DIR, \
+    MSWMS_SERVER_CONFIG_DIR, MSWMS_DATA_DIR, MSWMS_SERVER_CONFIG_FILE_PATH, MSCOLAB_DATA_DIR, \
+    MSCOLAB_SERVER_CONFIG_FILE_PATH, MSUI_CONFIG_PATH, MSUI_CONFIG_FILE_PATH
 from mslib.mscolab.server import APP, sockio, cm, fm
 from mslib.mscolab.mscolab import handle_db_reset
-from mslib.utils.config import modify_config_file
-from tests.utils import is_url_response_ok
+from mslib.utils.config import modify_config_file, read_config_file
+from tests.utils import is_url_response_ok, create_msui_settings_file
 
 
 @pytest.fixture
@@ -365,3 +369,65 @@ def reset_user_options():
         yield
     finally:
         config_module.user_options = config_module.copy.deepcopy(original_options)
+
+
+@pytest.fixture(autouse=True)
+def reset_config():
+    """Reset the configuration directory used in the tests after every test."""
+    # Ideally this would just be shutil.rmtree(MSCOLAB_SERVER_CONFIG_DIR),
+    # but SQLAlchemy complains if the SQLite file is deleted.
+    for item_name in MSCOLAB_SERVER_CONFIG_DIR.iterdir():
+        if item_name.is_dir():
+            _rmtree_retry(item_name)
+        else:
+            if item_name.name != "mscolab.db":
+                item_name.unlink()
+
+    generate_initial_config()
+    create_msui_settings_file("{}")
+    read_config_file()
+
+
+@pytest.fixture(scope="session")
+def root_dir():
+    return ROOT_DIR
+
+
+@pytest.fixture(scope="session")
+def mswms_server_config_dir():
+    return MSWMS_SERVER_CONFIG_DIR
+
+
+@pytest.fixture(scope="session")
+def mswms_data_dir():
+    return MSWMS_DATA_DIR
+
+
+@pytest.fixture(scope="session")
+def mswms_server_config_file_path():
+    return MSWMS_SERVER_CONFIG_FILE_PATH
+
+
+@pytest.fixture(scope="session")
+def mscolab_server_config_dir():
+    return MSCOLAB_SERVER_CONFIG_DIR
+
+
+@pytest.fixture(scope="session")
+def mscolab_data_dir():
+    return MSCOLAB_DATA_DIR
+
+
+@pytest.fixture(scope="session")
+def mscolab_server_config_file_path():
+    return MSCOLAB_SERVER_CONFIG_FILE_PATH
+
+
+@pytest.fixture(scope="session")
+def msui_config_path():
+    return MSUI_CONFIG_PATH
+
+
+@pytest.fixture(scope="session")
+def msui_config_file_path():
+    return MSUI_CONFIG_FILE_PATH
