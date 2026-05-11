@@ -221,11 +221,6 @@ class ConnectionManager(QtCore.QObject):
                 pass
 
         self.sio.disconnect()
-        # sio.disconnect() returns once the engine.io transport is closed, but the
-        # server's handle_disconnect runs on a worker thread and may not have finished
-        # touching the SocketsManager registries. Give it a brief moment so a quick
-        # reconnect (or test teardown) does not race with that cleanup.
-        time.sleep(0.1)
 
     def request_post(self, api, data=None, files=None):
         response = requests.post(
