@@ -175,7 +175,6 @@ class ConnectionManager(QtCore.QObject):
             "token": self.token
         })
 
-
     def delete_message(self, message_id, op_id):
         logging.debug("delete message")
         self.sio.emit(SocketEvents.DELETE_MESSAGE, {
