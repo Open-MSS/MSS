@@ -371,13 +371,12 @@ if os.environ.get("MSCOLAB_TEST_MODE") == "1":
 
     @APP.route("/test/reset_db", methods=["POST"])
     def _test_reset_db():
-        if "PYTEST_CURRENT_TEST" in os.environ:
-            # Test-only: reset the database within the subprocess so its SQLAlchemy
-            # connection pool sees the fresh schema after the in-process db reset.
-            from mslib.mscolab.mscolab import handle_db_reset
-            handle_db_reset(verbose=False)
-            sockio.sm.clear_state()
-            return jsonify({"success": True})
+        # Test-only: reset the database within the subprocess so its SQLAlchemy
+        # connection pool sees the fresh schema after the in-process db reset.
+        from mslib.mscolab.mscolab import handle_db_reset
+        handle_db_reset(verbose=False)
+        sockio.sm.clear_state()
+        return jsonify({"success": True})
 
 
 @APP.route('/token', methods=["POST"])
