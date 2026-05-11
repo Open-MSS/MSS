@@ -21,7 +21,7 @@
     distributed under the License is distributed on an "AS IS" BASIS,
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
-    limitations under the License.qg
+    limitations under the License.
 """
 
 import socketio
@@ -36,7 +36,6 @@ from PyQt5 import QtCore
 from mslib.mscolab.events import SocketEvents
 from mslib.msui.mscolab_exceptions import MSColabConnectionError
 from mslib.utils.config import MSUIDefaultConfig as mss_default
-from mslib.utils.verify_user_token import verify_user_token
 from mslib.utils.config import config_loader
 
 
@@ -160,47 +159,37 @@ class ConnectionManager(QtCore.QObject):
                       "token": self.token})
 
     def send_message(self, message_text, op_id, reply_id):
-        if verify_user_token(self.mscolab_server_url, self.token):
-            logging.debug("sending message")
-            self.sio.emit(SocketEvents.CHAT_MESSAGE, {
-                          "op_id": op_id,
-                          "token": self.token,
-                          "message_text": message_text,
-                          "reply_id": reply_id})
-        else:
-            # this triggers disconnect
-            self.signal_reload.emit(op_id)
+        logging.debug("sending message")
+        self.sio.emit(SocketEvents.CHAT_MESSAGE, {
+                      "op_id": op_id,
+                      "token": self.token,
+                      "message_text": message_text,
+                      "reply_id": reply_id})
 
     def edit_message(self, message_id, new_message_text, op_id):
-        if verify_user_token(self.mscolab_server_url, self.token):
-            self.sio.emit(SocketEvents.EDIT_MESSAGE, {
-                "message_id": message_id,
-                "new_message_text": new_message_text,
-                "op_id": op_id,
-                "token": self.token
-            })
-        else:
-            # this triggers disconnect
-            self.signal_reload.emit(op_id)
+        logging.debug("edit message")
+        self.sio.emit(SocketEvents.EDIT_MESSAGE, {
+            "message_id": message_id,
+            "new_message_text": new_message_text,
+            "op_id": op_id,
+            "token": self.token
+        })
+
 
     def delete_message(self, message_id, op_id):
-        if verify_user_token(self.mscolab_server_url, self.token):
-            self.sio.emit(SocketEvents.DELETE_MESSAGE, {
-                'message_id': message_id,
-                'op_id': op_id,
-                'token': self.token
-            })
-        else:
-            # this triggers disconnect
-            self.signal_reload.emit(op_id)
+        logging.debug("delete message")
+        self.sio.emit(SocketEvents.DELETE_MESSAGE, {
+            'message_id': message_id,
+            'op_id': op_id,
+            'token': self.token
+        })
 
     def select_operation(self, op_id):
         # Emit an event to notify the server of the operation selection.
         self.sio.emit(SocketEvents.OPERATION_SELECTED, {'token': self.token, 'op_id': op_id})
 
     def save_file(self, op_id, content, comment=None, version_name=None, messageText=""):
-        # Token validity is already checked by the @verify_user_token decorator on the caller
-        # (handle_waypoints_changed) and again server-side. The extra HTTP round-trip here
+        # Token validity is already checked on server-side. The extra HTTP round-trip here
         # only adds load under parallel saves and can cause the decorator to trigger logout.
         logging.debug("saving file")
         self.sio.emit(SocketEvents.FILE_SAVE, {
