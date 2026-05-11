@@ -159,12 +159,12 @@ def get_xml_data(msc_url, token, op_id):
 
 def get_op_id(msc_url, token, op_name):
     """
-    get most recent operation's op_id
+    gets the operation's id of the given operation name
 
     Parameters:
         :msc_url: The URL of the MSColab server
         :token: The user token for authentication
-        :op_name:: The name of the operation to retrieve op_id for
+        :op_name: The name of the operation to retrieve op_id for
 
     Returns:
         :op_id: The op_id of the operation with the specified name
