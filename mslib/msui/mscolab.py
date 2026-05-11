@@ -43,7 +43,6 @@ import urllib.request
 from pathlib import Path
 
 from PIL import Image, UnidentifiedImageError
-import socketio
 
 from mslib.msui import flighttrack as ft
 from mslib.msui import mscolab_chat as mc
@@ -59,7 +58,6 @@ from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox
 from PyQt5.QtGui import QPixmap
 
 from mslib.utils.auth import del_password_from_keyring
-from mslib.utils.verify_user_token import verify_user_token as _verify_user_token
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.utils.qt import get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup
 from mslib.msui.qt5 import ui_mscolab_help_dialog as msc_help_dialog
@@ -68,33 +66,6 @@ from mslib.msui.qt5 import ui_mscolab_merge_waypoints_dialog as merge_wp_ui
 from mslib.msui.qt5 import ui_mscolab_profile_dialog as ui_profile
 from mslib.msui import constants
 from mslib.utils.config import config_loader
-
-
-def verify_user_token(func):
-    if not hasattr(verify_user_token, "depth"):
-        verify_user_token.depth = 0
-
-    @functools.wraps(func)
-    def wrapper(self, *args, **vargs):
-        if self.mscolab_server_url is None:
-            # in case of a forced logout some QT events may still trigger MSCOLAB functions
-            return
-        verify_user_token.depth += 1
-        try:
-            if not _verify_user_token(self.mscolab_server_url, self.token):
-                raise MSColabConnectionError("Your Connection is expired. New Login required!")
-            assert self.mscolab_server_url is not None
-            result = func(self, *args, **vargs)
-            return result
-        except (MSColabConnectionError, socketio.exceptions.SocketIOError) as ex:
-            if verify_user_token.depth > 1:
-                raise
-            logging.error("%s %s", type(ex), ex)
-            show_popup(self.ui, "Error", str(ex))
-            self.logout()
-        finally:
-            verify_user_token.depth -= 1
-    return wrapper
 
 
 class MSUIMscolab(QtCore.QObject):
@@ -231,7 +202,6 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.activate_selected_flight_track()
         self.active_op_id = None
 
-    @verify_user_token
     def view_description(self, _=None):
         try:
             response = self.conn.request_get(
@@ -467,7 +437,6 @@ class MSUIMscolab(QtCore.QObject):
         self.prof_diag.show()
         self.fetch_profile_image()
 
-    @verify_user_token
     def upload_image(self, _=None):
         file_name, _ = QFileDialog.getOpenFileName(self.prof_diag, "Open Image", "",
                                                    "Image (*.png *.gif *.jpg *.jpeg *.bpm)")
@@ -509,7 +478,6 @@ class MSUIMscolab(QtCore.QObject):
                 QMessageBox.critical(self.prof_diag, "Error",
                                      f'Cannot identify image file. Please check the file format. Error: {e}')
 
-    @verify_user_token
     def delete_own_account(self, _=None):
         reply = QMessageBox.question(
             self.ui,
@@ -533,7 +501,6 @@ class MSUIMscolab(QtCore.QObject):
     def add_operation_handler(self, _=None):
         self.add_operation_dialog()
 
-    @verify_user_token
     def add_operation_dialog(self, name=None, description=None, xml=None):
         def check_and_enable_operation_accept():
             if (self.add_proj_dialog.path.text() != "" and
@@ -599,7 +566,6 @@ class MSUIMscolab(QtCore.QObject):
             self.add_proj_dialog.category.text(),
             self.add_proj_dialog.f_content)
 
-    @verify_user_token
     def add_operation(self, path, description, category, f_content):
         logging.debug("add_operation")
         if not path:
@@ -652,7 +618,6 @@ class MSUIMscolab(QtCore.QObject):
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('The path already exists')
 
-    @verify_user_token
     def get_recent_op_id(self):
         """
         get most recent operation's op_id
@@ -682,7 +647,6 @@ class MSUIMscolab(QtCore.QObject):
         elif self.sender() == self.ui.actionLeaveOperation:
             self.handle_leave_operation()
 
-    @verify_user_token
     def open_chat_window(self):
         if self.active_op_id is None:
             return
@@ -709,7 +673,6 @@ class MSUIMscolab(QtCore.QObject):
         self.chat_window.close()
         self.chat_window = None
 
-    @verify_user_token
     def open_admin_window(self):
         if self.active_op_id is None:
             return
@@ -737,7 +700,6 @@ class MSUIMscolab(QtCore.QObject):
         self.admin_window.close()
         self.admin_window = None
 
-    @verify_user_token
     def open_version_history_window(self):
         if self.active_op_id is None:
             return
@@ -783,7 +745,6 @@ class MSUIMscolab(QtCore.QObject):
             self.version_window.close()
             self.version_window = None
 
-    @verify_user_token
     def handle_delete_operation(self):
         logging.debug("handle_delete_operation")
         entered_operation_name, ok = QtWidgets.QInputDialog.getText(
@@ -808,7 +769,6 @@ class MSUIMscolab(QtCore.QObject):
             else:
                 show_popup(self.ui, "Error", "Entered operation name did not match!")
 
-    @verify_user_token
     def handle_leave_operation(self):
         logging.debug("handle_leave_operation")
         reply = QMessageBox.question(
@@ -843,7 +803,6 @@ class MSUIMscolab(QtCore.QObject):
                 "Description is too long to show here, for long descriptions go "
                 "to operations menu.")
 
-    @verify_user_token
     def change_category_handler(self, _=None):
         logging.debug('change_category_handler')
         # only after login
@@ -875,7 +834,6 @@ class MSUIMscolab(QtCore.QObject):
                 "Category is updated successfully.",
             )
 
-    @verify_user_token
     def change_description_handler(self, _=None):
         logging.debug('change_description_handler')
         # only after login
@@ -909,7 +867,6 @@ class MSUIMscolab(QtCore.QObject):
                 "Description is updated successfully.",
             )
 
-    @verify_user_token
     def rename_operation_handler(self, _=None):
         logging.debug('rename_operation_handler')
         # only after login
@@ -949,7 +906,6 @@ class MSUIMscolab(QtCore.QObject):
                 "Operation is renamed successfully.",
             )
 
-    @verify_user_token
     def handle_work_locally_toggle(self, _=None):
         if self.ui.workLocallyCheckbox.isChecked():
             if self.version_window is not None:
@@ -1030,7 +986,6 @@ class MSUIMscolab(QtCore.QObject):
         elif selected_option == "Save To Server":
             self.save_wp_mscolab()
 
-    @verify_user_token
     def fetch_wp_mscolab(self):
         server_xml = self.request_wps_from_server()
         server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
@@ -1048,7 +1003,6 @@ class MSUIMscolab(QtCore.QObject):
         self.merge_dialog.close()
         self.merge_dialog = None
 
-    @verify_user_token
     def save_wp_mscolab(self, comment=None):
         server_xml = self.request_wps_from_server()
         server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
@@ -1068,7 +1022,6 @@ class MSUIMscolab(QtCore.QObject):
         self.merge_dialog.close()
         self.merge_dialog = None
 
-    @verify_user_token
     def get_recent_operation(self):
         """
         get most recent operation
@@ -1235,7 +1188,6 @@ class MSUIMscolab(QtCore.QObject):
     def handle_change_message(self, message):
         self.lastChangeMessage = message
 
-    @verify_user_token
     def show_categories_to_ui(self, ops=None):
         """
         adds the list of operation categories to the UI
@@ -1267,7 +1219,6 @@ class MSUIMscolab(QtCore.QObject):
             self.operation_category_handler(update_operations=False)
             self.ui.filterCategoryCb.currentIndexChanged.connect(self.operation_category_handler)
 
-    @verify_user_token
     def add_operations_to_ui(self):
         logging.debug('add_operations_to_ui')
         skip_archived = config_loader(dataset="MSCOLAB_skip_archived_operations")
@@ -1326,7 +1277,6 @@ class MSUIMscolab(QtCore.QObject):
         if access_level in ["creator", "admin"]:
             self.ui.actionUnarchiveOperation.setEnabled(True)
 
-    @verify_user_token
     def archive_operation(self, _):
         logging.debug("handle_archive_operation")
         ret = QMessageBox.warning(
@@ -1348,7 +1298,6 @@ class MSUIMscolab(QtCore.QObject):
             logging.debug("activate local")
             self._activate_first_local_flighttrack()
 
-    @verify_user_token
     def set_active_op_id(self, item):
         logging.debug('set_active_op_id %s %s %s', item, item.op_id, self.active_op_id)
         if not self.ui.local_active and item.op_id == self.active_op_id:
@@ -1484,7 +1433,6 @@ class MSUIMscolab(QtCore.QObject):
         # change working status label
         self.ui.workingStatusLabel.setText(self.ui.tr("\n\nNo Operation Selected"))
 
-    @verify_user_token
     def request_wps_from_server(self, op_id=None):
         if op_id is None:
             op_id = self.active_op_id
@@ -1521,7 +1469,6 @@ class MSUIMscolab(QtCore.QObject):
         self.load_wps_from_server()
         self.reload_view_windows()
 
-    @verify_user_token
     def handle_waypoints_changed(self, _1=None, _2=None, _3=None, version_name=None):
         logging.debug("handle_waypoints_changed")
         if self.ui.workLocallyCheckbox.isChecked():
@@ -1548,7 +1495,6 @@ class MSUIMscolab(QtCore.QObject):
                 except AttributeError as err:
                     logging.error("%s" % err)
 
-    @verify_user_token
     def handle_import_msc(self, file_path, extension, function, pickertype):
         logging.debug("handle_import_msc")
         if self.active_op_id is None:
@@ -1584,7 +1530,6 @@ class MSUIMscolab(QtCore.QObject):
         self.reload_view_windows()
         show_popup(self.ui, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
 
-    @verify_user_token
     def handle_export_msc(self, extension, function, pickertype):
         logging.debug("handle_export_msc")
         if self.active_op_id is None:

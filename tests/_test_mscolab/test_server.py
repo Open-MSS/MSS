@@ -152,8 +152,6 @@ class Test_Server:
             response = test_client.post('/delete_own_account', data={"token": token})
             assert response.status_code == 200
             assert response.get_json()["success"] is True
-            # ToDo: Check if user token was cleared after deleting account as assert returns True instead of False
-            # assert verify_user_token(config_loader(dataset="mscolab_server_url"), token) is False
 
             # Case 2 : The user has a custom profile image set
             assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
@@ -168,8 +166,6 @@ class Test_Server:
             assert response.status_code == 200
             assert response.get_json()["success"] is True
             assert not os.path.exists(full_image_path)
-            # ToDo: Check if user token was cleared after deleting account as assert returns True instead of False
-            # assert verify_user_token(config_loader(dataset="mscolab_server_url"), token) is False
 
     # ToDo: Add a test for an oversized image/file ( > MAX_UPLOAD_SIZE) for chat attachments and profile image.
     # Currently, flask is unable to raise exception for an oversized file.
