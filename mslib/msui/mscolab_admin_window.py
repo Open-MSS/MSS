@@ -316,36 +316,36 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             self.conn.signal_reload.emit(self.op_id)
 
     def import_permissions(self):
-            import_op_id = self.importPermissionsCB.currentData(QtCore.Qt.UserRole)
-            data = {
-                "token": self.token,
-                "current_op_id": self.op_id,
-                "import_op_id": import_op_id
-            }
-            url = urljoin(self.mscolab_server_url, 'import_permissions')
-            res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-            if res.text != "False":
-                res = res.json()
-                if res["success"]:
-                    self.load_import_operations()
-                    self.load_users_without_permission()
-                    self.load_users_with_permission()
-                else:
-                    show_popup(self, "Error", res["message"])
+        import_op_id = self.importPermissionsCB.currentData(QtCore.Qt.UserRole)
+        data = {
+            "token": self.token,
+            "current_op_id": self.op_id,
+            "import_op_id": import_op_id
+        }
+        url = urljoin(self.mscolab_server_url, 'import_permissions')
+        res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        if res.text != "False":
+            res = res.json()
+            if res["success"]:
+                self.load_import_operations()
+                self.load_users_without_permission()
+                self.load_users_with_permission()
             else:
-                # this triggers disconnect
-                self.conn.signal_reload.emit(self.op_id)
+                show_popup(self, "Error", res["message"])
+        else:
+            # this triggers disconnect
+            self.conn.signal_reload.emit(self.op_id)
 
     # Socket Events
     def handle_permissions_updated(self, u_id):
-            if self.user["id"] == u_id:
-                return
+        if self.user["id"] == u_id:
+            return
 
-            show_popup(self, 'Alert',
-                       'The permissions for this operation were updated! The window is going to refresh.', 1)
-            self.load_import_operations()
-            self.load_users_without_permission()
-            self.load_users_with_permission()
+        show_popup(self, 'Alert',
+                   'The permissions for this operation were updated! The window is going to refresh.', 1)
+        self.load_import_operations()
+        self.load_users_without_permission()
+        self.load_users_with_permission()
 
     def closeEvent(self, event):
         self.viewCloses.emit()

@@ -35,7 +35,6 @@ import json
 import hashlib
 import logging
 import types
-import functools
 import requests
 import re
 import mimetypes
