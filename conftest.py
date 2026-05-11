@@ -24,7 +24,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
+import shutil
 import importlib.util
 import os
 import sys
@@ -65,7 +65,6 @@ _xdg_cache_home_temporary_directory = tempfile.TemporaryDirectory(**_tmpdir_kwar
 os.environ["XDG_CACHE_HOME"] = _xdg_cache_home_temporary_directory.name
 
 import pytest
-import shutil
 import keyring
 from mslib.mswms.seed import DataFiles
 from mslib.utils.loggerdef import configure_mpl_logger
@@ -227,26 +226,6 @@ def pytest_configure(config):
 
 
 generate_initial_config()
-
-
-# This import must come after the call to generate_initial_config, otherwise SQLAlchemy will have a wrong database path
-
-
-def _rmtree_retry(path, retries=5, delay=0.2):
-    """shutil.rmtree with retry on Windows WinError 32 (file in use)."""
-    def onerror(func, path, exc_info):
-        exc = exc_info[1]
-        if isinstance(exc, PermissionError) and retries > 0:
-            for _ in range(retries):
-                time.sleep(delay)
-                try:
-                    func(path)
-                    return
-                except PermissionError:
-                    pass
-        raise exc
-    shutil.rmtree(path, onerror=onerror)
-
 
 # Make fixtures available everywhere
 from tests.fixtures import *  # noqa: F401, F403

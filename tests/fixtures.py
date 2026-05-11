@@ -23,6 +23,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import shutil
 import pytest
 import mock
 import os
@@ -41,7 +42,7 @@ import mslib.mswms.gallery_builder
 from PyQt5 import QtWidgets
 from contextlib import contextmanager
 
-from conftest import MSCOLAB_SERVER_CONFIG_DIR, _rmtree_retry, generate_initial_config, ROOT_DIR, \
+from conftest import MSCOLAB_SERVER_CONFIG_DIR, generate_initial_config, ROOT_DIR, \
     MSWMS_SERVER_CONFIG_DIR, MSWMS_DATA_DIR, MSWMS_SERVER_CONFIG_FILE_PATH, MSCOLAB_DATA_DIR, \
     MSCOLAB_SERVER_CONFIG_FILE_PATH, MSUI_CONFIG_PATH, MSUI_CONFIG_FILE_PATH
 from mslib.mscolab.server import APP, sockio, cm, fm
@@ -369,6 +370,22 @@ def reset_user_options():
         yield
     finally:
         config_module.user_options = config_module.copy.deepcopy(original_options)
+
+
+def _rmtree_retry(path, retries=5, delay=0.2):
+    """shutil.rmtree with retry on Windows WinError 32 (file in use)."""
+    def onerror(func, path, exc_info):
+        exc = exc_info[1]
+        if isinstance(exc, PermissionError) and retries > 0:
+            for _ in range(retries):
+                time.sleep(delay)
+                try:
+                    func(path)
+                    return
+                except PermissionError:
+                    pass
+        raise exc
+    shutil.rmtree(path, onerror=onerror)
 
 
 @pytest.fixture(autouse=True)
