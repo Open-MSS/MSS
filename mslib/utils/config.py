@@ -211,7 +211,7 @@ class MSUIDefaultConfig:
     MSCOLAB_category = "default"
 
     # timeout for MSColab in seconds. First value is for connection, second for reply
-    MSCOLAB_timeout = [5, 60]
+    MSCOLAB_timeout = [2, 10]
 
     # don't query for archived operations
     MSCOLAB_skip_archived_operations = False
@@ -221,7 +221,7 @@ class MSUIDefaultConfig:
     MSS_auth = {}
 
     # timeout of Url request
-    WMS_request_timeout = 60
+    WMS_request_timeout = 30
 
     WMS_preload = []
 
