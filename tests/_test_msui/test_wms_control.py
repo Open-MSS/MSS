@@ -106,7 +106,7 @@ class WMSControlWidgetSetup:
         # WMS servers under simultaneous CPU load, making the two-step HTTP
         # chain (requests.get + MSUIWebMapService) occasionally exceed the
         # default 5 s limit.
-        with qtbot.wait_signal(self.window.cpdlg.canceled, timeout=30000):
+        with qtbot.wait_signal(self.window.cpdlg.canceled):
             QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
 
@@ -192,7 +192,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         # started_request is emitted before the blocking HTTP call, so pdlg.isVisible()
         # becomes True while the request is still in-flight — giving us time to cancel.
-        qtbot.wait_until(self.window.pdlg.isVisible, timeout=5000)
+        qtbot.wait_until(self.window.pdlg.isVisible)
         self.window.pdlg.cancel()
         # Let the fetch complete; continue_retrieve_image will see wasCanceled=True.
         QtTest.QTest.qWait(500)
@@ -207,7 +207,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         self.query_server(qtbot, self.url)
 
-        with qtbot.wait_signal(self.window.image_displayed, timeout=30000):
+        with qtbot.wait_signal(self.window.image_displayed):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
@@ -220,7 +220,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         self.query_server(qtbot, self.url)
 
-        with qtbot.wait_signal(self.window.image_displayed, timeout=30000):
+        with qtbot.wait_signal(self.window.image_displayed):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
@@ -229,7 +229,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.view.reset_mock()
 
         QtTest.QTest.mouseClick(self.window.cbCacheEnabled, QtCore.Qt.LeftButton)
-        with qtbot.wait_signal(self.window.image_displayed, timeout=30000):
+        with qtbot.wait_signal(self.window.image_displayed):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
@@ -243,7 +243,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(qtbot, self.url)
 
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as qm_critical:
-            with qtbot.wait_signal(self.window.cpdlg.canceled, timeout=30000):
+            with qtbot.wait_signal(self.window.cpdlg.canceled):
                 QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
                 QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
                 QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
@@ -252,12 +252,12 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_legend.call_count == 0
         assert self.view.draw_metadata.call_count == 0
 
-        with qtbot.wait_signal(self.window.cpdlg.canceled, timeout=30000):
+        with qtbot.wait_signal(self.window.cpdlg.canceled):
             QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, ord(str(self.port)[-1]))
             QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Slash)
             QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
-        with qtbot.wait_signal(self.window.image_displayed, timeout=30000):
+        with qtbot.wait_signal(self.window.image_displayed):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
@@ -299,7 +299,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.window.multilayers.listLayers.itemWidget(server.child(0), 2).currentText() == "1"
 
         # Check drawing not causing errors
-        with qtbot.wait_signal(self.window.image_displayed, timeout=30000):
+        with qtbot.wait_signal(self.window.image_displayed):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
@@ -375,7 +375,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.window.lLayerName.text().endswith(server.child(1).text(0))
 
         # Check drawing not causing errors
-        with qtbot.wait_signal(self.window.image_displayed, timeout=30000):
+        with qtbot.wait_signal(self.window.image_displayed):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
@@ -423,7 +423,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         server.child(0).setCheckState(0, 2)
         server.child(1).setCheckState(0, 2)
 
-        with qtbot.wait_signal(self.window.image_displayed, timeout=30000):
+        with qtbot.wait_signal(self.window.image_displayed):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         urlstr = f"{self.url}/mss/logo.png"
@@ -450,7 +450,7 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         """
         self.query_server(qtbot, self.url)
 
-        with qtbot.wait_signal(self.window.image_displayed, timeout=30000):
+        with qtbot.wait_signal(self.window.image_displayed):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
@@ -465,7 +465,7 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                               QtCore.Qt.MatchFixedString)[0]
 
-        with qtbot.wait_signal(self.window.image_displayed, timeout=30000):
+        with qtbot.wait_signal(self.window.image_displayed):
             server.child(0).draw()
 
 
