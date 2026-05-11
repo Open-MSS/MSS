@@ -74,7 +74,7 @@ class Test_MscolabVersionHistory:
         def assert_():
             len_after = self.version_window.changes.count()
             assert len_prev == (len_after - 2)
-        qtbot.wait_until(assert_, timeout=30000)
+        qtbot.wait_until(assert_)
 
     def test_set_version_name(self, qtbot):
         self._set_version_name(qtbot)
@@ -88,7 +88,7 @@ class Test_MscolabVersionHistory:
             assert self.version_window.changes.count() == 1
             self._activate_change_at_index(0)
             assert str(self.version_window.changes.currentItem().version_name) == "None"
-        qtbot.wait_until(assert_, timeout=15000)
+        qtbot.wait_until(assert_)
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_undo_changes(self, mockbox, qtbot):
@@ -100,14 +100,14 @@ class Test_MscolabVersionHistory:
 
         def assert_two_changes():
             assert self.version_window.changes.count() == 2
-        qtbot.wait_until(assert_two_changes, timeout=30000)
+        qtbot.wait_until(assert_two_changes)
         changes_count = self.version_window.changes.count()
         self._activate_change_at_index(1)
         QtTest.QTest.mouseClick(self.version_window.checkoutBtn, QtCore.Qt.LeftButton)
 
         def assert_checkout():
             assert self.version_window.changes.count() == changes_count + 1
-        qtbot.wait_until(assert_checkout, timeout=30000)
+        qtbot.wait_until(assert_checkout)
 
     def _connect_to_mscolab(self, qtbot):
         self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)
@@ -120,7 +120,7 @@ class Test_MscolabVersionHistory:
         def assert_():
             assert not self.connect_window.connectBtn.isVisible()
             assert self.connect_window.disconnectBtn.isVisible()
-        qtbot.wait_until(assert_, timeout=15000)
+        qtbot.wait_until(assert_)
 
     def _login(self, emailid, password):
         assert self.connect_window is not None
@@ -158,7 +158,7 @@ class Test_MscolabVersionHistory:
         # Ensure that the change is visible
         def assert_():
             assert self.version_window.changes.count() == num_changes_before + 1
-        qtbot.wait_until(assert_, timeout=15000)
+        qtbot.wait_until(assert_)
 
         self._activate_change_at_index(0)
         with mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=["MyVersionName", True]):
@@ -167,4 +167,4 @@ class Test_MscolabVersionHistory:
         # Ensure that the name change is fully processed
         def assert_():
             assert self.version_window.changes.currentItem().version_name == "MyVersionName"
-        qtbot.wait_until(assert_, timeout=15000)
+        qtbot.wait_until(assert_)
