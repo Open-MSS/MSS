@@ -75,6 +75,8 @@ except ImportError as ex:
 
 APP = create_app(__name__, imprint=mswms_settings.imprint, gdpr=mswms_settings.gdpr)
 auth = HTTPBasicAuth()
+with APP.app_context():
+    current_app.extensions['basic_auth'] = auth
 
 realm = 'Mission Support Web Map Service'
 APP.config['realm'] = realm
@@ -107,7 +109,6 @@ if mswms_settings.enable_basic_http_authentication:
             username = auth.username
             password = auth.password
         return authfunc(username, password)
-    current_app.extensions['basic_auth'] = auth
 
 from mslib.mswms import mss_plot_driver
 from mslib.utils.get_projection_params import get_projection_params

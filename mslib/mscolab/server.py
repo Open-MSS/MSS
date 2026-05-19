@@ -139,6 +139,8 @@ with APP.app_context():
 mail = Mail(APP)
 CORS(APP, origins=APP.config['CORS_ORIGINS'] if hasattr(APP, "CORS_ORIGINS") else ["*"])
 auth = HTTPBasicAuth()
+with APP.app_context():
+    current_app.extensions["basic_auth"] = auth
 
 
 try:
@@ -170,7 +172,6 @@ if APP.__dict__.get('enable_basic_http_authentication', False):
             username = auth.username
             password = auth.password
         return authfunc(username, password)
-    current_app.extensions["basic_auth"] = auth
 
 
 def _initialize_managers(app):
