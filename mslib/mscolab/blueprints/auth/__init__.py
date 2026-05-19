@@ -46,8 +46,6 @@ from mslib.utils.auth import send_email
 AUTH_BP = Blueprint('auth', __name__, template_folder='templates')
 
 
-
-
 def optional_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
