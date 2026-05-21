@@ -52,19 +52,22 @@ def plots():
 
 @GALLERY_BP.route("/mss/code/<path:filename>")
 def code(filename):
-    download = request.args.get("download", False)
-    _file = werkzeug.security.safe_join(STATIC_LOCATION, "code", filename)
-    if _file is None:
-        abort(404)
-    content = get_content(_file)
-    if not download:
-        return render_template("gallery/content.html", act="code", content=content)
-    else:
-        if not os.path.isfile(_file):
+    if STATIC_LOCATION != "":
+        download = request.args.get("download", False)
+        _file = werkzeug.security.safe_join(STATIC_LOCATION, "code", filename)
+        if _file is None:
             abort(404)
-        with open(_file) as f:
-            text = f.read()
-        return Response("".join([s.replace("\t", "", 1) for s in text.split("```python")[-1]
-                                .splitlines(keepends=True)][1:-2]),
-                        mimetype="text/plain",
-                        headers={"Content-disposition": f"attachment; filename={filename.split('-')[0]}.py"})
+        content = get_content(_file)
+        if not download:
+            return render_template("gallery/content.html", act="code", content=content)
+        else:
+            if not os.path.isfile(_file):
+                abort(404)
+            with open(_file) as f:
+                text = f.read()
+            return Response("".join([s.replace("\t", "", 1) for s in text.split("```python")[-1]
+                                    .splitlines(keepends=True)][1:-2]),
+                            mimetype="text/plain",
+                            headers={"Content-disposition": f"attachment; filename={filename.split('-')[0]}.py"})
+    else:
+        abort(404)
