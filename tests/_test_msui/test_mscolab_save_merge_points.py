@@ -57,10 +57,12 @@ class Test_Save_Merge_Points(Test_Mscolab_Merge_Waypoints):
         # has persisted the merged waypoints before asserting server-side content.
         # workLocallyCheckbox is still checked here so reload_window() returns early
         # and no cascading callbacks fire during the wait.
+
         def assert_server_updated():
             server_xml = self.window.mscolab.request_wps_from_server()
             assert len(ft.WaypointsTableModel(xml_content=server_xml).waypoints) == new_wp_count
         qtbot.wait_until(assert_server_updated)
+
         server_xml = self.window.mscolab.request_wps_from_server()
         new_local_wp = ft.WaypointsTableModel(xml_content=server_xml)
         for wp_index in range(new_wp_count):
