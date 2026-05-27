@@ -544,7 +544,7 @@ class FileManager:
         repo = git.Repo(operation_path)
         change_content = repo.git.show(f'{change.commit_hash}:main.ftml')
         repo.close()
-        return change_content
+        return change_content.replace('\r\n', '\n')
 
     def set_version_name(self, ch_id, op_id, u_id, version_name):
         if (not self.is_admin(u_id, op_id) and not self.is_creator(u_id, op_id) and not
@@ -581,6 +581,7 @@ class FileManager:
             repo.git.clear_cache()
             try:
                 file_content = repo.git.show(f'{ch.commit_hash}:main.ftml')
+                file_content = file_content.replace('\r\n', '\n')
                 main_ftml_path = operation_path / 'main.ftml'
                 main_ftml_path.write_text(file_content, encoding='utf-8')
 
