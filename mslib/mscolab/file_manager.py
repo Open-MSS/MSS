@@ -375,12 +375,7 @@ class FileManager:
             if new_path.exists():
                 return False
 
-            new_path.mkdir(parents=True, exist_ok=True)
-
-            try:
-                old_path.rename(new_path)
-            except OSError:
-                shutil.move(str(old_path), str(new_path))
+            shutil.move(str(old_path), str(new_path))
 
             if value.endswith(APP.config['GROUP_POSTFIX']):
                 # getting the category
@@ -492,7 +487,7 @@ class FileManager:
         op_lock = self._get_operation_lock(op_id)
         with op_lock:
             operation_path = Path(self.data_dir) / operation.path / 'main.ftml'
-            with operation_path.open() as data:
+            with operation_path.open(encoding="utf-8") as data:
                 operation_data = data.read()
             return operation_data
 
