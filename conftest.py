@@ -177,7 +177,11 @@ MAIL_DEFAULT_SENDER = 'MSS@localhost'
 # enable verification by Mail
 MAIL_ENABLED = False
 
-SQLALCHEMY_DATABASE_URI = 'sqlite:///' + urljoin(DATA_DIR, 'mscolab.db')
+SQLALCHEMY_DATABASE_URI = 'sqlite:///{MSCOLAB_SERVER_CONFIG_DIR.as_posix()}/mscolab.db'
+
+# Extend SQLite busy-wait timeout (seconds) so concurrent workers don't
+# immediately fail with "database is locked" during Alembic migrations.
+SQLALCHEMY_ENGINE_OPTIONS = {{"connect_args": {{"timeout": 30}}}}
 
 # enable SQLALCHEMY_ECHO
 SQLALCHEMY_ECHO = False

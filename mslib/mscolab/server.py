@@ -62,6 +62,10 @@ from mslib.mscolab import migrations
 def _handle_db_upgrade():
     from mslib.mscolab.models import db
 
+    # Remove any stale session state before inspecting the schema; a lingering
+    # open transaction (e.g. from a previous iteration in test_upgrade_from)
+    # can cause the inspector to see a stale/empty table list on Windows.
+    db.session.remove()
     create_files()
     inspector = sqlalchemy.inspect(db.engine)
     existing_tables = inspector.get_table_names()
@@ -94,8 +98,12 @@ your database MSColab will abort. Please follow the documentation for a manual d
         else:
             # It's probably v8
             flask_migrate.upgrade(directory=migrations.__path__[0], revision="92eaba86a92e")
-        # Copy over the existing data
-        target_engine = sqlalchemy.create_engine(APP.config['SQLALCHEMY_DATABASE_URI'])
+        # Copy over the existing data.
+        # Use db.engine.url (the resolved absolute URL) rather than
+        # APP.config['SQLALCHEMY_DATABASE_URI'], which may be a relative SQLite
+        # path that Flask-SQLAlchemy expands via instance_path — plain
+        # sqlalchemy.create_engine would resolve it against CWD instead.
+        target_engine = sqlalchemy.create_engine(str(db.engine.url))
         target_metadata = sqlalchemy.MetaData()
         target_metadata.reflect(bind=target_engine)
         with source_engine.connect() as src_connection, target_engine.connect() as target_connection:
@@ -141,6 +149,10 @@ ORDER BY sequence_namespace.nspname, class_sequence.relname;
                     target_connection.execute(sqlalchemy.text(stmt))
                 target_connection.commit()
         logging.info("Data migration finished")
+        # Dispose the temporary copy engine so it doesn't hold SQLite
+        # connections across subsequent _handle_db_upgrade() iterations.
+        target_engine.dispose()
+        source_engine.dispose()
 
     # Upgrade to the latest database revision
     flask_migrate.upgrade(directory=migrations.__path__[0])
@@ -367,6 +379,14 @@ if os.environ.get("MSCOLAB_TEST_MODE") == "1":
     def _test_reset_socket_state():
         # Test-only: clear in-memory socket bookkeeping that survives db_reset.
         sockio.sm.clear_state()
+        return jsonify({"success": True})
+
+    @APP.route("/test/dispose_connections", methods=["POST"])
+    def _test_dispose_connections():
+        # Test-only: release all pooled SQLite connections so the in-process
+        # Alembic reset can acquire the exclusive lock for batch migrations.
+        from mslib.mscolab.models import db
+        db.engine.dispose()
         return jsonify({"success": True})
 
     @APP.route("/test/reset_db", methods=["POST"])

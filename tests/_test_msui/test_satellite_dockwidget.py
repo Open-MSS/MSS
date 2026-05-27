@@ -57,8 +57,9 @@ class Test_SatelliteDockWidget:
     def test_load_no_file(self, mockbox):
         QtTest.QTest.mouseClick(self.window.btLoadFile, QtCore.Qt.LeftButton)
         assert self.window.cbSatelliteOverpasses.count() == 0
-        mockbox.assert_called_once_with(
-            self.window,
-            'Satellite Overpass Tool',
-            "ERROR:\n<class 'IsADirectoryError'>\n[Errno 21] Is a directory: '.'"
-        )
+        mockbox.assert_called_once()
+        args = mockbox.call_args[0]
+        assert args[0] is self.window
+        assert args[1] == 'Satellite Overpass Tool'
+        # Windows raises PermissionError when reading a directory; Linux/macOS raise IsADirectoryError
+        assert args[2].startswith("ERROR:")

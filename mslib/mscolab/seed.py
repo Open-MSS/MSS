@@ -89,6 +89,7 @@ def add_all_users_default_operation(path='TEMPLATE', description="Operation to k
                 main_file_git.write_text(XML_CONTENT_INIT, encoding='utf-8')
                 r.index.add(['main.ftml'])
                 r.index.commit("initial commit")
+                r.close()
 
         operation = Operation.query.filter_by(path=path).first()
         op_id = operation.id
@@ -182,6 +183,7 @@ def add_operation(operation_name, description):
                 main_file_git.write_text(XML_CONTENT_INIT, encoding='utf-8')
                 r.index.add(['main.ftml'])
                 r.index.commit("initial commit")
+                r.close()
             return True
         else:
             return False
@@ -445,3 +447,4 @@ def seed_data():
         r.git.clear_cache()
         r.index.add(['main.ftml'])
         r.index.commit("initial commit")
+        r.close()

@@ -87,6 +87,11 @@ def test_multiple_times_save_filename(qtbot, tmp_path):
     # verify that we can save the file multiple times
     msui.save_flight_track(filename)
     assert os.path.exists(filename)
+    # Set mtime 2 s in the past so a subsequent write is guaranteed to produce
+    # a measurably newer mtime, even on Windows where lazy mtime updates can
+    # cause two rapid writes to share the same timestamp.
+    saved_mtime = os.stat(filename).st_mtime
+    os.utime(filename, (saved_mtime - 2, saved_mtime - 2))
     first_timestamp = os.stat(filename).st_mtime_ns
     assert filename == msui.active_flight_track.get_filename()
     msui.save_handler()

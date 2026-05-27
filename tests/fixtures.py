@@ -179,14 +179,24 @@ def mscolab_managers(mscolab_session_managers, reset_mscolab):
 
 
 @pytest.fixture
-def mscolab_server(mscolab_session_server, reset_mscolab):
+def mscolab_server(mscolab_session_server, mscolab_session_app):
     """Fixture that provides a running MSColab server and does cleanup actions.
 
     :returns: The URL where the server is running.
     """
-    # Reset the subprocess server's own database and socket bookkeeping so its
-    # SQLAlchemy connection pool sees the freshly migrated schema.  Falling back
-    # to the socket-only reset keeps things working if the endpoint is absent.
+    # Step 1: release subprocess SQLite connections BEFORE the in-process
+    # migration so Alembic can acquire the exclusive lock for batch operations
+    # (on Windows, active pool connections block DDL even when idle).
+    try:
+        requests.post(urllib.parse.urljoin(mscolab_session_server, "/test/dispose_connections"), timeout=5)
+    except requests.RequestException:
+        pass
+    # Step 2: in-process schema reset (safe now that subprocess released its locks).
+    with mscolab_session_app.app_context():
+        from mslib.mscolab.mscolab import handle_db_reset
+        handle_db_reset(verbose=False)
+    sockio.sm.clear_state()
+    # Step 3: subprocess schema reset so its SQLAlchemy pool sees the fresh schema.
     try:
         r = requests.post(urllib.parse.urljoin(mscolab_session_server, "/test/reset_db"), timeout=10)
         if r.status_code != 200:

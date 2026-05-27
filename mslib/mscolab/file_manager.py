@@ -112,6 +112,7 @@ class FileManager:
             r.git.clear_cache()
             r.index.add(['main.ftml'])
             r.index.commit("initial commit")
+            r.close()
             return True
 
     def get_operation_details(self, op_id, user):
@@ -313,12 +314,13 @@ class FileManager:
         with file_path.open(mode="wb") as f:
             file.save(f)
 
-        # Relative File path
+        # Relative File path — always use forward slashes so the path can be
+        # used as a URL segment on both Windows and Linux.
         if include_prefix:  # ToDo: add a namespace for the chat attachments, similar as for profile images
             static_dir = Path(upload_folder).name
-            static_file_path = str(Path(static_dir) / str(subfolder) / file_name)
+            static_file_path = '/'.join([static_dir, str(subfolder), file_name])
         else:
-            static_file_path = str(Path(file_path).relative_to(Path(upload_folder)))
+            static_file_path = Path(file_path).relative_to(Path(upload_folder)).as_posix()
 
         logging.debug(f'Relative Path: {static_file_path}')
         return static_file_path
@@ -468,6 +470,7 @@ class FileManager:
                 repo.git.clear_cache()
                 repo.index.add(['main.ftml'])
                 cm = repo.index.commit("committing changes")
+                repo.close()
                 # change db table
                 change = Change(op_id, user.id, cm.hexsha, version_name=version_name)
                 db.session.add(change)
@@ -545,6 +548,7 @@ class FileManager:
         operation_path = Path(self.data_dir) / operation.path
         repo = git.Repo(operation_path)
         change_content = repo.git.show(f'{change.commit_hash}:main.ftml')
+        repo.close()
         return change_content
 
     def set_version_name(self, ch_id, op_id, u_id, version_name):
@@ -594,6 +598,8 @@ class FileManager:
             except Exception as ex:
                 logging.debug(ex)
                 return False
+            finally:
+                repo.close()
 
     def fetch_users_without_permission(self, op_id, u_id):
         if not self.is_admin(u_id, op_id) and not self.is_creator(u_id, op_id):
