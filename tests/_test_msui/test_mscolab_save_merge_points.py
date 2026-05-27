@@ -51,14 +51,18 @@ class Test_Save_Merge_Points(Test_Mscolab_Merge_Waypoints):
         with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
             self.window.serverOptionsCb.setCurrentIndex(2)
             m.assert_called_once()
-        # get the updated waypoints model from the server
-        # ToDo understand why requesting in follow up test of self.window.waypoints_model not working
-        server_xml = self.window.mscolab.request_wps_from_server()
-        server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
-        new_local_wp = server_waypoints_model
         new_wp_count = len(merge_waypoints_model.waypoints)
         assert new_wp_count == 4
-        assert len(new_local_wp.waypoints) == new_wp_count
+        # conn.save_file is a fire-and-forget SocketIO emit; poll until the server
+        # has persisted the merged waypoints before asserting server-side content.
+        # workLocallyCheckbox is still checked here so reload_window() returns early
+        # and no cascading callbacks fire during the wait.
+        def assert_server_updated():
+            server_xml = self.window.mscolab.request_wps_from_server()
+            assert len(ft.WaypointsTableModel(xml_content=server_xml).waypoints) == new_wp_count
+        qtbot.wait_until(assert_server_updated)
+        server_xml = self.window.mscolab.request_wps_from_server()
+        new_local_wp = ft.WaypointsTableModel(xml_content=server_xml)
         for wp_index in range(new_wp_count):
             assert new_local_wp.waypoint_data(wp_index).lat == merge_waypoints_model.waypoint_data(wp_index).lat
         self.window.workLocallyCheckbox.setChecked(False)
