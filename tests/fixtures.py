@@ -212,7 +212,7 @@ def mscolab_server(mscolab_session_server, mscolab_session_app):
 def mswms_app():
     """Fixture that provides the MSWMS WSGI app instance."""
     yield mslib.mswms.mswms.application
-    # Close all open NetCDF4 datasets to release file handles on Windows
+    # Close all open NetCDF4 datasets to release file handles
     from mslib.mswms import wms
     for drivers in (wms.server.hsec_drivers, wms.server.vsec_drivers, wms.server.lsec_drivers):
         for driver in drivers.values():
