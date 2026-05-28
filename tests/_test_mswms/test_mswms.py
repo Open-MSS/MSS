@@ -128,7 +128,7 @@ class TestMainServerStart:
         mswms.main()
         assert "http://0.0.0.0:9000" in capsys.readouterr().out
 
-    def test_port_zero_prints_only_actual_port(self, mocker, capsys, mock_wms, mock_make_server):
+    def test_printout_string_for_port_extraction(self, mocker, capsys, mock_wms, mock_make_server):
         mock_make_server.return_value.server_address = ("127.0.0.1", 54321)
         mocker.patch("mslib.mswms.mswms.argparse.ArgumentParser.parse_args",
                      return_value=_args(port="0"))
