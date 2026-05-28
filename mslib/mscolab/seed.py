@@ -83,13 +83,13 @@ def add_all_users_default_operation(path='TEMPLATE', description="Operation to k
                 operation_file_path.write_text(xml_content, encoding='utf-8')
                 git_repo_path = Path(APP.config['OPERATIONS_DATA']) / path
                 git_repo_path.mkdir(parents=True, exist_ok=True)
-                r = git.Repo.init(str(git_repo_path))
-                r.git.clear_cache()
-                main_file_git = git_repo_path / "main.ftml"
-                main_file_git.write_text(XML_CONTENT_INIT, encoding='utf-8')
-                r.index.add(['main.ftml'])
-                r.index.commit("initial commit")
-                r.close()
+                #  Todo this should be done by the file_manager
+                with git.Repo.init(str(git_repo_path)) as gr:
+                    gr.git.clear_cache()
+                    main_file_git = git_repo_path / "main.ftml"
+                    main_file_git.write_text(XML_CONTENT_INIT, encoding='utf-8')
+                    gr.index.add(['main.ftml'])
+                    gr.index.commit("initial commit")
 
         operation = Operation.query.filter_by(path=path).first()
         op_id = operation.id
@@ -177,13 +177,13 @@ def add_operation(operation_name, description):
                 operation_file_path.write_text(XML_CONTENT_INIT, encoding='utf-8')
                 git_repo_path = Path(APP.config['OPERATIONS_DATA']) / operation_name
                 git_repo_path.mkdir(parents=True, exist_ok=True)
-                r = git.Repo.init(str(git_repo_path))
-                r.git.clear_cache()
-                main_file_git = git_repo_path / "main.ftml"
-                main_file_git.write_text(XML_CONTENT_INIT, encoding='utf-8')
-                r.index.add(['main.ftml'])
-                r.index.commit("initial commit")
-                r.close()
+                # Todo this should be done by the file_manager
+                with git.Repo.init(str(git_repo_path)) as gr:
+                    gr.git.clear_cache()
+                    main_file_git = git_repo_path / "main.ftml"
+                    main_file_git.write_text(XML_CONTENT_INIT, encoding='utf-8')
+                    gr.index.add(['main.ftml'])
+                    gr.index.commit("initial commit")
             return True
         else:
             return False
@@ -443,8 +443,8 @@ def seed_data():
         git_file.write_text(XML_CONTENT_INIT)
 
         # Initialize git repository
-        r = git.Repo.init(str(git_dir))
-        r.git.clear_cache()
-        r.index.add(['main.ftml'])
-        r.index.commit("initial commit")
-        r.close()
+        # Todo this should be done by the file_manager
+        with git.Repo.init(str(git_dir)) as gr:
+            gr.git.clear_cache()
+            gr.index.add(['main.ftml'])
+            gr.index.commit("initial commit")
