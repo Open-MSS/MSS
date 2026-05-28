@@ -135,7 +135,7 @@ class TestMainServerStart:
         mswms.main()
         out = capsys.readouterr().out
         assert "54321" in out
-        assert "MSS WMS server" not in out
+        assert out == "MSS WMS server available on http://127.0.0.1:54321\n"
 
     def test_make_server_called_with_correct_args(self, mocker, mock_wms, mock_make_server):
         mock_make_server.return_value.server_address = ("localhost", 9999)

@@ -283,14 +283,14 @@ def _running_server(app, cmd, extra_paths=None, extra_env=None):
         env=env,
     )
     try:
-        # Retrieve the port printed by the runner to stdout
+        # Retrieve the port from the URL printed by the runner to stdout
         port_line = process.stdout.readline()
         if not port_line:
             stderr_output = process.stderr.read().decode(errors='replace')
             raise RuntimeError(
                 f"Could not retrieve port from server process. stderr:\n{stderr_output}"
             )
-        port = int(port_line.strip())
+        port = int(port_line.strip().decode(errors='replace').rsplit(":", 1)[-1])
 
         # Drain stdout and stderr in daemon threads so the subprocess's pipe
         # buffers never fill up.  Werkzeug logs each request to stderr; after

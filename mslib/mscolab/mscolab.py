@@ -60,12 +60,7 @@ def handle_server_start(app_module='mslib.mscolab.server', app_attr='APP',
     srv = make_server(host, port, app, threaded=True)
     srv.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     actual_port = srv.server_address[1]
-    if port == 0:
-        # Subprocess/pytest case
-        # Signal the parent process with the chosen port via stdout by print
-        print(actual_port, flush=True)
-    else:
-        print(f"MSColab server available on http://{host}:{actual_port}", flush=True)
+    print(f"MSColab server available on http://{host}:{actual_port}", flush=True)
     srv.serve_forever()
 
 

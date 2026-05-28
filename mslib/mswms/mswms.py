@@ -123,10 +123,7 @@ def main():
     srv = make_server(args.host, port, application, threaded=True)
     srv.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     actual_port = srv.server_address[1]
-    if port == 0:
-        print(actual_port, flush=True)
-    else:
-        print(f"MSS WMS server available on http://{args.host}:{actual_port}", flush=True)
+    print(f"MSS WMS server available on http://{args.host}:{actual_port}", flush=True)
     srv.serve_forever()
 
 
