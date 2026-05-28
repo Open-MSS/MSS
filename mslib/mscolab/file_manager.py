@@ -25,7 +25,6 @@
     limitations under the License.
 """
 import shutil
-import sys
 import secrets
 import time
 import datetime
@@ -267,8 +266,6 @@ class FileManager:
         This function is called when deleting account or updating the profile picture
         """
         upload_folder = APP.config['UPLOAD_FOLDER']
-        if sys.platform.startswith('win'):
-            upload_folder = upload_folder.replace('\\', '/')
 
         # Construct the full path to the image file
         full_image_path = Path(upload_folder) / image_to_be_deleted
@@ -289,8 +286,6 @@ class FileManager:
         and return the relative file path.
         """
         upload_folder = APP.config['UPLOAD_FOLDER']
-        if sys.platform.startswith('win'):
-            upload_folder = upload_folder.replace('\\', '/')
 
         subfolder_path = Path(upload_folder) / (str(subfolder) if subfolder else "")
         subfolder_path.mkdir(parents=True, exist_ok=True)
