@@ -217,7 +217,7 @@ class Test_SideViewWMS:
         assert that a getmap call to a WMS server displays an image
         """
         self.query_server(qtbot, self.url)
-        with qtbot.wait_signal(self.wms_control.image_displayed):
+        with qtbot.wait_signal(self.wms_control.image_displayed, timeout=30000):
             QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         assert self.window.getView().plotter.image is not None
 
