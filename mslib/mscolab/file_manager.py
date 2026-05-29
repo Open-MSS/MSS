@@ -35,6 +35,7 @@ import threading
 import mimetypes
 from pathlib import Path
 from werkzeug.utils import secure_filename
+from werkzeug.security import safe_join
 from sqlalchemy.exc import IntegrityError
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
@@ -283,7 +284,7 @@ class FileManager:
     def upload_file(self, file, subfolder=None, identifier=None, include_prefix=False):
         """
         Generic function to save files securely in any specified directory with unique filename
-        and return the relative file path.
+        and return the URL-segment.
         """
         upload_folder = APP.config['UPLOAD_FOLDER']
 
@@ -308,16 +309,14 @@ class FileManager:
         with file_path.open(mode="wb") as f:
             file.save(f)
 
-        # Relative File path — always use forward slashes so the path can be
-        # used as a URL segment on both Windows and Linux.
         if include_prefix:  # ToDo: add a namespace for the chat attachments, similar as for profile images
             static_dir = Path(upload_folder).name
-            static_file_path = '/'.join([static_dir, str(subfolder), file_name])
+            url_segment = safe_join(static_dir, str(subfolder), file_name)
         else:
-            static_file_path = Path(file_path).relative_to(Path(upload_folder)).as_posix()
+            url_segment = safe_join(str(subfolder) if subfolder else '', file_name)
 
-        logging.debug(f'Relative Path: {static_file_path}')
-        return static_file_path
+        logging.debug(f'Relative Path: {url_segment}')
+        return url_segment
 
     def save_user_profile_image(self, user_id, image_file):
         """
