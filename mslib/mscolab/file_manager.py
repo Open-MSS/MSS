@@ -108,7 +108,7 @@ class FileManager:
             operation_file_path.write_text(content, encoding='utf-8')
 
             # Initialize git repository
-            with git.Repo.init(str(operation_dir)) as gr:
+            with git.Repo.init(operation_dir) as gr:
                 gr.git.clear_cache()
                 gr.index.add(['main.ftml'])
                 gr.index.commit("initial commit")

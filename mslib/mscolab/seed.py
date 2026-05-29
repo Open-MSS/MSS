@@ -84,7 +84,7 @@ def add_all_users_default_operation(path='TEMPLATE', description="Operation to k
                 git_repo_path = Path(APP.config['OPERATIONS_DATA']) / path
                 git_repo_path.mkdir(parents=True, exist_ok=True)
                 #  Todo this should be done by the file_manager
-                with git.Repo.init(str(git_repo_path)) as gr:
+                with git.Repo.init(git_repo_path) as gr:
                     gr.git.clear_cache()
                     main_file_git = git_repo_path / "main.ftml"
                     main_file_git.write_text(XML_CONTENT_INIT, encoding='utf-8')
@@ -178,7 +178,7 @@ def add_operation(operation_name, description):
                 git_repo_path = Path(APP.config['OPERATIONS_DATA']) / operation_name
                 git_repo_path.mkdir(parents=True, exist_ok=True)
                 # Todo this should be done by the file_manager
-                with git.Repo.init(str(git_repo_path)) as gr:
+                with git.Repo.init(git_repo_path) as gr:
                     gr.git.clear_cache()
                     main_file_git = git_repo_path / "main.ftml"
                     main_file_git.write_text(XML_CONTENT_INIT, encoding='utf-8')
@@ -444,7 +444,7 @@ def seed_data():
 
         # Initialize git repository
         # Todo this should be done by the file_manager
-        with git.Repo.init(str(git_dir)) as gr:
+        with git.Repo.init(git_dir) as gr:
             gr.git.clear_cache()
             gr.index.add(['main.ftml'])
             gr.index.commit("initial commit")
