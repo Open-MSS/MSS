@@ -28,7 +28,7 @@ import pytest
 
 from mslib.mscolab.conf import mscolab_settings
 
-mscolab_settings.enable_basic_http_authentication = True
+mscolab_settings.ENABLE_BASIC_HTTP_AUTHENTICATION = True
 try:
     from mslib.mscolab.server import authfunc, verify_pw, initialize_managers
     from mslib.mscolab.blueprints.auth import get_auth_token
@@ -53,7 +53,7 @@ class Test_Server_Auth_Not_Valid:
         assert 'Class with handler functions for file related functionalities' in fm.__doc__
 
     def test_authfunc(self):
-        mscolab_settings.enable_basic_http_authentication = True
+        mscolab_settings.ENABLE_BASIC_HTTP_AUTHENTICATION = True
         assert authfunc("user", "testvaluepassword")
         assert authfunc("user", "wrong") is False
 

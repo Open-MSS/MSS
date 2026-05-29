@@ -91,7 +91,7 @@ except ImportError as ex:
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None
 
-if mswms_settings.enable_basic_http_authentication:
+if mswms_settings.ENABLE_BASIC_HTTP_AUTHENTICATION:
     logging.debug("Enabling basic HTTP authentication. Username and "
                   "password required to access the service.")
     import hashlib

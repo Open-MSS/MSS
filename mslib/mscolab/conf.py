@@ -96,7 +96,7 @@ class DefaultSettings:
     # having the roles in the TexGroup
     GROUP_POSTFIX = "Group"
 
-    enable_basic_http_authentication = False
+    ENABLE_BASIC_HTTP_AUTHENTICATION = False
 
     # enable verification by Mail
     MAIL_ENABLED = False

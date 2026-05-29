@@ -71,7 +71,7 @@ class default_mswms_settings:
     imprint = ""
     gdpr = ""
     data = {}
-    enable_basic_http_authentication = False
+    ENABLE_BASIC_HTTP_AUTHENTICATION = False
     __file__ = None
 
 

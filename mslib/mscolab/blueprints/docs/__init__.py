@@ -44,7 +44,7 @@ DOCS_BP = Blueprint("docs", __name__, template_folder='templates', static_folder
 def optional_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if current_app.config.get('enable_basic_http_authentication', False):
+        if current_app.config.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
             auth_basic_auth = current_app.extensions['basic_auth']
             return auth_basic_auth.login_required(f)(*args, **kwargs)
         return f(*args, **kwargs)

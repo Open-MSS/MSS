@@ -151,7 +151,7 @@ except ImportError as ex:
         __file__ = None
 
 # setup http auth
-if APP.__dict__.get('enable_basic_http_authentication', False):
+if APP.__dict__.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
     logging.debug("Enabling basic HTTP authentication. Username and "
                   "password required to access the service.")
     import hashlib

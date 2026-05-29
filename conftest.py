@@ -156,7 +156,7 @@ SQLALCHEMY_ECHO = False
 UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
 MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
 
-enable_basic_http_authentication = False
+ENABLE_BASIC_HTTP_AUTHENTICATION = False
 
 # enable login by identity provider
 USE_SAML2 = False

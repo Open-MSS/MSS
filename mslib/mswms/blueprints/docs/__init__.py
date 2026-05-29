@@ -52,7 +52,7 @@ def application():
     from mslib.mswms.app import mswms_settings
     auth_basic_auth = current_app.extensions['basic_auth']
     view_func = conditional_decorator(auth_basic_auth.login_required,
-                                      mswms_settings.enable_basic_http_authentication)(_application_impl)
+                                      mswms_settings.ENABLE_BASIC_HTTP_AUTHENTICATION)(_application_impl)
     return view_func()
 
 

@@ -49,7 +49,7 @@ AUTH_BP = Blueprint('auth', __name__, template_folder='templates')
 def optional_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if current_app.config.get('enable_basic_http_authentication', False):
+        if current_app.config.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
             auth_basic_auth = current_app.extensions['basic_auth']
             return auth_basic_auth.login_required(f)(*args, **kwargs)
         return f(*args, **kwargs)
@@ -60,7 +60,7 @@ def optional_auth(f):
 @AUTH_BP.route("/status")
 @optional_auth
 def hello():
-    if request.authorization is not None and current_app.config.get('enable_basic_http_authentication', False):
+    if request.authorization is not None and current_app.config.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
         current_app.extensions['basic_auth'].login_required()
     return json.dumps({
         'message': "Mscolab server",
