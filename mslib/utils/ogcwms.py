@@ -377,7 +377,7 @@ class WMSCapabilitiesReader(common.WMSCapabilitiesReader):
         """
         # (mss) handle bytes
         if isinstance(st, bytes):
-            logging.debug("reveived bytes")
+            logging.debug("received bytes")
             self.capabilities_document = st
             return etree.fromstring(st)
         if not isinstance(st, str):
