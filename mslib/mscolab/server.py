@@ -374,31 +374,6 @@ def hello():
         })
 
 
-if os.environ.get("MSCOLAB_TEST_MODE") == "1":
-    @APP.route("/test/reset_socket_state", methods=["POST"])
-    def _test_reset_socket_state():
-        # Test-only: clear in-memory socket bookkeeping that survives db_reset.
-        sockio.sm.clear_state()
-        return jsonify({"success": True})
-
-    @APP.route("/test/dispose_connections", methods=["POST"])
-    def _test_dispose_connections():
-        # Test-only: release all pooled SQLite connections so the in-process
-        # Alembic reset can acquire the exclusive lock for batch migrations.
-        from mslib.mscolab.models import db
-        db.engine.dispose()
-        return jsonify({"success": True})
-
-    @APP.route("/test/reset_db", methods=["POST"])
-    def _test_reset_db():
-        # Test-only: reset the database within the subprocess so its SQLAlchemy
-        # connection pool sees the fresh schema after the in-process db reset.
-        from mslib.mscolab.mscolab import handle_db_reset
-        handle_db_reset(verbose=False)
-        sockio.sm.clear_state()
-        return jsonify({"success": True})
-
-
 @APP.route('/token', methods=["POST"])
 @conditional_decorator(auth.login_required, APP.__dict__.get('enable_basic_http_authentication', False))
 def get_auth_token():

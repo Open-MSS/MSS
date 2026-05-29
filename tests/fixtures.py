@@ -34,7 +34,6 @@ import time
 import urllib
 import socket
 import socketio
-import requests
 import mslib.mswms.mswms
 import mslib.mswms.wms
 import mslib.mswms.gallery_builder
@@ -136,8 +135,7 @@ def mscolab_session_server(mscolab_session_app, mscolab_session_managers, mscola
     # Use port 0 to let OS assign available port - early failure if unavailable
     cmd = [sys.executable, '-m', 'mslib.mscolab.mscolab', 'start', '--host', '127.0.0.1', '--port', '0']
     with _running_server(mscolab_session_app, cmd,
-                         extra_paths=[str(mscolab_server_config_dir)],
-                         extra_env={"MSCOLAB_TEST_MODE": "1"}) as url:
+                         extra_paths=[str(mscolab_server_config_dir)]) as url:
         # Wait until the Flask-SocketIO server is ready for connections
         sio = socketio.Client()
         sio.connect(url, retry=True, wait_timeout=60)
@@ -184,30 +182,12 @@ def mscolab_server(mscolab_session_server, mscolab_session_app):
 
     :returns: The URL where the server is running.
     """
-    # Step 1: release subprocess SQLite connections BEFORE the in-process
-    # migration so Alembic can acquire the exclusive lock for batch operations
-    # (on Windows, active pool connections block DDL even when idle).
-    try:
-        requests.post(urllib.parse.urljoin(mscolab_session_server, "/test/dispose_connections"), timeout=5)
-    except requests.RequestException:
-        pass
-    # Step 2: in-process schema reset (safe now that subprocess released its locks).
     with mscolab_session_app.app_context():
         from mslib.mscolab.mscolab import handle_db_reset
         from mslib.mscolab.models import db
         handle_db_reset(verbose=False)
-        # Dispose the in-process pool after migration so the subprocess can acquire
-        # the exclusive SQLite lock for its own downgrade/upgrade (batch ops on Windows
-        # fail if any other process holds a file reference to the database).
         db.engine.dispose()
     sockio.sm.clear_state()
-    # Step 3: subprocess schema reset so its SQLAlchemy pool sees the fresh schema.
-    try:
-        r = requests.post(urllib.parse.urljoin(mscolab_session_server, "/test/reset_db"), timeout=10)
-        if r.status_code != 200:
-            requests.post(urllib.parse.urljoin(mscolab_session_server, "/test/reset_socket_state"), timeout=5)
-    except requests.RequestException:
-        pass
     # Update mscolab URL to avoid "Update Server List" message boxes
     modify_config_file({"default_MSCOLAB": [mscolab_session_server]})
     return mscolab_session_server
