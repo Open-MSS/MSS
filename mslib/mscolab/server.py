@@ -134,9 +134,6 @@ ORDER BY sequence_namespace.nspname, class_sequence.relname;
 
 
 APP = create_app(imprint=APP.config['IMPRINT'], gdpr=APP.config['GDPR'])
-with APP.app_context():
-    _handle_db_upgrade()
-mail = Mail(APP)
 CORS(APP, origins=APP.config['CORS_ORIGINS'] if hasattr(APP, "CORS_ORIGINS") else ["*"])
 auth = HTTPBasicAuth()
 with APP.app_context():
@@ -207,7 +204,7 @@ def check_login(emailid, password):
 
 
 def get_mail():
-    return mail
+    return current_app.extensions['mail']
 
 
 # 413: Payload Too Large
@@ -219,7 +216,9 @@ def error413(error):
 
 
 def start_server(app, sockio, cm, fm, port=8083):
-    create_files()
+    with app.app_context():
+        _handle_db_upgrade()
+    Mail(app)
     sockio.run(app, port=port, debug=APP.config['DEBUG'])
 
 
