@@ -34,12 +34,7 @@ jobs:
     - name: Run tests
       timeout-minutes: 40
       shell: bash
-      run: |
-        # Set stricter resource limits for tests on Linux
-        if [ "$(uname)" = "Linux" ]; then
-          ulimit -n 16384 2>/dev/null || true
-        fi
-        pixi run -e dev env QT_QPA_PLATFORM=offscreen pytest -v -n logical --durations=20 --cov=mslib tests
+      run: pixi run -e dev env QT_QPA_PLATFORM=offscreen pytest -v -n logical --durations=20 --cov=mslib tests
     - run: pixi run -e dev coverage xml
     - name: Send coverage to Coveralls (parallel)
       uses: coverallsapp/github-action@5cbfd81b66ca5d10c19b062c04de0199c215fb6e # v2.3.7
