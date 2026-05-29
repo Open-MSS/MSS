@@ -372,23 +372,18 @@ class WMSCapabilitiesReader(common.WMSCapabilitiesReader):
         # (mss)
 
     def readString(self, st):
-        # (mss)
+        """Parse a WMS capabilities document, returning an elementtree instance.
+        Accepts bytes or str; stores the raw document in capabilities_document.
         """
-        Parses a string or bytes and converts it into an XML element tree.
-
-        st (str | bytes): The input string or bytes to be parsed into an XML
-        element tree. The type of the input must be either `str` or `bytes`.
-
-        Raises:
-        ValueError: If the input is not of type `str` or `bytes`.
-
-        Returns xml.etree.ElementTree.Element: An XML element tree parsed from the input.
-        """
-        if not isinstance(st, (str, bytes)):
+        # (mss) handle bytes
+        if isinstance(st, bytes):
+            logging.debug("received bytes")
+            self.capabilities_document = st
+            return etree.fromstring(st)
+        if not isinstance(st, str):
             raise ValueError("String must be of type string or bytes, not %s" % type(st))
-        capabilities_document = st if isinstance(st, bytes) else st.encode('utf-8')
-        return etree.fromstring(capabilities_document)
-        # (mss)
+        self.capabilities_document = st.encode('utf-8')
+        return etree.fromstring(st)
 
 
 def removeXMLNamespace(tree):
