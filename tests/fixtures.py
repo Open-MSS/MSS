@@ -194,7 +194,12 @@ def mscolab_server(mscolab_session_server, mscolab_session_app):
     # Step 2: in-process schema reset (safe now that subprocess released its locks).
     with mscolab_session_app.app_context():
         from mslib.mscolab.mscolab import handle_db_reset
+        from mslib.mscolab.models import db
         handle_db_reset(verbose=False)
+        # Dispose the in-process pool after migration so the subprocess can acquire
+        # the exclusive SQLite lock for its own downgrade/upgrade (batch ops on Windows
+        # fail if any other process holds a file reference to the database).
+        db.engine.dispose()
     sockio.sm.clear_state()
     # Step 3: subprocess schema reset so its SQLAlchemy pool sees the fresh schema.
     try:
@@ -407,7 +412,10 @@ def reset_config():
         if item_name.is_dir():
             _rmtree_retry(item_name)
         else:
-            if item_name.name != "mscolab.db":
+            # Never delete SQLite auxiliary files; they are managed by SQLite
+            # and held by the subprocess server on Windows (WinError 32).
+            if item_name.name not in {"mscolab.db", "mscolab.db-journal",
+                                      "mscolab.db-wal", "mscolab.db-shm"}:
                 item_name.unlink()
 
     generate_initial_config()
