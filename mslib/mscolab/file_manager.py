@@ -368,7 +368,7 @@ class FileManager:
             if new_path.exists():
                 return False
 
-            shutil.move(str(old_path), str(new_path))
+            shutil.move(old_path, new_path)
 
             if value.endswith(APP.config['GROUP_POSTFIX']):
                 # getting the category
