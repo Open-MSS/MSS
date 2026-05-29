@@ -60,26 +60,13 @@ def optional_auth(f):
 @AUTH_BP.route("/status")
 @optional_auth
 def hello():
-    if request.authorization is not None:
-        if current_app.config.get('enable_basic_http_authentication', False):
-            auth_basic_auth = current_app.extensions['basic_auth']
-            auth_basic_auth.login_required()
-            return json.dumps({
-                'message': "Mscolab server",
-                'use_saml2': current_app.config['USE_SAML2'],
-                'direct_login': current_app.config['DIRECT_LOGIN']
-            })
-        return json.dumps({
-            'message': "Mscolab server",
-            'use_saml2': current_app.config['USE_SAML2'],
-            'direct_login': current_app.config['DIRECT_LOGIN']
-        })
-    else:
-        return json.dumps({
-            'message': "Mscolab server",
-            'use_saml2': current_app.config['USE_SAML2'],
-            'direct_login': current_app.config['DIRECT_LOGIN']
-        })
+    if request.authorization is not None and current_app.config.get('enable_basic_http_authentication', False):
+        current_app.extensions['basic_auth'].login_required()
+    return json.dumps({
+        'message': "Mscolab server",
+        'use_saml2': current_app.config['USE_SAML2'],
+        'direct_login': current_app.config['DIRECT_LOGIN']
+    })
 
 
 @AUTH_BP.route('/token', methods=["POST"])
