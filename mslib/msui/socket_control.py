@@ -186,9 +186,7 @@ class ConnectionManager(QtCore.QObject):
         # Emit an event to notify the server of the operation selection.
         self.sio.emit(SocketEvents.OPERATION_SELECTED, {'token': self.token, 'op_id': op_id})
 
-    def save_file(self, op_id, content, comment=None, version_name=None, messageText=""):
-        # Token validity is already checked on server-side. The extra HTTP round-trip here
-        # only adds load under parallel saves and can cause the decorator to trigger logout.
+    def save_file(self, op_id, content, comment=None, version_name=None, messageText=""):.
         logging.debug("saving file")
         self.sio.emit(SocketEvents.FILE_SAVE, {
                       "op_id": op_id,
