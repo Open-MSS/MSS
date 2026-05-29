@@ -214,7 +214,6 @@ def error413(error):
     return jsonify({"success": False, "message": f"File size too large. Upload limit is {upload_limit}MB"}), 413
 
 
-
 def start_server(app, sockio, cm, fm, port=8083):
     with app.app_context():
         _handle_db_upgrade()
