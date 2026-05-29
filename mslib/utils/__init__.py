@@ -36,7 +36,8 @@ class FatalUserError(Exception):
 
 def setup_logging(args):
     logger = logging.getLogger()
-    # this is necessary as "someone" has already initialized logging, preventing basicConfig from doing stuff
+    # Remove any handlers auto-added by Python when logging calls were made
+    # during module imports (e.g. warnings in wms.py, mscolab.py at import time).
     for ch in logger.handlers[:]:
         logger.removeHandler(ch)
 
