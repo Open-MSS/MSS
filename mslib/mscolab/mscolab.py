@@ -47,14 +47,12 @@ from mslib.utils import setup_logging
 
 
 def handle_server_start(host='127.0.0.1', port=8083):
-    import importlib
     from werkzeug.serving import make_server
     logging.info("MSS Version: %s", __version__)
     logging.info("Python Version: %s", sys.version)
     logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
     logging.info("Launching MSColab Server")
-    module = importlib.import_module('mslib.mscolab.server')
-    app = getattr(module, 'APP')
+    from mslib.mscolab.server import APP as app
     import socket
     srv = make_server(host, port, app, threaded=True)
     srv.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
