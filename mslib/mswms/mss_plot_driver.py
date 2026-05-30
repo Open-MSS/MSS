@@ -69,12 +69,23 @@ class MSSPlotDriver(metaclass=ABCMeta):
         self.plot_object = None
         self.filenames = []
 
+    def close(self):
+        """
+        Close the open NetCDF dataset, if existing, and release its file handle.
+
+        On Windows an open dataset keeps a lock on the underlying file, so this
+        should be called explicitly when the driver is no longer needed rather
+        than relying on __del__ / garbage collection.
+        """
+        if self.dataset is not None:
+            self.dataset.close()
+            self.dataset = None
+
     def __del__(self):
         """
         Closes the open NetCDF dataset, if existing.
         """
-        if self.dataset is not None:
-            self.dataset.close()
+        self.close()
 
     def _set_time(self, init_time, fc_time):
         """

@@ -192,11 +192,7 @@ def mswms_app():
     yield mslib.mswms.mswms.application
     # Close all open NetCDF4 datasets to release file handles
     from mslib.mswms import wms
-    for drivers in (wms.server.hsec_drivers, wms.server.vsec_drivers, wms.server.lsec_drivers):
-        for driver in drivers.values():
-            if driver.dataset is not None:
-                driver.dataset.close()
-                driver.dataset = None
+    wms.server.close_datasets()
 
 
 @pytest.fixture(scope="session")
