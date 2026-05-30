@@ -153,9 +153,6 @@ def reset_mscolab(mscolab_session_app):
     """
     with mscolab_session_app.app_context():
         handle_db_reset(verbose=False)
-    # In-process socket bookkeeping survives handle_db_reset; clear it so state
-    # does not leak across tests that share the imported server module.
-    sockio.sm.clear_state()
 
 
 @pytest.fixture
@@ -187,7 +184,6 @@ def mscolab_server(mscolab_session_server, mscolab_session_app):
         from mslib.mscolab.models import db
         handle_db_reset(verbose=False)
         db.engine.dispose()
-    sockio.sm.clear_state()
     # Update mscolab URL to avoid "Update Server List" message boxes
     modify_config_file({"default_MSCOLAB": [mscolab_session_server]})
     return mscolab_session_server

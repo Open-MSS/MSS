@@ -125,6 +125,14 @@ def handle_db_reset(verbose=True):
         if previous_levels is not None:
             for logger, level in zip(alembic_loggers, previous_levels):
                 logger.setLevel(level)
+    # In-memory socket bookkeeping references database rows (user ids, operation ids)
+    # that no longer exist after the reset, so drop it as part of the reset. When the
+    # server module has not been initialized (e.g. a CLI `db --reset`) there is no
+    # manager to clear.
+    from mslib.mscolab.sockets_manager import socketio
+    sm = getattr(socketio, "sm", None)
+    if sm is not None:
+        sm.clear_state()
     if verbose is True:
         print("Database has been reset successfully!")
 

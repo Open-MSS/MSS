@@ -63,8 +63,8 @@ class SocketsManager:
     def clear_state(self):
         """Drop all in-memory socket bookkeeping.
 
-        Used by tests to prevent state leaks across runs that share the same server
-        process — handle_db_reset only resets the database, not these registries.
+        Called by handle_db_reset so a database reset also discards these registries,
+        which would otherwise reference user/operation rows that no longer exist.
         """
         self.sockets[:] = []
         self.active_users_per_operation.clear()
