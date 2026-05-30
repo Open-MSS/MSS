@@ -180,10 +180,7 @@ def mscolab_server(mscolab_session_server, mscolab_session_app):
     :returns: The URL where the server is running.
     """
     with mscolab_session_app.app_context():
-        from mslib.mscolab.mscolab import handle_db_reset
-        from mslib.mscolab.models import db
         handle_db_reset(verbose=False)
-        db.engine.dispose()
     # Update mscolab URL to avoid "Update Server List" message boxes
     modify_config_file({"default_MSCOLAB": [mscolab_session_server]})
     return mscolab_session_server

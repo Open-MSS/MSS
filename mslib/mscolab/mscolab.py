@@ -125,6 +125,10 @@ def handle_db_reset(verbose=True):
         if previous_levels is not None:
             for logger, level in zip(alembic_loggers, previous_levels):
                 logger.setLevel(level)
+    # Release the connections opened during migration, mirroring the dispose() at the
+    # start of this function. This frees the SQLite write lock so another process
+    # sharing the same database file (e.g. a subprocess server) can acquire it.
+    db.engine.dispose()
     # In-memory socket bookkeeping references database rows (user ids, operation ids)
     # that no longer exist after the reset, so drop it as part of the reset. When the
     # server module has not been initialized (e.g. a CLI `db --reset`) there is no
