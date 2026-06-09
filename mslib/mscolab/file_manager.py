@@ -340,10 +340,19 @@ class FileManager:
         else:
             return False, "User not found"
 
-    def get_user_profile_image(self, user_id):
+    def get_user_profile_image(self, user_id, op_id, requesting_user_id=None):
         """
-        Retrieve the user's profile image from the database.
+        Fetches and verifies the profile image of a user based on specific conditions.
+
+        This method determines if a user's profile image can be accessed based on their
+        membership in an operation (OP), the identity of the requesting user, and
+        whether the user has an associated profile image.
         """
+        if op_id is not None and not self.is_member(user_id, op_id):
+            # any participant of the OP is allowed to see profile images
+            return False, "Profile image not shown"
+        if op_id is None and (requesting_user_id is None or int(requesting_user_id) != int(user_id)):
+            return False, "Profile image not shown"
         user = db.session.get(User, user_id)
         if user:
             if user.profile_image_path:

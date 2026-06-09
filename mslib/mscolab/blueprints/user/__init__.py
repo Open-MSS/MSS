@@ -65,7 +65,8 @@ def upload_profile_image():
 def fetch_profile_image():
     fm = current_app.extensions['fm']
     user_id = request.form['user_id']
-    success, filename = fm.get_user_profile_image(user_id)
+    op_id = request.args.get("op_id", request.form.get("op_id", None))
+    success, filename = fm.get_user_profile_image(user_id, op_id, g.user.id)
     if success:
         base_path = current_app.config['UPLOAD_FOLDER']
         return send_from_directory(Path(base_path), filename)
