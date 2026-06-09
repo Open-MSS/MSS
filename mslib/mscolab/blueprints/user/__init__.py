@@ -25,9 +25,11 @@
     limitations under the License.
 """
 
+import io
 import json
 from pathlib import Path
 
+from PIL import Image
 from flask import Blueprint, g, request, jsonify, send_from_directory, current_app
 
 from mslib.mscolab.auth import verify_user
@@ -48,10 +50,15 @@ def upload_profile_image():
     file = request.files['image']
     if not file:
         return jsonify({'message': 'No file provided or invalid file type'}), 400
-    if not file.mimetype.startswith('image/'):
-        return jsonify({'message': 'Invalid file type'}), 400
-    if file.content_length > current_app.config['MAX_UPLOAD_SIZE']:
+    data = file.read()
+    if len(data) > current_app.config['MAX_UPLOAD_SIZE']:
         return jsonify({'message': 'File too large'}), 413
+    try:
+        img = Image.open(io.BytesIO(data))
+        img.verify()
+    except Exception:
+        return jsonify({'message': 'Invalid file type'}), 400
+    file.seek(0)
     fm = current_app.extensions['fm']
     success, message = fm.save_user_profile_image(user_id, file)
     if success:
