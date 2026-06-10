@@ -31,17 +31,22 @@ import os
 import platformdirs
 from pathlib import Path
 
-HOME = Path.home()
-MSUI_CONFIG_PATH = Path(os.getenv("MSUI_CONFIG_PATH", HOME / ".config" / "msui"))
+def _get_config_path():
+    home = Path.home()
+    return Path(os.getenv("MSUI_CONFIG_PATH", home / ".config" / "msui"))
 
+MSUI_CONFIG_PATH = _get_config_path()
 MSUI_CONFIG_SYSPATH = str(MSUI_CONFIG_PATH.resolve())
-
-MSUI_CACHE_PATH = platformdirs.user_cache_path("msui", "mss")
-
 GRAVATAR_DIR_PATH = MSUI_CONFIG_PATH / "gravatars"
 
-MSUI_SETTINGS = Path(os.getenv('MSUI_SETTINGS', MSUI_CONFIG_PATH / "msui_settings.json"))
+def _get_settings_path():
+    return Path(os.getenv("MSUI_SETTINGS", MSUI_CONFIG_PATH / "msui_settings.json"))
 
-MSS_AUTOPLOT = Path(os.getenv('MSS_AUTOPLOT', MSUI_CONFIG_PATH / "mssautoplot.json"))
+def _get_autoplot_path():
+    return Path(os.getenv("MSS_AUTOPLOT", MSUI_CONFIG_PATH / "mssautoplot.json"))
+
+MSUI_SETTINGS = _get_settings_path()
+MSS_AUTOPLOT = _get_autoplot_path()
+
 
 AUTH_LOGIN_CACHE = {}

@@ -216,7 +216,7 @@ class DefaultDataAccess(NWPDataAccess):
         self._mfDatasetArgsDict = {"skip_dim_check": skip_dim_check}
         self._file_cache = {}
 
-    def _determine_filename(self, variable, vartype, init_time, valid_time, reload=True):
+   def _determine_filename(self, variable, vartype, init_time, valid_time, reload=True):
         """
         Determines the name of the data file that contains
         the variable <variable> with type <vartype> of the forecast specified
