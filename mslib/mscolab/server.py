@@ -27,6 +27,10 @@
 import logging
 import socketio
 import sqlalchemy.exc
+<<<<<<< HEAD
+=======
+import flask_migrate
+>>>>>>> be83156e (for current test setup of test_server_auth_required we need the definition on module level)
 import hashlib
 
 from flask import jsonify, request, current_app
