@@ -178,6 +178,8 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                     try:
                         if shortcut[-1] and hasattr(shortcut[-1], "setStyleSheet"):
                             shortcut[-1].setStyleSheet("")
+                        elif shortcut[-1] and isinstance(shortcut[-1], QtWidgets.QListWidgetItem):
+                            shortcut[-1].setBackground(QtGui.QBrush())
                     except RuntimeError:
                         # when we have deleted a QAction we have to update the list
                         # Because we cannot test if the underlying object exist we have to catch that
@@ -188,8 +190,15 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
         Highlights the selected item in the GUI as yellow
         """
         self.reset_highlight()
-        if hasattr(item, "source_object") and item.source_object and hasattr(item.source_object, "setStyleSheet"):
-            item.source_object.setStyleSheet("background-color:yellow;")
+        if hasattr(item, "source_object") and item.source_object:
+            obj = item.source_object
+            if hasattr(obj, "setStyleSheet"):
+                obj.setStyleSheet("background-color:yellow;")
+            elif isinstance(obj, QtWidgets.QListWidgetItem):
+                lw = obj.listWidget()
+                if lw:
+                    lw.clearSelection()
+                obj.setBackground(QtGui.QBrush(QtGui.QColor("yellow")))
 
     def double_clicked(self, item):
         """
@@ -209,6 +218,12 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                 QtCore.QTimer.singleShot(200, obj.showPopup)
             elif isinstance(obj, QtWidgets.QLineEdit) or isinstance(obj, QtWidgets.QAbstractSpinBox):
                 obj.setFocus()
+            elif isinstance(obj, QtWidgets.QListWidgetItem):
+                lw = obj.listWidget()
+                if lw:
+                    lw.setCurrentItem(obj)
+                    lw.scrollToItem(obj)
+                    lw.itemActivated.emit(obj)
 
     def fill_list(self):
         """
@@ -236,7 +251,8 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                 item = QtWidgets.QTreeWidgetItem(header)
                 item.source_object = obj
                 itemText = description if self.cbDisplayType.currentText() == 'Tooltip' \
-                    else text if self.cbDisplayType.currentText() == 'Text' else obj.objectName()
+                    else text if self.cbDisplayType.currentText() == 'Text' \
+                    else (obj.objectName() if hasattr(obj, 'objectName') else text)
                 item.setText(0, f"{itemText}: {shortcut}")
                 item.setToolTip(0, f"ToolTip: {description}\nText: {text}\nObjectName: {objectName}")
                 header.addChild(item)
@@ -291,6 +307,17 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                             for obj in qobject.findChildren(QtWidgets.QLabel)
                             if self.cbNoShortcut.checkState()])
 
+            # QListWidget items - added here so they appear in the tree near their list widget's label
+            for _lw in qobject.findChildren(QtWidgets.QListWidget):
+                if len(_lw.window().objectName()) == 0:
+                    continue
+                for _i in range(_lw.count()):
+                    _li = _lw.item(_i)
+                    _text = _li.text()
+                    if _text:
+                        actions.append((_lw.window(), _lw.toolTip(), _text,
+                                        f"{_lw.objectName()}[{_i}]", "", _li))
+
             # FigureCanvas
             actions.extend([(obj.window(), "", obj.figure.axes[0].get_title(), obj.objectName(), "", obj)
                            for obj in qobject.findChildren(FigureCanvas)
@@ -328,21 +355,39 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
 
                     if item[0] not in shortcuts:
                         shortcuts[item[0]] = {}
-                    shortcuts[item[0]][item[5]] = item[1:]
+                    dict_key = item[3] if isinstance(item[5], QtWidgets.QListWidgetItem) else item[5]
+                    shortcuts[item[0]][dict_key] = item[1:]
                     if self.tutorial_mode:
                         try:
                             prefix = item[0].objectName()
                             attr = item[2]
-                            if item[5] is None:
+                            if item[5] is None or isinstance(item[5], QtWidgets.QListWidgetItem):
                                 continue
                             pixmap = item[5].grab()
                             pix_name = slugify(f"{prefix}-{attr}")
                             if pix_name.startswith("Search") is False:
-                                pix_file = f"{pix_name}.png"
-                                pix_file = pix_dir / pix_file
-                                pixmap.save(str(pix_file.resolve()), 'png')
+                                pixmap.save(str((pix_dir / f"{pix_name}.png").resolve()), 'png')
                         except AttributeError:
                             pass
+
+            # QListWidget tutorial images — items are added to the shortcuts dict via the
+            # actions list above; here we only capture viewport screenshots for tutorial mode.
+            if self.tutorial_mode:
+                for list_widget in qobject.findChildren(QtWidgets.QListWidget):
+                    list_prefix = list_widget.window().objectName()
+                    if len(list_prefix) == 0:
+                        continue
+                    for i in range(list_widget.count()):
+                        list_item = list_widget.item(i)
+                        text = list_item.text()
+                        if not text:
+                            continue
+                        rect = list_widget.visualItemRect(list_item)
+                        if rect.isEmpty():
+                            continue
+                        pix_name = slugify(f"{list_prefix}-{text}")
+                        list_widget.viewport().grab(rect).save(
+                            str((pix_dir / f"{pix_name}.png").resolve()), 'png')
         return shortcuts
 
     def filter_shortcuts(self, text="Nothing", rerun=True):
