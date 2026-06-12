@@ -30,7 +30,7 @@ import datetime
 import socketio
 import sqlalchemy.exc
 import flask_migrate
-
+import hashlib
 
 from flask import jsonify, request, current_app
 from flask_mail import Mail
@@ -151,24 +151,27 @@ except ImportError as ex:
         __file__ = None
 
 # setup http auth
+# for current test setup of test_server_auth_required we need the definition on module level
+# so the import works regardless of when server was first loaded.
+def authfunc(username, password):
+    for u, p in mscolab_auth.allowed_users:
+        if (u == username) and (p == hashlib.md5(password.encode('utf-8')).hexdigest()):
+            return True
+    return False
+
+
+def verify_pw(username, password):
+    if request.authorization:
+        _auth = request.authorization
+        username = _auth.username
+        password = _auth.password
+    return authfunc(username, password)
+
+
 if APP.__dict__.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
     logging.debug("Enabling basic HTTP authentication. Username and "
                   "password required to access the service.")
-    import hashlib
-
-    def authfunc(username, password):
-        for u, p in mscolab_auth.allowed_users:
-            if (u == username) and (p == hashlib.md5(password.encode('utf-8')).hexdigest()):
-                return True
-        return False
-
-    @auth.verify_password
-    def verify_pw(username, password):
-        if request.authorization:
-            auth = request.authorization
-            username = auth.username
-            password = auth.password
-        return authfunc(username, password)
+    auth.verify_password(verify_pw)
 
 
 def _initialize_managers(app):
