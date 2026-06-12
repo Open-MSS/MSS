@@ -25,7 +25,7 @@
 """
 
 import pytest
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5 import QtWidgets, QtGui
 from mslib.msui import msui_mainwindow as msui_mw
 from mslib.msui import constants
 
