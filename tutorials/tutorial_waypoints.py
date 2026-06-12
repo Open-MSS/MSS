@@ -23,7 +23,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
+import argparse
 import pyautogui as pag
 import datetime
 
@@ -133,4 +133,10 @@ def automate_waypoints():
 
 
 if __name__ == '__main__':
-    start(target=automate_waypoints, duration=158)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--duration", type=int, default=158,
+                        help="estimated time for the tutorial in seconds")
+    parser.add_argument("--no-dry-run", action="store_false", dest="dry_run",
+                        help="default: no recording")
+    args = parser.parse_args()
+    start(target=automate_waypoints, duration=args.duration, dry_run=args.dry_run)

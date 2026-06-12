@@ -23,6 +23,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import argparse
 import pyautogui as pag
 
 from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view, create_tutorial_images,
@@ -581,4 +582,10 @@ def _tv_add_waypoints(os_screen_region):
 
 
 if __name__ == '__main__':
-    start(target=automate_views, duration=567)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--duration", type=int, default=567,
+                        help="estimated time for the tutorial in seconds")
+    parser.add_argument("--no-dry-run", action="store_false", dest="dry_run",
+                        help="default: no recording")
+    args = parser.parse_args()
+    start(target=automate_views, duration=args.duration, dry_run=args.dry_run)
