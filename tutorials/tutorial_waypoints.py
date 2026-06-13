@@ -28,7 +28,7 @@ import pyautogui as pag
 import datetime
 
 from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view, select_listelement,
-                             find_and_click_picture, zoom_in, panning)
+                             find_and_click_picture, zoom_in, panning, switch_window)
 from tutorials.utils.platform_keys import platform_keys
 
 CTRL, ENTER, WIN, ALT = platform_keys()
@@ -123,8 +123,8 @@ def automate_waypoints():
     # Saving the figure
     find_and_click_picture('topviewwindow-save.png', 'save button could not be located.')
     current_time = datetime.datetime.now().strftime('%d-%m-%Y %H-%M-%S')
-    pag.hotkey('altleft', 'tab')  # if the save file system window is not in the forefront, use this statement.
-    # This can happen sometimes. At that time, you just need to uncomment it.
+    # if the save file system window is not in the forefront, bring it forward
+    switch_window(presses=1, sleep=0)
     pag.write(f'Fig_{current_time}.png', interval=0.25)
     pag.press(ENTER)
     pag.sleep(2)
