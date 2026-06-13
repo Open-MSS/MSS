@@ -365,8 +365,7 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                                 continue
                             pixmap = item[5].grab()
                             pix_name = slugify(f"{prefix}-{attr}")
-                            if pix_name.startswith("Search") is False:
-                                pixmap.save(str((pix_dir / f"{pix_name}.png").resolve()), 'png')
+                            pixmap.save(str((pix_dir / f"{pix_name}.png").resolve()), 'png')
                         except AttributeError:
                             pass
 
