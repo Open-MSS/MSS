@@ -31,6 +31,7 @@ import sys
 import multiprocessing
 import pyautogui as pag
 from pyscreeze import ImageNotFoundException
+from PyQt5.QtWidgets import QApplication
 
 from mslib.msui import msui
 from tutorials.utils import screenrecorder as sr
@@ -39,6 +40,44 @@ from tutorials.utils.platform_keys import platform_keys
 from mslib.msui.constants import MSUI_CONFIG_PATH
 
 CTRL, ENTER, WIN, ALT = platform_keys()
+
+
+def screen_scale():
+    """
+    PyAutoGUI utilizes logical coordinates. When capturing screenshots on a Retina display,
+    the resulting image is physically larger because each logical point consists of multiple physical pixels.
+    Without adjusting for this scaling factor, image recognition will fail to locate the elements.
+    """
+
+    app = QApplication.instance()
+    if app is not None:
+        return app.primaryScreen().devicePixelRatio()
+    # fallback: no QApplication running yet
+    try:
+        logical_width = pag.size()[0]
+        screenshot_width = pag.screenshot().size[0]
+        return screenshot_width / logical_width if logical_width else 1.0
+    except (OSError, PermissionError, AttributeError, TypeError):
+        return 1.0
+
+
+def locate_center_on_screen(pic, region=None):
+    """
+    Locate the center of an image on screen and return its coordinates in
+    pyautogui's logical point space, corrected for the display scale
+
+    :param pic: The image file to locate on the screen.
+    :param region: Optional region (in screenshot/physical pixels) to search in.
+    :return: The (x, y) center in logical points, or None if not found.
+    """
+    if region is None:
+        location = pag.locateCenterOnScreen(pic)
+    else:
+        location = pag.locateCenterOnScreen(pic, region=region)
+    if location is None:
+        return None
+    scale = screen_scale()
+    return (location[0] / scale, location[1] / scale)
 
 
 def initial_ops():
@@ -243,10 +282,7 @@ def click_center_on_screen(pic, duration=2, xoffset=0, yoffset=0, region=None, c
 
     :return: None
     """
-    if region is None:
-        x, y = pag.locateCenterOnScreen(pic)
-    else:
-        x, y = pag.locateCenterOnScreen(pic, region=region)
+    x, y = locate_center_on_screen(pic, region=region)
     if click:
         pag.click(x + xoffset, y + yoffset, duration=duration)
 
@@ -359,7 +395,7 @@ def zoom_in(pic_name, exception_message, move=(379, 205), dragRel=(70, 75), regi
      Defaults to None, which means the entire screen will be searched.
     """
     try:
-        x, y = pag.locateCenterOnScreen(picture(pic_name), region=region)
+        x, y = locate_center_on_screen(picture(pic_name), region=region)
         pag.click(x, y, interval=2)
         pag.move(move[0], move[1], duration=1)
         pag.dragRel(dragRel[0], dragRel[1], duration=2)
@@ -380,7 +416,7 @@ def panning(pic_name, exception_message, moveRel=(400, 400), dragRel=(-100, -50)
     :param region: The region of the screen to search for the picture. Defaults to None.
     """
     try:
-        x, y = pag.locateCenterOnScreen(picture(pic_name), region=region)
+        x, y = locate_center_on_screen(picture(pic_name), region=region)
         pag.click(x, y, interval=2)
         pag.moveRel(moveRel[0], moveRel[1], duration=1)
         pag.dragRel(dragRel[0], dragRel[1], duration=2)
