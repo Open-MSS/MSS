@@ -81,6 +81,7 @@ def call_msui():
     Calls the main MSS GUI window since operations are to be performed on it only.
     """
     msui.main(tutorial_mode=True)
+    # To use keyboard shortcuts, the relevant window must be active.
     QTimer.singleShot(0, lambda: (msui.mainwindow.raise_(),
                                   msui.mainwindow.activateWindow()))
 
