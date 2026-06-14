@@ -243,7 +243,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
             files = sorted(glob.glob(files))
 
         # Call parent class __init__
-        super().__init__(files, exclude=exclude)
+        
 
         master = files[0]
 

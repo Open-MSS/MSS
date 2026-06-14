@@ -172,9 +172,8 @@ class WebMapService(wms111.WebMapService_1_1_1):
                  timeout=config_loader(dataset="WMS_request_timeout"),
                  auth=None):
         """Initialize."""
-        super().__init__(url=url, version=version, xml=xml, username=username,
-                         password=password, parse_remote_metadata=parse_remote_metadata,
-                         headers=headers, auth=auth)
+
+        
 
         if auth:
             if username:
