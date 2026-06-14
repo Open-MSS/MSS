@@ -28,7 +28,8 @@ import shutil
 import tempfile
 
 from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view,
-                             create_tutorial_images, select_listelement, find_and_click_picture, type_and_key)
+                             create_tutorial_images, select_listelement, find_and_click_picture,
+                             type_path, type_and_key)
 from tutorials.utils.platform_keys import platform_keys
 
 CTRL, ENTER, WIN, ALT = platform_keys()
@@ -43,11 +44,12 @@ def automate_performance():
     pag.sleep(5)
 
     # Performance file path
-    path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
-    ps_file_path = os.path.join(path, 'docs/samples/config/msui/performance_simple.json.sample')
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    ps_file_path = os.path.join(repo_root, 'docs', 'samples', 'config', 'msui',
+                                'performance_simple.json.sample')
     dirpath = tempfile.mkdtemp()
-    sample = os.path.join(dirpath, 'example.json')
-    shutil.copy(ps_file_path, sample)
+    sample_path = os.path.join(dirpath, 'example.json')
+    shutil.copy(ps_file_path, sample_path)
 
     msui_full_screen_and_open_first_view(view_cmd='t')
     # Opening Performance Settings dockwidget
@@ -62,7 +64,7 @@ def automate_performance():
 
     # Exploring through the file system and loading the performance settings json file for a dummy aircraft.
     find_and_click_picture('tableviewwindow-select.png', 'Select button not found')
-    type_and_key(sample)
+    type_path(sample_path, clear=True)
 
     # Checking the Show Performance checkbox to display the settings file in the table view
     find_and_click_picture('tableviewwindow-show-performance.png',

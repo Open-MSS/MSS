@@ -53,7 +53,7 @@ def _switch_to_europe_map():
 
 
 def _create_and_load_kml_files():
-    parent_path = os.path.normpath(os.path.join(os.getcwd(), os.pardir))
+    parent_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     kml_folder_path = os.path.join(parent_path, 'docs/samples/kml')
     _load_kml_files(kml_folder_path)
     pag.sleep(1)
@@ -106,4 +106,4 @@ def _change_linewidth(img_name, actions):
 
 
 if __name__ == '__main__':
-    start(target=automate_kml, duration=130)
+    start(target=automate_kml, duration=130, dry_run=True)

@@ -26,6 +26,7 @@
     limitations under the License.
 """
 import os
+import subprocess
 import platform
 import sys
 import multiprocessing
@@ -323,12 +324,84 @@ def load_kml_file(pic_name, file_path, exception_message):
     """
     try:
         find_and_click_picture(pic_name, exception_message)
-        pag.typewrite(file_path, interval=0.1)
-        pag.sleep(1)
-        pag.press(ENTER)
+        type_path(file_path, key=ENTER, clear=True)
     except (ImageNotFoundException, OSError, Exception):
         print(exception_message)
         raise
+
+
+def type_path(file_path, key=ENTER, clear=False):
+    if sys.platform == 'darwin':
+        macos_enter_path_in_dialog(file_path)
+    elif sys.platform == 'win32':
+        win32_enter_path_in_dialog(file_path, key=key, clear=clear)
+    else:
+        pag.typewrite(file_path, interval=0.1)
+        pag.sleep(1)
+        pag.press(key)
+
+
+def macos_enter_path_in_dialog(file_path):
+    """
+    Enter ``file_path`` into the macOS native file-open dialog.
+
+    pag.typewrite() sends US key codes, so it mangles paths on non-US keyboards,
+    and the Cmd+V paste shortcut is not reliably delivered to the panel's text
+    field (it beeps instead of pasting). AppleScript ``keystroke`` honours the
+    active keyboard layout and needs neither the clipboard nor Cmd+V.
+
+    Requires Accessibility permission for the app that launches the tutorial
+    (System Settings > Privacy & Security > Accessibility); without it macOS
+    rejects the keystrokes with osascript.
+
+    Requires Automation permission for the app that launches the tutorial
+    (System Settings > Privacy & Security > Automation); without it macOS
+    rejects the keystrokes with osascript.
+    """
+    import subprocess
+
+    def osa(applescript):
+        subprocess.run(['osascript', '-e', applescript], check=True)
+
+    escaped = file_path.replace('\\', '\\\\').replace('"', '\\"')
+    # open the "Go to Folder" sheet, type the path, then confirm twice
+    # (first Return accepts "Go to Folder", second accepts the open panel).
+    osa('tell application "System Events" to keystroke "g" using {command down, shift down}')
+    pag.sleep(2.5)  # wait for sheet to fully open
+    osa(f'tell application "System Events" to keystroke "{escaped}"')
+    pag.sleep(0.8)
+    osa('tell application "System Events" to keystroke return')
+    pag.sleep(0.8)
+    osa('tell application "System Events" to keystroke return')
+    pag.sleep(1)
+
+
+def win32_enter_path_in_dialog(path, key=ENTER, clear=False):
+    """
+    Enter a filesystem path into the focused field or file dialog.
+
+    On Windows the path is pasted via the clipboard instead of typed: native
+    open/save dialogs reject forward-slash paths and require backslashes, but
+    pyautogui cannot type a backslash on non-US keyboard layouts (it is an AltGr
+    combination), so pasting is the only layout-independent option.
+
+    :param path: The filesystem path to enter.
+    :param key: Key to press afterwards (default ENTER); pass None to skip.
+    :param clear: Select existing content (Ctrl+A) before entering the path.
+    """
+    # Normalise to the OS separator: paths built with os.path.join(root, 'a/b/c')
+    # mix backslashes and forward slashes on Windows (e.g. ...MSS\docs/samples/kml\
+    # folder.kml), which the native dialog cannot resolve, so it never closes.
+    path = os.path.normpath(path)
+    if clear:
+        pag.hotkey(CTRL, 'a')
+        pag.sleep(1)
+        subprocess.run('clip', input=path, text=True, shell=True, check=False)
+        pag.sleep(1)
+        pag.hotkey(CTRL, 'v')
+    pag.sleep(1)
+    if key is not None:
+        pag.press(key)
 
 
 def change_color(pic_name, exception_message, actions, interval=2, sleep_time=2):
