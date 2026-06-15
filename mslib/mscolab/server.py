@@ -150,6 +150,7 @@ except ImportError as ex:
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None
 
+
 # setup http auth
 # for current test setup of test_server_auth_required we need the definition on module level
 # so the import works regardless of when server was first loaded.
