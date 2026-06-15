@@ -29,6 +29,7 @@ import logging
 import mslib.msui.wms_control
 from mslib.msui.icons import icons
 from mslib.msui.qt5 import ui_wms_multilayers as ui
+from mslib.utils.colordialog import CustomColorDialog
 from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
 
 
@@ -353,15 +354,20 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
                 color.setStyleSheet(f"background-color: {widget.color}")
                 self.listLayers.setItemWidget(widget, 3, color)
 
-                def color_changed(layer):
-                    self.multilayer_clicked(layer)
-                    new_color = QtWidgets.QColorDialog.getColor().name()
-                    color.setStyleSheet(f"background-color: {new_color}")
+                def apply_color(layer, button, new_color):
+                    button.setStyleSheet(f"background-color: {new_color}")
                     layer.color_changed(new_color)
                     self.multilayer_clicked(layer)
                     self.dock_widget.auto_update()
 
-                color.clicked.connect(lambda: color_changed(widget))
+                def color_changed(layer, button):
+                    self.multilayer_clicked(layer)
+                    dialog = CustomColorDialog(self)
+                    dialog.color_selected.connect(
+                        lambda colour: apply_color(layer, button, colour.name()))
+                    dialog.show()
+
+                color.clicked.connect(lambda: color_changed(widget, color))
 
             if widget.style:
                 style = QtWidgets.QComboBox()

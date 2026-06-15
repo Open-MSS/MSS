@@ -190,6 +190,16 @@ class Test_RemoteSensingControlWidget:
         result = [(round(x, 2), round(y, 2)) for x, y in coordinates]
         assert result == self.result_test_tangent_point_coordinates
 
+    def test_set_tangentpoint_colour(self):
+        from PyQt5 import QtWidgets, QtGui
+        self.remote_widget.set_tangentpoint_colour()
+        color_dialog = self.remote_widget.findChild(QtWidgets.QDialog)
+        assert color_dialog is not None
+        color_dialog.color_buttons[0].click()
+        expected = QtGui.QColor(color_dialog.colors[0])
+        button_color = self.remote_widget.btTangentsColour.palette().button().color()
+        assert button_color.getRgbF() == expected.getRgbF()
+
     @pytest.mark.parametrize("obs_azi, obs_ele, sol_azi, sol_ele, expected_rating", [
         (76.00, -1.0, 240.70, 58.33, 175.06),
         (76.11, -1.0, 239.90, 60.03, 174.79),

@@ -34,6 +34,7 @@ import skyfield_data
 
 from PyQt5 import QtGui, QtWidgets
 from mslib.msui.qt5 import ui_remotesensing_dockwidget as ui
+from mslib.utils.colordialog import CustomColorDialog
 from mslib.utils.time import jsec_to_datetime, datetime_to_jsec
 from mslib.utils.coordinate import get_distance, rotate_point, fix_angle, normalize_longitude
 
@@ -130,17 +131,20 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         self.view.set_remote_sensing_appearance(settings)
 
     def set_tangentpoint_colour(self):
-        """Slot for the colour buttons: Opens a QColorDialog and sets the
+        """Slot for the colour buttons: Opens the CustomColorDialog and sets the
            new button face colour.
         """
-        button = self.btTangentsColour
-        palette = QtGui.QPalette(button.palette())
-        colour = palette.color(QtGui.QPalette.Button)
-        colour = QtWidgets.QColorDialog.getColor(colour)
+        dialog = CustomColorDialog(self)
+        dialog.color_selected.connect(self.on_tangentpoint_colour_selected)
+        dialog.show()
+
+    def on_tangentpoint_colour_selected(self, colour):
         if colour.isValid():
+            button = self.btTangentsColour
+            palette = QtGui.QPalette(button.palette())
             palette.setColor(QtGui.QPalette.Button, colour)
             button.setPalette(palette)
-        self.update_settings()
+            self.update_settings()
 
     def compute_tangent_lines(self, bmap, wp_vertices, wp_heights):
         """

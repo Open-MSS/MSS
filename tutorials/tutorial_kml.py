@@ -26,8 +26,8 @@
 
 import os
 import pyautogui as pag
-from tutorials.utils import (start, finish,
-                             change_color, create_tutorial_images, find_and_click_picture,
+from tutorials.utils import (start, finish, change_color,
+                             select_color, create_tutorial_images, find_and_click_picture,
                              load_kml_file, select_listelement, type_and_key, msui_full_screen_and_open_first_view
                              )
 from tutorials.utils.platform_keys import platform_keys
@@ -66,11 +66,12 @@ def _load_kml_files(kml_folder_path):
                            "'select to open control' button/option not found on the screen.")
     select_listelement(4)
     create_tutorial_images()
+    # select kml examples for europe
     _load_individual_kml_file('folder.kml', kml_folder_path)
     # cursor is on center of the button, moving it so it can be found on screen
     pag.move(100, 100)
     create_tutorial_images()
-    _load_individual_kml_file('color.kml', kml_folder_path)
+    _load_individual_kml_file('line.kml', kml_folder_path)
     pag.sleep(1)
     create_tutorial_images()
 
@@ -88,17 +89,16 @@ def _change_color_and_linewidth():
     create_tutorial_images()
     pag.move(-200, 0, duration=1)
     pag.click(interval=2)
-    _change_color('topviewwindow-change-color.png',
-                  lambda: (pag.move(-220, -300, duration=1), pag.click(interval=2), pag.press(ENTER)))
+    # locate the "red" swatch image and click it, wherever the dialog opens
+    select_color('topviewwindow-change-color.png', 'red')
+    find_and_click_picture('topviewwindow-change-color.png',
+                           "'Change Color' button not found on the screen.")
+    select_color('topviewwindow-change-color.png', 'yellow')
     create_tutorial_images()
-    _change_linewidth('topviewwindow-2-00.png', lambda: (pag.hotkey(CTRL, 'a'),
+    _change_linewidth('topviewwindow-200.png', lambda: (pag.hotkey(CTRL, 'a'),
                                                          [pag.press('down') for _ in range(8)],
                                                          type_and_key('2.50'), pag.sleep(1),
                                                          type_and_key('5.50')))
-
-
-def _change_color(img_name, actions):
-    change_color(img_name, "'Change Color' button not found on the screen.", actions, interval=2)
 
 
 def _change_linewidth(img_name, actions):
