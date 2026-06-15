@@ -96,9 +96,9 @@ def _change_color_and_linewidth():
     select_color('topviewwindow-change-color.png', 'yellow')
     create_tutorial_images()
     _change_linewidth('topviewwindow-200.png', lambda: (pag.hotkey(CTRL, 'a'),
-                                                         [pag.press('down') for _ in range(8)],
-                                                         type_and_key('2.50'), pag.sleep(1),
-                                                         type_and_key('5.50')))
+                                                        [pag.press('down') for _ in range(8)],
+                                                        type_and_key('2.50'), pag.sleep(1),
+                                                        type_and_key('5.50')))
 
 
 def _change_linewidth(img_name, actions):
