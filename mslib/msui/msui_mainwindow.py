@@ -540,6 +540,47 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
         self.openOperationsGb.hide()
 
+        if self.tutorial_mode:
+            # Pre-render the standard dialog buttons so tutorials can image-match and
+            # click them (e.g. the Yes/No close confirmation on Ctrl/Cmd+W). Scheduled
+            # so it runs once the event loop is up and the widgets render at the real
+            # on-screen style and HiDPI/Retina scale.
+            QtCore.QTimer.singleShot(0, self.save_messagebox_button_images)
+
+    def save_messagebox_button_images(self):
+        """
+        In tutorial mode, render a QMessageBox off-screen and store an image of each
+        of its standard buttons under ``tutorial_images`` so tutorials can locate and
+        click modal dialog buttons (e.g. the Yes/No confirmation shown when a widget
+        is closed with Ctrl/Cmd+W).
+
+        Rendering happens in the running application via ``QWidget.grab()`` with the
+        ``WA_DontShowOnScreen`` attribute, so the images match the on-screen widget
+        style and HiDPI/Retina scale exactly (like the other tutorial images) without
+        a dialog flashing up. Files are named ``messagebox-<buttontext>.png``.
+        """
+        pix_dir = constants.MSUI_CONFIG_PATH / 'tutorial_images'
+        pix_dir.mkdir(exist_ok=True)
+        box = QtWidgets.QMessageBox(self)
+        box.setIcon(QtWidgets.QMessageBox.Warning)
+        box.setStandardButtons(
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No |
+            QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel |
+            QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard)
+        # We don't need the widget on screen rendered to get its elements grabbed
+        box.setAttribute(QtCore.Qt.WA_DontShowOnScreen, True)
+        box.show()
+        QtWidgets.QApplication.processEvents()
+        try:
+            for button in box.buttons():
+                # mirror the de-mnemonic handling used for the other tutorial images
+                text = button.text().replace("&&", "%%").replace("&", "").replace("%%", "&")
+                pix_file = pix_dir / f"{slugify(f'messagebox-{text}')}.png"
+                button.grab().save(str(pix_file.resolve()), 'png')
+        finally:
+            box.close()
+            box.deleteLater()
+
     def bring_main_window_to_front(self):
         self.show()
         self.raise_()

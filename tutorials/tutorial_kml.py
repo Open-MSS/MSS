@@ -42,7 +42,7 @@ def automate_kml():
     _create_and_load_kml_files()
     _change_color_and_linewidth()
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
-    finish(close_widgets=2)
+    finish(close_widgets=1)
 
 
 def _switch_to_europe_map():
