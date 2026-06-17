@@ -28,6 +28,7 @@ import argparse
 import pyautogui as pag
 
 from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view, create_tutorial_images,
+                             select_listelement, find_and_click_picture, type_and_key, type_path, switch_window)
 from tutorials.utils.platform_keys import platform_keys
 from tutorials.utils.picture import picture
 
