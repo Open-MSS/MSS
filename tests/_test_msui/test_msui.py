@@ -113,6 +113,9 @@ class Test_MSS_TutorialMode:
         yield
         self.main_window.hide()
 
+    def test_tutorial_mode_flag_is_stored(self):
+        assert self.main_window.shortcuts_dlg.tutorial_mode is True
+
     def test_tutorial_dir(self):
         dir_path = Path(self.tutorial_dir)
         assert dir_path.parent.exists()
@@ -124,6 +127,11 @@ class Test_MSS_TutorialMode:
         assert 'msuimainwindow-operation-archive.png' in common_images
         assert 'msuimainwindow-work-asynchronously.png' in common_images
         assert 'msuimainwindow-connect.png' in common_images
+
+    def test_show_shortcuts_hides_dialog_in_tutorial_mode(self):
+        """In tutorial_mode the dialog must be hidden immediately after show_shortcuts()."""
+        self.main_window.show_shortcuts()
+        assert not self.main_window.shortcuts_dlg.isVisible()
 
 
 class Test_MSS_AboutDialog:
