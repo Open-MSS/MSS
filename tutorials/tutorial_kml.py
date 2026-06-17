@@ -54,7 +54,7 @@ def _switch_to_europe_map():
 
 
 def _create_and_load_kml_files():
-    parent_path = os.path.normpath(os.path.join(os.getcwd(), os.pardir))
+    parent_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     kml_folder_path = os.path.join(parent_path, 'docs/samples/kml')
     _load_kml_files(kml_folder_path)
     pag.sleep(1)
@@ -107,7 +107,6 @@ def _change_linewidth(img_name, actions):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
     parser.add_argument("--duration", type=int, default=130,
                         help="estimated time for the tutorial in seconds")
     parser.add_argument("--no-dry-run", action="store_false", dest="dry_run",

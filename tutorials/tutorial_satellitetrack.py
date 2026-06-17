@@ -25,12 +25,12 @@ import os.path
 import argparse
 import pyautogui as pag
 from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view,
-                             create_tutorial_images, select_listelement, find_and_click_picture, type_and_key, zoom_in)
+                             create_tutorial_images, select_listelement, find_and_click_picture, type_path, zoom_in)
 from tutorials.utils.platform_keys import platform_keys
 
 
 CTRL, ENTER, WIN, ALT = platform_keys()
-PATH = os.path.normpath(os.getcwd() + os.sep + os.pardir)
+PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SATELLITE_PATH = os.path.join(PATH, 'docs/samples/satellite_tracks/satellite_predictor.txt')
 
 
@@ -63,7 +63,7 @@ def automate_st():
     # Todo find and use QLineEdit leFile instead of Load button
     # Loading the file
     find_and_click_picture('topviewwindow-load.png', 'Load button not found', xoffset=-150)
-    type_and_key(SATELLITE_PATH, interval=0.1)
+    type_path(SATELLITE_PATH, clear=True)
     find_and_click_picture('topviewwindow-load.png', 'Load button not found')
 
     # Switching between different date and time of satellite overpass.

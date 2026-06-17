@@ -28,8 +28,6 @@ import argparse
 import pyautogui as pag
 
 from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view, create_tutorial_images,
-                             select_listelement, find_and_click_picture, type_and_key, switch_window)
-
 from tutorials.utils.platform_keys import platform_keys
 from tutorials.utils.picture import picture
 
@@ -43,7 +41,7 @@ OPERATION_NAME = 'operation_of_john_doe'
 OPERATION_DESCRIPTION = """This is John Doe's operation. He wants his colleagues and friends \
 to collaborate on this operation with him in the network. Mscolab, here, \
 will be very helpful for Joe with various features to use!"""
-PATH = os.path.normpath(os.getcwd() + os.sep + os.pardir)
+PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EXMPLE_IMAGE_PATH = os.path.join(os.path.join(PATH, 'docs', 'mss-logo.png'))
 MSCOLAB_URL = 'http://localhost:8083/'
 
@@ -456,9 +454,7 @@ def _chatting():
     pag.moveTo(x, y + 40, duration=2)
     pag.click(x, y + 40, duration=2)
     pag.sleep(1)
-    pag.typewrite(EXMPLE_IMAGE_PATH, interval=0.2)
-    pag.sleep(1)
-    pag.press(ENTER)
+    type_path(EXMPLE_IMAGE_PATH, clear=True)
     pag.sleep(1)
     pag.moveTo(x, y, duration=2)
     pag.click(x, y, duration=2)
