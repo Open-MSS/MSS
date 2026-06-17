@@ -23,11 +23,13 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import argparse
 import pyautogui as pag
 
 from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view, create_tutorial_images,
                              select_listelement, find_and_click_picture, zoom_in, type_and_key, move_window,
-                             move_and_setup_layerchooser, show_other_widgets, add_waypoints_to_topview)
+                             move_and_setup_layerchooser, show_other_widgets, add_waypoints_to_topview,
+                             switch_window, close_window)
 from tutorials.utils.platform_keys import platform_keys
 from mslib.utils.config import load_settings_qsettings
 
@@ -76,14 +78,8 @@ def automate_views():
     y_drag_rel = -30
     move_window(sideview["os_screen_region"], x_drag_rel, y_drag_rel)
 
-    pag.keyDown('altleft')
-    # this selects the next window in the window manager on budgie and kde
-    pag.press('tab')
-    pag.keyUp('tab')
-    pag.press('tab')
-    pag.keyUp('tab')
-    pag.keyUp('altleft')
-    pag.sleep(1)
+    # this selects the next window in the window manager
+    switch_window(presses=2)
     topview = load_settings_qsettings('topview', {"os_screen_region": (0, 0, 0, 0)})
     pag.sleep(1)
 
@@ -184,16 +180,10 @@ def automate_views():
 
     # Closing list layer of sideview and topview to make screen a little less congested.
     pag.click(ll_sv_x, ll_sv_y, duration=2)
-    pag.hotkey('altleft', 'f4')
-    pag.sleep(1)
-    pag.press('left')
-    pag.press(ENTER)
+    close_window()
 
     pag.click(ll_tov_x, ll_tov_y, duration=2)
-    pag.hotkey('altleft', 'f4')
-    pag.sleep(1)
-    pag.press('left')
-    pag.press(ENTER)
+    close_window()
 
     # Table View
     # Opening Table View
@@ -201,7 +191,7 @@ def automate_views():
     pag.click(duration=1)
 
     pag.sleep(1)
-    pag.hotkey('ctrl', 't')
+    pag.hotkey(CTRL, 't')
     pag.sleep(2)
 
     create_tutorial_images()
@@ -233,11 +223,7 @@ def automate_views():
 
     # Closing Table View to make space on screen
     pag.click(tv_x, tv_y, duration=1)
-    pag.hotkey('altleft', 'f4')
-    pag.sleep(1)
-    pag.press('left')
-    pag.sleep(1)
-    pag.press('enter')
+    close_window()
 
     # Opening Linear View
     pag.sleep(1)
@@ -297,7 +283,7 @@ def automate_views():
     # CLosing Linear View Layer List
     pag.click(x, y, duration=2)
     pag.sleep(1)
-    pag.hotkey('altleft', 'f4')
+    close_window(confirm=False)
 
     # Clicking on Linear View  Window Head
     pag.click(lv_x, lv_y, duration=1)
@@ -581,4 +567,10 @@ def _tv_add_waypoints(os_screen_region):
 
 
 if __name__ == '__main__':
-    start(target=automate_views, duration=567)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--duration", type=int, default=567,
+                        help="estimated time for the tutorial in seconds")
+    parser.add_argument("--no-dry-run", action="store_false", dest="dry_run",
+                        help="default: no recording")
+    args = parser.parse_args()
+    start(target=automate_views, duration=args.duration, dry_run=args.dry_run)

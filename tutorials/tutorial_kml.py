@@ -24,6 +24,7 @@
     limitations under the License.
 """
 
+import argparse
 import os
 import pyautogui as pag
 from tutorials.utils import (start, finish,
@@ -42,7 +43,7 @@ def automate_kml():
     _create_and_load_kml_files()
     _change_color_and_linewidth()
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
-    finish(close_widgets=2)
+    finish(close_widgets=1)
 
 
 def _switch_to_europe_map():
@@ -106,4 +107,9 @@ def _change_linewidth(img_name, actions):
 
 
 if __name__ == '__main__':
-    start(target=automate_kml, duration=130, dry_run=True)
+    parser.add_argument("--duration", type=int, default=130,
+                        help="estimated time for the tutorial in seconds")
+    parser.add_argument("--no-dry-run", action="store_false", dest="dry_run",
+                        help="default: no recording")
+    args = parser.parse_args()
+    start(target=automate_kml, duration=args.duration, dry_run=args.dry_run)

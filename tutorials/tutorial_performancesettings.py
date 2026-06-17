@@ -22,6 +22,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import argparse
 import os.path
 import pyautogui as pag
 import shutil
@@ -115,4 +116,10 @@ def automate_performance():
 
 
 if __name__ == '__main__':
-    start(target=automate_performance, duration=114)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--duration", type=int, default=114,
+                        help="estimated time for the tutorial in seconds")
+    parser.add_argument("--no-dry-run", action="store_false", dest="dry_run",
+                        help="default: no recording")
+    args = parser.parse_args()
+    start(target=automate_performance, duration=args.duration, dry_run=args.dry_run)

@@ -22,6 +22,7 @@
     limitations under the License.
 """
 import os.path
+import argparse
 import pyautogui as pag
 from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view,
                              create_tutorial_images, select_listelement, find_and_click_picture, type_path, zoom_in)
@@ -33,9 +34,9 @@ PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SATELLITE_PATH = os.path.join(PATH, 'docs/samples/satellite_tracks/satellite_predictor.txt')
 
 
-def automate_rs():
+def automate_st():
     """
-    This is the main automating script of the MSS remote sensing tutorial which will be recorded and saved
+    This is the main automating script of the MSS satellitetrack tutorial which will be recorded and saved
     to a file having dateframe nomenclature with a .mp4 extension(codec).
     """
     # Giving time for loading of the MSS GUI.
@@ -111,4 +112,10 @@ def automate_rs():
 
 
 if __name__ == '__main__':
-    start(target=automate_rs, duration=170)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--duration", type=int, default=170,
+                        help="estimated time for the tutorial in seconds")
+    parser.add_argument("--no-dry-run", action="store_false", dest="dry_run",
+                        help="default: no recording")
+    args = parser.parse_args()
+    start(target=automate_st, duration=args.duration, dry_run=args.dry_run)
