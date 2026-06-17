@@ -36,7 +36,7 @@ def platform_keys():
         The key mappings returned depend on the value of `sys.platform`.
         For Linux, the return values are ('ctrl', 'enter', 'winleft', 'altleft').
         For Windows, the return values are ('ctrl', 'enter', 'win', 'alt').
-        For macOS, the return values are ('command', 'return').
+        For macOS, the return values are ('ctrl', 'return', 'command', 'option').
 
     Example:
         ctrl, enter, win, alt = platform_keys()
@@ -54,7 +54,7 @@ def platform_keys():
         alt = 'alt'
     elif sys.platform == 'darwin':
         enter = 'return'
-        ctrl = 'control'
+        ctrl = 'ctrl'
         alt = 'option'
         win = 'command'
     return ctrl, enter, win, alt

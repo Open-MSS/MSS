@@ -23,10 +23,12 @@
     limitations under the License.
 """
 import os
+import argparse
+
 import pyautogui as pag
 
 from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view, create_tutorial_images,
-                             select_listelement, find_and_click_picture, type_and_key)
+                             select_listelement, find_and_click_picture, type_and_key, switch_window)
 
 from tutorials.utils.platform_keys import platform_keys
 from tutorials.utils.picture import picture
@@ -183,11 +185,8 @@ def _work_asynchronously(wp1_x, wp1_y):
     find_and_click_picture('mergewaypointsdialog-keep-server-waypoints.png',
                            'Merge waypoints keepe server waypoints not found')
     pag.press(ENTER)
-    pag.keyDown('altleft')
-    # this selects the next window in the window manager on budgie and kde
-    pag.press('tab')
-    pag.keyUp('tab')
-    pag.keyUp('altleft')
+    # this selects the next window in the window manager
+    switch_window(presses=1, sleep=0)
     # Moving waypoints.
     create_tutorial_images()
     find_and_click_picture('topviewwindow-mv-wp.png',
@@ -554,4 +553,12 @@ def _connect_to_mscolab_url():
 
 
 if __name__ == '__main__':
-    start(target=automate_mscolab, duration=640, mscolab=True, dry_run=False)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--duration", type=int, default=640,
+                        help="estimated time for the tutorial in seconds")
+    parser.add_argument("--no-dry-run", action="store_false", dest="dry_run",
+                        help="default: no recording")
+    parser.add_argument("--mscolab", action=argparse.BooleanOptionalAction, default=True,
+                        help="default: use a local mscolab server")
+    args = parser.parse_args()
+    start(target=automate_mscolab, duration=args.duration, mscolab=args.mscolab, dry_run=args.dry_run)

@@ -23,11 +23,11 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
+import argparse
 import pyautogui as pag
 
 from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view, create_tutorial_images, move_window,
-                             select_listelement, find_and_click_picture, zoom_in, type_and_key)
+                             select_listelement, find_and_click_picture, zoom_in, type_and_key, switch_window)
 from tutorials.utils.platform_keys import platform_keys
 from mslib.utils.config import load_settings_qsettings
 
@@ -54,7 +54,7 @@ def automate_hexagoncontrol():
     pag.move(500, 0, duration=1)
     pag.click(duration=1)
     pag.sleep(1)
-    pag.hotkey('ctrl', 't')
+    pag.hotkey(CTRL, 't')
     pag.sleep(3)
     # update images, because tableview was opened
     create_tutorial_images()
@@ -140,14 +140,14 @@ def _arrange_open_app_windows():
     pag.sleep(1)
     create_tutorial_images()
 
-    pag.keyDown('altleft')
-    pag.press('tab')
-    pag.keyUp('tab')
-    pag.press('tab')
-    pag.keyUp('tab')
-    pag.keyUp('altleft')
-    pag.sleep(1)
+    switch_window(presses=2)
 
 
 if __name__ == '__main__':
-    start(target=automate_hexagoncontrol, duration=170)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--duration", type=int, default=170,
+                        help="estimated time for the tutorial in seconds")
+    parser.add_argument("--no-dry-run", action="store_false", dest="dry_run",
+                        help="default: no recording")
+    args = parser.parse_args()
+    start(target=automate_hexagoncontrol, duration=args.duration, dry_run=args.dry_run)

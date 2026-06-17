@@ -32,6 +32,7 @@ import multiprocessing
 import pyautogui as pag
 from pyscreeze import ImageNotFoundException
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QTimer
 
 from mslib.msui import msui
 from tutorials.utils import screenrecorder as sr
@@ -119,6 +120,9 @@ def call_msui():
     Calls the main MSS GUI window since operations are to be performed on it only.
     """
     msui.main(tutorial_mode=True)
+    # To use keyboard shortcuts, the relevant window must be active.
+    QTimer.singleShot(0, lambda: (msui.mainwindow.raise_(),
+                                  msui.mainwindow.activateWindow()))
 
 
 def call_mscolab():
@@ -139,42 +143,83 @@ def finish(close_widgets=3):
     """
     # clean up and close all
     try:
-        if sys.platform == 'linux' or sys.platform == 'linux2':
+        if sys.platform in ('linux', 'linux2'):
             for _ in range(close_widgets):
                 pag.hotkey('altleft', 'f4')
-                pag.sleep(3)
-                pag.press('left')
-                pag.sleep(3)
-                pag.press('enter')
-                pag.sleep(2)
+                # pyautogui.ImageNotFoundException shows up when not enough views to close available
+                find_and_click_picture('messagebox-yes.png', "Yes Button not found")
             pag.keyDown('altleft')
             pag.press('tab')
             pag.press('left')
             pag.keyUp('altleft')
             pag.press('q')
+            find_and_click_picture('messagebox-yes.png', "Yes Button not found")
         if sys.platform == 'win32':
             for _ in range(close_widgets):
                 pag.hotkey('alt', 'f4')
-                pag.sleep(3)
-                pag.press('left')
-                pag.sleep(3)
-                pag.press('enter')
-                pag.sleep(2)
+                # pyautogui.ImageNotFoundException shows up when not enough views to close available
+                find_and_click_picture('messagebox-yes.png', "Yes Button not found")
             pag.hotkey('alt', 'tab')
             pag.press('q')
+            find_and_click_picture('messagebox-yes.png', "Yes Button not found")
         elif sys.platform == 'darwin':
             for _ in range(close_widgets):
                 pag.hotkey('command', 'w')
-                pag.sleep(3)
-                pag.press('left')
-                pag.sleep(3)
-                pag.press('return')
-                pag.sleep(2)
-            pag.hotkey('command', 'tab')
-            pag.press('q')
+                # pyautogui.ImageNotFoundException shows up when not enough views to close available
+                find_and_click_picture('messagebox-yes.png', "Yes Button not found")
+            pag.hotkey('command', 'q')
+            find_and_click_picture('messagebox-yes.png', "Yes Button not found")
     except Exception:
         print("Cannot automate : Enable Shortcuts for your system or try again")
         raise
+
+
+def switch_window(presses=1, sleep=1):
+    """
+    Cycle to another window of the running application.
+
+    This uses the platform's window-switching shortcut, since the key naming
+    *and* the semantics differ per OS:
+
+    - Linux/Windows: hold Alt and press Tab ``presses`` times.
+    - macOS: press Command+Backtick presses ´ times. ⌘+´ cycles through
+      the windows of the frontmost application (Alt+Tab would switch
+      applications instead, not the MSUI view windows).
+
+    :param presses: How many windows to advance by (default 1).
+    :param sleep: Seconds to sleep afterwards (default 1, 0 to skip).
+    """
+    if sys.platform == 'darwin':
+        for _ in range(presses):
+            pag.hotkey('command', '`')
+    else:
+        pag.keyDown(ALT)
+        for _ in range(presses):
+            pag.press('tab')
+        pag.keyUp(ALT)
+    if sleep:
+        pag.sleep(sleep)
+
+
+def close_window(confirm=True, sleep=1):
+    """
+    Close the active window using the platform's shortcut.
+
+    - Linux/Windows: Alt+F4.
+    - macOS: Command+W (Alt/Option+F4 does nothing on macOS).
+
+    :param confirm: When True, confirm a follow-up dialog by selecting the
+        default button (Left then Enter). Default True.
+    :param sleep: Seconds to wait before confirming the dialog (default 1).
+    """
+    if sys.platform == 'darwin':
+        pag.hotkey('command', 'w')
+    else:
+        pag.hotkey(ALT, 'f4')
+    if confirm:
+        pag.sleep(sleep)
+        pag.press('left')
+        pag.press(ENTER)
 
 
 def start(target=None, duration=120, dry_run=False, mscolab=False):
@@ -188,7 +233,7 @@ def start(target=None, duration=120, dry_run=False, mscolab=False):
 
     Note: Uncomment the line pag.press('q') if recording windows do not close in some cases.
     """
-    if platform.system() == 'Linux':
+    if platform.system() in ('Linux', 'Darwin'):
         tutdir = "/tmp/msui_tutorials"
         if not os.path.isdir(tutdir):
             os.mkdir(tutdir)
@@ -250,7 +295,10 @@ def create_tutorial_images():
     combination 'Ctrl + F' and then puts the program to sleep for 1 second.
 
     """
-    pag.hotkey('ctrl', 'f')
+    if sys.platform == "darwin":
+        pag.hotkey(WIN, 'f')
+    else:
+        pag.hotkey(CTRL, 'f')
     pag.sleep(1)
 
 
@@ -514,33 +562,19 @@ def show_other_widgets():
     Displays other widgets in the application.
 
     This method shows the sideview, linearview, and topview of the application.
-    It uses the `pag` module from the PyAutoGUI library to simulate key presses.
-
-    Note:
-    - The 'altleft' key is pressed and released in the following sections to navigate through the application.
-    - The 'tab' key is pressed multiple times to switch between different views.
+    It cycles through the application windows using the platform-aware
+    :func:`switch_window` helper.
 
     Example usage:
     show_other_widgets()
 
     """
     # show sideview
-    pag.keyDown('altleft')
-    pag.press('tab')
-    pag.press('tab')
-    pag.keyUp('altleft')
-    pag.sleep(1)
+    switch_window(presses=2)
     # show linearview also
-    pag.keyDown('altleft')
-    pag.press('tab')
-    pag.keyUp('altleft')
+    switch_window(presses=1, sleep=0)
     # show topview also
-    pag.keyDown('altleft')
-    pag.press('tab')
-    pag.press('tab')
-    pag.press('tab')
-    pag.keyUp('altleft')
-    pag.sleep(1)
+    switch_window(presses=3)
 
 
 def msui_full_screen_and_open_first_view(view_cmd='h'):
