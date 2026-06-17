@@ -33,7 +33,7 @@ import multiprocessing
 import pyautogui as pag
 from pyscreeze import ImageNotFoundException
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, QLocale
 
 from mslib.msui import msui
 from tutorials.utils import screenrecorder as sr
@@ -582,9 +582,18 @@ def type_and_key(value, interval=0.1, key=ENTER):
 
     This method types the given value and then presses the Enter key on the keyboard.
 
-    :param value (str): The value to be typed.
+    :param value (str): The value to be typed. A canonical dot-decimal numeric
+        string (e.g. '90.00') is reformatted to the current locale's decimal
+        separator before typing (e.g. '90,00' under a German/French locale).
+        Non-numeric strings are typed unchanged.
     :param interval (float, optional): The interval between typing each character. Defaults to 0.3 seconds.
     """
+    try:
+        # preserve the number of decimal places from the canonical string
+        decimals = len(value.split('.')[1]) if '.' in value else 0
+        value = QLocale().toString(float(value), 'f', decimals)
+    except (ValueError, TypeError, AttributeError):
+        pass
     pag.hotkey(CTRL, 'a')
     pag.sleep(1)
     pag.typewrite(value, interval=interval)
