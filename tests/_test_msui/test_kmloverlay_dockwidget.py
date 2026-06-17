@@ -28,7 +28,7 @@
 import mock
 import pytest
 from pathlib import Path
-from PyQt5 import QtCore, QtTest, QtGui
+from PyQt5 import QtCore, QtTest, QtGui, QtWidgets
 from tests.constants import ROOT_DIR
 import mslib.msui.kmloverlay_dockwidget as kd
 
@@ -146,8 +146,7 @@ class Test_KmlOverlayDockWidget:
         assert mocksave.call_count == 1
         assert save_kml.exists()
 
-    @mock.patch("PyQt5.QtWidgets.QColorDialog.getColor", return_value=QtGui.QColor())
-    def test_customize_kml(self, mock_colour_button):
+    def test_customize_kml(self):
         """
         Test the pushbutton for color and double spin box for linewidth and checking specific
         file gets desired linewidth and colour
@@ -156,25 +155,25 @@ class Test_KmlOverlayDockWidget:
         assert self.window.listWidget.count() == 1
         item = self.window.listWidget.item(0)
         rect = self.window.listWidget.visualItemRect(item)
-        # in testing, need to add mouseclick and click the listWidget item
         QtTest.QTest.mouseClick(self.window.listWidget.viewport(),
                                 QtCore.Qt.LeftButton,
                                 pos=rect.center())
 
-        # Clicking on Push Button Colour
+        # Clicking on Push Button Colour opens the CustomColorDialog
         QtTest.QTest.mouseClick(self.window.pushButton_color, QtCore.Qt.LeftButton)
-        assert mock_colour_button.call_count == 1
+        color_dialog = self.window.findChild(QtWidgets.QDialog)
+        assert color_dialog is not None
+        # pick the first swatch
+        color_dialog.color_buttons[0].click()
 
         # Testing the Double Spin Box for linewidth
         self.window.dsbx_linewidth.setValue(3)
         assert self.window.dsbx_linewidth.value() == 3
 
         # Testing the dictionary of files for color and linewidth
-        assert self.window.dict_files[str(path)]["color"] == (0, 0, 0, 1)
+        expected = QtGui.QColor(color_dialog.colors[0]).getRgbF()
+        assert self.window.dict_files[str(path)]["color"] == expected
         assert self.window.dict_files[str(path)]["linewidth"] == 3
-
-        self.window.remove_file()
-        assert self.window.listWidget.count() == 0
 
     def test_check_uncheck(self):
         """

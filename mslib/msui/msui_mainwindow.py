@@ -318,6 +318,15 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
             pix_dir.mkdir(exist_ok=True)
 
             for item in actions:
+                # Tutorial-only: capture widgets explicitly marked with a
+                # color_name (e.g. CustomColorDialog swatches, which
+                # have empty text and would otherwise be skipped below).
+                if self.tutorial_mode:
+                    tut_name = item[5].property("color_name") if item[5] is not None else None
+                    if tut_name:
+                        pix_name = slugify(f"{item[0].objectName()}-{tut_name}")
+                        pix_file = pix_dir / f"{pix_name}.png"
+                        item[5].grab().save(str(pix_file.resolve()), 'png')
                 if len(item[2]) > 0:
                     # These are twice defined, but only one can be used for highlighting
                     if (item[2] in ['Pan', 'Home', 'Forward',

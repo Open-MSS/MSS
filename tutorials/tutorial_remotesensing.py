@@ -108,10 +108,15 @@ def _draw_tangents_to_the_waypoints(os_screen_region):
                            'Draw tangent points not found',
                            region=os_screen_region)
     x, y = pag.position()
-    # Changing color of tangents
+    # Open the tangent colour dialog (the colour button sits to the right of the checkbox)
     pag.click(x + 160, y, duration=1)
     pag.sleep(1)
-    pag.press(ENTER)
+    # Capture the CustomColorDialog swatches, then click the red swatch by image
+    create_tutorial_images()
+    pag.sleep(1)
+    find_and_click_picture('colorselectdialog-red.png',
+                           "Color 'red' not found in color dialog",
+                           region=os_screen_region)
     pag.sleep(1)
     return x, y
 

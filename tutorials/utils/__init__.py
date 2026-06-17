@@ -501,6 +501,36 @@ def change_color(pic_name, exception_message, actions, interval=2, sleep_time=2)
         raise
 
 
+def select_color(open_pic, color_name, exception_message=None, region=None):
+    """
+    Open the predefined-swatch color dialog (CustomColorDialog) and click the
+    swatch named ``color_name`` by locating its captured image on screen.
+
+    This relies on create_tutorial_images() having captured the swatches as
+    ``colorselectdialog-<color_name>.png`` (see CustomColorDialog), so the cursor
+    goes to e.g. "red" wherever the dialog happens to open.
+
+    :param open_pic: Image of the dock button that opens the color dialog.
+    :param color_name: Friendly swatch name, e.g. "red", "blue", "green".
+    :param exception_message: Optional message if ``open_pic`` is not found.
+    :param region: Optional region applied to BOTH the open-button click and the
+        swatch click (e.g. the view window's screen region). Constraining the
+        swatch search avoids matching a same-colored preview button elsewhere.
+        ``create_tutorial_images()`` always captures globally; ``region`` only
+        bounds the on-screen clicks.
+    """
+    # open the color dialog
+    find_and_click_picture(open_pic,
+                           exception_message or f"{open_pic} not found", region=region)
+    pag.sleep(1)
+    # capture the swatch images now that the dialog is visible
+    create_tutorial_images()
+    pag.sleep(1)
+    # click the named swatch
+    find_and_click_picture(f"colorselectdialog-{color_name}.png",
+                           f"Color '{color_name}' not found in color dialog", region=region)
+
+
 def zoom_in(pic_name, exception_message, move=(379, 205), dragRel=(70, 75), region=None):
     """
     This method locates a given picture on the screen, clicks on it, moves the mouse cursor,

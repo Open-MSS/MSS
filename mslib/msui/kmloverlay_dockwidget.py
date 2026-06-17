@@ -36,6 +36,7 @@ from pathlib import Path
 from matplotlib import patheffects
 
 from mslib.utils.qt import get_open_filenames, get_save_filename
+from mslib.utils.colordialog import CustomColorDialog
 from mslib.msui.qt5 import ui_kmloverlay_dockwidget as ui
 from PyQt5 import QtGui, QtWidgets, QtCore
 from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
@@ -370,17 +371,22 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         Sets the color of the selected KML file when Change Colour button is clicked.
         """
         if self.listWidget.currentItem() is not None:
-            filename = self.listWidget.currentItem().text()
-            clr = self.set_color(filename)
-            colour = QtGui.QColor(int(clr[0] * 255), int(clr[1] * 255), int(clr[2] * 255))
-            self.colour = QtWidgets.QColorDialog.getColor(colour)
-            if self.colour.isValid() and filename in self.dict_files:
-                self.dict_files[filename]["color"] = self.colour.getRgbF()
-                self.flag2 = 1  # sets flag of 0 to 1 when the color changes
-                self.listWidget.currentItem().setIcon(self.show_color_icon(filename, self.set_color(filename)))
-                if self.dict_files[filename]["patch"] is not None:
-                    self.dict_files[filename]["patch"].update(
-                        self.dict_files[filename]["color"], self.dict_files[filename]["linewidth"])
+            dialog = CustomColorDialog(self)
+            dialog.color_selected.connect(self.on_color_selected)
+            dialog.show()
+
+    def on_color_selected(self, colour):
+        if self.listWidget.currentItem() is None:
+            return
+        filename = self.listWidget.currentItem().text()
+        self.colour = colour
+        if self.colour.isValid() and filename in self.dict_files:
+            self.dict_files[filename]["color"] = self.colour.getRgbF()
+            self.flag2 = 1  # sets flag of 0 to 1 when the color changes
+            self.listWidget.currentItem().setIcon(self.show_color_icon(filename, self.set_color(filename)))
+            if self.dict_files[filename]["patch"] is not None:
+                self.dict_files[filename]["patch"].update(
+                    self.dict_files[filename]["color"], self.dict_files[filename]["linewidth"])
 
     def set_color(self, filename):
         """

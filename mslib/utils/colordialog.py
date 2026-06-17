@@ -38,6 +38,7 @@ class CustomColorDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Select Color")
+        self.setObjectName("ColorSelectDialog")
         self.setFixedSize(350, 300)
 
         self.colors = [
@@ -46,6 +47,16 @@ class CustomColorDialog(QtWidgets.QDialog):
             "#e6194B", "#d2cf94", "#356e33", "#f58231", "#2c2c2c",
             "#000075", "#9A6324", "#808000", "#000000", "#f8cbdc"
         ]
+        # Used to locate colors by name in tutorials.
+        self.color_names = [
+            "maroon", "raspberry", "apricot", "yellow", "blue",
+            "green", "skyblue", "purple", "magenta", "lightgray",
+            "red", "khaki", "darkgreen", "orange", "darkgrey",
+            "navy", "brown", "olive", "black", "pink"
+        ]
+
+        assert len(self.color_names) == len(self.colors), \
+            "color_names and colors must stay the same length"
 
         layout = QVBoxLayout()
         # Color swatches layout
@@ -56,6 +67,7 @@ class CustomColorDialog(QtWidgets.QDialog):
             button = QtWidgets.QPushButton()
             button.setFixedSize(50, 50)
             button.setStyleSheet(f"background-color: {color}")
+            button.setProperty("color_name", self.color_names[i])
             button.clicked.connect(functools.partial(self.on_color_clicked, color))
             row = i // 5
             col = i % 5
