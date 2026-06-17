@@ -100,39 +100,32 @@ def finish(close_widgets=3):
     """
     # clean up and close all
     try:
-        if sys.platform == 'linux' or sys.platform == 'linux2':
+        if sys.platform in ('linux', 'linux2'):
             for _ in range(close_widgets):
                 pag.hotkey('altleft', 'f4')
-                pag.sleep(3)
-                pag.press('left')
-                pag.sleep(3)
-                pag.press('enter')
-                pag.sleep(2)
+                # pyautogui.ImageNotFoundException shows up when not enough views to close available
+                find_and_click_picture('messagebox-yes.png', "Yes Button not found")
             pag.keyDown('altleft')
             pag.press('tab')
             pag.press('left')
             pag.keyUp('altleft')
             pag.press('q')
+            find_and_click_picture('messagebox-yes.png', "Yes Button not found")
         if sys.platform == 'win32':
             for _ in range(close_widgets):
                 pag.hotkey('alt', 'f4')
-                pag.sleep(3)
-                pag.press('left')
-                pag.sleep(3)
-                pag.press('enter')
-                pag.sleep(2)
+                # pyautogui.ImageNotFoundException shows up when not enough views to close available
+                find_and_click_picture('messagebox-yes.png', "Yes Button not found")
             pag.hotkey('alt', 'tab')
             pag.press('q')
+            find_and_click_picture('messagebox-yes.png', "Yes Button not found")
         elif sys.platform == 'darwin':
             for _ in range(close_widgets):
                 pag.hotkey('command', 'w')
-                pag.sleep(3)
-                pag.press('left')
-                pag.sleep(3)
-                pag.press('return')
-                pag.sleep(2)
-            pag.hotkey('command', 'tab')
-            pag.press('q')
+                # pyautogui.ImageNotFoundException shows up when not enough views to close available
+                find_and_click_picture('messagebox-yes.png', "Yes Button not found")
+            pag.hotkey('command', 'q')
+            find_and_click_picture('messagebox-yes.png', "Yes Button not found")
     except Exception:
         print("Cannot automate : Enable Shortcuts for your system or try again")
         raise
