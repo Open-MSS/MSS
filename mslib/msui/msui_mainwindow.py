@@ -349,8 +349,9 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                 # color_name (e.g. CustomColorDialog swatches, which
                 # have empty text and would otherwise be skipped below).
                 if self.tutorial_mode:
-                    tut_name = item[5].property("color_name") if item[5] is not None else None
-                    if tut_name:
+                    tut_name = (item[5].property("color_name")
+                                if isinstance(item[5], QtWidgets.QWidget) else None)
+                    if tut_name is not None:
                         pix_name = slugify(f"{item[0].objectName()}-{tut_name}")
                         pix_file = pix_dir / f"{pix_name}.png"
                         item[5].grab().save(str(pix_file.resolve()), 'png')
