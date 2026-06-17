@@ -107,6 +107,7 @@ def _change_linewidth(img_name, actions):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
     parser.add_argument("--duration", type=int, default=130,
                         help="estimated time for the tutorial in seconds")
     parser.add_argument("--no-dry-run", action="store_false", dest="dry_run",
