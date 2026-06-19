@@ -145,7 +145,7 @@ def init_saml(state):
     register_saml_routes()
 
 
-def register_saml_routes():
+def register_saml_routes(idp_identity_name=None, ):
     """All SAML routes are registered here safely."""
 
     def create_acs_post_handler():
