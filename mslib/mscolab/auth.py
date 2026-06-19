@@ -4,12 +4,7 @@
     mslib.utils.auth
     ~~~~~~~~~~~~~~~~
 
-    handles passwords from the keyring for login and http_auuth
-
-
-    To better understand of the code, look at the 'ships' example from
-    chapter 14/16 of 'Rapid GUI Programming with Python and Qt: The
-    Definitive Guide to PyQt Programming' (Mark Summerfield).
+    handles passwords from the keyring for login and http_auth
 
     This file is part of MSS.
 
