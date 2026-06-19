@@ -30,7 +30,7 @@ from mslib.mscolab.conf import mscolab_settings
 
 mscolab_settings.ENABLE_BASIC_HTTP_AUTHENTICATION = True
 try:
-    from mslib.mscolab.server import authfunc, verify_pw, initialize_managers
+    from mslib.mscolab.server import authfunc, verify_pw, _initialize_managers
     from mslib.mscolab.blueprints.auth import get_auth_token
     from mslib.mscolab.auth import register_user
 except ImportError:
@@ -45,7 +45,7 @@ class Test_Server_Auth_Not_Valid:
         self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
 
     def test_initialize_managers(self):
-        app, sockio, cm, fm = initialize_managers(self.app)
+        app, sockio, cm, fm = _initialize_managers(self.app)
 
         assert app.config['OPERATIONS_DATA'] == mscolab_settings.OPERATIONS_DATA
         assert 'Create a Flask-SocketIO server.' in sockio.__doc__
