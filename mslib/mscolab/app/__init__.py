@@ -45,10 +45,11 @@ from xstatic.main import XStatic
 
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
 DOCS_BLUEPRINTS_DIR = os.path.join(DOCS_SERVER_PATH, 'blueprints')
-DOCS_STATIC_DIR = os.path.join(DOCS_BLUEPRINTS_DIR, 'static')
+DOCS_BLUEPRINTS_DOCS_DIR = os.path.join(DOCS_BLUEPRINTS_DIR, 'docs')
+DOCS_TEMPLATES_DIR = os.path.join(DOCS_BLUEPRINTS_DOCS_DIR, 'templates')
+DOCS_STATIC_DIR = os.path.join(DOCS_BLUEPRINTS_DOCS_DIR, 'static')
 DOCS_IMG_DIR = os.path.join(DOCS_STATIC_DIR, 'img')
 DOCS_DOCS_DIR = os.path.join(DOCS_STATIC_DIR, 'docs')
-DOCS_TEMPLATES_DIR = os.path.join(DOCS_STATIC_DIR, 'templates')
 # This can be used to set a location by SCRIPT_NAME for testing. e.g. export SCRIPT_NAME=/demo/
 SCRIPT_NAME = os.environ.get('SCRIPT_NAME', '/')
 
