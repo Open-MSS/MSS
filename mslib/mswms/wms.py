@@ -73,7 +73,7 @@ try:
 except ImportError as ex:
     logging.warning("Couldn't import mswms_settings (ImportError:'%s'), Using dummy config.", ex)
 
-APP = create_app(__name__, imprint=mswms_settings.imprint, gdpr=mswms_settings.gdpr)
+APP = create_app(__name__, imprint=mswms_settings.IMPRINT, gdpr=mswms_settings.GDPR)
 auth = HTTPBasicAuth()
 with APP.app_context():
     current_app.extensions['basic_auth'] = auth

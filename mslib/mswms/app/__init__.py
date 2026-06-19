@@ -68,14 +68,20 @@ class default_mswms_settings:
     register_horizontal_layers = []
     register_vertical_layers = []
     register_linear_layers = []
-    imprint = ""
-    gdpr = ""
+    IMPRINT = ""
+    GDPR = ""
     data = {}
     ENABLE_BASIC_HTTP_AUTHENTICATION = False
     __file__ = None
 
 
 mswms_settings = default_mswms_settings()
+try:
+    import mswms_settings as user_settings
+    logging.info("Using user defined settings")
+    mswms_settings.__dict__.update(user_settings.__dict__)
+except ImportError as ex:
+    logging.warning(u"Couldn't import mswms_settings (ImportError:'%s'), using dummy config.", ex)
 
 message, update = release_info.check_for_new_release()
 if update:
@@ -87,7 +93,7 @@ if update:
 APP = Flask(__name__, template_folder=os.path.join(DOCS_TEMPLATES_DIR),
             static_url_path="/static",
             static_folder=STATIC_LOCATION)
-APP.config.from_object(default_mswms_settings)
+APP.config.from_object(mswms_settings)
 APP.route = prefix_route(APP.route, SCRIPT_NAME)
 
 APP.jinja_env.globals.update(file_exists=file_exists)
@@ -135,4 +141,5 @@ def create_app(name="", imprint=None, gdpr=None):
 
     APP.register_blueprint(DOCS_BP)
     APP.register_blueprint(GALLERY_BP)
+
     return APP
