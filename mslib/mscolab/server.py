@@ -207,10 +207,6 @@ def check_login(emailid, password):
     return False
 
 
-def get_mail():
-    return current_app.extensions['mail']
-
-
 # 413: Payload Too Large
 @APP.errorhandler(413)
 def error413(error):

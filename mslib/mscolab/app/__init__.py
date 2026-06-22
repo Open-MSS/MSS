@@ -27,6 +27,7 @@
 import os
 import logging
 import sqlalchemy
+from flask_mail import Mail
 
 from flask_migrate import Migrate
 from flask import Flask
@@ -95,6 +96,8 @@ APP.xstatic = _xstatic
 def create_app(imprint=None, gdpr=None):
     imprint_file = imprint
     gdpr_file = gdpr
+
+    APP.mail = Mail()
 
     APP.jinja_env.globals.update(file_exists=file_exists)
     APP.jinja_env.globals["imprint"] = imprint_file or ""
