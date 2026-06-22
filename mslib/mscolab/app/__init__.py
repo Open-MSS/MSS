@@ -201,6 +201,8 @@ def create_app(imprint=None, gdpr=None):
     with APP.app_context():
         _handle_db_upgrade()
 
+    APP.mail = Mail()
+
     APP.jinja_env.globals.update(file_exists=file_exists)
     APP.jinja_env.globals["imprint"] = imprint_file or ""
     APP.jinja_env.globals["gdpr"] = gdpr_file or ""
