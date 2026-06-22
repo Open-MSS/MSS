@@ -108,7 +108,7 @@ def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
 
             # Also try multiple applications of the db upgrade to ensure idempotence of the operation
             for _ in range(iterations):
-                mslib.mscolab.server._handle_db_upgrade()
+                mslib.mscolab.app._handle_db_upgrade()
 
             # Check that no further migration is required
             flask_migrate.check(directory=migrations_path)

@@ -28,11 +28,11 @@ import os
 import pytest
 import json
 
-from mslib.mscolab.app import APP
+from mslib.mscolab.app import APP, create_files
 from mslib.mscolab.models import Operation, Message, MessageType, User
 from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.utils import (get_recent_op_id, get_session_id,
-                                 get_message_dict, create_files,
+                                 get_message_dict,
                                  get_user_id)
 from mslib.mscolab.seed import XML_CONTENT_INIT
 
