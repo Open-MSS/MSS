@@ -27,13 +27,13 @@ import logging
 import os
 import traceback
 import urllib.parse
+from functools import wraps
 
 from flask import Blueprint, abort, send_from_directory, render_template, url_for, send_file, request, make_response, \
-    current_app
+    current_app, Response
 from multidict import CIMultiDict
 
 from mslib.msui.icons import icons
-from mslib.utils import conditional_decorator
 from mslib.utils.file_exists import file_exists
 from mslib.utils.get_content import get_content
 
@@ -47,13 +47,45 @@ DOCS_BP = Blueprint("docs", __name__, template_folder='templates',
                     static_folder='static', static_url_path='/docs-static')
 
 
-@DOCS_BP.route('/')
-def application():
+def basic_auth(username, password):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            auth = request.authorization
+
+            if not auth or auth.username != username or auth.password != password:
+                return Response(
+                    "Authentication required",
+                    401,
+                    {"WWW-Authenticate": 'Basic realm="Login Required"'}
+                )
+
+            return f(*args, **kwargs)
+
+        return wrapper
+    return decorator
+
+
+def apply_auth(view, enabled, username, password):
+    if not enabled:
+        return view
+
+    return basic_auth(username, password)(view)
+
+
+def init_docs_bp(app):
     from mslib.mswms.app import mswms_settings
-    auth_basic_auth = current_app.extensions['basic_auth']
-    view_func = conditional_decorator(auth_basic_auth.login_required,
-                                      mswms_settings.ENABLE_BASIC_HTTP_AUTHENTICATION)(_application_impl)
-    return view_func()
+
+    enabled = mswms_settings.ENABLE_BASIC_HTTP_AUTHENTICATION
+
+    view = apply_auth(
+        _application_impl,
+        enabled,
+        app.config.get("BASIC_AUTH_USERNAME", "admin"),
+        app.config.get("BASIC_AUTH_PASSWORD", "secret"),
+    )
+
+    app.add_url_rule("/", view_func=view)
 
 
 def _application_impl():

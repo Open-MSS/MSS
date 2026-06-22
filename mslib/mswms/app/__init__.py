@@ -30,7 +30,7 @@ import mslib
 
 from flask import Flask, url_for
 from xstatic.main import XStatic
-from mslib.mswms.blueprints.docs import DOCS_BP
+from mslib.mswms.blueprints.docs import DOCS_BP, init_docs_bp
 from mslib.mswms.blueprints.gallery import GALLERY_BP
 
 from mslib.mswms.gallery_builder import STATIC_LOCATION
@@ -135,6 +135,11 @@ def get_topmenu():
 def create_app(name="", imprint=None, gdpr=None):
     imprint_file = imprint
     gdpr_file = gdpr
+
+    APP.config["BASIC_AUTH_USERNAME"] = "admin"
+    APP.config["BASIC_AUTH_PASSWORD"] = "secret"
+
+    init_docs_bp(APP)
 
     APP.jinja_env.globals.update(file_exists=file_exists)
     APP.jinja_env.globals["imprint"] = imprint_file
