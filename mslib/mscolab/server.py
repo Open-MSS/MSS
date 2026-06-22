@@ -169,7 +169,7 @@ def verify_pw(username, password):
     return authfunc(username, password)
 
 
-if APP.__dict__.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
+if APP.config.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
     logging.debug("Enabling basic HTTP authentication. Username and "
                   "password required to access the service.")
     auth.verify_password(verify_pw)
