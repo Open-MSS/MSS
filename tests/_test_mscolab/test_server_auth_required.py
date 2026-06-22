@@ -63,9 +63,14 @@ class Test_Server_Auth_Not_Valid:
         assert verify_pw("user", "wrong") is False
 
     def test_register_user(self):
-        r = register_user("test@test.io", "test", "pwdtest", "UserPWD")
-        assert r.status_code == 401
+        with self.app.test_client() as test_client:
+            response = test_client.post('/register', data={"email": "test@test.io",
+                                                           "password": "test",
+                                                           "username": "UserPWD",
+                                                           "fullname": "UserPWD"})
+            assert response.status_code == 401
 
     def test_get_auth_token(self):
-        r = get_auth_token()
-        assert r.status_code == 401
+        with self.app.test_client() as test_client:
+            response = test_client.post('/token')
+        assert response.status_code == 401
