@@ -141,7 +141,9 @@ def create_app(name="", imprint=None, gdpr=None):
     APP.jinja_env.globals["gdpr"] = gdpr_file
     APP.jinja_env.globals.update(get_topmenu=get_topmenu)
 
-    APP.register_blueprint(DOCS_BP)
-    APP.register_blueprint(GALLERY_BP)
+    if DOCS_BP.name not in APP.blueprints:
+        APP.register_blueprint(DOCS_BP)
+    if GALLERY_BP.name not in APP.blueprints:
+        APP.register_blueprint(GALLERY_BP)
 
     return APP
