@@ -134,7 +134,7 @@ ORDER BY sequence_namespace.nspname, class_sequence.relname;
 
 
 APP = create_app(imprint=APP.config['IMPRINT'], gdpr=APP.config['GDPR'])
-CORS(APP, origins=APP.config['CORS_ORIGINS'] if hasattr(APP, "CORS_ORIGINS") else ["*"])
+CORS(APP, origins=APP.config.get(['CORS_ORIGINS'], ["*"]))
 auth = HTTPBasicAuth()
 with APP.app_context():
     current_app.extensions["basic_auth"] = auth
