@@ -52,6 +52,8 @@ if not MSCOLAB_DATA_DIR.exists():
     MSCOLAB_DATA_DIR.mkdir(parents=True)
 
 MSUI_CONFIG_PATH = ROOT_DIR / "msui"
+if not MSUI_CONFIG_PATH.exists():
+    MSUI_CONFIG_PATH.mkdir(parents=True)
 os.environ["MSUI_CONFIG_PATH"] = str(MSUI_CONFIG_PATH.resolve())
 MSUI_CONFIG_FILE_PATH = MSUI_CONFIG_PATH / "msui_settings.json"
 
