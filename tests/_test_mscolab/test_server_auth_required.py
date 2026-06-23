@@ -56,9 +56,10 @@ class Test_Server_Auth_Not_Valid:
         assert authfunc("user", "wrong") is False
 
     def test_verify_pw(self):
-        assert verify_pw("user", "testvaluepassword")
-        assert verify_pw("unknown", "unknown") is False
-        assert verify_pw("user", "wrong") is False
+        with self.app.test_request_context():
+            assert verify_pw("user", "testvaluepassword")
+            assert verify_pw("unknown", "unknown") is False
+            assert verify_pw("user", "wrong") is False
 
     def test_register_user(self):
         with self.app.test_client() as test_client:
