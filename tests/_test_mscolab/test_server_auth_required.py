@@ -28,7 +28,6 @@ import pytest
 
 from mslib.mscolab.conf import mscolab_settings
 
-mscolab_settings.ENABLE_BASIC_HTTP_AUTHENTICATION = True
 try:
     from mslib.mscolab.server import authfunc, verify_pw, _initialize_managers
 except ImportError:
@@ -41,6 +40,10 @@ class Test_Server_Auth_Not_Valid:
     def setup(self, mscolab_app):
         self.app = mscolab_app
         self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
+        # enable basic auth
+        self.app.config['ENABLE_BASIC_HTTP_AUTHENTICATION'] = True
+        yield
+        self.app.config['ENABLE_BASIC_HTTP_AUTHENTICATION'] = False
 
     def test_initialize_managers(self):
         app, sockio, cm, fm = _initialize_managers(self.app)
@@ -51,7 +54,6 @@ class Test_Server_Auth_Not_Valid:
         assert 'Class with handler functions for file related functionalities' in fm.__doc__
 
     def test_authfunc(self):
-        mscolab_settings.ENABLE_BASIC_HTTP_AUTHENTICATION = True
         assert authfunc("user", "testvaluepassword")
         assert authfunc("user", "wrong") is False
 
