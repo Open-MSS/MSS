@@ -214,6 +214,28 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
             self.cbTools.setEnabled(False)
             self.tableWayPoints.setEnabled(False)
 
+    def _tutorial_screen_settings(self):
+        """
+        Build the on-screen geometry persisted for the tutorials.
+
+        Records the view window rectangle and, for Matplotlib views, the figure
+        canvas rectangle -- both in Qt logical points (mapToGlobal / width /
+        height). The canvas rectangle lets coordinate-based tutorials map plot
+        pixels to screen points deterministically and independent of the display
+        scale (Retina/HiDPI).
+
+        :return: dict with ``os_screen_region`` and, when a canvas is present,
+          ``canvas_screen_region``, each an (x, y, width, height) tuple.
+        """
+        top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
+        settings = {'os_screen_region': (top_left.x(), top_left.y(), self.width(), self.height())}
+        canvas = getattr(getattr(self, 'mpl', None), 'canvas', None)
+        if canvas is not None:
+            canvas_top_left = canvas.mapToGlobal(QtCore.QPoint(0, 0))
+            settings['canvas_screen_region'] = (canvas_top_left.x(), canvas_top_left.y(),
+                                                canvas.width(), canvas.height())
+        return settings
+
     def changeEvent(self, event):
         """
         Change event method
@@ -227,10 +249,8 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
         if self.tutorial_mode:
             top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
             if top_left.x() != 0:
-                os_screen_region = (top_left.x(), top_left.y(), self.width(), self.height())
-                settings = {'os_screen_region': os_screen_region}
                 # we have to save this to reuse it by the tutorials
-                save_settings_qsettings(self.settings_tag, settings)
+                save_settings_qsettings(self.settings_tag, self._tutorial_screen_settings())
             QtWidgets.QWidget.changeEvent(self, event)
 
     def moveEvent(self, event):
@@ -246,10 +266,8 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
         if self.tutorial_mode:
             top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
             if top_left.x() != 0:
-                os_screen_region = (top_left.x(), top_left.y(), self.width(), self.height())
-                settings = {'os_screen_region': os_screen_region}
                 # we have to save this to reuse it by the tutorials
-                save_settings_qsettings(self.settings_tag, settings)
+                save_settings_qsettings(self.settings_tag, self._tutorial_screen_settings())
             QtWidgets.QWidget.moveEvent(self, event)
 
 
