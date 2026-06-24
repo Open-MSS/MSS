@@ -182,6 +182,7 @@ class mscolab_auth:
 
     _load_module("mswms_settings", constants.MSWMS_SERVER_CONFIG_FILE_PATH)
     _load_module("mscolab_settings", constants.MSCOLAB_SERVER_CONFIG_FILE_PATH)
+    _load_module("mscolab_auth", constants.MSCOLAB_SERVER_CONFIG_DIR / constants.MSCOLAB_AUTH_FILE)
 
 
 generate_initial_config()
