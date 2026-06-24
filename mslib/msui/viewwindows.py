@@ -27,10 +27,12 @@
     limitations under the License.
 """
 import logging
+import os
 
 from abc import abstractmethod
 
 from PyQt5 import QtCore, QtWidgets
+from mslib.msui import constants
 from mslib.utils.config import save_settings_qsettings
 
 
@@ -112,6 +114,63 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
             self.setWindowTitle(self.windowTitle().replace(self.waypoints_model.name, model.name))
 
         self.waypoints_model = model
+
+        if getattr(self, "tutorial_mode", False):
+            self._track_tutorial_flighttrack(model)
+
+    def enable_tutorial_flighttrack_save(self):
+        """
+        Start mirroring the displayed flight track to the tutorial FTML.
+
+        Views receive their model through the constructor, which bypasses
+        setFlightTrackModel (where the mirroring is normally wired). The view
+        creator calls this once after construction, in tutorial mode, so the
+        initial track is written and later edits are tracked.
+        """
+        self._track_tutorial_flighttrack(self.waypoints_model)
+
+    def _track_tutorial_flighttrack(self, model):
+        """
+        In tutorial mode, keep a silent FTML copy of the displayed flight track
+        current, so coordinate-based tutorials can resolve waypoint names and
+        entry order before a delete/move.
+
+        Connects to the model's change signals so edits made in *any* view (the
+        model object is shared across Top/Side/Table/Linear views) and
+        collaborative mscolab updates -- which also arrive through
+        setFlightTrackModel -- trigger a rewrite. The previously tracked model
+        is disconnected when the displayed model is swapped.
+        """
+        signals = ("dataChanged", "rowsInserted", "rowsRemoved", "layoutChanged", "modelReset")
+        previous = getattr(self, "_tutorial_ft_model", None)
+        if previous is not None and previous is not model:
+            for sig in signals:
+                try:
+                    getattr(previous, sig).disconnect(self._save_tutorial_flighttrack)
+                except (TypeError, RuntimeError):
+                    pass
+        if model is not None and model is not previous:
+            for sig in signals:
+                getattr(model, sig).connect(self._save_tutorial_flighttrack)
+        self._tutorial_ft_model = model
+        self._save_tutorial_flighttrack()
+
+    def _save_tutorial_flighttrack(self, *args):
+        """
+        Write the current flight track to a fixed FTML path for the tutorials.
+
+        Uses get_xml_content() rather than save_to_ftml() so the model's own
+        name/filename are not overwritten.
+        """
+        model = self.waypoints_model
+        if model is None:
+            return
+        path = os.path.join(constants.MSUI_CONFIG_PATH, "tutorial_flighttrack.ftml")
+        try:
+            with open(path, "w") as file_object:
+                file_object.write(model.get_xml_content())
+        except OSError as ex:
+            logging.warning("Could not write tutorial flight track (%s: %s)", type(ex), ex)
 
     def controlToBeCreated(self, index):
         """

@@ -56,6 +56,49 @@ class Test_TableView:
         yield
         self.window.hide()
 
+    def test_tutorial_mode_mirrors_flighttrack_to_ftml(self):
+        """
+        In tutorial mode the displayed flight track is silently written to a
+        fixed FTML, and the file is rewritten when the model changes.
+        """
+        from mslib.msui import constants
+        ftml = os.path.join(constants.MSUI_CONFIG_PATH, "tutorial_flighttrack.ftml")
+        if os.path.exists(ftml):
+            os.remove(ftml)
+        self.window.tutorial_mode = True
+        model = self.window.waypoints_model
+        # setting the model connects the change signals and writes the file
+        self.window.setFlightTrackModel(model)
+        assert os.path.exists(ftml)
+        content = open(ftml).read()
+        assert "<FlightTrack" in content
+        assert content.count("<Waypoint") == len(model.waypoints)
+        # a model change triggers a rewrite
+        os.remove(ftml)
+        model.insertRows(0, rows=1, waypoints=[ft.Waypoint(10.0, 20.0, 200)])
+        assert os.path.exists(ftml)
+        with open(ftml) as f:
+            data = f.read()
+            assert data.count("<Waypoint") == len(model.waypoints)
+            assert '    <Waypoint location="" lat="10.0" lon="20.0" flightlevel="200">' in data.split('\n')
+
+    def test_tutorial_mode_enable_save_writes_initial_ftml(self):
+        """
+        Views get their model via the constructor (bypassing setFlightTrackModel),
+        so the creator calls enable_tutorial_flighttrack_save to write the initial
+        FTML and start tracking (mscolab).
+        """
+        from mslib.msui import constants
+        ftml = os.path.join(constants.MSUI_CONFIG_PATH, "tutorial_flighttrack.ftml")
+        if os.path.exists(ftml):
+            os.remove(ftml)
+        self.window.tutorial_mode = True
+        self.window.enable_tutorial_flighttrack_save()
+        assert os.path.exists(ftml)
+        with open(ftml) as f:
+            data = f.read()
+            assert data.count("<Waypoint") == len(self.window.waypoints_model.waypoints)
+
     def test_open_hex(self):
         """
         Tests opening the hexagon dock widget.
