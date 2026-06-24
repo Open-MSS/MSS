@@ -1150,6 +1150,11 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 view_window.mpl.setFixedSize(layout['linearview'][0], layout['linearview'][1])
 
         if view_window is not None:
+            if self.tutorial_mode:
+                # Views receive their model via the constructor, which bypasses
+                # setFlightTrackModel; wire the tutorial-mode flight-track mirroring
+                # here once tutorial_mode and the model are both set on the window.
+                view_window.enable_tutorial_flighttrack_save()
             # Set view type to window
             view_window.view_type = view_window.name
             # Make sure view window will be deleted after being closed, not
