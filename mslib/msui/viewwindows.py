@@ -27,12 +27,10 @@
     limitations under the License.
 """
 import logging
-import os
 
 from abc import abstractmethod
 
 from PyQt5 import QtCore, QtWidgets
-from mslib.msui import constants
 from mslib.utils.config import save_settings_qsettings
 
 
