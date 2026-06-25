@@ -34,7 +34,7 @@ from mslib.mswms.blueprints.docs import DOCS_BP, init_docs_bp
 from mslib.mswms.blueprints.gallery import GALLERY_BP
 
 from mslib.mswms.gallery_builder import STATIC_LOCATION
-from mslib.utils import prefix_route, release_info
+from mslib.utils import prefix_route, release_info, config
 from mslib.utils.file_exists import file_exists
 
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
@@ -136,8 +136,7 @@ def create_app(name="", imprint=None, gdpr=None):
     imprint_file = imprint
     gdpr_file = gdpr
 
-    APP.config["BASIC_AUTH_USERNAME"] = "admin"
-    APP.config["BASIC_AUTH_PASSWORD"] = "secret"
+    APP.config.from_object(config)
 
     init_docs_bp(APP)
 
