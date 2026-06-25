@@ -4,7 +4,7 @@
     mslib.mscolab.auth
     ~~~~~~~~~~~~~~~~~~
 
-    handles passwords from the keyring for login and http_auth
+    handles login/token/SAML logic
 
     This file is part of MSS.
 
