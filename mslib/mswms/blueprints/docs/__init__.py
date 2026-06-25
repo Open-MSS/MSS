@@ -23,6 +23,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import hmac
 import logging
 import os
 import traceback
@@ -53,7 +54,7 @@ def basic_auth(username, password):
         def wrapper(*args, **kwargs):
             auth = request.authorization
 
-            if not auth or auth.username != username or auth.password != password:
+            if not auth or not hmac.compare_digest(auth.username, username) or not hmac.compare_digest(auth.password, password):
                 return Response(
                     "Authentication required",
                     401,
