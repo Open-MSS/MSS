@@ -54,7 +54,10 @@ def basic_auth(username, password):
         def wrapper(*args, **kwargs):
             auth = request.authorization
 
-            if not auth or not hmac.compare_digest(auth.username, username) or not hmac.compare_digest(auth.password, password):
+            if (
+                not auth
+                or not hmac.compare_digest(auth.username, username)
+                or not hmac.compare_digest(auth.password, password)):
                 return Response(
                     "Authentication required",
                     401,
@@ -64,6 +67,7 @@ def basic_auth(username, password):
             return f(*args, **kwargs)
 
         return wrapper
+
     return decorator
 
 
