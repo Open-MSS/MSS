@@ -26,7 +26,6 @@
 """
 import logging
 import socketio
-import sqlalchemy.exc
 import hashlib
 
 from flask import jsonify, request, current_app
@@ -34,7 +33,6 @@ from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth
 
 from mslib.mscolab.app import create_app, APP
-from mslib.mscolab.models import User
 from mslib.mscolab.sockets_manager import _setup_managers
 
 
@@ -93,23 +91,6 @@ def _initialize_managers(app):
 
 
 _app, sockio, cm, fm = _initialize_managers(APP)
-
-
-def check_login(emailid, password):
-    try:
-        user = User.query.filter_by(emailid=str(emailid)).first()
-    except sqlalchemy.exc.OperationalError as ex:
-        logging.debug("Problem in the database (%ex), likely version client different", ex)
-        return False
-    if user is not None:
-        if APP.config['MAIL_ENABLED']:
-            if user.confirmed:
-                if user.verify_password(password):
-                    return user
-        else:
-            if user.verify_password(password):
-                return user
-    return False
 
 
 # 413: Payload Too Large
