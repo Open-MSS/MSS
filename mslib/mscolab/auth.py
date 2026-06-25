@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.utils.auth
-    ~~~~~~~~~~~~~~~~
+    mslib.mscolab.auth
+    ~~~~~~~~~~~~~~~~~~
 
     handles passwords from the keyring for login and http_auth
 
