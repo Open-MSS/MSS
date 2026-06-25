@@ -31,7 +31,7 @@ import logging
 import secrets
 from functools import wraps
 
-from flask import Blueprint, request, url_for, render_template, jsonify, flash, redirect, current_app
+from flask import Blueprint, request, url_for, render_template, jsonify, flash, redirect, current_app, config
 from flask.wrappers import Response
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from saml2.metadata import create_metadata_string
@@ -145,10 +145,10 @@ def init_saml(state):
     register_saml_routes()
 
 
-def register_saml_routes(idp_identity_name=None, ):
+def register_saml_routes():
     """All SAML routes are registered here safely."""
 
-    def create_acs_post_handler(config):
+    def create_acs_post_handler():
         """
         Create acs_post_handler function for the given idp_config.
         """
@@ -189,6 +189,7 @@ def register_saml_routes(idp_identity_name=None, ):
                         return render_template('auth/errors/403.html'), 403
 
                 if email is not None and username is not None:
+                    idp_identity_name = config['idp_identity_name']
                     idp_user_db_state = create_or_update_idp_user(email,
                                                                   username, token, idp_identity_name)
                     if idp_user_db_state:
