@@ -71,6 +71,7 @@ def verify_pw(username, password):
         password = _auth.password
     return authfunc(username, password)
 
+
 with APP.app_context():
     if current_app.config.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
         logging.debug("Enabling basic HTTP authentication. Username and "

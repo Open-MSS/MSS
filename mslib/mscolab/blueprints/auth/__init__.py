@@ -215,9 +215,9 @@ def register_saml_routes():
         """Handle the login process for the user by selected IDP"""
         selected_idp = request.form.get('selectedIdentityProvider')
         sp_config = None
-        for config in setup_saml2_backend.CONFIGURED_IDPS:
-            if selected_idp == config['idp_identity_name']:
-                sp_config = config['idp_data']['saml2client']
+        for config_ in setup_saml2_backend.CONFIGURED_IDPS:
+            if selected_idp == config_['idp_identity_name']:
+                sp_config = config_['idp_data']['saml2client']
                 break
 
         try:
@@ -263,9 +263,9 @@ def register_saml_routes():
     @AUTH_BP.route("/metadata/<idp_identity_name>", methods=['GET'])
     def metadata(idp_identity_name):
         """Return the SAML metadata XML for the requested IDP"""
-        for config in setup_saml2_backend.CONFIGURED_IDPS:
-            if idp_identity_name == config['idp_identity_name']:
-                sp_config = config['idp_data']['saml2client']
+        for config_ in setup_saml2_backend.CONFIGURED_IDPS:
+            if idp_identity_name == config_['idp_identity_name']:
+                sp_config = config_['idp_data']['saml2client']
                 metadata_string = create_metadata_string(
                     None, sp_config.config, 4, None, None, None, None, None
                 ).decode("utf-8")
