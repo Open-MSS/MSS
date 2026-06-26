@@ -80,7 +80,7 @@ def apply_auth(view, enabled, username, password):
 def init_docs_bp(app):
     from mslib.mswms.app import mswms_settings
 
-    enabled = mswms_settings.ENABLE_BASIC_HTTP_AUTHENTICATION
+    enabled = app.config.get("ENABLE_BASIC_HTTP_AUTHENTICATION", False)
 
     view = apply_auth(
         _application_impl,
