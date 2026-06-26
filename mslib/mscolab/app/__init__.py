@@ -211,11 +211,16 @@ def create_app(imprint=None, gdpr=None):
     from mslib.mscolab.blueprints.operation import OPERATION_BP
     from mslib.mscolab.blueprints.user import USER_BP
 
-    APP.register_blueprint(AUTH_BP)
-    APP.register_blueprint(CHAT_BP)
-    APP.register_blueprint(USER_BP)
-    APP.register_blueprint(OPERATION_BP)
-    APP.register_blueprint(DOCS_BP)
+    if AUTH_BP.name not in APP.blueprints:
+        APP.register_blueprint(AUTH_BP)
+    if CHAT_BP.name not in APP.blueprints:
+        APP.register_blueprint(CHAT_BP)
+    if USER_BP.name not in APP.blueprints:
+        APP.register_blueprint(USER_BP)
+    if OPERATION_BP.name not in APP.blueprints:
+        APP.register_blueprint(OPERATION_BP)
+    if DOCS_BP.name not in APP.blueprints:
+        APP.register_blueprint(DOCS_BP)
 
     return APP
 
