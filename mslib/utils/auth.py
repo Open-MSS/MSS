@@ -126,7 +126,7 @@ def send_email(to, subject, template):
         )
         try:
             current_app.mail.send(msg)
-        except IOError:
+        except (IOError, AttributeError):
             logging.error("Can't send email to %s", to)
     else:
         logging.debug("setup user verification by email")
