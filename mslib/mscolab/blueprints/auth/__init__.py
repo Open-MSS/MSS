@@ -29,7 +29,6 @@ import datetime
 import json
 import logging
 import secrets
-from functools import wraps
 
 from flask import Blueprint, request, url_for, render_template, jsonify, flash, redirect, current_app, config
 from flask.wrappers import Response
@@ -38,23 +37,13 @@ from saml2.metadata import create_metadata_string
 
 from mslib.mscolab.auth import check_login, register_user, generate_confirmation_token, create_or_update_idp_user, \
     get_idp_entity_id, confirm_token
+from mslib.mscolab.blueprints.docs import optional_auth
 from mslib.mscolab.conf import setup_saml2_backend
 from mslib.mscolab.forms import ResetPasswordForm, ResetRequestForm
 from mslib.mscolab.models import User
 from mslib.utils.auth import send_email
 
 AUTH_BP = Blueprint('auth', __name__, template_folder='templates')
-
-
-def optional_auth(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if current_app.config.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
-            auth_basic_auth = current_app.extensions['basic_auth']
-            return auth_basic_auth.login_required(f)(*args, **kwargs)
-        return f(*args, **kwargs)
-
-    return decorated
 
 
 @AUTH_BP.route("/status")
