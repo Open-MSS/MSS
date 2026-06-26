@@ -90,17 +90,17 @@ except ImportError as ex:
         allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None
+with APP.app_context():
+    if current_app.config.get("ENABLE_BASIC_HTTP_AUTHENTICATION", False):
+        logging.debug("Enabling basic HTTP authentication. Username and "
+                      "password required to access the service.")
+        import hashlib
 
-if APP.config.get("ENABLE_BASIC_HTTP_AUTHENTICATION", False):
-    logging.debug("Enabling basic HTTP authentication. Username and "
-                  "password required to access the service.")
-    import hashlib
-
-    def authfunc(username, password):
-        for u, p in mswms_auth.allowed_users:
-            if (u == username) and (p == hashlib.md5(password.encode('utf-8')).hexdigest()):
-                return True
-        return False
+        def authfunc(username, password):
+            for u, p in mswms_auth.allowed_users:
+                if (u == username) and (p == hashlib.md5(password.encode('utf-8')).hexdigest()):
+                    return True
+            return False
 
     @auth.verify_password
     def verify_pw(username, password):

@@ -37,9 +37,9 @@ from mslib.mscolab.sockets_manager import _setup_managers
 
 
 APP = create_app(imprint=APP.config['IMPRINT'], gdpr=APP.config['GDPR'])
-CORS(APP, origins=APP.config.get('CORS_ORIGINS', ["*"]))
 auth = HTTPBasicAuth()
 with APP.app_context():
+    CORS(APP, origins=current_app.config.get('CORS_ORIGINS', ["*"]))
     current_app.extensions["basic_auth"] = auth
 
 
@@ -71,11 +71,11 @@ def verify_pw(username, password):
         password = _auth.password
     return authfunc(username, password)
 
-
-if APP.config.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
-    logging.debug("Enabling basic HTTP authentication. Username and "
-                  "password required to access the service.")
-    auth.verify_password(verify_pw)
+with APP.app_context():
+    if current_app.config.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
+        logging.debug("Enabling basic HTTP authentication. Username and "
+                      "password required to access the service.")
+        auth.verify_password(verify_pw)
 
 
 def _initialize_managers(app):
