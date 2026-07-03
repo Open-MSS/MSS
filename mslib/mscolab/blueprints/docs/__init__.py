@@ -25,10 +25,10 @@
 """
 
 import os
-from functools import wraps
 
 from flask import Blueprint, abort, send_from_directory, render_template, url_for, send_file, current_app
 
+from mslib.mscolab.auth import optional_auth
 from mslib.msui.icons import icons
 from mslib.utils.file_exists import file_exists
 from mslib.utils.get_content import get_content
@@ -39,17 +39,6 @@ DOCS_IMG_DIR = os.path.join(DOCS_STATIC_DIR, 'img')
 DOCS_DOCS_DIR = os.path.join(DOCS_STATIC_DIR, 'docs')
 
 DOCS_BP = Blueprint("docs", __name__, template_folder='templates', static_folder='static', static_url_path='/static')
-
-
-def optional_auth(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if current_app.config.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
-            auth_basic_auth = current_app.extensions['basic_auth']
-            return auth_basic_auth.login_required(f)(*args, **kwargs)
-        return f(*args, **kwargs)
-
-    return decorated
 
 
 @DOCS_BP.route('/')

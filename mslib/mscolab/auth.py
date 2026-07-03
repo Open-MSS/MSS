@@ -39,6 +39,17 @@ from mslib.mscolab.conf import setup_saml2_backend
 from mslib.mscolab.models import User
 
 
+def optional_auth(f):
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        if current_app.config.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
+            auth_basic_auth = current_app.extensions['basic_auth']
+            return auth_basic_auth.login_required(f)(*args, **kwargs)
+        return f(*args, **kwargs)
+
+    return decorated
+
+
 def check_login(emailid, password):
     try:
         user = User.query.filter_by(emailid=str(emailid)).first()

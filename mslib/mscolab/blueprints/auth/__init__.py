@@ -37,7 +37,7 @@ from saml2.metadata import create_metadata_string
 
 from mslib.mscolab.auth import check_login, register_user, generate_confirmation_token, create_or_update_idp_user, \
     get_idp_entity_id, confirm_token
-from mslib.mscolab.blueprints.docs import optional_auth
+from mslib.mscolab.auth import optional_auth
 from mslib.mscolab.conf import setup_saml2_backend
 from mslib.mscolab.forms import ResetPasswordForm, ResetRequestForm
 from mslib.mscolab.models import User
