@@ -41,7 +41,6 @@ import mslib
 from flask import url_for
 from flask_sqlalchemy import SQLAlchemy
 
-from mslib.mscolab.blueprints.docs import DOCS_BP
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab import migrations
 from mslib.utils import prefix_route, release_info
@@ -210,6 +209,7 @@ def create_app(imprint=None, gdpr=None):
     from mslib.mscolab.blueprints.chat import CHAT_BP
     from mslib.mscolab.blueprints.operation import OPERATION_BP
     from mslib.mscolab.blueprints.user import USER_BP
+    from mslib.mscolab.blueprints.docs import DOCS_BP
 
     if AUTH_BP.name not in APP.blueprints:
         APP.register_blueprint(AUTH_BP)
