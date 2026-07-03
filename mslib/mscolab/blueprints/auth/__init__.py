@@ -30,7 +30,7 @@ import json
 import logging
 import secrets
 
-from flask import Blueprint, request, url_for, render_template, jsonify, flash, redirect, current_app, config
+from flask import Blueprint, request, url_for, render_template, jsonify, flash, redirect, current_app
 from flask.wrappers import Response
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from saml2.metadata import create_metadata_string
@@ -149,7 +149,7 @@ def register_saml_routes():
             try:
                 outstanding_queries = {}
                 binding = BINDING_HTTP_POST
-                authn_response = config['idp_data']['saml2client'].parse_authn_request_response(
+                authn_response = current_app.config['idp_data']['saml2client'].parse_authn_request_response(
                     request.form["SAMLResponse"], binding, outstanding=outstanding_queries
                 )
 
@@ -178,7 +178,7 @@ def register_saml_routes():
                         return render_template('auth/errors/403.html'), 403
 
                 if email is not None and username is not None:
-                    idp_identity_name = config['idp_identity_name']
+                    idp_identity_name = current_app.config['idp_identity_name']
                     idp_user_db_state = create_or_update_idp_user(email,
                                                                   username, token, idp_identity_name)
                     if idp_user_db_state:
