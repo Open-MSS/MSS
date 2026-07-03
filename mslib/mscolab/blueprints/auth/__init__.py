@@ -196,7 +196,7 @@ def register_saml_routes():
             for assertion_consumer_endpoint in idp_config['idp_data']['assertion_consumer_endpoints']:
                 # Dynamically add the route for the current endpoint
                 AUTH_BP.add_url_rule(f'/{assertion_consumer_endpoint}/', assertion_consumer_endpoint,
-                                     create_acs_post_handler(idp_config), methods=['POST'])
+                                     create_acs_post_handler(), methods=['POST'])
         except (NameError, AttributeError, KeyError) as ex:
             logging.warning("USE_SAML2 is %s, Failure is: %s", current_app.config['USE_SAML2'], ex)
 
