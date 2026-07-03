@@ -30,7 +30,7 @@ import mslib
 
 from flask import Flask, url_for
 from xstatic.main import XStatic
-from mslib.mswms.blueprints.docs import DOCS_BP, init_docs_bp
+from mslib.mswms.blueprints.docs import DOCS_BP, init_docs_bp, build_auth_backend
 from mslib.mswms.blueprints.gallery import GALLERY_BP
 
 from mslib.mswms.gallery_builder import STATIC_LOCATION
@@ -138,7 +138,13 @@ def create_app(name="", imprint=None, gdpr=None):
 
     APP.config.from_object(config)
 
-    init_docs_bp(APP)
+    allowed_users = getattr(APP, "allowed_users", None)
+    auth_backend = build_auth_backend(
+        enabled=APP.config.get("ENABLE_BASIC_HTTP_AUTHENTICATION", False),
+        allowed_users=allowed_users
+    )
+
+    init_docs_bp(APP, auth_backend)
 
     APP.jinja_env.globals.update(file_exists=file_exists)
     APP.jinja_env.globals["imprint"] = imprint_file
