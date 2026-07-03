@@ -55,11 +55,10 @@ class Test_SatelliteDockWidget:
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.critical")
     def test_load_no_file(self, mockbox):
-        self.window.leFile.setText(".")
         QtTest.QTest.mouseClick(self.window.btLoadFile, QtCore.Qt.LeftButton)
         assert self.window.cbSatelliteOverpasses.count() == 0
-        mockbox.assert_called_once()
-        args = mockbox.call_args[0]
-        assert args[0] == self.window
-        assert args[1] == 'Satellite Overpass Tool'
-        assert "<class 'IsADirectoryError'>" in args[2]
+        mockbox.assert_called_once_with(
+            self.window,
+            'Satellite Overpass Tool',
+            "ERROR:\n<class 'IsADirectoryError'>\n[Errno 21] Is a directory: '.'"
+        )
