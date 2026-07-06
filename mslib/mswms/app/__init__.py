@@ -86,6 +86,23 @@ except ImportError as ex:
     logging.warning(u"Couldn't import mswms_settings (ImportError:'%s'), using dummy config.", ex)
 
 message, update = release_info.check_for_new_release()
+
+
+def _load_allowed_users():
+    """Return the (username, md5-hex-password) pairs for HTTP basic auth.
+
+    Sourced from the operator-provided ``mswms_auth`` module; falls back to an
+    empty list (auth then rejects everyone -- fail closed) when it is absent.
+    """
+    try:
+        import mswms_auth
+        return list(mswms_auth.allowed_users)
+    except (ImportError, AttributeError) as ex:
+        logging.warning("Couldn't import mswms_auth.allowed_users (%s); "
+                        "basic auth will reject all users.", ex)
+        return []
+
+
 if update:
     logging.warning(message)
 
@@ -138,7 +155,7 @@ def create_app(name="", imprint=None, gdpr=None):
 
     APP.config.from_object(mswms_settings)
 
-    allowed_users = getattr(APP, "allowed_users", None)
+    allowed_users = _load_allowed_users()
     auth_backend = build_auth_backend(
         enabled=APP.config.get("ENABLE_BASIC_HTTP_AUTHENTICATION", False),
         allowed_users=allowed_users
