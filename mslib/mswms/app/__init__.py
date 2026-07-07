@@ -77,6 +77,11 @@ class default_mswms_settings:
     __file__ = None
 
 
+message, update = release_info.check_for_new_release()
+
+if update:
+    logging.warning(message)
+
 mswms_settings = default_mswms_settings()
 try:
     import mswms_settings as user_settings
@@ -84,8 +89,6 @@ try:
     mswms_settings.__dict__.update(user_settings.__dict__)
 except ImportError as ex:
     logging.warning(u"Couldn't import mswms_settings (ImportError:'%s'), using dummy config.", ex)
-
-message, update = release_info.check_for_new_release()
 
 
 def _load_allowed_users():
@@ -101,10 +104,6 @@ def _load_allowed_users():
         logging.warning("Couldn't import mswms_auth.allowed_users (%s); "
                         "basic auth will reject all users.", ex)
         return []
-
-
-if update:
-    logging.warning(message)
 
 
 # in memory database for testing
