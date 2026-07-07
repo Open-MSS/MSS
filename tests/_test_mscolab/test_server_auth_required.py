@@ -74,5 +74,5 @@ class Test_Server_Auth_Not_Valid:
     def test_get_auth_token(self):
         with self.app.test_client() as test_client:
             response = test_client.post('/token', data={"email": "test@test.io",
-                                                           "password": "test"})
+                                                        "password": "test"})
         assert response.status_code == 401
