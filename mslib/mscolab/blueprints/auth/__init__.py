@@ -137,7 +137,7 @@ def init_saml(state):
 def register_saml_routes():
     """All SAML routes are registered here safely."""
 
-    def create_acs_post_handler():
+    def create_acs_post_handler(idp_config):
         """
         Create acs_post_handler function for the given idp_config.
         """
@@ -149,7 +149,7 @@ def register_saml_routes():
             try:
                 outstanding_queries = {}
                 binding = BINDING_HTTP_POST
-                authn_response = current_app.config['idp_data']['saml2client'].parse_authn_request_response(
+                authn_response = idp_config['idp_data']['saml2client'].parse_authn_request_response(
                     request.form["SAMLResponse"], binding, outstanding=outstanding_queries
                 )
 
@@ -178,7 +178,7 @@ def register_saml_routes():
                         return render_template('auth/errors/403.html'), 403
 
                 if email is not None and username is not None:
-                    idp_identity_name = current_app.config['idp_identity_name']
+                    idp_identity_name = idp_config['idp_identity_name']
                     idp_user_db_state = create_or_update_idp_user(email,
                                                                   username, token, idp_identity_name)
                     if idp_user_db_state:
@@ -196,7 +196,7 @@ def register_saml_routes():
             for assertion_consumer_endpoint in idp_config['idp_data']['assertion_consumer_endpoints']:
                 # Dynamically add the route for the current endpoint
                 AUTH_BP.add_url_rule(f'/{assertion_consumer_endpoint}/', assertion_consumer_endpoint,
-                                     create_acs_post_handler(), methods=['POST'])
+                                     create_acs_post_handler(idp_config), methods=['POST'])
         except (NameError, AttributeError, KeyError) as ex:
             logging.warning("USE_SAML2 is %s, Failure is: %s", current_app.config['USE_SAML2'], ex)
 
