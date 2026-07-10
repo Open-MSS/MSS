@@ -113,6 +113,11 @@ pyautogui = "*"
 pyscreeze = "*"
 python-mss = "*"
 
+[feature.tutorials.target.linux-64.dependencies]
+# Clipboard CLI so type_localized can paste layout-independently on X11
+# (Wayland users additionally need wl-clipboard).
+xclip = "*"
+
 [feature.docs]
 platforms = ["win-64", "linux-64", "osx-64"]
 

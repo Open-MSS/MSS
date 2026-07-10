@@ -414,15 +414,96 @@ def load_kml_file(pic_name, file_path, exception_message):
         raise
 
 
+def _macos_keystroke(text):
+    """
+    Type *text* on macOS via AppleScript ``keystroke``.
+
+    Honours the active keyboard layout, unlike pag.typewrite which sends US key
+    codes (so '_' / '-' and similar get mangled on non-US layouts). Requires
+    Accessibility + Automation permission for the launching app.
+    """
+    escaped = text.replace('\\', '\\\\').replace('"', '\\"')
+    subprocess.run(['osascript', '-e',
+                    f'tell application "System Events" to keystroke "{escaped}"'], check=True)
+
+
+def _linux_clipboard_copy(text):
+    """
+    Copy *text* to the Linux clipboard via the first available CLI tool.
+
+    Tries ``wl-copy`` (Wayland), then ``xclip`` and ``xsel`` (X11). Returns True
+    if a tool succeeded, False if none is installed -- letting the caller fall
+    back to typewrite. Each tool reads the text from stdin and (xclip/wl-copy)
+    forks to keep owning the selection, so the paste works afterwards.
+    """
+    candidates = []
+    if os.environ.get('WAYLAND_DISPLAY'):
+        candidates.append(['wl-copy'])
+    candidates += [['xclip', '-selection', 'clipboard'], ['xsel', '--clipboard', '--input']]
+    for cmd in candidates:
+        try:
+            subprocess.run(cmd, input=text, text=True, check=True)
+            return True
+        except (FileNotFoundError, OSError, subprocess.CalledProcessError):
+            continue
+    return False
+
+
+def type_localized(text, key=ENTER, clear=False, interval=0.1):
+    """
+    Type *text* into the focused field independent of the keyboard layout.
+
+    pag.write/typewrite sends US key codes, which mangle characters such as '_'
+    or '-' on non-US layouts -- so a typed filename can come out wrong. macOS
+    uses AppleScript keystroke (honours the active layout); Windows and Linux
+    paste via the clipboard (Ctrl+V). On Linux this needs a clipboard CLI
+    (``wl-copy``, ``xclip`` or ``xsel``); when none is installed it falls back to
+    typewrite (fine for CI/Xvfb, which uses a US layout).
+
+    :param text: the text to type.
+    :param key: key to press afterwards (default ENTER); None to skip.
+    :param clear: select existing content (Ctrl/Cmd+A) before typing.
+    :param interval: per-character delay for the typewrite fallback.
+    """
+    if clear:
+        pag.hotkey('command' if sys.platform == 'darwin' else CTRL, 'a')
+        pag.sleep(0.5)
+    if sys.platform == 'darwin':
+        _macos_keystroke(text)
+    elif sys.platform == 'win32':
+        subprocess.run(['clip'], input=text, text=True, check=False)
+        pag.sleep(0.5)
+        pag.hotkey(CTRL, 'v')
+    elif _linux_clipboard_copy(text):
+        pag.sleep(0.5)
+        pag.hotkey(CTRL, 'v')
+    else:
+        pag.typewrite(text, interval=interval)
+    pag.sleep(1)
+    if key is not None:
+        pag.press(key)
+
+
 def type_path(file_path, key=ENTER, clear=False):
+    """
+    Enter a filesystem path into the focused field or file dialog, independent
+    of the keyboard layout.
+
+    macOS uses the native "Go to Folder" sheet (see macos_enter_path_in_dialog);
+    Windows and Linux type the path via type_localized. On Windows the path is
+    first normalised to backslashes, which the native dialogs require (and which
+    pyautogui cannot type on non-US layouts -- type_localized pastes it via the
+    clipboard).
+
+    :param file_path: the path to enter.
+    :param key: key to press afterwards (default ENTER); None to skip.
+    :param clear: select existing content before entering the path.
+    """
     if sys.platform == 'darwin':
         macos_enter_path_in_dialog(file_path)
-    elif sys.platform == 'win32':
-        win32_enter_path_in_dialog(file_path, key=key, clear=clear)
     else:
-        pag.typewrite(file_path, interval=0.1)
-        pag.sleep(1)
-        pag.press(key)
+        path = os.path.normpath(file_path) if sys.platform == 'win32' else file_path
+        type_localized(path, key=key, clear=clear)
 
 
 def macos_enter_path_in_dialog(file_path):
@@ -442,50 +523,19 @@ def macos_enter_path_in_dialog(file_path):
     (System Settings > Privacy & Security > Automation); without it macOS
     rejects the keystrokes with osascript.
     """
-    import subprocess
-
     def osa(applescript):
         subprocess.run(['osascript', '-e', applescript], check=True)
 
-    escaped = file_path.replace('\\', '\\\\').replace('"', '\\"')
     # open the "Go to Folder" sheet, type the path, then confirm twice
     # (first Return accepts "Go to Folder", second accepts the open panel).
     osa('tell application "System Events" to keystroke "g" using {command down, shift down}')
     pag.sleep(2.5)  # wait for sheet to fully open
-    osa(f'tell application "System Events" to keystroke "{escaped}"')
+    _macos_keystroke(file_path)
     pag.sleep(0.8)
     osa('tell application "System Events" to keystroke return')
     pag.sleep(0.8)
     osa('tell application "System Events" to keystroke return')
     pag.sleep(1)
-
-
-def win32_enter_path_in_dialog(path, key=ENTER, clear=False):
-    """
-    Enter a filesystem path into the focused field or file dialog.
-
-    On Windows the path is pasted via the clipboard instead of typed: native
-    open/save dialogs reject forward-slash paths and require backslashes, but
-    pyautogui cannot type a backslash on non-US keyboard layouts (it is an AltGr
-    combination), so pasting is the only layout-independent option.
-
-    :param path: The filesystem path to enter.
-    :param key: Key to press afterwards (default ENTER); pass None to skip.
-    :param clear: Select existing content (Ctrl+A) before entering the path.
-    """
-    # Normalise to the OS separator: paths built with os.path.join(root, 'a/b/c')
-    # mix backslashes and forward slashes on Windows (e.g. ...MSS\docs/samples/kml\
-    # folder.kml), which the native dialog cannot resolve, so it never closes.
-    path = os.path.normpath(path)
-    if clear:
-        pag.hotkey(CTRL, 'a')
-        pag.sleep(1)
-        subprocess.run('clip', input=path, text=True, shell=True, check=False)
-        pag.sleep(1)
-        pag.hotkey(CTRL, 'v')
-    pag.sleep(1)
-    if key is not None:
-        pag.press(key)
 
 
 def change_color(pic_name, exception_message, actions, interval=2, sleep_time=2):
@@ -578,15 +628,17 @@ def panning(pic_name, exception_message, moveRel=(400, 400), dragRel=(-100, -50)
 
 def type_and_key(value, interval=0.1, key=ENTER):
     """
-    Type and Enter method
+    Replace the focused field's content with *value*, then press *key*.
 
-    This method types the given value and then presses the Enter key on the keyboard.
+    A canonical dot-decimal numeric string (e.g. '90.00') is reformatted to the
+    current locale's decimal separator first (e.g. '90,00' under a German/French
+    locale); non-numeric strings are passed through. The actual typing is
+    delegated to type_localized, so it clears the field (Cmd+A on macOS, Ctrl+A
+    elsewhere) and enters the text independent of the keyboard layout.
 
-    :param value (str): The value to be typed. A canonical dot-decimal numeric
-        string (e.g. '90.00') is reformatted to the current locale's decimal
-        separator before typing (e.g. '90,00' under a German/French locale).
-        Non-numeric strings are typed unchanged.
-    :param interval (float, optional): The interval between typing each character. Defaults to 0.3 seconds.
+    :param value: the value to type (locale-formatted if numeric).
+    :param interval: per-character delay for the Linux typewrite fallback.
+    :param key: key to press afterwards (default ENTER).
     """
     try:
         # preserve the number of decimal places from the canonical string
@@ -594,11 +646,7 @@ def type_and_key(value, interval=0.1, key=ENTER):
         value = QLocale().toString(float(value), 'f', decimals)
     except (ValueError, TypeError, AttributeError):
         pass
-    pag.hotkey(CTRL, 'a')
-    pag.sleep(1)
-    pag.typewrite(value, interval=interval)
-    pag.sleep(1)
-    pag.press(key)
+    type_localized(value, key=key, clear=True, interval=interval)
 
 
 def move_window(os_screen_region, x_drag_rel, y_drag_rel, x_mouse_down_offset=100):
