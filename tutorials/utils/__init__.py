@@ -76,12 +76,7 @@ def locate_center_on_screen(pic, region=None, confidence=None):
       there; None means an exact match.
     :return: The (x, y) center in logical points, or None if not found.
     """
-    kwargs = {}
-    if region is not None:
-        kwargs['region'] = region
-    if confidence is not None:
-        kwargs['confidence'] = confidence
-    location = pag.locateCenterOnScreen(pic, **kwargs)
+    location = pag.locateCenterOnScreen(pic, region=region, confidence=confidence)
     if location is None:
         return None
     scale = screen_scale()
