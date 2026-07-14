@@ -30,7 +30,6 @@ from PyQt5.QtWidgets import QDialog
 from mslib.msui.qt5 import ui_operation_archive as ui_opar
 from mslib.utils.config import config_loader
 from mslib.utils.qt import show_popup
-from mslib.utils.verify_user_token import verify_user_token as _verify_user_token
 
 
 class MSColab_OperationArchiveBrowser(QDialog, ui_opar.Ui_OperationArchiveBrowser):
@@ -55,24 +54,20 @@ class MSColab_OperationArchiveBrowser(QDialog, ui_opar.Ui_OperationArchiveBrowse
             self.pbUnarchiveOperation.setEnabled(False)
 
     def unarchive_operation(self):
-        if _verify_user_token(self.mscolab.mscolab_server_url, self.mscolab.token):
-            logging.debug('unarchive_operation')
-            try:
-                res = self.mscolab.conn.request_post(
-                    "update_operation",
-                    {"op_id": self.archived_op_id,
-                     "attribute": "active",
-                     "value": "True"}, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-            except requests.exceptions.RequestException as e:
-                logging.debug(e)
-                show_popup(self.parent, "Error", "Some error occurred! Could not unarchive operation.")
-                self.mscolab.logout()
-            else:
-                if res.text == "True":
-                    self.mscolab.reload_operations()
-                else:
-                    show_popup(self.parent, "Error", "Session expired, new login required")
-                    self.mscolab.logout()
-        else:
-            show_popup(self.parent, "Error", "Your Connection is expired. New Login required!")
+        logging.debug('unarchive_operation')
+        try:
+            res = self.mscolab.conn.request_post(
+                "update_operation",
+                {"op_id": self.archived_op_id,
+                 "attribute": "active",
+                 "value": "True"}, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        except requests.exceptions.RequestException as e:
+            logging.debug(e)
+            show_popup(self.parent, "Error", "Some error occurred! Could not unarchive operation.")
             self.mscolab.logout()
+        else:
+            if res.text == "True":
+                self.mscolab.reload_operations()
+            else:
+                show_popup(self.parent, "Error", "Session expired, new login required")
+                self.mscolab.logout()

@@ -31,7 +31,6 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
 from mslib.msui import flighttrack as ft
 import mslib.msui.msui_mainwindow as msui_mainwindow
-from mslib.utils.verify_user_token import verify_user_token
 from mslib.utils.qt import Worker
 from mslib.utils.config import config_loader
 from urllib.parse import urljoin
@@ -811,16 +810,15 @@ class MultipleFlightpathOperations:
         return operations
 
     def request_wps_from_server(self, op_id):
-        if verify_user_token(self.mscolab_server_url, self.token):
-            data = {
-                "token": self.token,
-                "op_id": op_id
-            }
-            url = urljoin(self.mscolab_server_url, "get_operation_by_id")
-            r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-            if r.text != "False":
-                xml_content = json.loads(r.text)["content"]
-                return xml_content
+        data = {
+            "token": self.token,
+            "op_id": op_id
+        }
+        url = urljoin(self.mscolab_server_url, "get_operation_by_id")
+        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        if r.text != "False":
+            xml_content = json.loads(r.text)["content"]
+            return xml_content
 
     def load_wps_from_server(self, op_id):
         xml_content = self.request_wps_from_server(op_id)

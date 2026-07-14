@@ -56,9 +56,6 @@ class MSUIDefaultConfig:
     Do not change any value for good reasons.
     Your values can be set in your personal msui_settings.json file
     """
-    # this skips the verification of the user token on each mscolab request
-    mscolab_skip_verify_user_token = True
-
     # Default for general filepicker. Pick "default", "qt"
     filepicker_default = "default"
 
@@ -314,7 +311,6 @@ class MSUIDefaultConfig:
 
     # Fixed key/value pair options
     key_value_options = [
-        'mscolab_skip_verify_user_token',
         'filepicker_default',
         'mss_dir',
         'data_dir',

@@ -60,7 +60,6 @@ from mslib.utils import config as conf
 from mslib.utils.get_projection_params import get_projection_params
 from mslib.utils.auth import get_auth_from_url_and_name
 from mslib.utils.loggerdef import configure_mpl_logger
-from mslib.utils.verify_user_token import verify_user_token
 
 
 TEXT_CONFIG = {
@@ -147,48 +146,43 @@ def get_xml_data(msc_url, token, op_id):
         str: The content of the XML data retrieved from the server
 
     """
-    if verify_user_token(msc_url, token):
-        data = {
-            "token": token,
-            "op_id": op_id
-        }
-        url = urljoin(msc_url, "get_operation_by_id")
-        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-        if r.text != "False":
-            xml_content = json.loads(r.text)["content"]
-            return xml_content
+    data = {
+        "token": token,
+        "op_id": op_id
+    }
+    url = urljoin(msc_url, "get_operation_by_id")
+    r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+    if r.text != "False":
+        xml_content = json.loads(r.text)["content"]
+        return xml_content
 
 
 def get_op_id(msc_url, token, op_name):
     """
-    gets the operation id of the given operation name
+    gets the operation's id of the given operation name
 
     Parameters:
         :msc_url: The URL of the MSColab server
         :token: The user token for authentication
-        :op_name:: The name of the operation to retrieve op_id for
+        :op_name: The name of the operation to retrieve op_id for
 
     Returns:
         :op_id: The op_id of the operation with the specified name
     """
     logging.debug('get_recent_op_id')
-    if verify_user_token(msc_url, token):
-        """
-        get most recent operation's op_id
-        """
-        skip_archived = config_loader(dataset="MSCOLAB_skip_archived_operations")
-        data = {
-            "token": token,
-            "skip_archived": skip_archived
-        }
-        url = urljoin(msc_url, "operations")
-        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-        if r.text != "False":
-            _json = json.loads(r.text)
-            operations = _json["operations"]
-            for op in operations:
-                if op["path"] == op_name:
-                    return op["op_id"]
+    skip_archived = config_loader(dataset="MSCOLAB_skip_archived_operations")
+    data = {
+        "token": token,
+        "skip_archived": skip_archived
+    }
+    url = urljoin(msc_url, "operations")
+    r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+    if r.text != "False":
+        _json = json.loads(r.text)
+        operations = _json["operations"]
+        for op in operations:
+            if op["path"] == op_name:
+                return op["op_id"]
 
 
 class Plotting:
