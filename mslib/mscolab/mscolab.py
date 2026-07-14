@@ -71,6 +71,19 @@ def confirm_action(confirmation_prompt, assume_yes=False):
 
 
 def handle_db_reset(verbose=True):
+    import sqlalchemy as _sa
+    from mslib.mscolab.models import db
+    # Close all pooled connections before DDL migrations so SQLite can acquire
+    # the exclusive lock required for batch table operations (critical on Windows).
+    db.session.remove()
+    db.engine.dispose()
+    # Drop any orphaned Alembic batch-mode temp tables (e.g. _alembic_tmp_users)
+    # left behind by an interrupted migration; they prevent the next upgrade() run.
+    with db.engine.connect() as _conn:
+        for _tname in _sa.inspect(db.engine).get_table_names():
+            if _tname.startswith("_alembic_tmp_"):
+                _conn.execute(_sa.text(f'DROP TABLE IF EXISTS "{_tname}"'))
+        _conn.commit()
     alembic_loggers = (logging.getLogger("alembic"), logging.getLogger("alembic.runtime.migration"))
     previous_levels = None
     if not verbose:
@@ -107,6 +120,18 @@ def handle_db_reset(verbose=True):
         if previous_levels is not None:
             for logger, level in zip(alembic_loggers, previous_levels):
                 logger.setLevel(level)
+    # Release the connections opened during migration, mirroring the dispose() at the
+    # start of this function. This frees the SQLite write lock so another process
+    # sharing the same database file (e.g. a subprocess server) can acquire it.
+    db.engine.dispose()
+    # In-memory socket bookkeeping references database rows (user ids, operation ids)
+    # that no longer exist after the reset, so drop it as part of the reset. When the
+    # server module has not been initialized (e.g. a CLI `db --reset`) there is no
+    # manager to clear.
+    from mslib.mscolab.sockets_manager import socketio
+    sm = getattr(socketio, "sm", None)
+    if sm is not None:
+        sm.clear_state()
     if verbose is True:
         print("Database has been reset successfully!")
 

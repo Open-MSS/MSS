@@ -60,6 +60,15 @@ class SocketsManager:
     def handle_connect(self):
         logging.debug(request.sid)
 
+    def clear_state(self):
+        """Drop all in-memory socket bookkeeping.
+
+        Called by handle_db_reset so a database reset also discards these registries,
+        which would otherwise reference user/operation rows that no longer exist.
+        """
+        self.sockets[:] = []
+        self.active_users_per_operation.clear()
+
     def handle_operation_selected(self, json_config):
         logging.debug("Operation selected: {}".format(json_config))
         token = json_config['token']
