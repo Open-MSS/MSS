@@ -191,6 +191,16 @@ class WMSServer:
             else:
                 self.register_lsec_layer(layer[1], layer_class=layer[0])
 
+    def close_datasets(self):
+        """
+        Close all open NetCDF datasets held by the section drivers, releasing their
+        file handles. Important on Windows, where an open dataset keeps the
+        underlying file locked.
+        """
+        for drivers in (self.hsec_drivers, self.vsec_drivers, self.lsec_drivers):
+            for driver in drivers.values():
+                driver.close()
+
     def generate_gallery(self, create=False, clear=False, generate_code=False, sphinx=False, plot_list=None,
                          all_plots=False, url_prefix="", levels="", itimes="", vtimes="", simple_naming=False,
                          plot_types=None):
