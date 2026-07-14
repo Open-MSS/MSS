@@ -30,6 +30,7 @@ from flask import request
 from flask_socketio import SocketIO, join_room
 
 from mslib.mscolab.chat_manager import ChatManager
+from mslib.mscolab.events import SocketEvents
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.models import MessageType, Permission, User
 from mslib.mscolab.utils import get_message_dict
@@ -77,7 +78,7 @@ class SocketsManager:
 
         # Emit the updated count to all users
         active_count = len(self.active_users_per_operation[op_id])
-        socketio.emit('active-user-update', {'op_id': op_id, 'count': active_count})
+        socketio.emit(SocketEvents.ACTIVE_USER_UPDATE, {'op_id': op_id, 'count': active_count})
 
     def update_operation_list(self, json_config):
         """
@@ -88,7 +89,7 @@ class SocketsManager:
         user = User.verify_auth_token(token)
         if user is None:
             return
-        socketio.emit('operation-list-update')
+        socketio.emit(SocketEvents.UPDATE_OPERATION_LIST)
 
     def join_creator_to_operation(self, json_config):
         """
@@ -161,11 +162,11 @@ class SocketsManager:
                 logging.debug(f"Updated {op_id}: {active_count} active users")
                 if user_ids:
                     # Emit update if there are still active users
-                    socketio.emit('active-user-update', {'op_id': op_id, 'count': active_count})
+                    socketio.emit(SocketEvents.ACTIVE_USER_UPDATE, {'op_id': op_id, 'count': active_count})
                 else:
                     # If no users left, delete the operation key
                     del self.active_users_per_operation[op_id]
-                    socketio.emit('active-user-update', {'op_id': op_id, 'count': 0})
+                    socketio.emit(SocketEvents.ACTIVE_USER_UPDATE, {'op_id': op_id, 'count': 0})
 
     def remove_active_user_id_from_specific_operation(self, user_id, op_id):
         """
@@ -179,11 +180,11 @@ class SocketsManager:
 
                 if self.active_users_per_operation[op_id]:
                     # Emit update if there are still active users
-                    socketio.emit('active-user-update', {'op_id': op_id, 'count': active_count})
+                    socketio.emit(SocketEvents.ACTIVE_USER_UPDATE, {'op_id': op_id, 'count': active_count})
                 else:
                     # If no users left, delete the operation key
                     del self.active_users_per_operation[op_id]
-                    socketio.emit('active-user-update', {'op_id': op_id, 'count': 0})
+                    socketio.emit(SocketEvents.ACTIVE_USER_UPDATE, {'op_id': op_id, 'count': 0})
 
     def handle_message(self, _json):
         """
@@ -198,9 +199,9 @@ class SocketsManager:
                 new_message = self.cm.add_message(user, _json['message_text'], str(op_id), reply_id=reply_id)
                 new_message_dict = get_message_dict(new_message)
                 if reply_id == -1:
-                    socketio.emit('chat-message-client', json.dumps(new_message_dict))
+                    socketio.emit(SocketEvents.CHAT_MESSAGE_CLIENT, json.dumps(new_message_dict))
                 else:
-                    socketio.emit('chat-message-reply-client', json.dumps(new_message_dict))
+                    socketio.emit(SocketEvents.CHAT_MESSAGE_REPLY_CLIENT, json.dumps(new_message_dict))
 
     def handle_message_edit(self, socket_message):
         message_id = socket_message["message_id"]
@@ -211,7 +212,7 @@ class SocketsManager:
             perm = self.permission_check_emit(user.id, int(op_id))
             if perm:
                 self.cm.edit_message(message_id, new_message_text)
-                socketio.emit('edit-message-client', json.dumps({
+                socketio.emit(SocketEvents.EDIT_MESSAGE_CLIENT, json.dumps({
                     "message_id": message_id,
                     "new_message_text": new_message_text
                 }))
@@ -224,7 +225,7 @@ class SocketsManager:
             perm = self.permission_check_emit(user.id, int(op_id))
             if perm:
                 self.cm.delete_message(message_id)
-                socketio.emit('delete-message-client', json.dumps({"message_id": message_id}))
+                socketio.emit(SocketEvents.DELETE_MESSAGE_CLIENT, json.dumps({"message_id": message_id}))
 
     def permission_check_emit(self, u_id, op_id):
         """
@@ -273,21 +274,21 @@ class SocketsManager:
                 message_ = f"[service message] **{user.username}** saved changes. {messageText}"
                 new_message = self.cm.add_message(user, message_, str(op_id), message_type=MessageType.SYSTEM_MESSAGE)
                 new_message_dict = get_message_dict(new_message)
-                socketio.emit('chat-message-client', json.dumps(new_message_dict))
+                socketio.emit(SocketEvents.CHAT_MESSAGE_CLIENT, json.dumps(new_message_dict))
                 # emit file-changed event to trigger reload of flight track
-                socketio.emit('file-changed', json.dumps({"op_id": op_id, "u_id": user.id}))
+                socketio.emit(SocketEvents.FILE_CHANGED, json.dumps({"op_id": op_id, "u_id": user.id}))
         else:
             logging.debug("Auth Token expired!")
 
     def emit_file_change(self, op_id):
-        socketio.emit('file-changed', json.dumps({"op_id": op_id}))
+        socketio.emit(SocketEvents.FILE_CHANGED, json.dumps({"op_id": op_id}))
 
     def emit_new_permission(self, u_id, op_id):
         """
         to refresh operation list of u_id
         and to refresh collaborators' list
         """
-        socketio.emit('new-permission', json.dumps({"op_id": op_id, "u_id": u_id}))
+        socketio.emit(SocketEvents.NEW_PERMISSION, json.dumps({"op_id": op_id, "u_id": u_id}))
 
     def emit_update_permission(self, u_id, op_id, access_level=None):
         """
@@ -298,18 +299,17 @@ class SocketsManager:
             access_level = perm.access_level
             logging.debug("access_level by database query")
 
-        socketio.emit('update-permission', json.dumps({"op_id": op_id,
-                                                       "u_id": u_id,
-                                                       "access_level": access_level}))
+        socketio.emit(SocketEvents.UPDATE_PERMISSION, json.dumps({"op_id": op_id, "u_id": u_id,
+                                                                  "access_level": access_level}))
 
     def emit_revoke_permission(self, u_id, op_id):
-        socketio.emit("revoke-permission", json.dumps({"op_id": op_id, "u_id": u_id}))
+        socketio.emit(SocketEvents.REVOKE_PERMISSION, json.dumps({"op_id": op_id, "u_id": u_id}))
 
     def emit_operation_permissions_updated(self, u_id, op_id):
-        socketio.emit("operation-permissions-updated", json.dumps({"op_id": op_id, "u_id": u_id}))
+        socketio.emit(SocketEvents.OPERATION_PERMISSIONS_UPDATED, json.dumps({"op_id": op_id, "u_id": u_id}))
 
     def emit_operation_delete(self, op_id):
-        socketio.emit("operation-deleted", json.dumps({"op_id": op_id}))
+        socketio.emit(SocketEvents.OPERATION_DELETED, json.dumps({"op_id": op_id}))
 
 
 def _setup_managers(app):
@@ -324,17 +324,17 @@ def _setup_managers(app):
     fm = FileManager(app.config["OPERATIONS_DATA"])
     sm = SocketsManager(cm, fm)
     # sockets related handlers
-    socketio.on_event('connect', sm.handle_connect)
-    socketio.on_event('start', sm.handle_start_event)
-    socketio.on_event('disconnect', sm.handle_disconnect)
-    socketio.on_event('chat-message', sm.handle_message)
-    socketio.on_event('edit-message', sm.handle_message_edit)
-    socketio.on_event('delete-message', sm.handle_message_delete)
-    socketio.on_event('file-save', sm.handle_file_save)
-    socketio.on_event('add-user-to-operation', sm.join_creator_to_operation)
-    socketio.on_event('update-operation-list', sm.update_operation_list)
+    socketio.on_event(SocketEvents.CONNECT, sm.handle_connect)
+    socketio.on_event(SocketEvents.START, sm.handle_start_event)
+    socketio.on_event(SocketEvents.DISCONNECT, sm.handle_disconnect)
+    socketio.on_event(SocketEvents.CHAT_MESSAGE, sm.handle_message)
+    socketio.on_event(SocketEvents.EDIT_MESSAGE, sm.handle_message_edit)
+    socketio.on_event(SocketEvents.DELETE_MESSAGE, sm.handle_message_delete)
+    socketio.on_event(SocketEvents.FILE_SAVE, sm.handle_file_save)
+    socketio.on_event(SocketEvents.ADD_USER_TO_OPERATION, sm.join_creator_to_operation)
+    socketio.on_event(SocketEvents.UPDATE_OPERATION_LIST, sm.update_operation_list)
     # Register the 'operation-selected' event to update active user tracking when an operation is selected
-    socketio.on_event('operation-selected', sm.handle_operation_selected)
+    socketio.on_event(SocketEvents.OPERATION_SELECTED, sm.handle_operation_selected)
 
     socketio.sm = sm
     return socketio, cm, fm

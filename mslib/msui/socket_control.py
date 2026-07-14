@@ -32,6 +32,7 @@ import requests
 from urllib.parse import urljoin
 
 from PyQt5 import QtCore
+from mslib.mscolab.events import SocketEvents
 from mslib.msui.mscolab_exceptions import MSColabConnectionError
 from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.verify_user_token import verify_user_token
@@ -65,30 +66,20 @@ class ConnectionManager(QtCore.QObject):
         self.sio.connect(self.mscolab_server_url)
         logging.debug("Transport Layer: %s", self.sio.transport())
 
-        self.sio.on('file-changed', handler=self.handle_file_change)
-        # on chat message receive
-        self.sio.on('chat-message-client', handler=self.handle_incoming_message)
-        self.sio.on('chat-message-reply-client', handler=self.handle_incoming_message_reply)
-        # on message edit
-        self.sio.on('edit-message-client', handler=self.handle_message_edited)
-        # on message delete
-        self.sio.on('delete-message-client', handler=self.handle_message_deleted)
-        # on new permission
-        self.sio.on('new-permission', handler=self.handle_new_permission)
-        # on update of permission
-        self.sio.on('update-permission', handler=self.handle_update_permission)
-        # on revoking operation permission
-        self.sio.on('revoke-permission', handler=self.handle_revoke_permission)
-        # on updating operation permissions in admin window
-        self.sio.on('operation-permissions-updated', handler=self.handle_operation_permissions_updated)
-        # On Operation Delete
-        self.sio.on('operation-deleted', handler=self.handle_operation_deleted)
-        # On New Operation
-        self.sio.on('operation-list-update', handler=self.handle_operation_list_update)
-        # On active user update
-        self.sio.on('active-user-update', handler=self.handle_active_user_update)
+        self.sio.on(SocketEvents.FILE_CHANGED, handler=self.handle_file_change)
+        self.sio.on(SocketEvents.CHAT_MESSAGE_CLIENT, handler=self.handle_incoming_message)
+        self.sio.on(SocketEvents.CHAT_MESSAGE_REPLY_CLIENT, handler=self.handle_incoming_message_reply)
+        self.sio.on(SocketEvents.EDIT_MESSAGE_CLIENT, handler=self.handle_message_edited)
+        self.sio.on(SocketEvents.DELETE_MESSAGE_CLIENT, handler=self.handle_message_deleted)
+        self.sio.on(SocketEvents.NEW_PERMISSION, handler=self.handle_new_permission)
+        self.sio.on(SocketEvents.UPDATE_PERMISSION, handler=self.handle_update_permission)
+        self.sio.on(SocketEvents.REVOKE_PERMISSION, handler=self.handle_revoke_permission)
+        self.sio.on(SocketEvents.OPERATION_PERMISSIONS_UPDATED, handler=self.handle_operation_permissions_updated)
+        self.sio.on(SocketEvents.OPERATION_DELETED, handler=self.handle_operation_deleted)
+        self.sio.on(SocketEvents.UPDATE_OPERATION_LIST, handler=self.handle_operation_list_update)
+        self.sio.on(SocketEvents.ACTIVE_USER_UPDATE, handler=self.handle_active_user_update)
 
-        self.sio.emit('start', {'token': token})
+        self.sio.emit(SocketEvents.START, {'token': token})
 
     def handle_active_user_update(self, data):
         """Handle the update for the number of active users on an operation."""
@@ -160,14 +151,14 @@ class ConnectionManager(QtCore.QObject):
 
     def handle_new_operation(self, op_id):
         logging.debug("adding user to new operation")
-        self.sio.emit('add-user-to-operation', {
+        self.sio.emit(SocketEvents.ADD_USER_TO_OPERATION, {
                       "op_id": op_id,
                       "token": self.token})
 
     def send_message(self, message_text, op_id, reply_id):
         if verify_user_token(self.mscolab_server_url, self.token):
             logging.debug("sending message")
-            self.sio.emit('chat-message', {
+            self.sio.emit(SocketEvents.CHAT_MESSAGE, {
                           "op_id": op_id,
                           "token": self.token,
                           "message_text": message_text,
@@ -178,7 +169,7 @@ class ConnectionManager(QtCore.QObject):
 
     def edit_message(self, message_id, new_message_text, op_id):
         if verify_user_token(self.mscolab_server_url, self.token):
-            self.sio.emit('edit-message', {
+            self.sio.emit(SocketEvents.EDIT_MESSAGE, {
                 "message_id": message_id,
                 "new_message_text": new_message_text,
                 "op_id": op_id,
@@ -190,7 +181,7 @@ class ConnectionManager(QtCore.QObject):
 
     def delete_message(self, message_id, op_id):
         if verify_user_token(self.mscolab_server_url, self.token):
-            self.sio.emit('delete-message', {
+            self.sio.emit(SocketEvents.DELETE_MESSAGE, {
                 'message_id': message_id,
                 'op_id': op_id,
                 'token': self.token
@@ -201,13 +192,13 @@ class ConnectionManager(QtCore.QObject):
 
     def select_operation(self, op_id):
         # Emit an event to notify the server of the operation selection.
-        self.sio.emit('operation-selected', {'token': self.token, 'op_id': op_id})
+        self.sio.emit(SocketEvents.OPERATION_SELECTED, {'token': self.token, 'op_id': op_id})
 
     def save_file(self, token, op_id, content, comment=None, version_name=None, messageText=""):
         # ToDo refactor API
         if verify_user_token(self.mscolab_server_url, self.token):
             logging.debug("saving file")
-            self.sio.emit('file-save', {
+            self.sio.emit(SocketEvents.FILE_SAVE, {
                           "op_id": op_id,
                           "token": self.token,
                           "content": content,
