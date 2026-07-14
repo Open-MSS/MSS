@@ -87,9 +87,11 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
                                                 QtWidgets.QMessageBox.No)
 
         if ret == QtWidgets.QMessageBox.Yes:
-            # if self._id is not None:
-            #     self.viewClosesId.emit(self._id)
-            #     logging.debug(self._id)
+            for dock in self.docks:
+                if dock is not None:
+                    widget = dock.widget()
+                    if widget is not None and hasattr(widget, "cleanup_threads"):
+                        widget.cleanup_threads()
             # sets flag as False which shows tableview window had been closed.
             self.tv_window_exists = False
             self.viewCloses.emit()

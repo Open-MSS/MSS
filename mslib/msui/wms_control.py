@@ -298,10 +298,12 @@ class WMSMapFetcher(QtCore.QObject):
         fetch_map events may interrupt.
         """
         if len(self.maps) == 0:
+            self.finished.emit(None, None, None, None, None, None, None)
             return
         layer, kwargs, md5_filename, use_cache, legend_kwargs = self.maps[0]
         self.maps = self.maps[1:]
         self.long_request = False
+        captured_ex = None
         try:
             self.map_imgs.append(self.fetch_map(layer, kwargs, use_cache, md5_filename))
             self.legend_imgs.append(self.fetch_legend(use_cache=use_cache, **legend_kwargs))
@@ -309,7 +311,10 @@ class WMSMapFetcher(QtCore.QObject):
             logging.error("MapPrefetcher Exception %s - %s.", type(ex), ex)
             # emit finished so progress dialog will be closed
             self.finished.emit(None, None, None, None, None, None, md5_filename)
-            self.exception.emit(ex)
+            # Capture outside the except block to emit below: emitting from within an
+            # except clause causes PyQt5 to treat the cross-thread signal as an
+            # unhandled exception, triggering sys.excepthook in the GUI thread.
+            captured_ex = ex
             self.map_imgs = []
             self.legend_imgs = []
         else:
@@ -321,6 +326,8 @@ class WMSMapFetcher(QtCore.QObject):
                     kwargs["time"], md5_filename)
                 self.map_imgs = []
                 self.legend_imgs = []
+        if captured_ex is not None:
+            self.exception.emit(captured_ex)
 
     def fetch_map(self, layer, kwargs, use_cache, md5_filename):
         """
@@ -728,6 +735,33 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     def style_changed_now(self, style):
         self.styles_changed.emit(style)
 
+    def cleanup_threads(self):
+        """Properly terminate background threads.
+        """
+        # Wait up to WMS_request_timeout + 5s for any in-flight GetMap HTTP request to
+        # complete naturally before terminating. The mswms process renders with
+        # matplotlib, which holds the GIL; terminating the thread early leaves the server
+        # GIL-busy and blocks subsequent GetCapabilities requests in later tests.
+        wms_wait_ms = (config_loader(dataset="WMS_request_timeout") + 5) * 1000
+        try:
+            if hasattr(self, 'thread_prefetch') and self.thread_prefetch is not None:
+                if self.thread_prefetch.isRunning():
+                    self.thread_prefetch.quit()
+                    if not self.thread_prefetch.wait(wms_wait_ms):
+                        self.thread_prefetch.terminate()
+                        self.thread_prefetch.wait(1000)
+        except Exception:
+            pass
+        try:
+            if hasattr(self, 'thread_fetch') and self.thread_fetch is not None:
+                if self.thread_fetch.isRunning():
+                    self.thread_fetch.quit()
+                    if not self.thread_fetch.wait(wms_wait_ms):
+                        self.thread_fetch.terminate()
+                        self.thread_fetch.wait(1000)
+        except Exception:
+            pass
+
     def __del__(self):
         """Destructor.
         """
@@ -735,10 +769,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if self.wms_cache is not None:
             self.service_cache()
         # properly terminate background threads. wait is necessary!
-        self.thread_prefetch.quit()
-        self.thread_prefetch.wait()
-        self.thread_fetch.quit()
-        self.thread_fetch.wait()
+        self.cleanup_threads()
 
     def get_all_maps(self, disregard_current=False):
         if self.multilayers.cbMultilayering.isChecked():
@@ -974,11 +1005,17 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     requests.exceptions.MissingSchema) as ex:
                 logging.error("Cannot load capabilities document.\n"
                               "No layers can be used in this view.")
-                QtWidgets.QMessageBox.critical(
-                    self.multilayers, self.tr("Web Map Service"),
-                    self.tr(f"ERROR: We cannot load the capability document!\n\\n{type(ex)}\n{ex}"))
+                try:
+                    QtWidgets.QMessageBox.critical(
+                        self.multilayers, self.tr("Web Map Service"),
+                        self.tr(f"ERROR: We cannot load the capability document!\n\\n{type(ex)}\n{ex}"))
+                except RuntimeError:
+                    logging.debug("WMS control widget was deleted before on_failure could show dialog")
             finally:
-                self.cpdlg.close()
+                try:
+                    self.cpdlg.close()
+                except RuntimeError:
+                    pass
 
         self.display_capabilities_dialog()
         Worker.create(lambda: requests.get(base_url, params=params, timeout=(5, 60)),
@@ -1017,6 +1054,15 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.prefetch.disconnect(self.prefetcher.fetch_maps)
         if self.fetcher is not None:
             self.fetch.disconnect(self.fetcher.fetch_maps)
+            for sig, slot in [
+                (self.fetcher.finished, self.continue_retrieve_image),
+                (self.fetcher.exception, self.display_exception),
+                (self.fetcher.started_request, self.display_progress_dialog),
+            ]:
+                try:
+                    sig.disconnect(slot)
+                except (RuntimeError, TypeError):
+                    pass
 
         self.prefetcher = WMSMapFetcher(self.wms_cache)
         self.prefetcher.moveToThread(self.thread_prefetch)
