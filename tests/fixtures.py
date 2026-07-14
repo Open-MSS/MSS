@@ -176,7 +176,10 @@ def mscolab_server(mscolab_session_server, reset_mscolab):
 @pytest.fixture(scope="session")
 def mswms_app():
     """Fixture that provides the MSWMS WSGI app instance."""
-    return mslib.mswms.mswms.application
+    yield mslib.mswms.mswms.application
+    # Close all open NetCDF4 datasets to release file handles
+    from mslib.mswms import wms
+    wms.server.close_datasets()
 
 
 @pytest.fixture(scope="session")

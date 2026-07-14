@@ -108,10 +108,10 @@ class FileManager:
             operation_file_path.write_text(content, encoding='utf-8')
 
             # Initialize git repository
-            r = git.Repo.init(str(operation_dir))
-            r.git.clear_cache()
-            r.index.add(['main.ftml'])
-            r.index.commit("initial commit")
+            with git.Repo.init(operation_dir) as gr:
+                gr.git.clear_cache()
+                gr.index.add(['main.ftml'])
+                gr.index.commit("initial commit")
             return True
 
     def get_operation_details(self, op_id, user):
@@ -473,10 +473,10 @@ class FileManager:
             if diff_content != "":
                 # commit to git repository
                 operation_path = Path(self.data_dir) / operation.path
-                repo = git.Repo(operation_path)
-                repo.git.clear_cache()
-                repo.index.add(['main.ftml'])
-                cm = repo.index.commit("committing changes")
+                with git.Repo(operation_path) as gr:
+                    gr.git.clear_cache()
+                    gr.index.add(['main.ftml'])
+                    cm = gr.index.commit("committing changes")
                 # change db table
                 change = Change(op_id, user.id, cm.hexsha, version_name=version_name)
                 db.session.add(change)
@@ -552,8 +552,8 @@ class FileManager:
             return False
         operation = Operation.query.filter_by(id=change.op_id).first()
         operation_path = Path(self.data_dir) / operation.path
-        repo = git.Repo(operation_path)
-        change_content = repo.git.show(f'{change.commit_hash}:main.ftml')
+        with git.Repo(operation_path) as gr:
+            change_content = gr.git.show(f'{change.commit_hash}:main.ftml')
         return change_content
 
     def set_version_name(self, ch_id, op_id, u_id, version_name):
@@ -587,22 +587,21 @@ class FileManager:
         op_lock = self._get_operation_lock(operation.id)
         with op_lock:
             operation_path = Path(self.data_dir) / operation.path
-            repo = git.Repo(str(operation_path))
-            repo.git.clear_cache()
-            try:
-                file_content = repo.git.show(f'{ch.commit_hash}:main.ftml')
-                main_ftml_path = operation_path / 'main.ftml'
-                main_ftml_path.write_text(file_content, encoding='utf-8')
-
-                repo.index.add(['main.ftml'])
-                cm = repo.index.commit(f"checkout to {ch.commit_hash}")
-                change = Change(ch.op_id, user.id, cm.hexsha)
-                db.session.add(change)
-                db.session.commit()
-                return True
-            except Exception as ex:
-                logging.debug(ex)
-                return False
+            with git.Repo(str(operation_path)) as gr:
+                gr.git.clear_cache()
+                try:
+                    file_content = gr.git.show(f'{ch.commit_hash}:main.ftml')
+                    main_ftml_path = operation_path / 'main.ftml'
+                    main_ftml_path.write_text(file_content, encoding='utf-8')
+                    gr.index.add(['main.ftml'])
+                    cm = gr.index.commit(f"checkout to {ch.commit_hash}")
+                    change = Change(ch.op_id, user.id, cm.hexsha)
+                    db.session.add(change)
+                    db.session.commit()
+                    return True
+                except Exception as ex:
+                    logging.debug(ex)
+                    return False
 
     def fetch_users_without_permission(self, op_id, u_id):
         if not self.is_admin(u_id, op_id) and not self.is_creator(u_id, op_id):
