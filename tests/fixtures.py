@@ -57,32 +57,37 @@ def fail_if_open_message_boxes_left():
 
 
 @pytest.fixture
-def close_remaining_widgets():
-    yield
-    # Try to close all remaining widgets after each test
-    for qobject in set(QtWidgets.QApplication.topLevelWindows() + QtWidgets.QApplication.topLevelWidgets()):
-        try:
-            qobject.destroy()
-        # Some objects deny permission, pass in that case
-        except RuntimeError:
-            pass
-
-
-@pytest.fixture
 def msui_configs(tmp_path):
     modify_config_file({"mss_dir": str(tmp_path)})
 
 
 @pytest.fixture
-def qtbot(qtbot, fail_if_open_message_boxes_left, close_remaining_widgets, msui_configs):
+def qtbot(qtbot, fail_if_open_message_boxes_left, msui_configs):
     """Fixture that re-defines the qtbot fixture from pytest-qt with additional checks."""
     yield qtbot
-    # Wait for a while after the requesting test has finished. At time of writing this
-    # is required to (mostly) stabilize the coverage reports, because tests don't
-    # properly close their Qt-related stuff and therefore there is no guarantee about
-    # what the Qt event loop has or hasn't done yet. Waiting just gives it a bit more
-    # time to converge on the same result every time the tests are executed. This is a
-    # band-aid fix, the proper fix is to make sure each test cleans up after itself.
+    # Drop any matplotlib figures from Gcf BEFORE scheduling Qt deletion, otherwise
+    # matplotlib's atexit Gcf.destroy_all trips over a dead NavigationToolbar2QT at
+    # worker shutdown ("wrapped C/C++ object has been deleted").
+    try:
+        import matplotlib.pyplot as plt
+        plt.close("all")
+    except ImportError:
+        pass
+    # Schedule destruction of any leftover top-level widgets BEFORE the drain wait
+    # below. Tests often only call hide(), which keeps the widget (and any sockets
+    # it owns) alive. deleteLater() queues destruction without firing close events
+    # (close() would trigger "save changes?" dialogs); the subsequent qtbot.wait
+    # gives the Qt event loop time to actually process the deletions.
+    for qobject in set(QtWidgets.QApplication.topLevelWindows() + QtWidgets.QApplication.topLevelWidgets()):
+        try:
+            delete_later = getattr(qobject, "deleteLater", None)
+            if delete_later is not None:
+                delete_later()
+        # Some objects are already deleted; ignore those.
+        except RuntimeError:
+            pass
+    # Drain the Qt event loop so destruction (and any socket disconnects it triggers)
+    # actually completes before the next test starts.
     qtbot.wait(5000)
 
 
