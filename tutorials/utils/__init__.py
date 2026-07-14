@@ -63,19 +63,20 @@ def screen_scale():
         return 1.0
 
 
-def locate_center_on_screen(pic, region=None):
+def locate_center_on_screen(pic, region=None, confidence=None):
     """
     Locate the center of an image on screen and return its coordinates in
     pyautogui's logical point space, corrected for the display scale
 
     :param pic: The image file to locate on the screen.
     :param region: Optional region (in screenshot/physical pixels) to search in.
+    :param confidence: Optional 0-1 match threshold (needs OpenCV). Captured
+      images rarely match the live screen exactly on Retina/HiDPI (antialiasing,
+      and toggle-button highlight states differ), so a value like 0.9 is needed
+      there; None means an exact match.
     :return: The (x, y) center in logical points, or None if not found.
     """
-    if region is None:
-        location = pag.locateCenterOnScreen(pic)
-    else:
-        location = pag.locateCenterOnScreen(pic, region=region)
+    location = pag.locateCenterOnScreen(pic, region=region, confidence=confidence)
     if location is None:
         return None
     scale = screen_scale()
@@ -318,7 +319,8 @@ def get_region(image, region=None):
     return image_region
 
 
-def click_center_on_screen(pic, duration=2, xoffset=0, yoffset=0, region=None, click=True):
+def click_center_on_screen(pic, duration=2, xoffset=0, yoffset=0, region=None, click=True,
+                           confidence=None):
     """
     Clicks the center of an image on the screen.
 
@@ -328,10 +330,12 @@ def click_center_on_screen(pic, duration=2, xoffset=0, yoffset=0, region=None, c
     :param yoffset: The vertical offset from the center of the image. Default is 0.
     :param region: The region on the screen to search for the image. Default is None, which searches the entire screen.
     :param click: Indicates whether to perform the click action. Default is True.
+    :param confidence: Optional 0-1 match threshold (needs OpenCV); see
+      locate_center_on_screen. None means an exact match.
 
     :return: None
     """
-    x, y = locate_center_on_screen(pic, region=region)
+    x, y = locate_center_on_screen(pic, region=region, confidence=confidence)
     if click:
         pag.click(x + xoffset, y + yoffset, duration=duration)
 
@@ -352,7 +356,7 @@ def select_listelement(steps, sleep=5, key=ENTER):
 
 
 def find_and_click_picture(pic_name, exception_message=None, duration=2, xoffset=0, yoffset=0,
-                           bounding_box=None, region=None, click=True):
+                           bounding_box=None, region=None, click=True, confidence=None):
     """
 
     Finds a specified picture and clicks on it.
@@ -367,6 +371,9 @@ def find_and_click_picture(pic_name, exception_message=None, duration=2, xoffset
     :param bounding_box: Optional. The bounding box of the image. The image is cropped to. Defaults to None.
     :param region: Optional. The region in which to search for the picture. Defaults to None.
     :param click: Optional. Indicates whether to perform the click action. Defaults to True.
+    :param confidence: Optional 0-1 match threshold (needs OpenCV); see
+      locate_center_on_screen. Needed on Retina/HiDPI where captured images
+      match the screen at ~0.98 rather than exactly. None means an exact match.
 
     :raises ImageNotFoundException: If the picture is not found.
     :raises OSError: If there is an error while processing the picture.
@@ -379,7 +386,8 @@ def find_and_click_picture(pic_name, exception_message=None, duration=2, xoffset
     message = exception_message if exception_message is not None else f"{pic_name} not found"
     try:
         click_center_on_screen(picture(pic_name, bounding_box=bounding_box),
-                               duration, xoffset=xoffset, yoffset=yoffset, region=region, click=click)
+                               duration, xoffset=xoffset, yoffset=yoffset, region=region, click=click,
+                               confidence=confidence)
         x, y = pag.position()
         # ToDo verify
         # pag.moveTo(x, y, duration=duration)
@@ -551,7 +559,7 @@ def change_color(pic_name, exception_message, actions, interval=2, sleep_time=2)
         raise
 
 
-def select_color(open_pic, color_name, exception_message=None, region=None):
+def select_color(open_pic, color_name, exception_message=None, region=None, confidence=None):
     """
     Open the predefined-swatch color dialog (CustomColorDialog) and click the
     swatch named ``color_name`` by locating its captured image on screen.
@@ -568,10 +576,12 @@ def select_color(open_pic, color_name, exception_message=None, region=None):
         swatch search avoids matching a same-colored preview button elsewhere.
         ``create_tutorial_images()`` always captures globally; ``region`` only
         bounds the on-screen clicks.
+    :param confidence: Optional 0-1 match threshold (needs OpenCV); see
+      locate_center_on_screen. None means an exact match.
     """
     # open the color dialog
     find_and_click_picture(open_pic,
-                           exception_message or f"{open_pic} not found", region=region)
+                           exception_message or f"{open_pic} not found", region=region, confidence=confidence)
     pag.sleep(1)
     # capture the swatch images now that the dialog is visible
     create_tutorial_images()
@@ -581,7 +591,7 @@ def select_color(open_pic, color_name, exception_message=None, region=None):
                            f"Color '{color_name}' not found in color dialog", region=region)
 
 
-def zoom_in(pic_name, exception_message, move=(379, 205), dragRel=(70, 75), region=None):
+def zoom_in(pic_name, exception_message, move=(379, 205), dragRel=(70, 75), region=None, confidence=None):
     """
     This method locates a given picture on the screen, clicks on it, moves the mouse cursor,
     performs a drag motion, waits for 5 seconds, and raises an exception if the picture is not found
@@ -593,10 +603,12 @@ def zoom_in(pic_name, exception_message, move=(379, 205), dragRel=(70, 75), regi
     :param dragRel: The amount to drag the mouse cursor horizontally and vertically after moving.
      Defaults to (70, 75).
     :param region: The specific region of the screen to search for the picture.
+    :param confidence: Optional 0-1 match threshold (needs OpenCV); see
+      locate_center_on_screen. None means an exact match.
      Defaults to None, which means the entire screen will be searched.
     """
     try:
-        x, y = locate_center_on_screen(picture(pic_name), region=region)
+        x, y = locate_center_on_screen(picture(pic_name), region=region, confidence=confidence)
         pag.click(x, y, interval=2)
         pag.move(move[0], move[1], duration=1)
         pag.dragRel(dragRel[0], dragRel[1], duration=2)
@@ -606,7 +618,8 @@ def zoom_in(pic_name, exception_message, move=(379, 205), dragRel=(70, 75), regi
         raise
 
 
-def panning(pic_name, exception_message, moveRel=(400, 400), dragRel=(-100, -50), region=None):
+def panning(pic_name, exception_message, moveRel=(400, 400), dragRel=(-100, -50), region=None,
+            confidence=None):
     """
     Executes panning action on the screen.
 
@@ -615,9 +628,11 @@ def panning(pic_name, exception_message, moveRel=(400, 400), dragRel=(-100, -50)
     :param moveRel: The relative movements to be made after clicking on the picture. Defaults to (400, 400).
     :param dragRel: The relative movements to be made during the dragging action. Defaults to (-100, -50).
     :param region: The region of the screen to search for the picture. Defaults to None.
+    :param confidence: Optional 0-1 match threshold (needs OpenCV); see
+      locate_center_on_screen. None means an exact match.
     """
     try:
-        x, y = locate_center_on_screen(picture(pic_name), region=region)
+        x, y = locate_center_on_screen(picture(pic_name), region=region, confidence=confidence)
         pag.click(x, y, interval=2)
         pag.moveRel(moveRel[0], moveRel[1], duration=1)
         pag.dragRel(dragRel[0], dragRel[1], duration=2)
