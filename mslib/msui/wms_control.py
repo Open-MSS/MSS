@@ -739,7 +739,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """Properly terminate background threads.
         """
         # Wait up to WMS_request_timeout + 5s for any in-flight GetMap HTTP request to
-        # complete naturally before terminating.  The mswms subprocess renders with
+        # complete naturally before terminating. The mswms process renders with
         # matplotlib, which holds the GIL; terminating the thread early leaves the server
         # GIL-busy and blocks subsequent GetCapabilities requests in later tests.
         wms_wait_ms = (config_loader(dataset="WMS_request_timeout") + 5) * 1000
