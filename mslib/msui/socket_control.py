@@ -35,7 +35,6 @@ from PyQt5 import QtCore
 from mslib.mscolab.events import SocketEvents
 from mslib.msui.mscolab_exceptions import MSColabConnectionError
 from mslib.utils.config import MSUIDefaultConfig as mss_default
-from mslib.utils.verify_user_token import verify_user_token
 from mslib.utils.config import config_loader
 
 
@@ -156,58 +155,43 @@ class ConnectionManager(QtCore.QObject):
                       "token": self.token})
 
     def send_message(self, message_text, op_id, reply_id):
-        if verify_user_token(self.mscolab_server_url, self.token):
-            logging.debug("sending message")
-            self.sio.emit(SocketEvents.CHAT_MESSAGE, {
-                          "op_id": op_id,
-                          "token": self.token,
-                          "message_text": message_text,
-                          "reply_id": reply_id})
-        else:
-            # this triggers disconnect
-            self.signal_reload.emit(op_id)
+        logging.debug("sending message")
+        self.sio.emit(SocketEvents.CHAT_MESSAGE, {
+                      "op_id": op_id,
+                      "token": self.token,
+                      "message_text": message_text,
+                      "reply_id": reply_id})
 
     def edit_message(self, message_id, new_message_text, op_id):
-        if verify_user_token(self.mscolab_server_url, self.token):
-            self.sio.emit(SocketEvents.EDIT_MESSAGE, {
-                "message_id": message_id,
-                "new_message_text": new_message_text,
-                "op_id": op_id,
-                "token": self.token
-            })
-        else:
-            # this triggers disconnect
-            self.signal_reload.emit(op_id)
+        logging.debug("edit message")
+        self.sio.emit(SocketEvents.EDIT_MESSAGE, {
+            "message_id": message_id,
+            "new_message_text": new_message_text,
+            "op_id": op_id,
+            "token": self.token
+        })
 
     def delete_message(self, message_id, op_id):
-        if verify_user_token(self.mscolab_server_url, self.token):
-            self.sio.emit(SocketEvents.DELETE_MESSAGE, {
-                'message_id': message_id,
-                'op_id': op_id,
-                'token': self.token
-            })
-        else:
-            # this triggers disconnect
-            self.signal_reload.emit(op_id)
+        logging.debug("delete message")
+        self.sio.emit(SocketEvents.DELETE_MESSAGE, {
+            'message_id': message_id,
+            'op_id': op_id,
+            'token': self.token
+        })
 
     def select_operation(self, op_id):
         # Emit an event to notify the server of the operation selection.
         self.sio.emit(SocketEvents.OPERATION_SELECTED, {'token': self.token, 'op_id': op_id})
 
-    def save_file(self, token, op_id, content, comment=None, version_name=None, messageText=""):
-        # ToDo refactor API
-        if verify_user_token(self.mscolab_server_url, self.token):
-            logging.debug("saving file")
-            self.sio.emit(SocketEvents.FILE_SAVE, {
-                          "op_id": op_id,
-                          "token": self.token,
-                          "content": content,
-                          "comment": comment,
-                          "version_name": version_name,
-                          "messageText": messageText})
-        else:
-            # this triggers disconnect
-            self.signal_reload.emit(op_id)
+    def save_file(self, op_id, content, comment=None, version_name=None, messageText=""):
+        logging.debug("saving file")
+        self.sio.emit(SocketEvents.FILE_SAVE, {
+                      "op_id": op_id,
+                      "token": self.token,
+                      "content": content,
+                      "comment": comment,
+                      "version_name": version_name,
+                      "messageText": messageText})
 
     def disconnect(self):
         # Get all pyqtSignals defined in this class and disconnect them from all slots

@@ -30,7 +30,6 @@ import requests
 from urllib.parse import urljoin
 
 from PyQt5 import QtCore, QtWidgets
-from mslib.utils.verify_user_token import verify_user_token
 from mslib.msui.qt5 import ui_mscolab_admin_window as ui
 from mslib.utils.qt import show_popup
 from mslib.utils.config import config_loader
@@ -197,184 +196,156 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             self.populate_import_permission_cb()
 
     def load_users_without_permission(self):
-        if verify_user_token(self.mscolab_server_url, self.token):
-            self.addUsers = []
-            data = {
-                "token": self.token,
-                "op_id": self.op_id
-            }
-            url = urljoin(self.mscolab_server_url, "users_without_permission")
-            res = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-            if res.text != "False":
-                res = res.json()
-                if res["success"]:
-                    self.addUsers = res["users"]
-                    self.populate_table(self.addUsersTable, self.addUsers)
-                    text_filter = self.addUsersSearch.text()
-                    self.apply_filters(self.addUsersTable, text_filter, None)
-                else:
-                    show_popup(self, "Error", res["message"])
+        self.addUsers = []
+        data = {
+            "token": self.token,
+            "op_id": self.op_id
+        }
+        url = urljoin(self.mscolab_server_url, "users_without_permission")
+        res = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        if res.text != "False":
+            res = res.json()
+            if res["success"]:
+                self.addUsers = res["users"]
+                self.populate_table(self.addUsersTable, self.addUsers)
+                text_filter = self.addUsersSearch.text()
+                self.apply_filters(self.addUsersTable, text_filter, None)
             else:
-                # this triggers disconnect
-                self.conn.signal_reload.emit(self.op_id)
+                show_popup(self, "Error", res["message"])
         else:
             # this triggers disconnect
             self.conn.signal_reload.emit(self.op_id)
 
     def load_users_with_permission(self):
-        if verify_user_token(self.mscolab_server_url, self.token):
-            self.modifyUsers = []
-            data = {
-                "token": self.token,
-                "op_id": self.op_id
-            }
-            url = urljoin(self.mscolab_server_url, "users_with_permission")
-            res = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-            if res.text != "False":
-                res = res.json()
-                if res["success"]:
-                    self.modifyUsers = res["users"]
-                    self.populate_table(self.modifyUsersTable, self.modifyUsers)
-                    text_filter = self.modifyUsersSearch.text()
-                    permission_filter = str(self.modifyUsersPermissionFilter.currentText())
-                    self.apply_filters(self.modifyUsersTable, text_filter, permission_filter)
-                else:
-                    show_popup(self, "Error", res["message"])
+        self.modifyUsers = []
+        data = {
+            "token": self.token,
+            "op_id": self.op_id
+        }
+        url = urljoin(self.mscolab_server_url, "users_with_permission")
+        res = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        if res.text != "False":
+            res = res.json()
+            if res["success"]:
+                self.modifyUsers = res["users"]
+                self.populate_table(self.modifyUsersTable, self.modifyUsers)
+                text_filter = self.modifyUsersSearch.text()
+                permission_filter = str(self.modifyUsersPermissionFilter.currentText())
+                self.apply_filters(self.modifyUsersTable, text_filter, permission_filter)
             else:
-                # this triggers disconnect
-                self.conn.signal_reload.emit(self.op_id)
+                show_popup(self, "Error", res["message"])
         else:
             # this triggers disconnect
             self.conn.signal_reload.emit(self.op_id)
 
     def add_selected_users(self):
-        if verify_user_token(self.mscolab_server_url, self.token):
-            selected_userids = self.get_selected_userids(self.addUsersTable, self.addUsers)
-            if len(selected_userids) == 0:
-                return
+        selected_userids = self.get_selected_userids(self.addUsersTable, self.addUsers)
+        if len(selected_userids) == 0:
+            return
 
-            selected_access_level = str(self.addUsersPermission.currentText())
-            data = {
-                "token": self.token,
-                "op_id": self.op_id,
-                "selected_userids": json.dumps(selected_userids),
-                "selected_access_level": selected_access_level
-            }
-            url = urljoin(self.mscolab_server_url, "add_bulk_permissions")
-            res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-            if res.text != "False":
-                res = res.json()
-                if res["success"]:
-                    # TODO: Do we need a success popup?
-                    self.load_import_operations()
-                    self.load_users_without_permission()
-                    self.load_users_with_permission()
-                else:
-                    show_popup(self, "Error", res["message"])
+        selected_access_level = str(self.addUsersPermission.currentText())
+        data = {
+            "token": self.token,
+            "op_id": self.op_id,
+            "selected_userids": json.dumps(selected_userids),
+            "selected_access_level": selected_access_level
+        }
+        url = urljoin(self.mscolab_server_url, "add_bulk_permissions")
+        res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        if res.text != "False":
+            res = res.json()
+            if res["success"]:
+                # TODO: Do we need a success popup?
+                self.load_import_operations()
+                self.load_users_without_permission()
+                self.load_users_with_permission()
             else:
-                # this triggers disconnect
-                self.conn.signal_reload.emit(self.op_id)
+                show_popup(self, "Error", res["message"])
         else:
             # this triggers disconnect
             self.conn.signal_reload.emit(self.op_id)
 
     def modify_selected_users(self):
-        if verify_user_token(self.mscolab_server_url, self.token):
-            selected_userids = self.get_selected_userids(self.modifyUsersTable, self.modifyUsers)
-            if len(selected_userids) == 0:
-                return
+        selected_userids = self.get_selected_userids(self.modifyUsersTable, self.modifyUsers)
+        if len(selected_userids) == 0:
+            return
 
-            selected_access_level = str(self.modifyUsersPermission.currentText())
-            data = {
-                "token": self.token,
-                "op_id": self.op_id,
-                "selected_userids": json.dumps(selected_userids),
-                "selected_access_level": selected_access_level
-            }
-            url = urljoin(self.mscolab_server_url, "modify_bulk_permissions")
-            res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-            if res.text != "False":
-                res = res.json()
-                if res["success"]:
-                    self.load_import_operations()
-                    self.load_users_without_permission()
-                    self.load_users_with_permission()
-                else:
-                    self.show_error_popup(res["message"])
+        selected_access_level = str(self.modifyUsersPermission.currentText())
+        data = {
+            "token": self.token,
+            "op_id": self.op_id,
+            "selected_userids": json.dumps(selected_userids),
+            "selected_access_level": selected_access_level
+        }
+        url = urljoin(self.mscolab_server_url, "modify_bulk_permissions")
+        res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        if res.text != "False":
+            res = res.json()
+            if res["success"]:
+                self.load_import_operations()
+                self.load_users_without_permission()
+                self.load_users_with_permission()
             else:
-                # this triggers disconnect
-                self.conn.signal_reload.emit(self.op_id)
+                self.show_error_popup(res["message"])
         else:
             # this triggers disconnect
             self.conn.signal_reload.emit(self.op_id)
 
     def delete_selected_users(self):
-        if verify_user_token(self.mscolab_server_url, self.token):
-            selected_userids = self.get_selected_userids(self.modifyUsersTable, self.modifyUsers)
-            if len(selected_userids) == 0:
-                return
+        selected_userids = self.get_selected_userids(self.modifyUsersTable, self.modifyUsers)
+        if len(selected_userids) == 0:
+            return
 
-            data = {
-                "token": self.token,
-                "op_id": self.op_id,
-                "selected_userids": json.dumps(selected_userids)
-            }
-            url = urljoin(self.mscolab_server_url, "delete_bulk_permissions")
-            res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-            if res.text != "False":
-                res = res.json()
-                if res["success"]:
-                    self.load_import_operations()
-                    self.load_users_without_permission()
-                    self.load_users_with_permission()
-                else:
-                    self.show_error_popup(res["message"])
+        data = {
+            "token": self.token,
+            "op_id": self.op_id,
+            "selected_userids": json.dumps(selected_userids)
+        }
+        url = urljoin(self.mscolab_server_url, "delete_bulk_permissions")
+        res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        if res.text != "False":
+            res = res.json()
+            if res["success"]:
+                self.load_import_operations()
+                self.load_users_without_permission()
+                self.load_users_with_permission()
             else:
-                # this triggers disconnect
-                self.conn.signal_reload.emit(self.op_id)
+                self.show_error_popup(res["message"])
         else:
             # this triggers disconnect
             self.conn.signal_reload.emit(self.op_id)
 
     def import_permissions(self):
-        if verify_user_token(self.mscolab_server_url, self.token):
-            import_op_id = self.importPermissionsCB.currentData(QtCore.Qt.UserRole)
-            data = {
-                "token": self.token,
-                "current_op_id": self.op_id,
-                "import_op_id": import_op_id
-            }
-            url = urljoin(self.mscolab_server_url, 'import_permissions')
-            res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-            if res.text != "False":
-                res = res.json()
-                if res["success"]:
-                    self.load_import_operations()
-                    self.load_users_without_permission()
-                    self.load_users_with_permission()
-                else:
-                    show_popup(self, "Error", res["message"])
+        import_op_id = self.importPermissionsCB.currentData(QtCore.Qt.UserRole)
+        data = {
+            "token": self.token,
+            "current_op_id": self.op_id,
+            "import_op_id": import_op_id
+        }
+        url = urljoin(self.mscolab_server_url, 'import_permissions')
+        res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        if res.text != "False":
+            res = res.json()
+            if res["success"]:
+                self.load_import_operations()
+                self.load_users_without_permission()
+                self.load_users_with_permission()
             else:
-                # this triggers disconnect
-                self.conn.signal_reload.emit(self.op_id)
+                show_popup(self, "Error", res["message"])
         else:
             # this triggers disconnect
             self.conn.signal_reload.emit(self.op_id)
 
     # Socket Events
     def handle_permissions_updated(self, u_id):
-        if verify_user_token(self.mscolab_server_url, self.token):
-            if self.user["id"] == u_id:
-                return
+        if self.user["id"] == u_id:
+            return
 
-            show_popup(self, 'Alert',
-                       'The permissions for this operation were updated! The window is going to refresh.', 1)
-            self.load_import_operations()
-            self.load_users_without_permission()
-            self.load_users_with_permission()
-        else:
-            # this triggers disconnect
-            self.conn.signal_reload.emit(self.op_id)
+        show_popup(self, 'Alert',
+                   'The permissions for this operation were updated! The window is going to refresh.', 1)
+        self.load_import_operations()
+        self.load_users_without_permission()
+        self.load_users_with_permission()
 
     def closeEvent(self, event):
         self.viewCloses.emit()
