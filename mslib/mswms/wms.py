@@ -49,22 +49,17 @@ import logging
 import shutil
 import tempfile
 import traceback
-import werkzeug
-import urllib.parse
 
 from defusedxml import ElementTree
 from chameleon import PageTemplateLoader
 from owslib.crs import axisorder_yx
 from PIL import Image
 import numpy as np
-from flask import request, make_response, render_template, Response, abort
+from flask import request, current_app
 from flask_httpauth import HTTPBasicAuth
-from multidict import CIMultiDict
 from mslib.mswms.app import create_app
 
 from mslib.mswms.app import mswms_settings
-from mslib.utils import conditional_decorator
-from mslib.utils.get_content import get_content
 from mslib.utils.time import parse_iso_datetime
 from mslib.mswms.gallery_builder import add_image, write_html, add_levels, add_times, \
     write_doc_index, write_code_pages, STATIC_LOCATION, DOCS_LOCATION
@@ -78,8 +73,10 @@ try:
 except ImportError as ex:
     logging.warning("Couldn't import mswms_settings (ImportError:'%s'), Using dummy config.", ex)
 
-APP = create_app(__name__, imprint=mswms_settings.imprint, gdpr=mswms_settings.gdpr)
+APP = create_app(__name__, imprint=mswms_settings.IMPRINT, gdpr=mswms_settings.GDPR)
 auth = HTTPBasicAuth()
+with APP.app_context():
+    current_app.extensions['basic_auth'] = auth
 
 realm = 'Mission Support Web Map Service'
 APP.config['realm'] = realm
@@ -93,17 +90,17 @@ except ImportError as ex:
         allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None
+with APP.app_context():
+    if current_app.config.get("ENABLE_BASIC_HTTP_AUTHENTICATION", False):
+        logging.debug("Enabling basic HTTP authentication. Username and "
+                      "password required to access the service.")
+        import hashlib
 
-if mswms_settings.enable_basic_http_authentication:
-    logging.debug("Enabling basic HTTP authentication. Username and "
-                  "password required to access the service.")
-    import hashlib
-
-    def authfunc(username, password):
-        for u, p in mswms_auth.allowed_users:
-            if (u == username) and (p == hashlib.md5(password.encode('utf-8')).hexdigest()):
-                return True
-        return False
+        def authfunc(username, password):
+            for u, p in mswms_auth.allowed_users:
+                if (u == username) and (p == hashlib.md5(password.encode('utf-8')).hexdigest()):
+                    return True
+            return False
 
     @auth.verify_password
     def verify_pw(username, password):
@@ -401,12 +398,15 @@ class WMSServer:
 
             if clear and os.path.exists(os.path.join(path, "plots")):
                 shutil.rmtree(os.path.join(path, "plots"))
+                os.makedirs(os.path.join(path, "plots"))
             if os.path.exists(os.path.join(path, "plots")):
                 for fn in glob.glob(os.path.join(tmp_path, "plots", "*")):
                     if not os.path.exists(os.path.join(path, "plots", os.path.basename(fn))):
                         shutil.move(fn, os.path.join(path, "plots"))
             else:
-                shutil.move(os.path.join(tmp_path, "plots"), path)
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                shutil.move(os.path.join(tmp_path, "plots"), os.path.join(path, "plots"))
             if os.path.exists(os.path.join(path, "code")):
                 shutil.rmtree(os.path.join(path, "code"))
             if os.path.exists(os.path.join(tmp_path, "code")):
@@ -918,89 +918,3 @@ class WMSServer:
 
 
 server = WMSServer()
-
-
-@APP.route('/')
-@conditional_decorator(auth.login_required, mswms_settings.enable_basic_http_authentication)
-def application():
-    try:
-        # Request info
-        query = CIMultiDict(request.args)
-        # Processing
-        # ToDo Refactor
-        request_type = query.get('request')
-        if request_type is None:  # request_type may *actually* be set to None
-            request_type = ''
-        request_type = request_type.lower()
-        request_service = query.get('service', '')
-        request_service = request_service.lower()
-        request_version = query.get('version', '')
-
-        url = request.url
-        server_url = urllib.parse.urljoin(url, urllib.parse.urlparse(url).path)
-
-        if (request_type in ('getcapabilities', 'capabilities') and
-                request_service == 'wms' and request_version in ('1.1.1', '1.3.0', '')):
-            return_data, mime_type = server.get_capabilities(query, server_url)
-        elif request_type in ('getmap', 'getvsec', 'getlsec') and request_version in ('1.1.1', '1.3.0', ''):
-            return_data, mime_type = server.produce_plot(query, request_type)
-        else:
-            logging.debug("Request type '%s' is not valid.", request)
-            raise RuntimeError("Request type is not valid.")
-
-        res = make_response(return_data, 200)
-        response_headers = [('Content-type', mime_type), ('Content-Length', str(len(return_data)))]
-        for response_header in response_headers:
-            res.headers[response_header[0]] = response_header[1]
-
-        return res
-
-    except Exception as ex:
-        # without query parameter show index page
-        query = request.args
-        if len(query) == 0:
-            return render_template("/index.html")
-
-        # communicate request errors back to client user
-        logging.error("Unexpected error: %s: %s\nTraceback:\n%s",
-                      type(ex), ex, traceback.format_exc())
-        error_message = "{}: {}\n".format(type(ex), ex)
-        response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(error_message)))]
-        res = make_response(error_message, 404)
-        for response_header in response_headers:
-            res.headers[response_header[0]] = response_header[1]
-        return res
-
-
-@APP.route("/mss/plots")
-def plots():
-    if STATIC_LOCATION != "" and os.path.exists(os.path.join(STATIC_LOCATION, 'plots.html')):
-        _file = os.path.join(STATIC_LOCATION, 'plots.html')
-        content = get_content(_file)
-    else:
-        content = "Gallery was not generated for this server.<br>" \
-                  "For further info on how to generate it, run the " \
-                  "<b>gallery --help</b> command line parameter of mswms.<br>" \
-                  "An example of the gallery can be seen " \
-                  "<a href=\"https://mss.readthedocs.io/en/stable/gallery/index.html\">here</a>"
-    return render_template("/content.html", act="plots", content=content)
-
-
-@APP.route("/mss/code/<path:filename>")
-def code(filename):
-    download = request.args.get("download", False)
-    _file = werkzeug.security.safe_join(STATIC_LOCATION, "code", filename)
-    if _file is None:
-        abort(404)
-    content = get_content(_file)
-    if not download:
-        return render_template("/content.html", act="code", content=content)
-    else:
-        if not os.path.isfile(_file):
-            abort(404)
-        with open(_file) as f:
-            text = f.read()
-        return Response("".join([s.replace("\t", "", 1) for s in text.split("```python")[-1]
-                                .splitlines(keepends=True)][1:-2]),
-                        mimetype="text/plain",
-                        headers={"Content-disposition": f"attachment; filename={filename.split('-')[0]}.py"})

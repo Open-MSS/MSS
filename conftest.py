@@ -156,7 +156,7 @@ SQLALCHEMY_ECHO = False
 UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
 MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
 
-enable_basic_http_authentication = False
+ENABLE_BASIC_HTTP_AUTHENTICATION = False
 
 # enable login by identity provider
 USE_SAML2 = False
@@ -182,6 +182,7 @@ class mscolab_auth:
 
     _load_module("mswms_settings", constants.MSWMS_SERVER_CONFIG_FILE_PATH)
     _load_module("mscolab_settings", constants.MSCOLAB_SERVER_CONFIG_FILE_PATH)
+    _load_module("mscolab_auth", constants.MSCOLAB_SERVER_CONFIG_DIR / constants.MSCOLAB_AUTH_FILE)
 
 
 generate_initial_config()

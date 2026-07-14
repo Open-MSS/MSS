@@ -1,0 +1,35 @@
+  <div id="footer">
+    <div class="container module-footer">
+       <div class="container-fluid">
+         <div class="row" style="background-color:lavender;">
+            <div class="col-sm-5 col-md-6" style="background-color:#ddf;"> A QT application,
+              a OGC web map server, a collaboration server to plan atmospheric research flights.
+            </div>
+            <div class="col-sm-5 col-sm-offset-2 col-md-6 col-md-offset-0" style="background-color:#ddf;">
+              <ul>
+                <dd><a href="http://mss.rtfd.io">MSS Docs</a></dd>
+                <dd><a href="https://github.com/Open-MSS/MSS/">MSS Repository</a></dd>
+                <dd>License: Apache-2.0</dd>
+              </ul>
+            </div>
+         </div>
+       </div>
+         <div class="container-fluid">
+           <div class="row" style="background-color:lavender;">
+               {% if file_exists(imprint) %}
+                  <div class="col-sm-2 col-md-2" style="background-color:f2f2f2;"><a href="{{ url_for('docs.imprint') }}">
+                  <p class="text-dark">Imprint</p></a>
+                  </div>
+               {% endif %}
+               {% if file_exists(gdpr) %}
+
+                   <div class="col-sm-2 col-md-2" style="background-color:f2f2f2;"><a href="{{ url_for('docs.gdpr') }}">
+                   <p class="text-dark">GDPR</p></a>
+                   </div>
+               {% endif %}
+             <div class="col-sm-5 col-sm-offset-2 col-md-6 col-md-offset-0" style="background-color:f2f2f2;">
+             </div>
+           </div>
+         </div>
+    </div>
+  </div>

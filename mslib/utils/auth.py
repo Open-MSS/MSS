@@ -31,7 +31,10 @@
 """
 
 import logging
+
 import keyring
+from flask import current_app
+from flask_mail import Message
 
 
 try:
@@ -111,3 +114,19 @@ def get_auth_from_url_and_name(server_url, http_auth, overwrite_login_cache=True
         name = None
     auth = constants.AUTH_LOGIN_CACHE.get(server_url, (name, None))
     return auth
+
+
+def send_email(to, subject, template):
+    if current_app.config['MAIL_DEFAULT_SENDER'] is not None:
+        msg = Message(
+            subject,
+            recipients=[to],
+            html=template,
+            sender=current_app.config['MAIL_DEFAULT_SENDER']
+        )
+        try:
+            current_app.mail.send(msg)
+        except (IOError, AttributeError):
+            logging.error("Can't send email to %s", to)
+    else:
+        logging.debug("setup user verification by email")

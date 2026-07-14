@@ -8,9 +8,9 @@
   <meta name="description" content="Mission Support System">
   <meta name="keywords" content="MSS, MSCOLAB">
   <meta name="author" content="authors of MSS">
-  <link rel='shortcut icon' type='image/x-icon' href="{{ url_for('favicons') }}">
+  <link rel='shortcut icon' type='image/x-icon' href="{{ url_for('docs.favicons') }}">
   <title>Mission Support System Collaboration Platform</title><!-- Bootstrap core CSS -->
-  <link href="{{ url_for('files', name='bootstrap', filename='css/bootstrap.css') }}" rel="stylesheet">
+  <link href="{{ url_for('docs.files', name='bootstrap', filename='css/bootstrap.css') }}" rel="stylesheet">
 </head>
 <body>
   <div id="wrap">
@@ -19,11 +19,12 @@
         <div class="container-fluid">
           <ul class="navbar-nav mr-auto">
             <li style="list-style: none; display: inline">
-              <a class="navbar-brand" href="{{ url_for('index') }}"><img src="{{ url_for('logo') }}" title="Mission Support System" alt="logo Mission Support System"></a>
+              <a class="navbar-brand" href="{{ url_for('docs.index') }}"><img src="{{ url_for('docs.logo') }}" title="Mission Support System" alt="logo Mission Support System"></a>
             </li>
             <li class="nav-item dropdown">{% for href, caption, submenu in get_topmenu(): %} {% if submenu[0] %}</li>
             <li class="dropdown">
-              <a href="{{ href }}" data-toggle="dropdown" class="nav-link dropdown-toggle">{{ caption }}</a>
+              <a href="{{ href }}" data-bs-toggle="dropdown" class="nav-link dropdown-toggle" role="button"
+                 aria-expanded="false">{{ caption }}</a>
               <ul class="dropdown-menu">
                 <li style="list-style: none">{% for href, caption in submenu: %}</li>
                 <li>
@@ -55,19 +56,17 @@
     ================================================== -->
    <!-- Placed at the end of the document so the pages load faster -->
 
-  <script src="{{ url_for('files', name='jquery', filename='jquery.min.js') }}">
+  <script src="{{ url_for('docs.files', name='jquery', filename='jquery.min.js') }}">
   </script>
-  <script src="{{ url_for('files', name='bootstrap', filename='js/bootstrap.js') }}">
+  <script src="{{ url_for('docs.files', name='bootstrap', filename='js/bootstrap.bundle.js') }}">
   </script>
   <script type="text/javascript">
-      $(document).ready(function() {
-      $('#myCarousel').carousel({
-      interval: 5000
-      })
-      $('#myCarousel').on('slid.bs.carousel', function() {
-      //alert("slid");
-      });
-      });
+    document.addEventListener("DOMContentLoaded", function () {
+      const carouselElement = document.getElementById("carouselExampleIndicators");
+      if (carouselElement && window.bootstrap && window.bootstrap.Carousel) {
+        new window.bootstrap.Carousel(carouselElement, { interval: 5000 });
+      }
+    });
   </script>
   </body>
 </html>

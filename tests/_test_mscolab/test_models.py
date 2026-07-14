@@ -29,7 +29,7 @@ import datetime
 import textwrap
 from zoneinfo import ZoneInfo
 
-from mslib.mscolab.server import register_user
+from mslib.mscolab.auth import register_user
 from mslib.mscolab.models import AwareDateTime, User, Permission, Operation, Message, MessageType, Change
 
 
@@ -112,7 +112,7 @@ def test_change_creation():
 class Test_User:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app):
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
+        self.userdata = 'UV10@uv10.de', 'UV10', 'uv10.de', 'User UV'
         with mscolab_app.app_context():
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
             assert result["success"] is True

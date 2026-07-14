@@ -486,7 +486,7 @@ class VerticalSectionDriver(MSSPlotDriver):
             logging.debug("\tInterpolating to cross-section path.")
             # Re-arange longitude dimension in the data field.
             var_data = var_data[:, :, lon_indices]
-            if jump:
+            if hasattr(jump, "size") and jump.size > 0:
                 logging.debug("\tsetting jump data to NaN at %s", jump)
                 var_data = var_data.copy()
                 var_data[:, :, jump] = np.nan
@@ -829,7 +829,7 @@ class LinearSectionDriver(VerticalSectionDriver):
             logging.debug("\tInterpolating to cross-section path.")
             # Re-arange longitude dimension in the data field.
             var_data = var_data[:, :, lon_indices]
-            if jump:
+            if hasattr(jump, "size") and jump.size > 0:
                 logging.debug("\tsetting jump data to NaN at %s", jump)
                 var_data = var_data.copy()
                 var_data[:, :, jump] = np.nan

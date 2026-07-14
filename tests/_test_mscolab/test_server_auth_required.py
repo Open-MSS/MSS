@@ -28,9 +28,8 @@ import pytest
 
 from mslib.mscolab.conf import mscolab_settings
 
-mscolab_settings.enable_basic_http_authentication = True
 try:
-    from mslib.mscolab.server import authfunc, verify_pw, initialize_managers, get_auth_token, register_user
+    from mslib.mscolab.server import authfunc, verify_pw, _initialize_managers
 except ImportError:
     pytest.skip("this test runs only by an explicit call "
                 "e.g. pytest tests/_test_mscolab/test_server_auth_required.py", allow_module_level=True)
@@ -41,9 +40,13 @@ class Test_Server_Auth_Not_Valid:
     def setup(self, mscolab_app):
         self.app = mscolab_app
         self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
+        # enable basic auth
+        self.app.config['ENABLE_BASIC_HTTP_AUTHENTICATION'] = True
+        yield
+        self.app.config['ENABLE_BASIC_HTTP_AUTHENTICATION'] = False
 
     def test_initialize_managers(self):
-        app, sockio, cm, fm = initialize_managers(self.app)
+        app, sockio, cm, fm = _initialize_managers(self.app)
 
         assert app.config['OPERATIONS_DATA'] == mscolab_settings.OPERATIONS_DATA
         assert 'Create a Flask-SocketIO server.' in sockio.__doc__
@@ -51,19 +54,25 @@ class Test_Server_Auth_Not_Valid:
         assert 'Class with handler functions for file related functionalities' in fm.__doc__
 
     def test_authfunc(self):
-        mscolab_settings.enable_basic_http_authentication = True
         assert authfunc("user", "testvaluepassword")
         assert authfunc("user", "wrong") is False
 
     def test_verify_pw(self):
-        assert verify_pw("user", "testvaluepassword")
-        assert verify_pw("unknown", "unknown") is False
-        assert verify_pw("user", "wrong") is False
+        with self.app.test_request_context():
+            assert verify_pw("user", "testvaluepassword")
+            assert verify_pw("unknown", "unknown") is False
+            assert verify_pw("user", "wrong") is False
 
     def test_register_user(self):
-        r = register_user("test@test.io", "test", "pwdtest", "UserPWD")
-        assert r.status_code == 401
+        with self.app.test_client() as test_client:
+            response = test_client.post('/register', data={"email": "test@test.io",
+                                                           "password": "test",
+                                                           "username": "UserPWD",
+                                                           "fullname": "UserPWD"})
+            assert response.status_code == 401
 
     def test_get_auth_token(self):
-        r = get_auth_token()
-        assert r.status_code == 401
+        with self.app.test_client() as test_client:
+            response = test_client.post('/token', data={"email": "test@test.io",
+                                                        "password": "test"})
+        assert response.status_code == 401

@@ -28,13 +28,24 @@ import os
 import logging
 import mslib
 
-from flask import Flask, url_for, render_template, send_from_directory, send_file, abort
+from flask import Flask, url_for
 from xstatic.main import XStatic
-from mslib.msui.icons import icons
+from mslib.mswms.blueprints.docs import DOCS_BP, init_docs_bp, build_auth_backend
+from mslib.mswms.blueprints.gallery import GALLERY_BP
 
 from mslib.mswms.gallery_builder import STATIC_LOCATION
 from mslib.utils import prefix_route, release_info
-from mslib.utils.get_content import get_content
+from mslib.utils.file_exists import file_exists
+
+DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
+DOCS_BLUEPRINTS_DIR = os.path.join(DOCS_SERVER_PATH, 'blueprints')
+DOCS_BLUEPRINTS_DOCS_DIR = os.path.join(DOCS_BLUEPRINTS_DIR, 'docs')
+DOCS_TEMPLATES_DIR = os.path.join(DOCS_BLUEPRINTS_DOCS_DIR, 'templates')
+DOCS_STATIC_DIR = os.path.join(DOCS_BLUEPRINTS_DOCS_DIR, 'static')
+DOCS_IMG_DIR = os.path.join(DOCS_STATIC_DIR, 'img')
+DOCS_DOCS_DIR = os.path.join(DOCS_STATIC_DIR, 'docs')
+# This can be used to set a location by SCRIPT_NAME for testing. e.g. export SCRIPT_NAME=/demo/
+SCRIPT_NAME = os.environ.get('SCRIPT_NAME', '/')
 
 
 class default_mswms_settings:
@@ -59,31 +70,51 @@ class default_mswms_settings:
     register_horizontal_layers = []
     register_vertical_layers = []
     register_linear_layers = []
-    imprint = ""
-    gdpr = ""
+    IMPRINT = ""
+    GDPR = ""
     data = {}
-    enable_basic_http_authentication = False
+    ENABLE_BASIC_HTTP_AUTHENTICATION = False
     __file__ = None
 
 
-mswms_settings = default_mswms_settings()
-
 message, update = release_info.check_for_new_release()
+
 if update:
     logging.warning(message)
 
+mswms_settings = default_mswms_settings()
+try:
+    import mswms_settings as user_settings
+    logging.info("Using user defined settings")
+    mswms_settings.__dict__.update(user_settings.__dict__)
+except ImportError as ex:
+    logging.warning(u"Couldn't import mswms_settings (ImportError:'%s'), using dummy config.", ex)
 
-DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
-# This can be used to set a location by SCRIPT_NAME for testing. e.g. export SCRIPT_NAME=/demo/
-SCRIPT_NAME = os.environ.get('SCRIPT_NAME', '/')
+
+def _load_allowed_users():
+    """Return the (username, md5-hex-password) pairs for HTTP basic auth.
+
+    Sourced from the operator-provided ``mswms_auth`` module; falls back to an
+    empty list (auth then rejects everyone -- fail closed) when it is absent.
+    """
+    try:
+        import mswms_auth
+        return list(mswms_auth.allowed_users)
+    except (ImportError, AttributeError) as ex:
+        logging.warning("Couldn't import mswms_auth.allowed_users (%s); "
+                        "basic auth will reject all users.", ex)
+        return []
+
 
 # in memory database for testing
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'
-APP = Flask(__name__, template_folder=os.path.join(DOCS_SERVER_PATH, 'static', 'templates'),
+APP = Flask(__name__, template_folder=os.path.join(DOCS_TEMPLATES_DIR),
             static_url_path="/static",
             static_folder=STATIC_LOCATION)
-APP.config.from_object(default_mswms_settings)
+APP.config.from_object(mswms_settings)
 APP.route = prefix_route(APP.route, SCRIPT_NAME)
+
+APP.jinja_env.globals.update(file_exists=file_exists)
 
 
 def _xstatic(name):
@@ -104,20 +135,13 @@ def _xstatic(name):
         return None
 
 
-def file_exists(filepath=None):
-    try:
-        return os.path.isfile(filepath)
-    except TypeError:
-        return False
-
-
 def get_topmenu():
     menu = [
-        (url_for('index'), 'Mission Support System',
-         ((url_for('about'), 'About'),
-          (url_for('install'), 'Install'),
-          (url_for("plots"), 'Gallery'),
-          (url_for('help'), 'Help'),
+        (url_for('docs.index'), 'Mission Support System',
+         ((url_for('docs.about'), 'About'),
+          (url_for('docs.install'), 'Install'),
+          (url_for("gallery.plots"), 'Gallery'),
+          (url_for('docs.help'), 'Help'),
           )),
     ]
 
@@ -128,86 +152,24 @@ def create_app(name="", imprint=None, gdpr=None):
     imprint_file = imprint
     gdpr_file = gdpr
 
+    APP.config.from_object(mswms_settings)
+
+    allowed_users = _load_allowed_users()
+    auth_backend = build_auth_backend(
+        enabled=APP.config.get("ENABLE_BASIC_HTTP_AUTHENTICATION", False),
+        allowed_users=allowed_users
+    )
+
+    init_docs_bp(APP, auth_backend)
+
     APP.jinja_env.globals.update(file_exists=file_exists)
     APP.jinja_env.globals["imprint"] = imprint_file
     APP.jinja_env.globals["gdpr"] = gdpr_file
     APP.jinja_env.globals.update(get_topmenu=get_topmenu)
 
-    @APP.route('/xstatic/<name>/<path:filename>')
-    def files(name, filename):
-        base_path = _xstatic(name)
-        if base_path is None:
-            abort(404)
-        if not filename:
-            abort(404)
-        return send_from_directory(base_path, filename)
-
-    @APP.route('/mss_theme/img/<path:filename>')
-    def mss_theme(filename):
-        base_path = os.path.join(DOCS_SERVER_PATH, 'static', 'img')
-        return send_from_directory(base_path, filename)
-
-    @APP.route("/index")
-    def index():
-        return render_template("/index.html")
-
-    @APP.route("/mss/about")
-    @APP.route("/mss")
-    def about():
-        _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'about.md')
-        img_url = url_for('overview')
-        md_overrides = ('![image](/mss/overview.png)', f'![image]({img_url})')
-
-        html_overrrides = ('<img alt="image" src="/mss/overview.png" />',
-                           '<img class="mx-auto d-block img-fluid" alt="image" src="/mss/overview.png" />')
-        content = get_content(_file, md_overrides=md_overrides, html_overrides=html_overrrides)
-        return render_template("/content.html", act="about", content=content)
-
-    @APP.route("/mss/install")
-    def install():
-        _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'installation.md')
-        content = get_content(_file)
-        return render_template("/content.html", act="install", content=content)
-
-    @APP.route("/mss/help")
-    def help():  # noqa: A001
-        _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'help.md')
-        html_overrides = ('<img alt="Waypoint Tutorial" '
-                          'src="https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.gif" />',
-                          '<img  class="mx-auto d-block img-fluid" alt="Waypoint Tutorial" '
-                          'src="https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.gif" />')
-        content = get_content(_file, html_overrides=html_overrides)
-        return render_template("/content.html", act="help", content=content)
-
-    @APP.route("/mss/imprint")
-    def imprint():
-        if file_exists(imprint_file):
-            content = get_content(imprint_file)
-            return render_template("/content.html", act="imprint", content=content)
-        else:
-            return ""
-
-    @APP.route("/mss/gdpr")
-    def gdpr():
-        if file_exists(gdpr_file):
-            content = get_content(gdpr_file)
-            return render_template("/content.html", act="gdpr", content=content)
-        else:
-            return ""
-
-    @APP.route('/mss/favicon.ico')
-    def favicons():
-        base_path = icons("16x16", "favicon.ico")
-        return send_file(base_path)
-
-    @APP.route('/mss/logo.png')
-    def logo():
-        base_path = icons("64x64", "mss-logo.png")
-        return send_file(base_path)
-
-    @APP.route('/mss/overview.png')
-    def overview():
-        base_path = os.path.join(DOCS_SERVER_PATH, 'static', 'img', 'wise12_overview.png')
-        return send_file(base_path)
+    if DOCS_BP.name not in APP.blueprints:
+        APP.register_blueprint(DOCS_BP)
+    if GALLERY_BP.name not in APP.blueprints:
+        APP.register_blueprint(GALLERY_BP)
 
     return APP

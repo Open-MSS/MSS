@@ -31,10 +31,11 @@ import io
 import os
 
 from PIL import Image
+from flask import current_app
 
-from mslib.mscolab.app import APP
+from mslib.mscolab.auth import register_user, check_login
 from mslib.mscolab.models import User, Operation
-from mslib.mscolab.server import check_login, register_user
+
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
 from tests.utils import XML_CONTENT1, XML_CONTENT2
@@ -46,13 +47,13 @@ class Test_Server:
     def setup(self, mscolab_app, mscolab_managers):
         self.app = mscolab_app
         self.sockio, _, self.fm = mscolab_managers
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
+        self.userdata = 'UV10@uv10.de', 'UV10', 'uv10.de', 'User UV'
         with self.app.app_context():
             yield
 
     def test_initialized_managers(self, mscolab_managers):
         sockio, cm, fm = mscolab_managers
-        assert self.app.config['OPERATIONS_DATA'] == APP.config['OPERATIONS_DATA']
+        assert self.app.config['OPERATIONS_DATA'] == current_app.config['OPERATIONS_DATA']
         assert 'Create a Flask-SocketIO server.' in sockio.__doc__
         assert 'Class with handler functions for chat related functionalities' in cm.__doc__
         assert 'Class with handler functions for file related functionalities' in fm.__doc__
@@ -101,7 +102,7 @@ class Test_Server:
             user = User.query.filter_by(emailid=str(self.userdata[0])).first()
             assert user is not None
             assert result == user
-            result = check_login('UV20@uv20', self.userdata[1])
+            result = check_login('UV20@uv20.de', self.userdata[1])
             assert result is False
 
     def test_get_auth_token(self):
@@ -163,7 +164,7 @@ class Test_Server:
 
             user = get_user(self.userdata[0])
             relative_image_path = user.profile_image_path  # Capture the path before deletion
-            full_image_path = os.path.join(APP.config['UPLOAD_FOLDER'], relative_image_path)
+            full_image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], relative_image_path)
             response = test_client.post('/delete_own_account', data={"token": token})
             assert response.status_code == 200
             assert response.get_json()["success"] is True

@@ -966,8 +966,8 @@ import mslib.mswms
 #service_country = "Germany"
 #service_fees = "none"
 #service_access_constraints = "This service is intended for research purposes only."
-#imprint = ""
-#gdpr = ""
+#IMPRINT = ""
+#GDPR = ""
 
 
 #
@@ -976,7 +976,7 @@ import mslib.mswms
 # If you require basic HTTP authentication, set the following variable
 # to True. Add usernames in the list "allowed:users". Note that the
 # passwords are not specified in plain text but by their md5 digest.
-#enable_basic_http_authentication = False
+#ENABLE_BASIC_HTTP_AUTHENTICATION = False
 
 
 #xml_template directory is a sub directory of mswms

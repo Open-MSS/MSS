@@ -23,54 +23,56 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
+import datetime
 import os
 import logging
+import sys
+from pathlib import Path
+
+import flask_migrate
 import sqlalchemy
+from flask_mail import Mail
 
 from flask_migrate import Migrate
 from flask import Flask
 
 import mslib
 
-from flask import render_template, send_from_directory, send_file, url_for, abort
+from flask import url_for
 from flask_sqlalchemy import SQLAlchemy
+
 from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab import migrations
 from mslib.utils import prefix_route, release_info
-from mslib.msui.icons import icons
-from mslib.utils.get_content import get_content
+from mslib.utils.file_exists import file_exists
 from xstatic.main import XStatic
+
+
+DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
+DOCS_BLUEPRINTS_DIR = os.path.join(DOCS_SERVER_PATH, 'blueprints')
+DOCS_BLUEPRINTS_DOCS_DIR = os.path.join(DOCS_BLUEPRINTS_DIR, 'docs')
+DOCS_TEMPLATES_DIR = os.path.join(DOCS_BLUEPRINTS_DOCS_DIR, 'templates')
+DOCS_STATIC_DIR = os.path.join(DOCS_BLUEPRINTS_DOCS_DIR, 'static')
+DOCS_IMG_DIR = os.path.join(DOCS_STATIC_DIR, 'img')
+DOCS_DOCS_DIR = os.path.join(DOCS_STATIC_DIR, 'docs')
+# This can be used to set a location by SCRIPT_NAME for testing. e.g. export SCRIPT_NAME=/demo/
+SCRIPT_NAME = os.environ.get('SCRIPT_NAME', '/')
+
 
 message, update = release_info.check_for_new_release()
 if update:
     logging.warning(message)
 
 
-def file_exists(filepath=None):
-    try:
-        return os.path.isfile(filepath)
-    except TypeError:
-        return False
-
-
-DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
-DOCS_STATIC_DIR = os.path.join(DOCS_SERVER_PATH, 'static')
-DOCS_IMG_DIR = os.path.join(DOCS_STATIC_DIR, 'img')
-DOCS_DOCS_DIR = os.path.join(DOCS_STATIC_DIR, 'docs')
-# This can be used to set a location by SCRIPT_NAME for testing. e.g. export SCRIPT_NAME=/demo/
-SCRIPT_NAME = os.environ.get('SCRIPT_NAME', '/')
-
 # in memory database for testing
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'
-APP = Flask(__name__, template_folder=os.path.join(DOCS_STATIC_DIR, 'templates'))
+APP = Flask(__name__, template_folder=os.path.join(DOCS_TEMPLATES_DIR))
+APP.jinja_env.globals.setdefault("imprint", "")
+APP.jinja_env.globals.setdefault("gdpr", "")
 APP.config.from_object(mscolab_settings)
 # Expose docs path for callers/tests and make it part of Flask config for consistency.
 APP.config['DOCS_SERVER_PATH'] = DOCS_SERVER_PATH
 APP.route = prefix_route(APP.route, SCRIPT_NAME)
-
-APP.jinja_env.globals.update(file_exists=file_exists)
-APP.jinja_env.globals["imprint"] = APP.config['IMPRINT']
-APP.jinja_env.globals["gdpr"] = APP.config['GDPR']
 
 
 def _xstatic(name):
@@ -95,92 +97,130 @@ def _xstatic(name):
 APP.xstatic = _xstatic
 
 
+def create_files():
+    Path(APP.config['OPERATIONS_DATA']).mkdir(parents=True, exist_ok=True)
+    Path(APP.config['UPLOAD_FOLDER']).mkdir(parents=True, exist_ok=True)
+    Path(APP.config['SSO_DIR']).mkdir(parents=True, exist_ok=True)
+
+
+def _handle_db_upgrade():
+    from mslib.mscolab.models import db
+
+    create_files()
+    inspector = sqlalchemy.inspect(db.engine)
+    existing_tables = inspector.get_table_names()
+    if ("alembic_version" not in existing_tables and len(existing_tables) > 0) or (
+        "alembic_version" in existing_tables
+        and len(existing_tables) > 1
+        and db.session.execute(sqlalchemy.text("SELECT * FROM alembic_version")).first() is None
+    ):
+        sys.exit(
+            """Your database contains no alembic_version revision identifier, but it has a schema. This suggests \
+that you have a pre-existing database but haven't followed the database migration instructions. To prevent damage to \
+your database MSColab will abort. Please follow the documentation for a manual database migration from MSColab v8/v9."""
+        )
+
+    is_empty_database = len(existing_tables) == 0 or (
+        len(existing_tables) == 1
+        and "alembic_version" in existing_tables
+        and db.session.execute(sqlalchemy.text("SELECT * FROM alembic_version")).first() is None
+    )
+    # If a database connection to migrate from is set and the target database is empty, then migrate the existing data
+    if is_empty_database and APP.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'] is not None:
+        logging.info("The target database is empty and a database to migrate from is set, starting the data migration")
+        source_engine = sqlalchemy.create_engine(APP.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'])
+        source_metadata = sqlalchemy.MetaData()
+        source_metadata.reflect(bind=source_engine)
+        # Determine the previous MSColab version based on the database content and upgrade to the corresponding revision
+        if "authentication_backend" in source_metadata.tables["users"].columns:
+            # It should be v9
+            flask_migrate.upgrade(directory=migrations.__path__[0], revision="c171019fe3ee")
+        else:
+            # It's probably v8
+            flask_migrate.upgrade(directory=migrations.__path__[0], revision="92eaba86a92e")
+        # Copy over the existing data
+        target_engine = sqlalchemy.create_engine(APP.config['SQLALCHEMY_DATABASE_URI'])
+        target_metadata = sqlalchemy.MetaData()
+        target_metadata.reflect(bind=target_engine)
+        with source_engine.connect() as src_connection, target_engine.connect() as target_connection:
+            for table in source_metadata.sorted_tables:
+                if table.name == "alembic_version":
+                    # Do not migrate the alembic_version table!
+                    continue
+                logging.debug("Copying table %s", table.name)
+                stmt = target_metadata.tables[table.name].insert()
+                for row in src_connection.execute(table.select()):
+                    logging.debug("Copying row %s", row)
+                    row = tuple(
+                        r.replace(tzinfo=datetime.timezone.utc) if isinstance(r, datetime.datetime) else r for r in row
+                    )
+                    target_connection.execute(stmt.values(row))
+            target_connection.commit()
+            if target_engine.name == "postgresql":
+                # Fix the databases auto-increment sequences, if it is a PostgreSQL database
+                # For reference, see: https://wiki.postgresql.org/wiki/Fixing_Sequences
+                logging.info("Using a PostgreSQL database, will fix up sequences")
+                cur = target_connection.execute(sqlalchemy.text(r"""
+SELECT
+    'SELECT SETVAL(' ||
+    quote_literal(quote_ident(sequence_namespace.nspname) || '.' || quote_ident(class_sequence.relname)) ||
+    ', COALESCE(MAX(' ||quote_ident(pg_attribute.attname)|| '), 1) ) FROM ' ||
+    quote_ident(table_namespace.nspname)|| '.'||quote_ident(class_table.relname)|| ';'
+FROM pg_depend
+    INNER JOIN pg_class AS class_sequence
+        ON class_sequence.oid = pg_depend.objid
+            AND class_sequence.relkind = 'S'
+    INNER JOIN pg_class AS class_table
+        ON class_table.oid = pg_depend.refobjid
+    INNER JOIN pg_attribute
+        ON pg_attribute.attrelid = class_table.oid
+            AND pg_depend.refobjsubid = pg_attribute.attnum
+    INNER JOIN pg_namespace as table_namespace
+        ON table_namespace.oid = class_table.relnamespace
+    INNER JOIN pg_namespace AS sequence_namespace
+        ON sequence_namespace.oid = class_sequence.relnamespace
+ORDER BY sequence_namespace.nspname, class_sequence.relname;
+"""))
+                for stmt, in cur.all():
+                    target_connection.execute(sqlalchemy.text(stmt))
+                target_connection.commit()
+        logging.info("Data migration finished")
+
+    # Upgrade to the latest database revision
+    flask_migrate.upgrade(directory=migrations.__path__[0])
+
+    logging.info("Database initialised successfully!")
+
+
 def create_app(imprint=None, gdpr=None):
     imprint_file = imprint
     gdpr_file = gdpr
+    APP.mail = Mail(APP)
+
+    with APP.app_context():
+        _handle_db_upgrade()
 
     APP.jinja_env.globals.update(file_exists=file_exists)
-    APP.jinja_env.globals["imprint"] = imprint_file
-    APP.jinja_env.globals["gdpr"] = gdpr_file
-
-    @APP.route('/xstatic/<name>/<path:filename>')
-    def files(name, filename):
-        base_path = _xstatic(name)
-        if base_path is None:
-            abort(404)
-        if not filename:
-            abort(404)
-        return send_from_directory(base_path, filename)
-
-    @APP.route('/mss_theme/img/<path:filename>')
-    def mss_theme(filename):
-        base_path = os.path.join(DOCS_IMG_DIR)
-        return send_from_directory(base_path, filename)
-
+    APP.jinja_env.globals["imprint"] = imprint_file or ""
+    APP.jinja_env.globals["gdpr"] = gdpr_file or ""
     APP.jinja_env.globals.update(get_topmenu=get_topmenu)
 
-    @APP.route("/index")
-    def index():
-        return render_template("/index.html")
+    from mslib.mscolab.blueprints.auth import AUTH_BP
+    from mslib.mscolab.blueprints.chat import CHAT_BP
+    from mslib.mscolab.blueprints.operation import OPERATION_BP
+    from mslib.mscolab.blueprints.user import USER_BP
+    from mslib.mscolab.blueprints.docs import DOCS_BP
 
-    @APP.route("/mss/about")
-    @APP.route("/mss")
-    def about():
-        _file = os.path.join(DOCS_DOCS_DIR, 'about.md')
-        img_url = url_for('overview')
-        md_overrides = ('![image](/mss/overview.png)', f'![image]({img_url})')
-
-        html_overrides = ('<img alt="image" src="/mss/overview.png" />',
-                          '<img class="mx-auto d-block img-fluid" alt="image" src="/mss/overview.png" />')
-        content = get_content(_file, md_overrides=md_overrides, html_overrides=html_overrides)
-        return render_template("/content.html", act="about", content=content)
-
-    @APP.route("/mss/install")
-    def install():
-        _file = os.path.join(DOCS_DOCS_DIR, 'installation.md')
-        content = get_content(_file)
-        return render_template("/content.html", act="install", content=content)
-
-    @APP.route("/mss/help")
-    def help():  # noqa: A001
-        _file = os.path.join(DOCS_DOCS_DIR, 'help.md')
-        html_overrides = ('<img alt="Waypoint Tutorial" '
-                          'src="https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.gif" />',
-                          '<img  class="mx-auto d-block img-fluid" alt="Waypoint Tutorial" '
-                          'src="https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.gif" />')
-        content = get_content(_file, html_overrides=html_overrides)
-        return render_template("/content.html", act="help", content=content)
-
-    @APP.route("/mss/imprint")
-    def imprint():
-        if file_exists(imprint_file):
-            content = get_content(imprint_file)
-            return render_template("/content.html", act="imprint", content=content)
-        else:
-            return ""
-
-    @APP.route("/mss/gdpr")
-    def gdpr():
-        if file_exists(gdpr_file):
-            content = get_content(gdpr_file)
-            return render_template("/content.html", act="gdpr", content=content)
-        else:
-            return ""
-
-    @APP.route('/mss/favicon.ico')
-    def favicons():
-        base_path = icons("16x16", "favicon.ico")
-        return send_file(base_path)
-
-    @APP.route('/mss/logo.png')
-    def logo():
-        base_path = icons("64x64", "mss-logo.png")
-        return send_file(base_path)
-
-    @APP.route('/mss/overview.png')
-    def overview():
-        base_path = os.path.join(DOCS_IMG_DIR, 'wise12_overview.png')
-        return send_file(base_path)
+    if AUTH_BP.name not in APP.blueprints:
+        APP.register_blueprint(AUTH_BP)
+    if CHAT_BP.name not in APP.blueprints:
+        APP.register_blueprint(CHAT_BP)
+    if USER_BP.name not in APP.blueprints:
+        APP.register_blueprint(USER_BP)
+    if OPERATION_BP.name not in APP.blueprints:
+        APP.register_blueprint(OPERATION_BP)
+    if DOCS_BP.name not in APP.blueprints:
+        APP.register_blueprint(DOCS_BP)
 
     return APP
 
@@ -205,10 +245,10 @@ migrate.init_app(APP, db)
 
 def get_topmenu():
     menu = [
-        (url_for('index'), 'Mission Support System',
-         ((url_for('about'), 'About'),
-          (url_for('install'), 'Install'),
-          (url_for('help'), 'Help'),
+        (url_for('docs.index'), 'Mission Support System',
+         ((url_for('docs.about'), 'About'),
+          (url_for('docs.install'), 'Install'),
+          (url_for('docs.help'), 'Help'),
           )),
     ]
     return menu
