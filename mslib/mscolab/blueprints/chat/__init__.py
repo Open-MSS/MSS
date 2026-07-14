@@ -31,6 +31,7 @@ import werkzeug
 from flask import Blueprint, request, g, jsonify, abort, send_from_directory, current_app
 
 from mslib.mscolab.auth import verify_user
+from mslib.mscolab.events import SocketEvents
 from mslib.mscolab.message_type import MessageType
 from mslib.mscolab.utils import get_message_dict
 
@@ -69,7 +70,7 @@ def message_attachment():
                 sockio = current_app.extensions['sockio']
                 new_message = cm.add_message(user, static_file_path, op_id, message_type)
                 new_message_dict = get_message_dict(new_message)
-                sockio.emit('chat-message-client', json.dumps(new_message_dict))
+                sockio.emit(SocketEvents.CHAT_MESSAGE_CLIENT, json.dumps(new_message_dict))
                 return jsonify({"success": True, "path": static_file_path})
             else:
                 return "False"
