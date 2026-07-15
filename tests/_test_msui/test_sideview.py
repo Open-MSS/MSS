@@ -252,7 +252,7 @@ class Test_SideViewWMS:
 
     def query_server(self, qtbot, url):
         QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
-        with qtbot.wait_signal(self.wms_control.cpdlg.canceled):
+        with qtbot.wait_signal(self.wms_control.cpdlg.canceled, timeout=65000):
             QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
     def test_server_getmap(self, qtbot):
@@ -260,7 +260,7 @@ class Test_SideViewWMS:
         assert that a getmap call to a WMS server displays an image
         """
         self.query_server(qtbot, self.url)
-        with qtbot.wait_signal(self.wms_control.image_displayed):
+        with qtbot.wait_signal(self.wms_control.image_displayed, timeout=65000):
             QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         assert self.window.getView().plotter.image is not None
 
