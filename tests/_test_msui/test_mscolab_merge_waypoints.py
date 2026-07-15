@@ -48,7 +48,7 @@ class Test_Mscolab_Merge_Waypoints:
         self.window = msui.MSUIMainWindow(local_operations_data=ROOT_DIR)
         self.window.create_new_flight_track()
         self.emailid = 'merge@alpha.org'
-        self.local_mscolab_data = ROOT_DIR / "local_mscolab_data"
+        self.local_mscolab_data = ROOT_DIR / "local_colabdata"
         yield
         self.window.mscolab.logout()
         mslib.utils.auth.del_password_from_keyring("merge@alpha.org")
