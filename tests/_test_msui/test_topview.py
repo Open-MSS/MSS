@@ -174,6 +174,20 @@ class Test_MSSTopViewWindow:
             data = f.read()
             assert data.count("<Waypoint") == len(self.window.waypoints_model.waypoints)
 
+    def test_tutorial_screen_settings_records_canvas(self):
+        """
+        In tutorial mode the view persists the figure canvas rectangle so
+        coordinate-based tutorials can map plot pixels to screen points.
+        """
+        settings = self.window._tutorial_screen_settings()
+        assert "os_screen_region" in settings
+        assert "canvas_screen_region" in settings
+        _, _, win_w, win_h = settings["os_screen_region"]
+        _, _, canvas_w, canvas_h = settings["canvas_screen_region"]
+        # the canvas is a sub-widget of the window (smaller, never larger)
+        assert 0 < canvas_w <= win_w
+        assert 0 < canvas_h <= win_h
+
     def test_open_wms(self):
         self.window.cbTools.currentIndexChanged.emit(1)
 
