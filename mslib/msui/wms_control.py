@@ -998,7 +998,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         def on_failure(e):
             try:
                 raise e
-            # catch all requests errors 
+            # catch all requests errors
             except requests.exceptions.RequestException as ex:
                 logging.error("Cannot load capabilities document.\n"
                               "No layers can be used in this view.")
