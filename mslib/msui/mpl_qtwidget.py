@@ -41,7 +41,7 @@ from mslib.msui.viewplotter import LAST_SAVE_DIRECTORY, TopViewPlotter, SideView
 
 from mslib.utils.thermolib import convert_pressure_to_vertical_axis_measure
 from mslib.utils import thermolib
-from mslib.utils.config import config_loader
+from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings
 from mslib.utils.qt import Worker
 from mslib.utils.units import units
 from mslib.msui import mpl_pathinteractor as mpl_pi
@@ -212,8 +212,20 @@ class NavigationToolbar(NavigationToolbar2QT):
         elif self.no_push_history:
             pass
         else:
-            self._nav_stack.push(self.canvas.map.kwargs.copy())
+            kwargs = self.canvas.map.kwargs.copy()
+            self._nav_stack.push(kwargs)
             self.set_history_buttons()
+            # Persist the map's current lon/lat extent, so an external process
+            # can read the view actually displayed after a pan/zoom
+            # rather than a predefined section's static extent.
+            # Merge into any existing settings for this tag
+            # (e.g. canvas_screen_region/os_screen_region) instead of
+            # overwriting them, since save_settings_qsettings replaces the
+            # whole per-tag dict.
+            settings = load_settings_qsettings(self.canvas.basename, {})
+            settings['map_extent_region'] = (kwargs['llcrnrlon'], kwargs['llcrnrlat'],
+                                             kwargs['urcrnrlon'], kwargs['urcrnrlat'])
+            save_settings_qsettings(self.canvas.basename, settings)
 
     def _update_view(self):
         """

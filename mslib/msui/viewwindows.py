@@ -33,7 +33,7 @@ from abc import abstractmethod
 
 from PyQt5 import QtCore, QtWidgets
 from mslib.msui import constants
-from mslib.utils.config import save_settings_qsettings
+from mslib.utils.config import load_settings_qsettings, save_settings_qsettings
 
 
 class MSUIViewWindow(QtWidgets.QMainWindow):
@@ -297,6 +297,18 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
                                                 canvas.width(), canvas.height())
         return settings
 
+    def _save_tutorial_screen_settings(self):
+        """
+        Save the on-screen geometry, without clobbering other
+        settings already stored under ``self.settings_tag`` (e.g. the map's
+        current extent, saved separately by NavigationToolbar.push_current on
+        pan/zoom) -- save_settings_qsettings replaces the whole per-tag dict,
+        so it has to be merged with what is already there.
+        """
+        settings = load_settings_qsettings(self.settings_tag, {})
+        settings.update(self._tutorial_screen_settings())
+        save_settings_qsettings(self.settings_tag, settings)
+
     def changeEvent(self, event):
         """
         Change event method
@@ -311,7 +323,7 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
             top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
             if top_left.x() != 0:
                 # we have to save this to reuse it by the tutorials
-                save_settings_qsettings(self.settings_tag, self._tutorial_screen_settings())
+                self._save_tutorial_screen_settings()
             QtWidgets.QWidget.changeEvent(self, event)
 
     def moveEvent(self, event):
@@ -328,7 +340,7 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
             top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
             if top_left.x() != 0:
                 # we have to save this to reuse it by the tutorials
-                save_settings_qsettings(self.settings_tag, self._tutorial_screen_settings())
+                self._save_tutorial_screen_settings()
             QtWidgets.QWidget.moveEvent(self, event)
 
 
