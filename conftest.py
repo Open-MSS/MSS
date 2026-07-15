@@ -205,7 +205,7 @@ def reset_config():
             if item_name.name != "mscolab.db":
                 item_name.unlink()
 
-    # Remove the client-side "work locally" cache. create_local_operation_file re-uses an
+    # Remove the client-side "work locally" cache. create_local_operation_file reuses an
     # existing FTML file, so stale waypoints would leak into any later test (or repeated
     # run of the same test) that toggles the work-locally mode.
     local_colabdata = constants.ROOT_DIR / "local_colabdata"
