@@ -611,8 +611,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         index = self.index(0, 0)
 
         self.layoutChanged.emit()
-        self.dataChanged.emit(index, index)
-
+        
     def replace_waypoints(self, new_waypoints):
         self.waypoints = []
         self.insertRows(0, rows=len(new_waypoints), waypoints=new_waypoints, data_copied=True)
