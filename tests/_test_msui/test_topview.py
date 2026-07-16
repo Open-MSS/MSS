@@ -33,6 +33,9 @@ from PyQt5 import QtWidgets, QtCore, QtTest, QtGui
 from mslib.msui import flighttrack as ft
 from mslib.msui.msui import MSUIMainWindow
 from mslib.msui.viewplotter import _DEFAULT_SETTINGS_TOPVIEW
+from mslib.utils.config import config_loader
+
+WMS_REQUEST_TIMEOUT_MS = (config_loader(dataset="WMS_request_timeout") + 5) * 1000
 
 
 class Test_MSS_TV_MapAppearanceDialog:
@@ -343,7 +346,7 @@ class Test_TopViewWMS:
 
     def query_server(self, qtbot, url):
         QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
-        with qtbot.wait_signal(self.wms_control.cpdlg.canceled, timeout=65000):
+        with qtbot.wait_signal(self.wms_control.cpdlg.canceled, timeout=WMS_REQUEST_TIMEOUT_MS):
             QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
     def test_server_getmap(self, qtbot):
@@ -351,7 +354,7 @@ class Test_TopViewWMS:
         assert that a getmap call to a WMS server displays an image
         """
         self.query_server(qtbot, self.url)
-        with qtbot.wait_signal(self.wms_control.image_displayed, timeout=65000):
+        with qtbot.wait_signal(self.wms_control.image_displayed, timeout=WMS_REQUEST_TIMEOUT_MS):
             QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         assert self.window.getView().map.image is not None
         self.window.getView().set_settings({})
