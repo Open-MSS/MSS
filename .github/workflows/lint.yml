@@ -39,6 +39,19 @@ jobs:
     - name: Lint with flake8
       run: git ls-files -z '**.py' | xargs -0 pixi run -e dev flake8
 
+  import-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v4
+    - uses: prefix-dev/setup-pixi@a09b6247153796b190642a2b53fac4241043cf6f # v0.10.0
+      with:
+        pixi-version: latest
+        cache: true
+        environments: dev
+    - name: Check architectural import contracts
+      run: pixi run -e dev lint-imports
+
   no-crlf-in-git:
     runs-on: ubuntu-latest
     timeout-minutes: 10

@@ -93,6 +93,7 @@ dnspython = ">=2.0.0, <2.3.0"
 flake8 = "*"
 flake8-builtins = "*"
 gsl = "==2.7.0"
+import-linter = ">=2"
 mock = "*"
 py = "*"
 pynco = "*"
@@ -101,6 +102,9 @@ pytest-cov = "*"
 pytest-qt = "*"
 pytest-randomly = "*"
 pytest-xdist = "*"
+
+[feature.dev.tasks]
+lint-imports = "lint-imports"
 
 [feature.tutorials]
 platforms = ["win-64", "linux-64", "osx-64"]
