@@ -10853,6 +10853,7 @@ packages:
   license_family: Apache
   purls:
   - pkg:pypi/sniffio?source=compressed-mapping
+  run_exports: {}
   size: 15698
   timestamp: 1762941572482
 - conda: https://conda.anaconda.org/conda-forge/noarch/snowballstemmer-3.0.1-pyhd8ed1ab_0.conda
