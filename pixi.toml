@@ -93,7 +93,6 @@ dnspython = ">=2.0.0, <2.3.0"
 flake8 = "*"
 flake8-builtins = "*"
 gsl = "==2.7.0"
-import-linter = ">=2"
 mock = "*"
 py = "*"
 pynco = "*"
@@ -106,7 +105,6 @@ pytest-xdist = "*"
 [feature.dev.tasks]
 lint = { cmd = "git ls-files -z '**.py' | xargs -0 flake8" }
 codespell = { cmd = "git ls-files -z | xargs -0 codespell --check-filenames" }
-lint-imports = "lint-imports"
 test-fast = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_plugins tests/_test_utils tests/test_meta.py"
 test-plugins = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_plugins"
 test-utils = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_utils"
