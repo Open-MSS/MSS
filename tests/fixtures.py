@@ -115,14 +115,24 @@ def mscolab_session_managers(mscolab_session_app):
     return sockio, cm, fm
 
 
-# TODO: Having this fixture be autouse is a crutch. It seems like if it is not autouse some tests can bring the pytest
+# TODO: Forcing the server fork before any test runs is a crutch. It seems like some tests can bring the pytest
 # processes objects into a state in which the MSColab server will have trouble starting the Flask-SocketIO server once
-# it is forked. With autouse the fork happens first, before any test runs. After that, the pytest process can no longer
-# affect the now-running server, thus mitigating the issue. This is my understanding at time of writing.
+# it is forked. Forking first, before any test runs, means the pytest process can no longer affect the now-running
+# server, thus mitigating the issue. This is my understanding at time of writing.
 #
 # This issue would also be avoided if the background server process wasn't started with multiprocessing and a fork, but
 # with a real subprocess, which would solve some other issues (e.g. testing on Windows) as well.
 @pytest.fixture(scope="session", autouse=True)
+def fork_mscolab_server_before_any_test(request):
+    """Fork the MSColab server before any test runs (see comment above), but only in
+    test sessions that contain at least one test using it (flag computed in
+    conftest.pytest_collection_modifyitems).
+    """
+    if getattr(request.config, "mss_needs_mscolab_server", True):
+        request.getfixturevalue("mscolab_session_server")
+
+
+@pytest.fixture(scope="session")
 def mscolab_session_server(mscolab_session_app, mscolab_session_managers):
     """Session-scoped fixture that provides a running MSColab server.
 

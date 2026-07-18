@@ -210,5 +210,18 @@ def reset_config():
     read_config_file()
 
 
+def pytest_collection_modifyitems(config, items):
+    """Determine whether this test session needs the forked MSColab server.
+
+    The session-scoped server fork (tests/fixtures.py) is expensive and must
+    happen before any (Qt) test runs. Sessions without any test that uses the
+    server -- e.g. a run of only tests/_test_utils -- skip the fork entirely.
+    """
+    config.mss_needs_mscolab_server = any(
+        "mscolab_session_server" in getattr(item, "fixturenames", ())
+        for item in items
+    )
+
+
 # Make fixtures available everywhere
 from tests.fixtures import *  # noqa: F401, F403
