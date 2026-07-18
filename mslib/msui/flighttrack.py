@@ -608,10 +608,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 wp_comm = f"Hexagon {(8 - int(wp_comm[-1])):d}"
                 self.waypoints[i].comments = wp_comm
         self.update_distances(position=0, rows=len(self.waypoints))
-        index = self.index(0, 0)
-
         self.layoutChanged.emit()
-        self.dataChanged.emit(index, index)
 
     def replace_waypoints(self, new_waypoints):
         self.waypoints = []

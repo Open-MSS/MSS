@@ -5,7 +5,11 @@
 *.pyc
 *.swp
 *.patch
+*.diff
+*.orig
+*.rej
 *~
+pytest*.log
 mslib/performance/data/
 mslib/mswms/mswms_settings.py
 mslib/mswms/mswms_auth.py

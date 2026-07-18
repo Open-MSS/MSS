@@ -37,8 +37,12 @@ from mslib.mscolab.utils import get_message_dict
 from mslib.mscolab.utils import get_user_id
 from mslib.mscolab.app import APP
 
+# async_handlers=False handles each client's events in the order they were received. With
+# the default (async_handlers=True) every event runs in its own thread, so two rapid
+# file-save events can give a wrong final document data.
 socketio = SocketIO(logger=APP.config['SOCKETIO_LOGGER'], engineio_logger=APP.config['ENGINEIO_LOGGER'],
                     async_mode='threading',
+                    async_handlers=False,
                     cors_allowed_origins=("*" if not hasattr(APP, "CORS_ORIGINS") or
                     "*" in APP.config['CORS_ORIGINS'] else APP.config['CORS_ORIGINS']))
 
