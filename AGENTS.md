@@ -11,24 +11,28 @@ Python constraint: **< 3.12** (pinned in pixi.toml).
 ## Commands
 
 ```
-# lint
-pixi run -e dev flake8
-git ls-files -z | xargs -0 pixi run -e dev codespell --check-filenames
+pixi run -e dev lint            # flake8 over tracked .py files
+pixi run -e dev lint-imports    # architectural import contracts (setup.cfg)
+pixi run -e dev codespell       # spelling
+pixi run -e dev test-fast       # plugins + utils + meta; no servers, fastest signal
+pixi run -e dev test-msui       # GUI suite (offscreen Qt)
+pixi run -e dev test-mscolab    # collaboration-server suite
+pixi run -e dev test-mswms      # WMS-server suite
+pixi run -e dev test            # full suite (~13 min)
 
-# test (full suite)
-pixi run -e dev env QT_QPA_PLATFORM=offscreen pytest -v -n logical --durations=20 --cov=mslib tests
-
-# run a single test file
-pixi run -e dev env QT_QPA_PLATFORM=offscreen pytest tests/test_something.py -v
-
-# headless Qt (CI default, required on macOS)
-QT_QPA_PLATFORM=offscreen pixi run -e dev -n logical pytest tests/
+# single test file
+pixi run -e dev env QT_QPA_PLATFORM=offscreen pytest tests/_test_msui/test_topview.py -v
 
 # coverage XML
 pixi run -e dev coverage xml
 ```
 
 ## Architecture
+
+Start with `ARCHITECTURE.md` (package DAG, module index, invariants,
+verification ladder). Each package under `mslib/` has its own `CLAUDE.md`
+card with layout, allowed imports, and how to verify changes there.
+Dependency direction is enforced by import-linter (`setup.cfg`).
 
 Single package `mslib` with four main subpackages:
 
@@ -46,7 +50,7 @@ CLI entrypoints (pixi env): `msui`, `mscolab`, `mswms`, `msidp`, `mssautoplot`, 
 - Qt tests require `QT_QPA_PLATFORM=offscreen` on headless machines.
 - Keyring is mocked via `TestKeyring` in conftest — no real keyring needed.
 - Tests clean config state after every test via `reset_config` autouse fixture.
-- MSColab tests spin up a real Flask-SocketIO subprocess on a random port.
+- MSColab tests fork a real Flask-SocketIO server (multiprocessing fork, random port); the fork happens only in sessions that contain tests needing it.
 
 ## Conventions
 
