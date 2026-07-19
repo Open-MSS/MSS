@@ -36,7 +36,7 @@ from mslib.utils.migration.config_before_nine import read_config_file as read_co
 from mslib.utils.migration.config_before_nine import config_loader as config_loader_before_nine
 from mslib.utils.config import modify_config_file
 from mslib.utils.config import read_config_file, config_loader
-from mslib.msui.constants import MSUI_SETTINGS
+from mslib.utils.constants import MSUI_SETTINGS
 
 
 class JsonConversion:

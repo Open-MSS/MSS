@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui.constants
-    ~~~~~~~~~~~~~~~~~~~~
+    mslib.utils.constants
+    ~~~~~~~~~~~~~~~~~~~~~
 
-    Deprecated compatibility shim: the constants moved to
-    :mod:`mslib.utils.constants` so that mslib.utils does not depend on the
-    GUI package. Import from mslib.utils.constants instead; this module is
-    kept for one release for third-party plugin configurations.
+    This module provides constants
 
     This file is part of MSS.
 
@@ -30,4 +27,21 @@
     limitations under the License.
 """
 
-from mslib.utils.constants import *  # noqa: F401,F403
+import os
+import platformdirs
+from pathlib import Path
+
+HOME = Path.home()
+MSUI_CONFIG_PATH = Path(os.getenv("MSUI_CONFIG_PATH", HOME / ".config" / "msui"))
+
+MSUI_CONFIG_SYSPATH = str(MSUI_CONFIG_PATH.resolve())
+
+MSUI_CACHE_PATH = platformdirs.user_cache_path("msui", "mss")
+
+GRAVATAR_DIR_PATH = MSUI_CONFIG_PATH / "gravatars"
+
+MSUI_SETTINGS = Path(os.getenv('MSUI_SETTINGS', MSUI_CONFIG_PATH / "msui_settings.json"))
+
+MSS_AUTOPLOT = Path(os.getenv('MSS_AUTOPLOT', MSUI_CONFIG_PATH / "mssautoplot.json"))
+
+AUTH_LOGIN_CACHE = {}

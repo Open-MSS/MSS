@@ -36,7 +36,7 @@ import logging
 import time
 
 import defusedxml.ElementTree as etree
-from mslib.msui.constants import MSUI_CONFIG_PATH
+from mslib.utils.constants import MSUI_CONFIG_PATH
 
 AIPDIR = Path(MSUI_CONFIG_PATH) / "downloads" / "aip"
 AIPDIR.mkdir(parents=True, exist_ok=True)

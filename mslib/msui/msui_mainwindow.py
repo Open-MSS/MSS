@@ -45,7 +45,8 @@ from mslib.msui.qt5 import ui_about_dialog as ui_ab
 from mslib.msui.qt5 import ui_shortcuts as ui_sh
 from mslib.msui import flighttrack as ft
 from mslib.msui import tableview, topview, sideview, linearview
-from mslib.msui import constants, editor, mscolab
+from mslib.utils import constants
+from mslib.msui import editor, mscolab
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 from mslib.utils.qt import get_open_filenames, get_save_filename, show_popup

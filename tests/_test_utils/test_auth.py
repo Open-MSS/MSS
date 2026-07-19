@@ -28,7 +28,7 @@
 from tests.utils import create_msui_settings_file
 from mslib.utils import auth
 from mslib.utils.config import read_config_file, config_loader
-from mslib.msui import constants
+from mslib.utils import constants
 
 
 def test_keyring():

@@ -47,7 +47,7 @@ except (ImportError, ModuleNotFoundError):
         def __init__(self, message):
             super().__init__(message)
 
-from mslib.msui import constants
+from mslib.utils import constants
 
 
 NAME = __name__
