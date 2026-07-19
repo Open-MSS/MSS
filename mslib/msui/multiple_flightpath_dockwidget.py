@@ -118,6 +118,38 @@ class MultipleFlightpath:
 
 
 class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidget):
+
+    def cleanup_connections(self):
+    try:
+        self.listFlightTracks.model().rowsInserted.disconnect(self.wait)
+    except Exception:
+        pass
+
+    try:
+        self.listFlightTracks.model().rowsRemoved.disconnect(self.flighttrackRemoved)
+    except Exception:
+        pass
+
+    try:
+        self.ui.signal_activate_flighttrack1.disconnect(self.get_active)
+    except Exception:
+        pass
+
+    try:
+        self.list_flighttrack.itemChanged.disconnect(self.flagop)
+    except Exception:
+        pass
+
+    try:
+        self.ui.signal_ft_vertices_color_change.disconnect(self.ft_vertices_color)
+    except Exception:
+        pass
+
+    try:
+        self.ui.signal_login_mscolab.disconnect(self.login)
+    except Exception:
+        pass
+
     """
     This class provides the interface for plotting Multiple Flighttracks
     on the TopView canvas.
@@ -219,7 +251,12 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             self.connect_mscolab_server()
 
         if parent is not None:
-            parent.viewCloses.connect(lambda: self.signal_parent_closes.emit())
+            parent.viewCloses.connect(self.handle_parent_close)
+
+         def handle_parent_close(self):
+            self.cleanup_connections()
+            self.signal_parent_closes.emit()
+
 
         # Load flighttracks
         for index in range(self.listFlightTracks.count()):
@@ -257,8 +294,9 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                                                        self.listOperationsMSC, self.view)
         self.obb.append(self.operations)
 
-        self.ui.signal_permission_revoked.connect(lambda op_id: self.operations.permission_revoked(op_id))
-        self.ui.signal_render_new_permission.connect(lambda op_id, path: self.operations.render_permission(op_id, path))
+        self.ui.signal_permission_revoked.connect(self.operations.permission_revoked)
+        self.ui.signal_render_new_permission.connect(self.operations.render_permission)
+
         # Signal emitted, on activation of operation from MSUI
         self.ui.signal_activate_operation.connect(self.update_op_id)
         self.ui.signal_operation_added.connect(self.add_operation_slot)

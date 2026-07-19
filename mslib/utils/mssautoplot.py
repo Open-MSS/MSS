@@ -656,13 +656,17 @@ def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime, raw):
                 return False
         except Exception as e:
             if "times" in str(e):
-                print("Invalid times and/or levels requested")
-            elif "LAYER" in str(e):
-                print(f"Invalid LAYER '{layer}' requested")
-            elif "404 Client Error" in str(e) or "NOT FOUND for url" in str(e):
-                print("Invalid STYLE and/or URL requested")
-            else:
-                print(str(e))
+    print("Invalid times and/or levels requested")
+
+elif "LAYER" in str(e):
+    print("Invalid LAYER '{}' requested".format(layer))
+
+elif "404 Client Error" in str(e) or "NOT FOUND for url" in str(e):
+    print("Invalid STYLE and/or URL requested")
+
+else:
+    print(str(e))
+
         else:
             print("Plot downloaded!")
             return True
