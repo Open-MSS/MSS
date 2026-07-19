@@ -17,6 +17,7 @@ Global map: ../../ARCHITECTURE.md
 - `mscolab.py` + `socket_control.py` + `mscolab_*.py` — MSColab client; network
   events arrive as Qt signals emitted by `socket_control.ConnectionManager`
 - `*_dockwidget.py` — per-feature dock widgets
+- `constants.py` — deprecated shim; import `mslib.utils.constants` instead
 - `ui/` — Qt Designer `.ui` sources; `qt5/` — pyuic5 OUTPUT, never edit
 
 ## May import
