@@ -1,7 +1,7 @@
 """
 
-    mslib.utils.mssautoplot
-    ~~~~~~~~~~~~~~~~~~~~~~~
+    mslib.autoplot
+    ~~~~~~~~~~~~~~
 
     A CLI tool to create for instance a number of the same plots
     for several flights or several forecast steps

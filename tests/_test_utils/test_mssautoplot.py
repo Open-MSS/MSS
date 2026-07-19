@@ -4,7 +4,7 @@
     tests._test_utils.test_mssautoplot
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module provides pytest functions to tests mslib.utils.mssautoplot
+    This module provides pytest functions to tests mslib.autoplot
 
     This file is part of MSS.
 
@@ -28,7 +28,7 @@
 
 import os
 
-from mslib.utils.mssautoplot import load_from_ftml
+from mslib.autoplot import load_from_ftml
 
 
 def test_load_from_ftml():
