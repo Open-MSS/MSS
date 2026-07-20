@@ -33,7 +33,7 @@ from pathlib import Path
 from mslib.utils.qt import get_open_filename, get_save_filename, show_popup
 from mslib.msui.qt5 import ui_configuration_editor_window as ui_conf
 from PyQt5 import QtWidgets, QtCore, QtGui
-from mslib.msui.constants import MSUI_SETTINGS
+from mslib.utils.constants import MSUI_SETTINGS
 from mslib.msui.icons import icons
 from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.config import config_loader, dict_raise_on_duplicates_empty, merge_dict

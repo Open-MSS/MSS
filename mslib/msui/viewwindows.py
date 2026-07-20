@@ -32,7 +32,7 @@ import os
 from abc import abstractmethod
 
 from PyQt5 import QtCore, QtWidgets
-from mslib.msui import constants
+from mslib.utils import constants
 from mslib.utils.config import load_settings_qsettings, save_settings_qsettings
 
 

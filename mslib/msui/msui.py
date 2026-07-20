@@ -38,7 +38,7 @@ import sys
 from packaging import version
 from mslib import __version__
 from mslib.msui.msui_mainwindow import MSUIMainWindow
-from mslib.msui import constants
+from mslib.utils import constants
 from mslib.utils import setup_logging
 from mslib.msui.icons import icons
 from mslib.utils.config import read_config_file

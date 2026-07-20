@@ -46,7 +46,8 @@ from owslib.crs import axisorder_yx
 from PIL import Image, ImageOps
 from keyring.errors import NoKeyringError, PasswordSetError, InitError
 
-from mslib.msui import constants, wms_capabilities
+from mslib.utils import constants
+from mslib.msui import wms_capabilities
 from mslib.msui.qt5 import ui_wms_dockwidget as ui
 from mslib.msui.qt5 import ui_wms_password_dialog as ui_pw
 from mslib.utils.qt import Worker

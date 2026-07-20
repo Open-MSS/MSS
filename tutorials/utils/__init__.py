@@ -39,7 +39,7 @@ from mslib.msui import msui
 from tutorials.utils import screenrecorder as sr
 from tutorials.utils.picture import picture
 from tutorials.utils.platform_keys import platform_keys
-from mslib.msui.constants import MSUI_CONFIG_PATH
+from mslib.utils.constants import MSUI_CONFIG_PATH
 
 CTRL, ENTER, WIN, ALT = platform_keys()
 

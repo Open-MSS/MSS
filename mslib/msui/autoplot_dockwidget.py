@@ -38,7 +38,7 @@ from PyQt5 import QtCore
 
 from mslib.utils.mssautoplot import main as cli_tool
 from mslib.msui.qt5.ui_mss_autoplot import Ui_AutoplotDockWidget
-from mslib.msui import constants as const
+from mslib.utils import constants as const
 
 
 class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):

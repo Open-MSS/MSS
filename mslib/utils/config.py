@@ -34,7 +34,7 @@ import os
 from pathlib import Path
 
 from mslib.utils import FatalUserError
-from mslib.msui import constants
+from mslib.utils import constants
 from mslib.support.qt_json_view.datatypes import match_type, UrlType, StrType
 
 

@@ -53,7 +53,8 @@ import mslib.utils.thermolib
 from mslib.utils.config import config_loader, read_config_file
 from mslib.utils.units import units
 from mslib.msui.wms_control import MSUIWebMapService
-from mslib.msui import constants, viewplotter
+from mslib.utils import constants
+from mslib.msui import viewplotter
 from mslib.msui import mpl_pathinteractor as mpath
 from mslib.msui import flighttrack as ft
 from mslib.utils import config as conf

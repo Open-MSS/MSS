@@ -41,7 +41,7 @@ def test_swatch_maps_to_expected_hex(dialog):
 
 def test_marked_swatches_are_captured_in_tutorial_mode(qtbot, tmp_path, monkeypatch):
     """create_tutorial_images() (get_shortcuts in tutorial_mode) writes a PNG per swatch."""
-    from mslib.msui import constants
+    from mslib.utils import constants
     from mslib.msui.msui_mainwindow import MSUI_ShortcutsDialog
     monkeypatch.setattr(constants, "MSUI_CONFIG_PATH", tmp_path)
 
