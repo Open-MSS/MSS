@@ -252,7 +252,7 @@ def get_users_with_permission():
 def add_bulk_permissions():
     fm = current_app.extensions['fm']
     op_id = int(request.form.get('op_id'))
-    new_u_ids = json.loads(request.form.get('selected_userids', []))
+    new_u_ids = json.loads(request.form.get('selected_userids', "[]"))
     access_level = request.form.get('selected_access_level')
     user = g.user
     success = fm.add_bulk_permission(op_id, user, new_u_ids, access_level)
@@ -271,7 +271,7 @@ def add_bulk_permissions():
 def modify_bulk_permissions():
     fm = current_app.extensions['fm']
     op_id = int(request.form.get('op_id'))
-    u_ids = json.loads(request.form.get('selected_userids', []))
+    u_ids = json.loads(request.form.get('selected_userids', "[]"))
     new_access_level = request.form.get('selected_access_level')
     user = g.user
     success = fm.modify_bulk_permission(op_id, user, u_ids, new_access_level)
@@ -290,7 +290,7 @@ def modify_bulk_permissions():
 def delete_bulk_permissions():
     fm = current_app.extensions['fm']
     op_id = int(request.form.get('op_id'))
-    u_ids = json.loads(request.form.get('selected_userids', []))
+    u_ids = json.loads(request.form.get('selected_userids', "[]"))
     user = g.user
     success = fm.delete_bulk_permission(op_id, user, u_ids)
     if success:
