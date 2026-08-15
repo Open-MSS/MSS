@@ -228,7 +228,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
     def __init__(self, parent=None, mainwindow=None, model=None, _id=None,
                  active_flighttrack=None, mscolab_server_url=None, token=None, config_settings=None,
-                 tutorial_mode=False):
+                 tutorial_mode=False, last_save_directory=None):
         """
         Set up user interface, connect signal/slots.
         """
@@ -262,6 +262,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
         # Store active flighttrack waypoint model
         self.active_flighttrack = active_flighttrack
+        self.last_save_directory = last_save_directory
 
         # Stores active mscolab operation id
         self.active_op_id = mainwindow.mscolab.active_op_id
@@ -439,7 +440,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             elif index == AUTOPLOT:
                 title = "Autoplot (Top View)"
                 widget = apd.AutoplotDockWidget(parent=self, parent2=parent,
-                                                view="Top View", config_settings=config_settings)
+                                                view="Top View", config_settings=config_settings,
+                                                last_save_directory=self.last_save_directory)
                 widget.treewidget_item_selected.connect(
                     lambda url, layer, style, level: self.tree_item_select(url, layer, style, level))
                 widget.autoplot_treewidget_item_selected.connect(

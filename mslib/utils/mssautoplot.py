@@ -208,6 +208,9 @@ class Plotting:
         flight = self.config["automated_plotting_flights"][0][0]
         section = self.config["automated_plotting_flights"][0][1]
         filename = self.config["automated_plotting_flights"][0][3]
+        config_dir = os.path.dirname(os.path.expanduser(cpath))
+        if filename and not os.path.isabs(filename):
+            filename = os.path.join(config_dir, filename)
         if self.__class__.__name__ == "TopViewPlotting":
             try:
                 self.params = get_projection_params(self.config["predefined_map_sections"][section]["CRS"].lower())
@@ -224,14 +227,11 @@ class Plotting:
         if filename != "" and filename == flight:
             self.read_operation(flight, msc_url, msc_auth_password, username, password)
         elif filename != "":
-            # Todo add the dir to the file in the mssautoplot.json
-            dirpath = "./"
-            file_path = os.path.join(dirpath, filename)
-            exists = os.path.exists(file_path)
-            if not exists:
-                print("Filename {} doesn't exist".format(filename))
-                self.pdlg.close()
-                raise SystemExit("Filename {} doesn't exist".format(filename))
+            if not os.path.exists(filename):
+                print(f"FTML file {filename} does not exist")
+                if self.pdlg:
+                    self.pdlg.close()
+                raise SystemExit(f"FTML file {filename} does not exist")
             self.read_ftml(filename)
 
     def setup(self):
@@ -579,34 +579,38 @@ class LinearViewPlotting(Plotting):
 @click.option('--stime', default="", help='Starting time for downloading multiple plots with a fixed interval.')
 @click.option('--etime', default="", help='Ending time for downloading multiple plots with a fixed interval.')
 @click.option('--raw', default=False, help='Saves the raw image with its projection in topview')
+@click.option('--ftml-path', default="", help='Override the FTML file path from the configuration.')
 @click.pass_context
-def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime, raw):
+def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime, raw, ftml_path):
     pdlg = None
 
     def close_process_dialog(pdlg):
         pdlg.close()
 
     if ctx.obj is not None:
-        # ToDo find a simpler solution, on a split of the package, QT is expensive for such a progressbar
         pdlg = QProgressDialog("Downloading images", "Cancel", 0, 10, parent=ctx.obj)
         pdlg.setMinimumDuration(0)
         pdlg.repaint()
         pdlg.canceled.connect(lambda: close_process_dialog(pdlg))
         pdlg.setWindowModality(Qt.WindowModal)
-        pdlg.setAutoReset(True)     # Close dialog automatically when reaching max value
-        pdlg.setAutoClose(True)     # Automatically close when value reaches maximum
-        pdlg.setValue(0)            # Initial progress value
-
-        # Set window flags to ensure visibility and modality
+        pdlg.setAutoReset(True)
+        pdlg.setAutoClose(True)
+        pdlg.setValue(0)
         pdlg.setWindowFlags(pdlg.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowTitleHint)
-
         pdlg.setValue(0)
 
     conf.read_config_file(path=cpath)
     config = conf.config_loader()
 
-    # flight_name = config["automated_plotting_flights"][0][0]
-    # file = config["automated_plotting_flights"][0][3]
+    if ftml_path:
+        # Override the FTML file path in the configuration
+        if not os.path.exists(ftml_path):
+            print(f"Provided FTML file path {ftml_path} does not exist")
+            if ctx.obj is not None:
+                pdlg.close()
+            raise SystemExit(f"Provided FTML file path {ftml_path} does not exist")
+        config["automated_plotting_flights"][0][3] = ftml_path
+
     if ctx.obj is not None:
         pdlg.setValue(1)
 

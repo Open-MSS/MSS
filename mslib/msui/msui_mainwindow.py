@@ -1123,7 +1123,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                                                     active_flighttrack=self.active_flight_track,
                                                     mscolab_server_url=self.mscolab.mscolab_server_url,
                                                     token=self.mscolab.token, tutorial_mode=self.tutorial_mode,
-                                                    config_settings=self.config_for_gui)
+                                                    config_settings=self.config_for_gui,
+                                                    last_save_directory=self.last_save_directory)
             view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)
             view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
             if layout["immutable"]:
