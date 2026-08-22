@@ -10,13 +10,13 @@ are machine-enforced by import-linter (`pixi run -e dev lint-imports`, config in
 Arrows mean "may import". Anything not drawn is forbidden.
 
 ```
-                 ┌────────────┐
-                 │ mslib.msui │  PyQt5 desktop client (GUI)
-                 └─────┬──────┘
+ mslib.autoplot ──┐┌────────────┐
+ (headless batch  ▼│ mslib.msui │  PyQt5 desktop client (GUI)
+  plotting CLI)    └─────┬──────┘
         ┌──────────────┼───────────────────────┐
         ▼              ▼                       ▼
  mslib.mscolab   mslib.support           mslib.utils
- (events/message_ (vendored qt_json_view) (shared: config,
+ (events/message_ (vendored qt_json_view) (shared: config, constants,
   type constants                           coordinates, units,
   ONLY)                                    netCDF, auth, qt helpers)
                                                ▲
@@ -30,9 +30,10 @@ Arrows mean "may import". Anything not drawn is forbidden.
 Grandfathered violations (do not add new ones; the lists live in `setup.cfg`
 under `ignore_imports` and must only shrink):
 
-- `utils.{config,auth,airdata,migration.*}` import `msui.constants` (path constants).
-- `utils.mssautoplot` drives the GUI plotting stack headlessly.
 - `plugins.io.{csv,text,flitestar}` import `msui.flighttrack`.
+- the deprecation shim `utils/mssautoplot.py` re-exports `mslib.autoplot`
+  (delete the shim next release and the entry with it). A twin shim exists at
+  `msui/constants.py` → `utils/constants.py`.
 - `{mscolab,mswms}.blueprints.docs` import `msui.icons` — invisible to the
   linter (`blueprints/` are namespace packages without `__init__.py`), but
   equally discouraged.
@@ -56,7 +57,7 @@ under `ignore_imports` and must only shrink):
 - `*_dockwidget.py` — airdata, autoplot, hexagon, kmloverlay, remotesensing,
   satellite, multiple_flightpath, multilayers dock widgets
 - `editor.py` — JSON config editor; `performance_settings.py`, `aircraft.py`
-- `constants.py` — MSUI config paths (imported by utils — grandfathered)
+- `constants.py` — deprecated shim; real module is `mslib/utils/constants.py`
 - `ui/` — Qt Designer sources; `qt5/` — pyuic5 output, NEVER edit by hand
 
 ### mslib/mscolab — collaboration server (Flask + SocketIO; entry: `mscolab`)
@@ -81,18 +82,20 @@ under `ignore_imports` and must only shrink):
 - `demodata.py` / `seed.py` — demo data generation; `gallery_builder.py` — docs gallery
 - `app/`, `blueprints/` — Flask assembly; `mswms.py` — entry point
 
-### mslib/utils — shared utilities (entry: `mssautoplot`)
+### mslib/utils — shared utilities (the base layer)
 
 - `config.py` — `MSUIDefaultConfig` defaults + `config_loader` (THE config API)
+- `constants.py` — MSUI config paths (moved here from msui in v11.1)
 - `coordinate.py`, `units.py`, `time.py`, `thermolib.py` — pure science helpers
 - `netCDF4tools.py` — NetCDF helpers; `ogcwms.py` — OWSLib WMS subclass
 - `auth.py` — keyring/password handling; `qt.py` — Qt helpers
 - `colordialog.py` — CustomColorDialog; `airdata.py` — airport/airspace download
-- `mssautoplot.py` — headless batch plotting CLI (drives msui plotting stack)
 - `migration/` — config-format migrations between major versions
 
 ### Smaller packages
 
+- `mslib/autoplot/` — `mssautoplot` CLI: headless batch plotting driving the
+  msui plotting stack (lives beside the GUI, not in the base layer)
 - `mslib/plugins/io/` — flight-track import/export formats (csv, kml, gpx, text,
   flitestar); registered via config `import_plugins`/`export_plugins`
 - `mslib/msidp/` — standalone SAML2 identity provider (entry: `msidp`)
