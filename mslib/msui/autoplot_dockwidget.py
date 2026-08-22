@@ -36,7 +36,7 @@ import click
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem, QMessageBox
 from PyQt5 import QtCore
 
-from mslib.utils.mssautoplot import main as cli_tool
+from mslib.autoplot import main as cli_tool
 from mslib.msui.qt5.ui_mss_autoplot import Ui_AutoplotDockWidget
 from mslib.utils import constants as const
 

@@ -22,7 +22,7 @@ Repository = "https://github.com/Open-MSS/MSS"
 [project.scripts]
 mscolab = "mslib.mscolab.mscolab:main"
 msidp = "mslib.msidp.idp:main"
-mssautoplot = "mslib.utils.mssautoplot:main"
+mssautoplot = "mslib.autoplot:main"
 mss = "mslib.msui.mss:main"
 mswms = "mslib.mswms.mswms:main"
 
