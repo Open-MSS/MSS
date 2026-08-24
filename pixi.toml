@@ -132,7 +132,7 @@ python-mss = "*"
 xclip = "*"
 
 [feature.docs]
-platforms = ["win-64", "linux-64", "osx-64"]
+platforms = ["win-64", "linux-64", "linux-aarch64", "osx-64"]
 
 [feature.docs.dependencies]
 sphinx = "*"
