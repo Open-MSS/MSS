@@ -1,6 +1,6 @@
 # overlay: pixi for different architectures
 # initial version https://www.fz-juelich.de/de/blogs/programmiere/lokale-ki-gestuetzte-pdf-verarbeitung-vibepod-pi-lm-studio-und-pixi
-# 
+#
 # FROM-less Dockerfile fragment; VibePod prepends the base image's `FROM <image>`
 
 ENV PIXI_HOME=/opt/pixi
@@ -58,4 +58,3 @@ ENV PATH=/opt/vp_pixi/.pixi/envs/default/bin:$PATH
 RUN printf 'detached-environments = "/workspace/.pixi-linux-%s"\n' "$(uname -m)" \
     > ${PIXI_HOME}/config.toml && \
     cat ${PIXI_HOME}/config.toml
-
