@@ -1,7 +1,7 @@
 [workspace]
 name = "MSS"
 channels = ["conda-forge"]
-platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64", "win-64"]
 
 [tasks]
 
@@ -132,7 +132,7 @@ python-mss = "*"
 xclip = "*"
 
 [feature.docs]
-platforms = ["win-64", "linux-64", "osx-64"]
+platforms = ["win-64", "linux-64", "linux-aarch64", "osx-64"]
 
 [feature.docs.dependencies]
 sphinx = "*"
