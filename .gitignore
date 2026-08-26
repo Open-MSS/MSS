@@ -24,4 +24,5 @@ tutorials/recordings
 tutorials/cursor_image.png
 # pixi environments
 .pixi
+.pixi-*
 .coverage
