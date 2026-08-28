@@ -33,7 +33,7 @@ from flask import Blueprint, request, g, jsonify, abort, send_from_directory, cu
 from mslib.mscolab.auth import verify_user
 from mslib.mscolab.events import SocketEvents
 from mslib.mscolab.message_type import MessageType
-from mslib.mscolab.utils import get_message_dict
+from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX, get_message_dict
 
 CHAT_BP = Blueprint('chat', __name__)
 
@@ -79,7 +79,7 @@ def message_attachment():
     return "False"
 
 
-@CHAT_BP.route('/uploads/<name>/<path:filename>', methods=["GET"])
+@CHAT_BP.route(f'/{ATTACHMENTS_URL_PREFIX}/<name>/<path:filename>', methods=["GET"])
 def uploads(name=None, filename=None):
     base_path = current_app.config['UPLOAD_FOLDER']
     if name is None:

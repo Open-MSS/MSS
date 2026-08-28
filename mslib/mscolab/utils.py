@@ -24,6 +24,11 @@
     limitations under the License.
 """
 
+# URL namespace under which chat attachments are served by the chat blueprint.
+# This is deliberately independent of the directory name configured as
+# UPLOAD_FOLDER, which may be named arbitrarily.
+ATTACHMENTS_URL_PREFIX = "uploads"
+
 
 def get_recent_op_id(fm, user):
     operations = fm.list_operations(user)
