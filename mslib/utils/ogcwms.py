@@ -173,6 +173,8 @@ class WebMapService(wms111.WebMapService_1_1_1):
                  auth=None):
         """Initialize."""
 
+        
+
         if auth:
             if username:
                 auth.username = username
