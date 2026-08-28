@@ -22,12 +22,12 @@ and [development](https://mss.readthedocs.io/en/stable/development.html) guideli
 
 ### User Installation
 
-Get **pixi** from https://pixi.sh/latest/ for your operation system.
+Get **pixi** from https://pixi.sh/latest/ for your operating system.
 
 You can now decide if you want to install **mss** as global or a project.
 
 #### Global installation
-You can install **mss** global without defining a project first.
+You can now decide whether you want to install **mss** globally or inside a project.
 This method is practical when you are interested in starting the client
 and don't need server configurations.
 
@@ -64,7 +64,7 @@ Add the **mss** dependencies from conda-forge.
 ##### Project Usage
 Always when you want to start **mss** programs you have after its installation
 to activate the environment by pixi shell in the project dir.
-On the very first start of **msui** it takes a bit longer because it setups fonts.
+On the very first start of **msui**, it takes a bit longer because it sets up fonts.
 
     cd MSS
     pixi shell
