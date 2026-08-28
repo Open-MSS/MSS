@@ -30,11 +30,14 @@ import json
 import io
 import os
 
+from unittest import mock
+
 from PIL import Image
 from flask import current_app
 
 from mslib.mscolab.auth import register_user, check_login
 from mslib.mscolab.models import User, Operation
+from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX
 
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
@@ -230,6 +233,29 @@ class Test_Server:
             response = test_client.get(f'{pfn}')
             assert response.status_code == 200
             assert response.data == text
+
+    def test_uploads_with_custom_upload_folder(self, tmp_path):
+        # a UPLOAD_FOLDER not named "uploads" must not break serving the attachment
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        upload_folder = tmp_path / "uploadshaha"
+        with mock.patch.dict(current_app.config, {'UPLOAD_FOLDER': str(upload_folder)}):
+            with self.app.test_client() as test_client:
+                operation, token = self._create_operation(test_client, self.userdata)
+                text = b"this is a test"
+                attachment = io.BytesIO(text)
+                response = test_client.post('/message_attachment', data={"token": token,
+                                                                         "op_id": operation.id,
+                                                                         "file": (attachment, 'test.txt'),
+                                                                         "message_type": "3"})
+                assert response.status_code == 200
+                pfn = json.loads(response.data.decode('utf-8'))["path"]
+                assert pfn.startswith(f"{ATTACHMENTS_URL_PREFIX}/{operation.id}/")
+                # the file is stored in the configured UPLOAD_FOLDER
+                assert (upload_folder / str(operation.id) / os.path.basename(pfn)).is_file()
+                # and the client can fetch it by the path it got
+                response = test_client.get(f'/{pfn}')
+                assert response.status_code == 200
+                assert response.data == text
 
     def test_create_operation(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
