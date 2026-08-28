@@ -2,7 +2,7 @@
 """
 
     mslib.utils.coordinate
-    ~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~
 
     Collection of functions all around coordinates, locations and positions.
 

@@ -2,7 +2,7 @@
 """
 
     mslib.msui.mscolab_change_history
-    ~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Mscolab change history window to display the change history of the flight path so that users
     can revert back to a previous version

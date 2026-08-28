@@ -2,7 +2,7 @@
 """
 
     mslib.mscolab._tests.utils
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Utility functions for mscolab
 

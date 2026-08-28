@@ -2,7 +2,7 @@
 """
 
     mslib.utils.netCDF4tools
-    ~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~
 
     Some useful functions for handling NetCDF files with the netCDF4 library.
 

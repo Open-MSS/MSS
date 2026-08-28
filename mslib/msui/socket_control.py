@@ -2,7 +2,7 @@
 """
 
     mslib.msui.socket_control
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
 
     client socket connection handler
 
