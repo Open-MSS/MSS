@@ -36,6 +36,23 @@ from mslib.utils import constants
 from mslib.utils.config import load_settings_qsettings, save_settings_qsettings
 
 
+def format_operation_with_revision(model):
+    """
+    Return operation name including revision id and optional revision name.
+    """
+    if model is None:
+        return ""
+
+    rev = getattr(model, "revision", None)
+    if rev is None:
+        return model.name
+
+    label = f"{model.name} [rev: {rev.id}]"
+    if getattr(rev, "name", None):
+        label += f" ({rev.name})"
+    return label
+
+
 class MSUIViewWindow(QtWidgets.QMainWindow):
     """
     Derives QMainWindow to provide some common functionality to all
@@ -113,7 +130,9 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
         """
         # Update title flighttrack name
         if self.waypoints_model:
-            self.setWindowTitle(self.windowTitle().replace(self.waypoints_model.name, model.name))
+            old_label = format_operation_with_revision(self.waypoints_model)
+            new_label = format_operation_with_revision(model)
+            self.setWindowTitle(self.windowTitle().replace(old_label, new_label))
 
         self.waypoints_model = model
 
@@ -365,11 +384,15 @@ class MSUIMplViewWindow(MSUIViewWindow):
 
             # Update Top View flighttrack name
             if hasattr(self.mpl.canvas, "map"):
-                self.mpl.canvas.map.ax.figure.suptitle(f"{model.name}", x=0.95, ha='right')
+                title = format_operation_with_revision(model)
+                self.mpl.canvas.map.ax.figure.suptitle(title, x=0.95, ha='right')
+
                 self.mpl.canvas.map.ax.figure.canvas.draw()
 
             elif hasattr(self.mpl.canvas, 'plotter'):
-                self.mpl.canvas.plotter.fig.suptitle(f"{model.name}", x=0.95, ha='right')
+                title = format_operation_with_revision(model)
+                self.mpl.canvas.plotter.fig.suptitle(title, x=0.95, ha='right')
+
                 self.mpl.canvas.plotter.fig.canvas.draw()
 
     def getView(self):

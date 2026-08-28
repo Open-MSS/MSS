@@ -50,7 +50,6 @@ from mslib.utils.units import units
 from mslib.utils.coordinate import path_points, get_distance
 from mslib.utils.find_location import find_location
 from mslib.utils import thermolib
-from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
 from mslib.utils.qt import variant_to_string, variant_to_float
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
@@ -59,6 +58,17 @@ from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 # used with a QTableWidget.
 LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE = list(range(5))
 TIME_UTC = 9
+
+
+class Revision:
+    """
+    Represents a revision of a flight track.
+    ID is mandatory, name is optional.
+    """
+
+    def __init__(self, revision_id, name=None):
+        self.id = revision_id
+        self.name = name
 
 
 def seconds_to_string(seconds):
@@ -130,12 +140,16 @@ class Waypoint:
 
     def __init__(self, lat=0., lon=0., flightlevel=0., location="", comments=""):
         self.location = location
+
+        # Prefer explicitly provided coordinates (e.g. from XML/server)
+        self.lat = lat
+        self.lon = lon
+
+        # Only resolve from configured locations if coordinates were not meaningfully provided
         locations = config_loader(dataset='locations')
-        if location in locations:
+        if location in locations and (lat == 0.0 and lon == 0.0):
             self.lat, self.lon = locations[location]
-        else:
-            self.lat = lat
-            self.lon = lon
+
         self.flightlevel = flightlevel
         self.pressure = thermolib.flightlevel2pressure(flightlevel * units.hft).magnitude
         self.distance_to_prev = 0.
@@ -184,6 +198,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                  data_dir=config_loader(dataset="mss_dir"),
                  xml_content=None):
         super().__init__()
+        self.revision = None
         self.name = name  # a name for this flight track
         self.filename = filename  # filename for store/load
         self.data_dir = data_dir
@@ -634,12 +649,24 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
     def get_xml_doc(self):
         doc = xml.dom.minidom.Document()  # nosec, we take care of writing correct XML
+
         ft_el = doc.createElement("FlightTrack")
         ft_el.setAttribute("version", __version__)
         doc.appendChild(ft_el)
         # The list of waypoint elements.
+
+        # Write revision information
+        if self.revision is not None:
+            rev_el = doc.createElement("Revision")
+            rev_el.setAttribute("id", str(self.revision.id))
+            if self.revision.name:
+                rev_el.setAttribute("name", self.revision.name)
+            ft_el.appendChild(rev_el)
+
+        # List of waypoints
         wp_el = doc.createElement("ListOfWaypoints")
         ft_el.appendChild(wp_el)
+
         for wp in self.waypoints:
             element = doc.createElement("Waypoint")
             wp_el.appendChild(element)
@@ -647,9 +674,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             element.setAttribute("lat", str(wp.lat))
             element.setAttribute("lon", str(wp.lon))
             element.setAttribute("flightlevel", str(wp.flightlevel))
+
             comments = doc.createElement("Comments")
             comments.appendChild(doc.createTextNode(str(wp.comments)))
             element.appendChild(comments)
+
         return doc
 
     def get_xml_content(self):
@@ -666,15 +695,34 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
     def load_from_xml_data(self, xml_content, name="Flight track"):
         self.name = name
-        if verify_waypoint_data(xml_content):
-            _waypoints_list = load_from_xml_data(xml_content, name)
-            self.replace_waypoints(_waypoints_list)
+
+        try:
+            doc = defusedxml.minidom.parseString(xml_content)
+        except DefusedXmlException as ex:
+            raise SyntaxError(str(ex))
+
+        ft_el = doc.getElementsByTagName("FlightTrack")[0]
+
+        # Load revision
+        revision_nodes = ft_el.getElementsByTagName("Revision")
+        if revision_nodes:
+            rev_el = revision_nodes[0]
+            revision_id = int(rev_el.getAttribute("id"))
+            revision_name = rev_el.getAttribute("name") or None
+            self.revision = Revision(revision_id, revision_name)
         else:
-            raise SyntaxError(f"Invalid flight track filename: {name}")
+            # Backward compatibility: create deterministic default revision
+            self.revision = Revision(
+                revision_id=0,
+                name=None
+            )
+
+        # Validate only waypoint structure, revision is optional metadata
+        _waypoints_list = load_from_xml_data(xml_content, name)
+        self.replace_waypoints(_waypoints_list)
 
     def get_filename(self):
         return self.filename
-
 
 #
 # CLASS  WaypointDelegate

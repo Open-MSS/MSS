@@ -101,3 +101,38 @@ class Test_WaypointsTableModel_CorruptedSettings:
             "Dict should pass isinstance dict check"
         assert isinstance({}, dict), \
             "Empty dict should pass isinstance dict check"
+
+    def test_load_ftml_with_revision(self):
+        xml_content = """
+        <FlightTrack version="test">
+            <Revision id="42" name="draft"/>
+            <ListOfWaypoints>
+                <Waypoint location="" lat="0" lon="0" flightlevel="100">
+                    <Comments></Comments>
+                </Waypoint>
+            </ListOfWaypoints>
+        </FlightTrack>
+        """
+
+        model = WaypointsTableModel(xml_content=xml_content, name="test_track")
+
+        assert model.revision is not None
+        assert model.revision.id == 42
+        assert model.revision.name == "draft"
+
+    def test_load_ftml_without_revision_creates_default_revision(self):
+        xml_content = """
+        <FlightTrack version="test">
+            <ListOfWaypoints>
+                <Waypoint location="" lat="0" lon="0" flightlevel="100">
+                    <Comments></Comments>
+                </Waypoint>
+            </ListOfWaypoints>
+        </FlightTrack>
+        """
+
+        model = WaypointsTableModel(xml_content=xml_content, name="legacy_track")
+
+        assert model.revision is not None
+        assert isinstance(model.revision.id, int)
+        assert model.revision.name is None
