@@ -27,8 +27,7 @@
 import datetime
 import pytest
 import os
-
-from unittest import mock
+import mock
 
 from werkzeug.datastructures import FileStorage
 
