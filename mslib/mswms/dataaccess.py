@@ -118,7 +118,7 @@ class NWPDataAccess(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _determine_filename(self, variable, vartype, init_time, valid_time):
+    def _determine_filename(self, variable, vartype, init_time, valid_time, reload=True):
         """
         Must be overwritten in subclass. Determines the filename
         (without path) of the variable <variable> at the forecast
