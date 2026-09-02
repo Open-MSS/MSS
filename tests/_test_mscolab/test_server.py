@@ -30,7 +30,7 @@ import json
 import io
 import os
 
-from unittest import mock
+import mock
 
 from PIL import Image
 from flask import current_app
