@@ -25,6 +25,8 @@
     limitations under the License.
 """
 import datetime
+from pathlib import Path
+
 import pytest
 import json
 import io
@@ -234,10 +236,11 @@ class Test_Server:
             assert response.status_code == 200
             assert response.data == text
 
-    def test_uploads_with_custom_upload_folder(self, tmp_path):
+    @pytest.mark.parametrize("upload_folder_name", ["uploadshaha", r"C:\Temp", ], )
+    def test_uploads_with_custom_upload_folder(self, tmp_path, upload_folder_name):
         # a UPLOAD_FOLDER not named "uploads" must not break serving the attachment
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
-        upload_folder = tmp_path / "uploadshaha"
+        upload_folder = tmp_path / upload_folder_name
         with mock.patch.dict(current_app.config, {'UPLOAD_FOLDER': str(upload_folder)}):
             with self.app.test_client() as test_client:
                 operation, token = self._create_operation(test_client, self.userdata)
