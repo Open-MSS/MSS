@@ -25,8 +25,6 @@
 """
 import urllib.parse
 
-from slugify import slugify
-
 # query parameters which describe a single request instead of the service itself
 OGC_REQUEST_PARAMS = ("service", "request")
 
@@ -55,12 +53,16 @@ def service_cache_key(url):
     remaining ones are sorted, so that the very same service is found again no
     matter how the request was spelled. Scheme and host are lower cased because
     they are case insensitive, the rest of the url is not.
+
+    The key is the normalized url itself. It must not be reduced any further,
+    e.g. by slugifying it, because that would collapse the url separators and
+    map distinct services onto the same key, for example
+    "http://example.com:1/wms" and "http://example.com/1/wms".
     """
     scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(strip_request_params(url))
     query = urllib.parse.urlencode(sorted(urllib.parse.parse_qsl(query)))
-    normalised = urllib.parse.urlunparse(
+    return urllib.parse.urlunparse(
         (scheme.lower(), netloc.lower(), path, params, query, fragment))
-    return slugify(normalised, lowercase=False)
 
 
 class WMSServiceManager:
