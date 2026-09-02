@@ -25,7 +25,6 @@
     limitations under the License.
 """
 import datetime
-from pathlib import Path
 
 import pytest
 import json
