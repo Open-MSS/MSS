@@ -65,7 +65,7 @@ unicodecsv = "*"
 websocket-client = "*"
 werkzeug = ">=2.2.3, <3.0.0"
 xstatic = "<2.0.0"
-xstatic-bootstrap = "*"
+xstatic-bootstrap = ">=5"
 xstatic-jquery = "*"
 humanfriendly = ">=10.0,<11"
 
