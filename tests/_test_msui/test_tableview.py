@@ -33,6 +33,7 @@ from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 import mslib.msui.tableview as tv
+from tests.utils import lsec_xml
 
 
 class Test_TableView:
@@ -158,6 +159,32 @@ class Test_TableView:
         # todo this does not check that actually something happens
         QtTest.QTest.mouseClick(self.window.docks[1].widget().pbLoadPerformance, QtCore.Qt.LeftButton)
         assert mockopen.call_count == 1
+
+    def test_show_linear_data(self):
+        """
+        The "show data" checkbox appends the data columns of the linear view.
+        """
+        model = self.window.waypoints_model
+        waypoints = model.all_waypoint_data()
+        model.set_linear_data_from_xml([lsec_xml(
+            lats=[wp.lat for wp in waypoints], lons=[wp.lon for wp in waypoints],
+            values=("nan", "0.05", "0.06", "0.07", "nan"))])
+        # the data is hidden as long as the checkbox is unchecked
+        assert model.columnCount() == 15
+
+        QtTest.QTest.mouseClick(self.window.cbShowLinearData, QtCore.Qt.LeftButton)
+        assert self.window.cbShowLinearData.isChecked()
+        assert model.columnCount() == 16
+        column = ft.LINEAR_DATA_COLUMN
+        assert model.headerData(
+            column, QtCore.Qt.Horizontal).value() == "Mole fraction of ozone (Linear)\n(ppmv)"
+        # no values where the aircraft is on the ground
+        assert [model.data(model.index(row, column)).value() for row in range(model.rowCount())] == \
+            ["", "0.05", "0.06", "0.07", ""]
+
+        QtTest.QTest.mouseClick(self.window.cbShowLinearData, QtCore.Qt.LeftButton)
+        assert not self.window.cbShowLinearData.isChecked()
+        assert model.columnCount() == 15
 
     def test_insert_point(self):
         """

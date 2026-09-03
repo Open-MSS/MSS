@@ -84,6 +84,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         self.btDeleteWayPoint.clicked.connect(self.removeWayPoint)
         self.btInvertDirection.clicked.connect(self.invertDirection)
         self.btRoundtrip.clicked.connect(self.make_roundtrip)
+        self.cbShowLinearData.toggled.connect(self.setLinearDataVisible)
         self.tableWayPoints.selectionModel().selectionChanged.connect(self.on_selection_changed)
 
         # Tool opener.
@@ -100,6 +101,22 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         self.waypoints_model.save_settings()
         self.resizeColumns()
         self.tableWayPoints.viewport().repaint()
+
+    def setLinearDataVisible(self, visible):
+        """
+        Handler for the <cbShowLinearData> checkbox. Shows or hides the
+        columns with the data values of the linear view.
+        """
+        self.waypoints_model.set_linear_data_visible(visible)
+
+    def update_linear_data(self):
+        """
+        Slot called when the data retrieved by the linear view has changed.
+        The values are not part of the flight plan, hence the model does not
+        emit dataChanged() for them and the table has to be repainted here.
+        """
+        self.tableWayPoints.viewport().update()
+        self.resizeColumns()
 
     def on_selection_changed(self, index):
         """
@@ -279,6 +296,10 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         # Automatically enable or disable roundtrip when data changes
         self.waypoints_model.dataChanged.connect(self.update_roundtrip_enabled)
         self.update_roundtrip_enabled()
+
+        # Show the data of the linear view as requested for this flight track
+        self.waypoints_model.linearDataChanged.connect(self.update_linear_data)
+        self.cbShowLinearData.setChecked(self.waypoints_model.linear_data_visible)
 
     def viewPerformance(self):
         """

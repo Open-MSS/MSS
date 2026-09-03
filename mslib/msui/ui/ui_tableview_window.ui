@@ -73,6 +73,16 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="cbShowLinearData">
+        <property name="toolTip">
+         <string>Show a column with the data values of the linear view at each waypoint</string>
+        </property>
+        <property name="text">
+         <string>show data</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <spacer name="horizontalSpacer_2">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
