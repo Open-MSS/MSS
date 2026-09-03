@@ -26,6 +26,7 @@
     limitations under the License.
 """
 import requests
+import xml.etree.ElementTree as etree
 
 from urllib.parse import urljoin
 
@@ -85,6 +86,23 @@ XML_CONTENT3 = """<?xml version="1.0" encoding="utf-8"?>
       </Waypoint>
     </ListOfWaypoints>
   </FlightTrack>"""
+
+
+def lsec_xml(title="Mole fraction of ozone (Linear)", unit="ppmv",
+             lats=(0., 0.5, 1., 1.5, 2., 2.5, 3.),
+             lons=(0., 0.5, 1., 1.5, 2., 2.5, 3.),
+             values=("nan", "5", "10", "12", "20", "22", "nan")):
+    """
+    Build a linear section response as it is returned by the WMS server for a
+    "LINE:1" request, see mslib.mswms.mpl_lsec.
+    """
+    return etree.fromstring(
+        "<MSS_LinearSection_Data>"
+        f"<Title>{title}</Title>"
+        f"<Longitude num_waypoints='{len(lons)}'>{','.join(str(lon) for lon in lons)}</Longitude>"
+        f"<Latitude num_waypoints='{len(lats)}'>{','.join(str(lat) for lat in lats)}</Latitude>"
+        f"<Data num_waypoints='{len(values)}' unit='{unit}'>{','.join(values)}</Data>"
+        "</MSS_LinearSection_Data>")
 
 
 def callback_ok_image(status, response_headers):
