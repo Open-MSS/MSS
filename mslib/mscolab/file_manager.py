@@ -34,12 +34,13 @@ import logging
 import git
 import threading
 import mimetypes
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
 from mslib.mscolab.app import APP
+from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX
 
 
 class FileManager:
@@ -314,9 +315,11 @@ class FileManager:
             file.save(f)
 
         # Relative File path
-        if include_prefix:  # ToDo: add a namespace for the chat attachments, similar as for profile images
-            static_dir = Path(upload_folder).name
-            static_file_path = str(Path(static_dir) / str(subfolder) / file_name)
+        if include_prefix:
+            # URL path (not a filesystem path) below which the chat blueprint serves
+            # attachments. It must not depend on the name of the UPLOAD_FOLDER
+            # directory, which is configurable, and always uses forward slashes.
+            static_file_path = str(PurePosixPath(ATTACHMENTS_URL_PREFIX, str(subfolder), file_name))
         else:
             static_file_path = str(Path(file_path).relative_to(Path(upload_folder)))
 

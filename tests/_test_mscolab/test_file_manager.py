@@ -27,13 +27,14 @@
 import datetime
 import pytest
 import os
-
+import mock
 
 from werkzeug.datastructures import FileStorage
 
 from mslib.mscolab.models import Operation, User
 from mslib.mscolab.seed import add_user, get_user, add_operation
 from mslib.mscolab.app import APP
+from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX
 from mslib.mscolab.seed import XML_CONTENT_INIT
 
 
@@ -272,6 +273,27 @@ class Test_FileManager:
             static_path = self.fm.upload_file(file, subfolder=str(operation.id), identifier=None)
             assert name in static_path
             assert static_path.endswith(ext)
+
+    def test_upload_chat_attachment_prefix_independent_of_upload_folder(self, tmp_path):
+        '''
+        The path returned for a chat attachment is used by the client to build the URL of
+        the attachment. It has to use the fixed URL namespace of the chat blueprint and
+        must not depend on the name of the configured UPLOAD_FOLDER.
+        '''
+        operation_name = "asia"
+        assert add_operation(operation_name, "test asia")
+        operation = Operation.query.filter_by(path=operation_name).first()
+
+        upload_folder = tmp_path / "uploadshaha"
+        sample_path = os.path.join(os.path.dirname(__file__), "..", "data")
+        with mock.patch.dict(APP.config, {'UPLOAD_FOLDER': str(upload_folder)}):
+            with open(os.path.join(sample_path, "example.csv"), 'rb') as fp:
+                file = FileStorage(fp, filename="example.csv", content_type="text/csv")
+                static_path = self.fm.upload_file(file, subfolder=str(operation.id), include_prefix=True)
+
+        assert static_path.startswith(f"{ATTACHMENTS_URL_PREFIX}/{operation.id}/")
+        # the file itself is stored in the configured UPLOAD_FOLDER
+        assert (upload_folder / str(operation.id) / os.path.basename(static_path)).is_file()
 
     def test_upload_file(self):
         sample_file_path = os.path.join(os.path.dirname(__file__), "..", "data")
