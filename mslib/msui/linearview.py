@@ -129,6 +129,15 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
 
+    def closeEvent(self, event):
+        """
+        Drop the data columns of the table view, this view is the source of
+        their values.
+        """
+        super().closeEvent(event)
+        if event.isAccepted() and self.waypoints_model is not None:
+            self.waypoints_model.clear_linear_data()
+
     def update_predefined_maps(self, extra):
         pass
 
