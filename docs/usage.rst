@@ -141,7 +141,8 @@ value at each waypoint. Waypoints for which the server provides no data, e.g. be
 the aircraft is on the ground, stay empty.
 
 The columns are refreshed with every plot of the Linear View and are removed when the
-Linear View is closed.
+Linear View is closed. The checkbox keeps its state when you activate another flight
+track, the columns then show the data of the Linear View of that flight track.
 
 
 Docking Widgets Configurations
