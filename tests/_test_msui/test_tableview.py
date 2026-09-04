@@ -186,6 +186,51 @@ class Test_TableView:
         assert not self.window.cbShowLinearData.isChecked()
         assert model.columnCount() == 15
 
+    def test_show_linear_data_of_another_flight_track(self):
+        """
+        Switching to another flight track keeps the "show data" checkbox and
+        shows the data columns that the linear view retrieved for that track.
+        """
+        model = self.window.waypoints_model
+        waypoints = model.all_waypoint_data()
+        model.set_linear_data_from_xml([lsec_xml(
+            lats=[wp.lat for wp in waypoints], lons=[wp.lon for wp in waypoints],
+            values=("nan", "0.05", "0.06", "0.07", "nan"))])
+        QtTest.QTest.mouseClick(self.window.cbShowLinearData, QtCore.Qt.LeftButton)
+        assert model.columnCount() == 16
+
+        # the linear view of the other flight track plots two layers
+        other = ft.WaypointsTableModel("other")
+        other.insertRows(0, rows=3, waypoints=[ft.Waypoint(48.10, 10.27, 200),
+                                               ft.Waypoint(52.32, 9.21, 200),
+                                               ft.Waypoint(52.55, 9.99, 200)])
+        other_waypoints = other.all_waypoint_data()
+        other.set_linear_data_from_xml([
+            lsec_xml(title=title, unit="ppmv",
+                     lats=[wp.lat for wp in other_waypoints],
+                     lons=[wp.lon for wp in other_waypoints],
+                     values=values)
+            for title, values in (("Ozone", ("0.1", "0.2", "0.3")),
+                                  ("Water vapour", ("1", "2", "nan")))])
+
+        self.window.setFlightTrackModel(other)
+        assert self.window.cbShowLinearData.isChecked()
+        assert other.columnCount() == 17
+        column = ft.LINEAR_DATA_COLUMN
+        assert [other.headerData(column + i, QtCore.Qt.Horizontal).value() for i in range(2)] == \
+            ["Ozone\n(ppmv)", "Water vapour\n(ppmv)"]
+        assert [other.data(other.index(row, column)).value() for row in range(other.rowCount())] == \
+            ["0.1", "0.2", "0.3"]
+        assert [other.data(other.index(row, column + 1)).value() for row in range(other.rowCount())] == \
+            ["1", "2", ""]
+
+        # the data of the other flight track is hidden again on demand
+        QtTest.QTest.mouseClick(self.window.cbShowLinearData, QtCore.Qt.LeftButton)
+        assert other.columnCount() == 15
+
+        # ... and the track shown before does not notify this window any more
+        assert model.receivers(model.linearDataChanged) == 0
+
     def test_insert_point(self):
         """
         Check insertion of points
