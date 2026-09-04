@@ -141,8 +141,16 @@ value at each waypoint. Waypoints for which the server provides no data, e.g. be
 the aircraft is on the ground, stay empty.
 
 The columns are refreshed with every plot of the Linear View and are removed when the
-Linear View is closed. The checkbox keeps its state when you activate another flight
-track, the columns then show the data of the Linear View of that flight track.
+Linear View is closed.
+
+As long as no Linear View provides data for the active flight track there is nothing to
+show, hence the checkbox is unchecked and greyed out. Activating another flight track
+therefore empties the columns first: the values the Linear View retrieved for the flight
+track it does not plot any more are dropped, they would be outdated. The columns are
+filled again with the plot of the newly activated flight track, which the Linear View
+requests right away as long as its *auto update* is enabled. The checkbox remembers your
+wish while it is greyed out, so the columns come back on their own, also when you switch
+back and forth between flight tracks.
 
 
 Docking Widgets Configurations
