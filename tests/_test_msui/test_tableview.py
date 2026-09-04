@@ -231,6 +231,127 @@ class Test_TableView:
         # ... and the track shown before does not notify this window any more
         assert model.receivers(model.linearDataChanged) == 0
 
+    def test_show_linear_data_without_linear_view(self):
+        """
+        The "show data" checkbox is unchecked and greyed out as long as no
+        linear view provides data.
+        """
+        model = self.window.waypoints_model
+        waypoints = model.all_waypoint_data()
+        # no linear view has plotted this flight track yet
+        assert not self.window.cbShowLinearData.isEnabled()
+        assert not self.window.cbShowLinearData.isChecked()
+
+        data = [lsec_xml(lats=[wp.lat for wp in waypoints], lons=[wp.lon for wp in waypoints],
+                         values=("nan", "0.05", "0.06", "0.07", "nan"))]
+        model.set_linear_data_from_xml(data)
+        assert self.window.cbShowLinearData.isEnabled()
+        QtTest.QTest.mouseClick(self.window.cbShowLinearData, QtCore.Qt.LeftButton)
+        assert model.columnCount() == 16
+
+        # closing the linear view drops the data columns and the tick
+        model.clear_linear_data()
+        assert not self.window.cbShowLinearData.isEnabled()
+        assert not self.window.cbShowLinearData.isChecked()
+        assert not model.linear_data_visible
+        assert model.columnCount() == 15
+
+        # ... the tick and the columns are back with the next plot
+        model.set_linear_data_from_xml(data)
+        assert self.window.cbShowLinearData.isEnabled()
+        assert self.window.cbShowLinearData.isChecked()
+        assert model.columnCount() == 16
+
+    def test_show_linear_data_disabled_for_flight_track_without_data(self):
+        """
+        Switching to a flight track that no linear view plots unchecks and
+        greys the "show data" checkbox out.
+        """
+        model = self.window.waypoints_model
+        waypoints = model.all_waypoint_data()
+        model.set_linear_data_from_xml([lsec_xml(
+            lats=[wp.lat for wp in waypoints], lons=[wp.lon for wp in waypoints],
+            values=("nan", "0.05", "0.06", "0.07", "nan"))])
+        QtTest.QTest.mouseClick(self.window.cbShowLinearData, QtCore.Qt.LeftButton)
+        assert self.window.cbShowLinearData.isEnabled()
+
+        other = ft.WaypointsTableModel("other")
+        other.insertRows(0, rows=2, waypoints=[ft.Waypoint(48.10, 10.27, 200),
+                                               ft.Waypoint(52.32, 9.21, 200)])
+        self.window.setFlightTrackModel(other)
+        assert not self.window.cbShowLinearData.isEnabled()
+        assert not self.window.cbShowLinearData.isChecked()
+        assert not other.linear_data_visible
+        assert other.columnCount() == 15
+
+    def test_show_linear_data_of_flight_tracks_switched_back_and_forth(self):
+        """
+        The data columns follow the active flight track: they are shown as
+        soon as the linear view has retrieved the values of that track, also
+        when switching back and forth between flight tracks.
+        """
+        model = self.window.waypoints_model
+        waypoints = model.all_waypoint_data()
+        data = [lsec_xml(lats=[wp.lat for wp in waypoints], lons=[wp.lon for wp in waypoints],
+                         values=("nan", "0.05", "0.06", "0.07", "nan"))]
+        model.set_linear_data_from_xml(data)
+        QtTest.QTest.mouseClick(self.window.cbShowLinearData, QtCore.Qt.LeftButton)
+        assert model.columnCount() == 16
+
+        other = ft.WaypointsTableModel("other")
+        other.insertRows(0, rows=2, waypoints=[ft.Waypoint(48.10, 10.27, 200),
+                                               ft.Waypoint(52.32, 9.21, 200)])
+        other_waypoints = other.all_waypoint_data()
+        other_data = [lsec_xml(lats=[wp.lat for wp in other_waypoints],
+                               lons=[wp.lon for wp in other_waypoints], values=("0.1", "0.2"))]
+        # the linear view drops the values of the track it does not plot any more
+        model.clear_linear_data()
+        self.window.setFlightTrackModel(other)
+        assert not self.window.cbShowLinearData.isEnabled()
+        assert not self.window.cbShowLinearData.isChecked()
+
+        # the plot of the new flight track arrives and its data is shown
+        other.set_linear_data_from_xml(other_data)
+        assert self.window.cbShowLinearData.isEnabled()
+        assert self.window.cbShowLinearData.isChecked()
+        assert other.columnCount() == 16
+        assert [other.data(other.index(row, ft.LINEAR_DATA_COLUMN)).value()
+                for row in range(other.rowCount())] == ["0.1", "0.2"]
+
+        # ... and the same when switching back to the first flight track
+        other.clear_linear_data()
+        self.window.setFlightTrackModel(model)
+        assert not self.window.cbShowLinearData.isChecked()
+        model.set_linear_data_from_xml(data)
+        assert self.window.cbShowLinearData.isChecked()
+        assert model.columnCount() == 16
+        assert [model.data(model.index(row, ft.LINEAR_DATA_COLUMN)).value()
+                for row in range(model.rowCount())] == ["", "0.05", "0.06", "0.07", ""]
+
+    def test_show_linear_data_not_wanted_stays_hidden_on_switch(self):
+        """
+        Data columns that the user has switched off stay off when the linear
+        view provides data for another flight track.
+        """
+        model = self.window.waypoints_model
+        waypoints = model.all_waypoint_data()
+        model.set_linear_data_from_xml([lsec_xml(
+            lats=[wp.lat for wp in waypoints], lons=[wp.lon for wp in waypoints],
+            values=("nan", "0.05", "0.06", "0.07", "nan"))])
+        assert not self.window.cbShowLinearData.isChecked()
+
+        other = ft.WaypointsTableModel("other")
+        other.insertRows(0, rows=2, waypoints=[ft.Waypoint(48.10, 10.27, 200),
+                                               ft.Waypoint(52.32, 9.21, 200)])
+        other_waypoints = other.all_waypoint_data()
+        self.window.setFlightTrackModel(other)
+        other.set_linear_data_from_xml([lsec_xml(
+            lats=[wp.lat for wp in other_waypoints], lons=[wp.lon for wp in other_waypoints],
+            values=("0.1", "0.2"))])
+        assert self.window.cbShowLinearData.isEnabled()
+        assert not self.window.cbShowLinearData.isChecked()
+        assert other.columnCount() == 15
+
     def test_insert_point(self):
         """
         Check insertion of points
