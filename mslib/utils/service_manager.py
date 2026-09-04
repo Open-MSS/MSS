@@ -25,9 +25,6 @@
 """
 import urllib.parse
 
-# query parameters which describe a single request instead of the service itself
-OGC_REQUEST_PARAMS = ("service", "request")
-
 
 def strip_request_params(url):
     """Remove the OGC request parameters (service, request) from an url.
@@ -37,7 +34,7 @@ def strip_request_params(url):
     """
     scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url)
     kept = [(key, value) for key, value in urllib.parse.parse_qsl(query)
-            if key.lower() not in OGC_REQUEST_PARAMS]
+            if key.lower() not in ("service", "request")]
     return urllib.parse.urlunparse(
         (scheme, netloc, path, params, urllib.parse.urlencode(kept), fragment))
 
