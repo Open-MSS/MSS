@@ -66,6 +66,17 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
         self.settings_tag = "tableview"
 
+        # Tooltip of <cbShowLinearData> while it is usable, a different one
+        # explains the greyed out checkbox.
+        self.show_linear_data_tooltip = self.cbShowLinearData.toolTip()
+        # Whether the user wants the data columns. The checkbox itself only
+        # shows them where a linear view provides data, this remembers the
+        # wish across flight tracks that have none.
+        self.show_linear_data_wanted = False
+        # Guards the checkbox against taking a state set by this window for
+        # the wish of the user.
+        self._updating_show_linear_data = False
+
         self.setFlightTrackModel(model)
         self.tableWayPoints.setItemDelegate(ft.WaypointDelegate(self))
 
@@ -107,6 +118,8 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         Handler for the <cbShowLinearData> checkbox. Shows or hides the
         columns with the data values of the linear view.
         """
+        if not self._updating_show_linear_data:
+            self.show_linear_data_wanted = visible
         self.waypoints_model.set_linear_data_visible(visible)
 
     def update_linear_data(self):
@@ -115,8 +128,30 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         The values are not part of the flight plan, hence the model does not
         emit dataChanged() for them and the table has to be repainted here.
         """
+        self.update_show_linear_data_enabled()
         self.tableWayPoints.viewport().update()
         self.resizeColumns()
+
+    def update_show_linear_data_enabled(self):
+        """
+        Match the <cbShowLinearData> checkbox to the data of the active flight
+        track. As long as no linear view provides data for it there is nothing
+        to show, hence the checkbox is unchecked and greyed out; a tick without
+        data columns would be misleading. The wish of the user is remembered,
+        so the columns of a flight track reappear as soon as the linear view
+        has data for it, e.g. after switching back and forth between tracks.
+        """
+        available = len(self.waypoints_model.linear_data_columns) > 0
+        # The checkbox passes the change on to the flight track (toggled).
+        self._updating_show_linear_data = True
+        try:
+            self.cbShowLinearData.setChecked(available and self.show_linear_data_wanted)
+        finally:
+            self._updating_show_linear_data = False
+        self.cbShowLinearData.setEnabled(available)
+        self.cbShowLinearData.setToolTip(
+            self.show_linear_data_tooltip if available else
+            "No linear view provides data values for this flight track")
 
     def on_selection_changed(self, index):
         """
@@ -311,13 +346,14 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         if previous is None or previous is self.waypoints_model:
             # Adopt what the flight track already shows, another table view
             # of the same track may have switched the data columns on.
-            self.cbShowLinearData.setChecked(self.waypoints_model.linear_data_visible)
+            self.show_linear_data_wanted = self.waypoints_model.linear_data_visible
         else:
-            # The checkbox is the wish of the user for this window, hence it
-            # keeps its state when another flight track becomes the active
-            # one and applies to the data of that track, which the linear
-            # view stores per flight track.
-            self.waypoints_model.set_linear_data_visible(self.cbShowLinearData.isChecked())
+            # The wish of the user applies to the flight track that becomes
+            # the active one, its data is what the linear view retrieved for
+            # that track. The checkbox follows below, ticked only if there is
+            # data to show.
+            self.waypoints_model.set_linear_data_visible(self.show_linear_data_wanted)
+        self.update_show_linear_data_enabled()
         self.resizeColumns()
 
     def viewPerformance(self):
