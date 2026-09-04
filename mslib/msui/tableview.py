@@ -290,16 +290,35 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         """
         Set the QAbstractItemModel instance that the table displays.
         """
+        previous = self.waypoints_model
         super().setFlightTrackModel(model)
+        if previous is not None and previous is not self.waypoints_model:
+            # Stop listening to the flight track that is not displayed here
+            # any more, otherwise the connections pile up on every switch.
+            for signal, slot in ((previous.dataChanged, self.update_roundtrip_enabled),
+                                 (previous.linearDataChanged, self.update_linear_data)):
+                try:
+                    signal.disconnect(slot)
+                except (TypeError, RuntimeError):
+                    pass
         self.tableWayPoints.setModel(self.waypoints_model)
 
         # Automatically enable or disable roundtrip when data changes
         self.waypoints_model.dataChanged.connect(self.update_roundtrip_enabled)
         self.update_roundtrip_enabled()
 
-        # Show the data of the linear view as requested for this flight track
         self.waypoints_model.linearDataChanged.connect(self.update_linear_data)
-        self.cbShowLinearData.setChecked(self.waypoints_model.linear_data_visible)
+        if previous is None or previous is self.waypoints_model:
+            # Adopt what the flight track already shows, another table view
+            # of the same track may have switched the data columns on.
+            self.cbShowLinearData.setChecked(self.waypoints_model.linear_data_visible)
+        else:
+            # The checkbox is the wish of the user for this window, hence it
+            # keeps its state when another flight track becomes the active
+            # one and applies to the data of that track, which the linear
+            # view stores per flight track.
+            self.waypoints_model.set_linear_data_visible(self.cbShowLinearData.isChecked())
+        self.resizeColumns()
 
     def viewPerformance(self):
         """
