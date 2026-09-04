@@ -23,6 +23,43 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import urllib.parse
+
+
+def strip_request_params(url):
+    """Remove the OGC request parameters (service, request) from an url.
+
+    All other query parameters are kept in their original order, so the result
+    can be used as base url for further requests to the same service.
+    """
+    scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url)
+    kept = [(key, value) for key, value in urllib.parse.parse_qsl(query)
+            if key.lower() not in ("service", "request")]
+    return urllib.parse.urlunparse(
+        (scheme, netloc, path, params, urllib.parse.urlencode(kept), fragment))
+
+
+def service_cache_key(url):
+    """Build the cache key of a WMS service from its full url.
+
+    In contrast to using only the base url, the query parameters are part of
+    the key. Services which differ solely in their parameters, e.g.
+    "https://example.com/wms?dataset=a", therefore get separate cache entries.
+
+    The parameters of the GetCapabilities request itself are dropped and the
+    remaining ones are sorted, so that the very same service is found again no
+    matter how the request was spelled. Scheme and host are lower cased because
+    they are case insensitive, the rest of the url is not.
+
+    The key is the normalized url itself. It must not be reduced any further,
+    e.g. by slugifying it, because that would collapse the url separators and
+    map distinct services onto the same key, for example
+    "http://example.com:1/wms" and "http://example.com/1/wms".
+    """
+    scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(strip_request_params(url))
+    query = urllib.parse.urlencode(sorted(urllib.parse.parse_qsl(query)))
+    return urllib.parse.urlunparse(
+        (scheme.lower(), netloc.lower(), path, params, query, fragment))
 
 
 class WMSServiceManager:
@@ -44,7 +81,7 @@ class WMSServiceManager:
         self._cache.clear()
 
     def get_service(self, url):
-        return self._cache.get(url)
+        return self._cache.get(service_cache_key(url))
 
     def cache_service(self, url, wms):
-        self._cache[url] = wms
+        self._cache[service_cache_key(url)] = wms
