@@ -33,6 +33,7 @@ import mslib.msui.linearview as tv
 from mslib.msui.msui import MSUIMainWindow
 from mslib.msui.viewplotter import _DEFAULT_SETTINGS_LINEARVIEW
 from mslib.utils.config import config_loader
+from tests.utils import lsec_xml
 
 WMS_REQUEST_TIMEOUT_MS = (config_loader(dataset="WMS_request_timeout") + 5) * 1000
 
@@ -77,6 +78,61 @@ class Test_MSSLinearViewWindow:
         QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(782, 266), -1)
         QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(100, 100), -1)
 
+    def test_draw_image_fills_waypoint_data(self):
+        """
+        The retrieved values are handed over to the flight track model, where
+        the table view picks them up.
+        """
+        waypoints = self.window.waypoints_model.all_waypoint_data()
+        self.window.mpl.canvas.draw_image([lsec_xml(
+            lats=[wp.lat for wp in waypoints], lons=[wp.lon for wp in waypoints],
+            values=("nan", "42", "13"))])
+
+        assert self.window.waypoints_model.linear_data_columns == [("Mole fraction of ozone (Linear)", "ppmv")]
+        assert [wp.linear_data for wp in waypoints] == [
+            {}, {"Mole fraction of ozone (Linear)": 42.}, {"Mole fraction of ozone (Linear)": 13.}]
+
+    def test_close_clears_waypoint_data(self):
+        waypoints = self.window.waypoints_model.all_waypoint_data()
+        self.window.mpl.canvas.draw_image([lsec_xml(
+            lats=[wp.lat for wp in waypoints], lons=[wp.lon for wp in waypoints],
+            values=("nan", "42", "13"))])
+
+        self.window.force_close = True
+        self.window.close()
+
+        assert self.window.waypoints_model.linear_data_columns == []
+        assert [wp.linear_data for wp in waypoints] == [{}, {}, {}]
+
+    def test_switch_flight_track_updates_data(self):
+        """
+        On a switch to another flight track the values of the track that is
+        not plotted here any more are dropped, and the plot of the new track
+        is requested for its waypoints.
+        """
+        waypoints = self.window.waypoints_model.all_waypoint_data()
+        self.window.mpl.canvas.draw_image([lsec_xml(
+            lats=[wp.lat for wp in waypoints], lons=[wp.lon for wp in waypoints],
+            values=("nan", "42", "13"))])
+        previous = self.window.waypoints_model
+
+        other = ft.WaypointsTableModel("other")
+        other.insertRows(0, rows=2, waypoints=[ft.Waypoint(48.10, 10.27, 200),
+                                               ft.Waypoint(52.32, 9.21, 200)])
+
+        wms_control = self.window.docks[tv.WMS].widget()
+        requested = []
+        self.window.mpl.canvas.waypoints_interactor.signal_get_lsec.connect(
+            lambda: requested.append(wms_control.waypoints_model))
+
+        self.window.setFlightTrackModel(other)
+
+        # the WMS control knows the new flight track when it is asked for a plot
+        assert requested == [other]
+        # the values of the previous flight track are outdated and gone
+        assert previous.linear_data_columns == []
+        assert [wp.linear_data for wp in waypoints] == [{}, {}, {}]
+
     @mock.patch("mslib.msui.linearview.MSUI_LV_Options_Dialog")
     def test_options(self, mockdlg):
         QtTest.QTest.mouseClick(self.window.lvoptionbtn, QtCore.Qt.LeftButton)
@@ -118,3 +174,5 @@ class Test_LinearViewWMS:
         self.query_server(qtbot, self.url)
         with qtbot.wait_signal(self.wms_control.image_displayed, timeout=WMS_REQUEST_TIMEOUT_MS):
             QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
+        # the retrieved data is offered as a column of the table view
+        assert len(self.window.waypoints_model.linear_data_columns) == 1

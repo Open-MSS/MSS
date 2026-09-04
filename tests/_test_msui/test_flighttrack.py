@@ -24,9 +24,14 @@
     limitations under the License.
 """
 import json
+import xml.etree.ElementTree as etree
 
-from mslib.msui.flighttrack import WaypointsTableModel
+from PyQt5 import QtCore
+
+from mslib.msui.flighttrack import (LINEAR_DATA_COLUMN, TABLE_FULL, Waypoint, WaypointsTableModel,
+                                    linear_data_columns, values_at_waypoints)
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
+from tests.utils import lsec_xml
 
 
 class Test_WaypointsTableModel_CorruptedSettings:
@@ -101,3 +106,85 @@ class Test_WaypointsTableModel_CorruptedSettings:
             "Dict should pass isinstance dict check"
         assert isinstance({}, dict), \
             "Empty dict should pass isinstance dict check"
+
+
+class Test_LinearData:
+    """
+    Tests for the data columns that the linear view fills in the table view.
+    """
+
+    def setup_method(self):
+        self.waypoints = [Waypoint(0., 0., 0.), Waypoint(1., 1., 350.),
+                          Waypoint(2., 2., 350.), Waypoint(3., 3., 0.)]
+        self.model = WaypointsTableModel("")
+        self.model.insertRows(0, rows=len(self.waypoints), waypoints=self.waypoints)
+
+    def test_values_at_waypoints(self):
+        # Only the waypoints, not the interpolated points in between, are
+        # returned, and NaN values (aircraft on the ground) become None.
+        assert values_at_waypoints(
+            [0., 0.5, 1., 1.5, 2., 2.5, 3.], [0., 0.5, 1., 1.5, 2., 2.5, 3.],
+            [float("nan"), 5., 10., 12., 20., 22., float("nan")],
+            self.waypoints) == [None, 10., 20., None]
+
+    def test_values_at_waypoints_without_matching_points(self):
+        assert values_at_waypoints([10., 11.], [10., 11.], [1., 2.], self.waypoints) == [None] * 4
+
+    def test_linear_data_columns(self):
+        columns = linear_data_columns([lsec_xml()], self.waypoints)
+        assert columns == [{"name": "Mole fraction of ozone (Linear)",
+                            "unit": "ppmv",
+                            "values": [None, 10., 20., None]}]
+
+    def test_linear_data_columns_makes_names_unique(self):
+        columns = linear_data_columns([lsec_xml(), lsec_xml()], self.waypoints)
+        assert [column["name"] for column in columns] == ["Mole fraction of ozone (Linear)",
+                                                          "Mole fraction of ozone (Linear) (2)"]
+
+    def test_linear_data_columns_skips_incomplete_data(self):
+        incomplete = etree.fromstring("<MSS_LinearSection_Data><Title>Empty</Title></MSS_LinearSection_Data>")
+        assert linear_data_columns([incomplete], self.waypoints) == []
+
+    def test_columns_are_hidden_by_default(self):
+        self.model.set_linear_data_from_xml([lsec_xml()])
+        assert self.model.columnCount() == len(TABLE_FULL)
+        assert self.model.visible_linear_data_columns() == []
+
+    def test_columns_are_shown_on_demand(self):
+        self.model.set_linear_data_from_xml([lsec_xml()])
+        self.model.set_linear_data_visible(True)
+        assert self.model.columnCount() == len(TABLE_FULL) + 1
+        assert self.model.headerData(
+            LINEAR_DATA_COLUMN, QtCore.Qt.Horizontal).value() == "Mole fraction of ozone (Linear)\n(ppmv)"
+        values = [self.model.data(self.model.index(row, LINEAR_DATA_COLUMN)).value()
+                  for row in range(self.model.rowCount())]
+        assert values == ["", "10", "20", ""]
+        # The data columns cannot be edited.
+        assert not self.model.flags(self.model.index(0, LINEAR_DATA_COLUMN)) & QtCore.Qt.ItemIsEditable
+
+        self.model.set_linear_data_visible(False)
+        assert self.model.columnCount() == len(TABLE_FULL)
+
+    def test_data_stays_at_its_waypoint_when_waypoints_change(self):
+        self.model.set_linear_data_from_xml([lsec_xml()])
+        self.model.set_linear_data_visible(True)
+        self.model.insertRows(0, waypoints=[Waypoint(10., 10., 0.)])
+        values = [self.model.data(self.model.index(row, LINEAR_DATA_COLUMN)).value()
+                  for row in range(self.model.rowCount())]
+        assert values == ["", "", "10", "20", ""]
+
+    def test_clear_linear_data(self):
+        self.model.set_linear_data_from_xml([lsec_xml()])
+        self.model.set_linear_data_visible(True)
+        self.model.clear_linear_data()
+        assert self.model.columnCount() == len(TABLE_FULL)
+        assert all(waypoint.linear_data == {} for waypoint in self.model.all_waypoint_data())
+
+    def test_linear_data_does_not_modify_the_flight_track(self):
+        changed = []
+        self.model.modified = False
+        self.model.dataChanged.connect(lambda *args: changed.append(args))
+        self.model.set_linear_data_visible(True)
+        self.model.set_linear_data_from_xml([lsec_xml()])
+        assert changed == []
+        assert not self.model.modified
