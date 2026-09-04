@@ -104,6 +104,35 @@ class Test_MSSLinearViewWindow:
         assert self.window.waypoints_model.linear_data_columns == []
         assert [wp.linear_data for wp in waypoints] == [{}, {}, {}]
 
+    def test_switch_flight_track_updates_data(self):
+        """
+        On a switch to another flight track the values of the track that is
+        not plotted here any more are dropped, and the plot of the new track
+        is requested for its waypoints.
+        """
+        waypoints = self.window.waypoints_model.all_waypoint_data()
+        self.window.mpl.canvas.draw_image([lsec_xml(
+            lats=[wp.lat for wp in waypoints], lons=[wp.lon for wp in waypoints],
+            values=("nan", "42", "13"))])
+        previous = self.window.waypoints_model
+
+        other = ft.WaypointsTableModel("other")
+        other.insertRows(0, rows=2, waypoints=[ft.Waypoint(48.10, 10.27, 200),
+                                               ft.Waypoint(52.32, 9.21, 200)])
+
+        wms_control = self.window.docks[tv.WMS].widget()
+        requested = []
+        self.window.mpl.canvas.waypoints_interactor.signal_get_lsec.connect(
+            lambda: requested.append(wms_control.waypoints_model))
+
+        self.window.setFlightTrackModel(other)
+
+        # the WMS control knows the new flight track when it is asked for a plot
+        assert requested == [other]
+        # the values of the previous flight track are outdated and gone
+        assert previous.linear_data_columns == []
+        assert [wp.linear_data for wp in waypoints] == [{}, {}, {}]
+
     @mock.patch("mslib.msui.linearview.MSUI_LV_Options_Dialog")
     def test_options(self, mockdlg):
         QtTest.QTest.mouseClick(self.window.lvoptionbtn, QtCore.Qt.LeftButton)

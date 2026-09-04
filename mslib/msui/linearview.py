@@ -229,9 +229,18 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
         """
         Set the QAbstractItemModel instance that the view displays.
         """
-        super().setFlightTrackModel(model)
+        previous = self.waypoints_model
         if self.docks[WMS] is not None:
+            # The WMS control has to know the new flight track before the
+            # redraw below asks it for a plot, its request describes the path.
             self.docks[WMS].widget().setFlightTrackModel(model)
+        super().setFlightTrackModel(model)
+        if previous is not None and previous is not model:
+            # The data values of the flight track that is not plotted here any
+            # more are outdated, the table view must not show them as if they
+            # belonged to the current plot. The values of the new flight track
+            # arrive with the plot that the redraw above requests.
+            previous.clear_linear_data()
 
     def open_settings_dialog(self):
         settings = self.getView().get_settings()
