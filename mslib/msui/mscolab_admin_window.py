@@ -2,7 +2,7 @@
 """
 
     mslib.msui.mscolab_admin_window
-    ~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Mscolab operation window, to display chat, file change
 

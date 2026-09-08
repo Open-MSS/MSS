@@ -2,7 +2,7 @@
 """
 
     mslib.msui.editor
-    ~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~
 
     config editor for msui_settings.json.
 

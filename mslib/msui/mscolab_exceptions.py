@@ -3,7 +3,7 @@
 """
 
     mslib.msui.mscolab_exceptions
-    ~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Exceptions
 
