@@ -148,8 +148,8 @@ show, hence the checkbox is unchecked and greyed out. Activating another flight 
 therefore empties the columns first: the values the Linear View retrieved for the flight
 track it does not plot any more are dropped, they would be outdated. The columns are
 filled again with the plot of the newly activated flight track, which the Linear View
-requests right away as long as its *auto update* is enabled. The checkbox remembers your
-wish while it is greyed out, so the columns come back on their own, also when you switch
+requests right away. The checkbox remembers your wish while it is greyed out,
+so the columns come back on their own, also when you switch
 back and forth between flight tracks.
 
 
