@@ -27,7 +27,7 @@
 
 import mock
 import pytest
-from PyQt5 import QtTest, QtCore
+from PyQt5 import QtTest, QtCore, QtWidgets
 from mslib.msui import flighttrack as ft
 import mslib.msui.linearview as tv
 from mslib.msui.msui import MSUIMainWindow
@@ -68,6 +68,12 @@ class Test_MSSLinearViewWindow:
         QtTest.QTest.qWaitForWindowExposed(self.window)
         yield
         self.window.hide()
+
+    def test_copy_figure_to_clipboard(self):
+        QtWidgets.QApplication.clipboard().clear()
+        self.window.mpl.navbar._actions['copy_figure'].trigger()
+        image = QtWidgets.QApplication.clipboard().image()
+        assert not image.isNull()
 
     def test_open_wms(self):
         self.window.cbTools.currentIndexChanged.emit(1)

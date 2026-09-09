@@ -26,6 +26,8 @@
 """
 import datetime
 import json
+import os
+import tempfile
 
 from pathlib import Path
 import requests
@@ -58,6 +60,15 @@ class MessageTextEdit(QtWidgets.QTextEdit):
                 chat_window.edit_message()
             return
         super().keyPressEvent(event)
+
+    def insertFromMimeData(self, source):
+        # Ctrl+V of an image (e.g. copied from topview/sideview/linearview, or
+        # any other application) attaches it, instead of inserting it as rich text.
+        if source.hasImage():
+            image = QtGui.QImage(source.imageData())
+            self.parent().parent().parent().handle_pasted_image(image)
+            return
+        super().insertFromMimeData(source)
 
 
 class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
@@ -96,6 +107,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
         self.text = ""
         self.attachment = None
         self.attachment_type = None
+        self._pasted_attachment_path = None
         self.active_edit_id = None
         self.active_message_reply = None
         self.current_search_index = None
@@ -139,7 +151,9 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             QtCore.Qt.LinksAccessibleByKeyboard | QtCore.Qt.LinksAccessibleByMouse | QtCore.Qt.TextBrowserInteraction |
             QtCore.Qt.TextEditable | QtCore.Qt.TextEditorInteraction | QtCore.Qt.TextSelectableByKeyboard |
             QtCore.Qt.TextSelectableByMouse)
-        self.messageText.setPlaceholderText("Enter message here.\nPress enter to send.\nShift+Enter to add a new line.")
+        self.messageText.setPlaceholderText(
+            "Enter message here.\nPress enter to send.\nShift+Enter to add a new line."
+            "\nCtrl+V to paste an image.")
         self.messageText.setObjectName("messageText")
         vbox_layout = QtWidgets.QVBoxLayout()
         vbox_layout.addWidget(self.messageText)
@@ -245,12 +259,29 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
         if file_path is None or file_path == "":
             return
         file_type = file_path.split('.')[-1]
+        message_type = MessageType.IMAGE if file_type in ['png', 'gif', 'jpg', 'jpeg', 'bmp'] else MessageType.DOCUMENT
+        self._stage_attachment(file_path, message_type)
+
+    def handle_pasted_image(self, image):
+        """
+        Stage an image pasted from the clipboard (e.g. copied from
+        topview/sideview/linearview) as an attachment, the same way a
+        file picked through handle_upload would be staged.
+        """
+        if image is None or image.isNull():
+            return
+        tmp_file = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+        tmp_file.close()
+        image.save(tmp_file.name, "PNG")
+        self._pasted_attachment_path = tmp_file.name
+        self._stage_attachment(tmp_file.name, MessageType.IMAGE)
+
+    def _stage_attachment(self, file_path, message_type):
         self.attachment = file_path
-        if file_type in ['png', 'gif', 'jpg', 'jpeg', 'bmp']:
-            self.attachment_type = MessageType.IMAGE
+        self.attachment_type = message_type
+        if message_type == MessageType.IMAGE:
             self.display_uploaded_img(file_path)
         else:
-            self.attachment_type = MessageType.DOCUMENT
             self.display_uploaded_document(file_path)
         self.uploadBtn.setVisible(False)
         self.cancelBtn.setVisible(True)
@@ -304,6 +335,12 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
     def send_message_state(self):
         self.active_edit_id = None
         self.attachment = None
+        if self._pasted_attachment_path is not None:
+            try:
+                os.remove(self._pasted_attachment_path)
+            except OSError:
+                pass
+            self._pasted_attachment_path = None
         if self.active_message_reply is not None:
             self.active_message_reply.set_selected(False)
             self.active_message_reply = None

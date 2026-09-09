@@ -150,6 +150,12 @@ class Test_MSSSideViewWindow:
         yield
         self.window.hide()
 
+    def test_copy_figure_to_clipboard(self):
+        QtWidgets.QApplication.clipboard().clear()
+        self.window.mpl.navbar._actions['copy_figure'].trigger()
+        image = QtWidgets.QApplication.clipboard().image()
+        assert not image.isNull()
+
     def test_tutorial_mode_mirrors_flighttrack_to_ftml(self):
         """
         In tutorial mode the displayed flight track is silently written to a

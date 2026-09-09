@@ -25,6 +25,7 @@
     limitations under the License.
 """
 
+import io
 import logging
 import os
 import re
@@ -173,6 +174,18 @@ def excepthook(type_, value, traceback_):
             f"Information about the fatal error:\n"
             f"\n"
             f"{tb}")
+
+
+def figure_to_clipboard(figure):
+    """
+    Render a Matplotlib figure to PNG and place it on the system clipboard,
+    so it can be pasted into the mscolab chat, or any other application,
+    without saving it to disk first.
+    """
+    buf = io.BytesIO()
+    figure.savefig(buf, format="png")
+    image = QtGui.QImage.fromData(buf.getvalue(), "PNG")
+    QtWidgets.QApplication.clipboard().setImage(image)
 
 
 def show_popup(parent, title, message, icon=0):

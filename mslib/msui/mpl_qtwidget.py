@@ -42,7 +42,7 @@ from mslib.msui.viewplotter import LAST_SAVE_DIRECTORY, TopViewPlotter, SideView
 from mslib.utils.thermolib import convert_pressure_to_vertical_axis_measure
 from mslib.utils import thermolib
 from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings
-from mslib.utils.qt import Worker
+from mslib.utils.qt import Worker, figure_to_clipboard
 from mslib.utils.units import units
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import mpl_map
@@ -163,16 +163,27 @@ class NavigationToolbar(NavigationToolbar2QT):
             ('Mv WP', 'Move waypoints', "wp_move", 'move_wp'),
             ('Ins WP', 'Insert waypoints', "wp_insert", 'insert_wp'),
             ('Del WP', 'Delete waypoints', "wp_delete", 'delete_wp'),
+            (None, None, None, None),
+            ('Copy', 'Copy image to clipboard (Ctrl+C)', "copy_image", 'copy_figure'),
         ])
         super().__init__(canvas, parent, coordinates)
         self._actions["move_wp"].setCheckable(True)
         self._actions["insert_wp"].setCheckable(True)
         self._actions["delete_wp"].setCheckable(True)
+        self._actions["copy_figure"].setShortcut(QtGui.QKeySequence.Copy)
 
         self.setIconSize(QtCore.QSize(24, 24))
         self.layout().setSpacing(12)
         self.canvas = canvas
         self.no_push_history = False
+
+    def copy_figure(self, *args):
+        """
+        Copy the current plot to the system clipboard as a PNG image, so it
+        can be pasted into the mscolab chat, or any other application,
+        without saving it to disk first.
+        """
+        figure_to_clipboard(self.canvas.figure)
 
     def _icon(self, name, *args):
         """
