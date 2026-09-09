@@ -29,6 +29,7 @@
 import mock
 import os
 import pytest
+import types
 from PyQt5 import QtTest, QtCore, QtGui, QtWidgets
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
@@ -223,6 +224,165 @@ class Test_MSSSideViewWindow:
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton)
         # click again on same position
         assert len(self.window.waypoints_model.waypoints) == 5
+
+    def _wp_pixel(self, index):
+        """Exact display-pixel position (mpl bottom-left origin) of waypoint <index>."""
+        wpi = self.window.mpl.canvas.waypoints_interactor
+        xy = wpi.plotter.pathpatch.get_path().vertices[index]
+        return wpi.plotter.pathpatch.get_transform().transform(xy)
+
+    def _to_qt_point(self, xt, yt):
+        """Convert a display-pixel position to a Qt widget position (top-left origin)."""
+        height = self.window.mpl.canvas.figure.bbox.height
+        return QtCore.QPoint(int(round(xt)), int(round(height - yt)))
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question",
+                return_value=QtWidgets.QMessageBox.Yes)
+    def test_rubberband_delete_multiple_points(self, mockbox):
+        """
+        Dragging a rubber-band box in Delete mode over several waypoints
+        removes all of them in one step, after a single confirmation.
+        """
+        # Insert a waypoint in the middle of the track (waypoints 0 and 3 --
+        # the first and last -- always sit exactly on the axes edges in this
+        # profile view, so a well-separated rubber-band box needs an
+        # interior point on each side).
+        self.window.waypoints_model.insertRows(2, rows=1, waypoints=[ft.Waypoint(50., 0., 350)])
+        assert len(self.window.waypoints_model.waypoints) == 4
+
+        wp1_px = self._wp_pixel(1)
+        wp2_px = self._wp_pixel(2)
+        margin = 20
+        origin = self._to_qt_point(min(wp1_px[0], wp2_px[0]) - margin, min(wp1_px[1], wp2_px[1]) - margin)
+        corner = self._to_qt_point(max(wp1_px[0], wp2_px[0]) + margin, max(wp1_px[1], wp2_px[1]) + margin)
+
+        self.window.mpl.navbar._actions['delete_wp'].trigger()
+        canvas = self.window.mpl.canvas
+        QtTest.QTest.mousePress(canvas, QtCore.Qt.LeftButton, pos=origin)
+        QtTest.QTest.mouseMove(canvas, pos=corner)
+        QtTest.QTest.mouseRelease(canvas, QtCore.Qt.LeftButton, pos=corner)
+
+        assert mockbox.call_count == 1
+        remaining = self.window.waypoints_model.waypoints
+        assert len(remaining) == 2
+        remaining_locations = sorted((round(wp.lat), round(wp.lon)) for wp in remaining)
+        assert remaining_locations == [(40, 10), (40, 25)]
+
+    def test_rubberband_click_empty_space_clears_selection(self):
+        """
+        A rubber-band drag selects waypoints; a subsequent plain click on
+        empty space (no drag) clears that selection again.
+        """
+        self.window.waypoints_model.insertRows(2, rows=1, waypoints=[ft.Waypoint(50., 0., 350)])
+
+        wp1_px = self._wp_pixel(1)
+        wp2_px = self._wp_pixel(2)
+        margin = 20
+        origin = self._to_qt_point(min(wp1_px[0], wp2_px[0]) - margin, min(wp1_px[1], wp2_px[1]) - margin)
+        corner = self._to_qt_point(max(wp1_px[0], wp2_px[0]) + margin, max(wp1_px[1], wp2_px[1]) + margin)
+
+        self.window.mpl.navbar._actions['move_wp'].trigger()
+        canvas = self.window.mpl.canvas
+        wpi = canvas.waypoints_interactor
+        QtTest.QTest.mousePress(canvas, QtCore.Qt.LeftButton, pos=origin)
+        QtTest.QTest.mouseMove(canvas, pos=corner)
+        QtTest.QTest.mouseRelease(canvas, QtCore.Qt.LeftButton, pos=corner)
+        assert wpi._selected == {1, 2}
+
+        # A plain click (no drag), still inside the profile axes but far
+        # away from any waypoint, clears the selection.
+        empty_spot = self._to_qt_point(wp1_px[0] - 300, wp1_px[1] - 150)
+        QtTest.QTest.mouseClick(canvas, QtCore.Qt.LeftButton, pos=empty_spot)
+        assert wpi._selected == set()
+
+    def test_rubberband_select_and_move_multiple_points(self):
+        """
+        Selecting several waypoints with a rubber-band box in Move mode and
+        then dragging one of the selected waypoints (changing its pressure)
+        moves the whole group by the same offset, leaving unselected
+        waypoints untouched.
+        """
+        self.window.waypoints_model.insertRows(2, rows=1, waypoints=[ft.Waypoint(50., 0., 350)])
+        assert len(self.window.waypoints_model.waypoints) == 4
+
+        canvas = self.window.mpl.canvas
+        wpi = canvas.waypoints_interactor
+
+        orig_wp0 = self.window.waypoints_model.waypoint_data(0).pressure
+        orig_wp1 = self.window.waypoints_model.waypoint_data(1).pressure
+        orig_wp2 = self.window.waypoints_model.waypoint_data(2).pressure
+        orig_wp3 = self.window.waypoints_model.waypoint_data(3).pressure
+
+        wp1_px = self._wp_pixel(1)
+        wp2_px = self._wp_pixel(2)
+        margin = 20
+        origin = self._to_qt_point(min(wp1_px[0], wp2_px[0]) - margin, min(wp1_px[1], wp2_px[1]) - margin)
+        corner = self._to_qt_point(max(wp1_px[0], wp2_px[0]) + margin, max(wp1_px[1], wp2_px[1]) + margin)
+
+        self.window.mpl.navbar._actions['move_wp'].trigger()
+
+        # Rubber-band select waypoints 1 and 2 (waypoints 0 and 3 are well outside the box).
+        QtTest.QTest.mousePress(canvas, QtCore.Qt.LeftButton, pos=origin)
+        QtTest.QTest.mouseMove(canvas, pos=corner)
+        QtTest.QTest.mouseRelease(canvas, QtCore.Qt.LeftButton, pos=corner)
+        assert wpi._selected == {1, 2}
+
+        # Press down on waypoint 1 (part of the selection) to start the drag.
+        start = self._to_qt_point(*wp1_px)
+        QtTest.QTest.mousePress(canvas, QtCore.Qt.LeftButton, pos=start)
+        assert wpi._ind == 1
+
+        # Headless Qt does not reliably deliver synthetic mouse-move events
+        # while a button is held, so the drag step is driven directly with a
+        # synthetic event, exercising the same motion_notify_callback() that
+        # a real drag would call. Only the y (pressure) coordinate matters in
+        # the side view -- the x position of a waypoint is locked.
+        delta_pressure = 3000.0
+        wpi.motion_notify_callback(types.SimpleNamespace(
+            ydata=orig_wp1 + delta_pressure, inaxes=True, button=1, x=0, y=0))
+
+        QtTest.QTest.mouseRelease(canvas, QtCore.Qt.LeftButton, pos=start)
+
+        new_wp0 = self.window.waypoints_model.waypoint_data(0)
+        new_wp1 = self.window.waypoints_model.waypoint_data(1)
+        new_wp2 = self.window.waypoints_model.waypoint_data(2)
+        new_wp3 = self.window.waypoints_model.waypoint_data(3)
+
+        # The unselected (edge) waypoints must not have moved at all.
+        assert new_wp0.pressure == pytest.approx(orig_wp0)
+        assert new_wp3.pressure == pytest.approx(orig_wp3)
+
+        # Both selected waypoints must have moved by (approximately) the same
+        # amount -- setData() quantizes pressure to the nearest flight level,
+        # so an exact match isn't expected.
+        assert new_wp1.pressure == pytest.approx(orig_wp1 + delta_pressure, abs=200)
+        assert new_wp2.pressure == pytest.approx(orig_wp2 + delta_pressure, abs=200)
+
+    def test_switch_tool_after_move_does_not_crash(self):
+        """
+        Regression test: after moving waypoints in Move mode, switching to
+        Delete (or Insert) mode must not raise and must uncheck the
+        previous tool's button.
+
+        This used to call VPathInteractor.redraw_path(), which only
+        HPathInteractor defines (VPathInteractor only has redraw_figure()),
+        raising an AttributeError that aborted the mode switch -- which is
+        also why the previously active tool button stayed visibly checked.
+        """
+        self.window.mpl.navbar._actions['move_wp'].trigger()
+        canvas = self.window.mpl.canvas
+        wpi = canvas.waypoints_interactor
+        point = self._to_qt_point(*self._wp_pixel(1))
+        QtTest.QTest.mousePress(canvas, QtCore.Qt.LeftButton, pos=point)
+        QtTest.QTest.mouseRelease(canvas, QtCore.Qt.LeftButton, pos=point)
+        assert self.window.mpl.navbar._actions['move_wp'].isChecked()
+        # A non-empty selection is required to exercise the crash this test guards against.
+        assert wpi._selected
+
+        self.window.mpl.navbar._actions['delete_wp'].trigger()
+
+        assert not self.window.mpl.navbar._actions['move_wp'].isChecked()
+        assert self.window.mpl.navbar._actions['delete_wp'].isChecked()
 
     def test_y_axes(self):
         self.window.getView().get_settings()["secondary_axis"] = "pressure altitude"

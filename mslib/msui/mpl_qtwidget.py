@@ -199,7 +199,7 @@ class NavigationToolbar(NavigationToolbar2QT):
                 self.canvas.waypoints_interactor.button_release_move_callback(event)
             elif self.mode == _Mode.DELETE_WP:
                 self.canvas.waypoints_interactor.button_release_delete_callback(event)
-            if not self.sideview and self.mode in (_Mode.MOVE_WP, _Mode.DELETE_WP):
+            if self.mode in (_Mode.MOVE_WP, _Mode.DELETE_WP):
                 # Clear any rubber-band selection box that may still be drawn.
                 self.remove_rubberband()
 
@@ -250,7 +250,7 @@ class NavigationToolbar(NavigationToolbar2QT):
         wpi = self.canvas.waypoints_interactor
         if getattr(wpi, "_selected", None):
             wpi._selected = set()
-            wpi.redraw_path()
+            wpi.redraw_figure()
 
     def insert_wp(self, *args):
         """
@@ -317,9 +317,11 @@ class NavigationToolbar(NavigationToolbar2QT):
         overwrite mouse_move to print lon/lat instead of x/y coordinates.
         """
         wpi = self.canvas.waypoints_interactor
-        if not self.sideview and self.mode in (_Mode.MOVE_WP, _Mode.DELETE_WP) and \
+        if self.mode in (_Mode.MOVE_WP, _Mode.DELETE_WP) and \
+                not isinstance(wpi, mpl_pi.LPathInteractor) and \
                 getattr(wpi, "_rubberband_active", False) and wpi._press_xy is not None:
-            # A rubber-band selection box is being dragged over empty space.
+            # A rubber-band selection box is being dragged over empty space
+            # (top view map or side view profile, not the linear view).
             x0, y0 = wpi._press_xy
             self.draw_rubberband(event, x0, y0, event.x, event.y)
         elif self.mode == _Mode.MOVE_WP:
