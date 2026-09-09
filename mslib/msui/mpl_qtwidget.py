@@ -199,6 +199,9 @@ class NavigationToolbar(NavigationToolbar2QT):
                 self.canvas.waypoints_interactor.button_release_move_callback(event)
             elif self.mode == _Mode.DELETE_WP:
                 self.canvas.waypoints_interactor.button_release_delete_callback(event)
+            if not self.sideview and self.mode in (_Mode.MOVE_WP, _Mode.DELETE_WP):
+                # Clear any rubber-band selection box that may still be drawn.
+                self.remove_rubberband()
 
     def clear_history(self):
         self._nav_stack.clear()
@@ -240,6 +243,15 @@ class NavigationToolbar(NavigationToolbar2QT):
                 return
             self.canvas.redraw_map(nav_info)
 
+    def _clear_wp_selection(self):
+        """
+        Clear any rubber-band waypoint selection when switching WP tool modes.
+        """
+        wpi = self.canvas.waypoints_interactor
+        if getattr(wpi, "_selected", None):
+            wpi._selected = set()
+            wpi.redraw_path()
+
     def insert_wp(self, *args):
         """
         activate insert_wp tool
@@ -250,6 +262,7 @@ class NavigationToolbar(NavigationToolbar2QT):
         else:
             self.mode = _Mode.INSERT_WP
             self.canvas.widgetlock(self)
+        self._clear_wp_selection()
         for a in self.canvas.figure.get_axes():
             a.set_navigate_mode(self.mode._navigate_mode)
         self.set_message(self.mode)
@@ -265,6 +278,7 @@ class NavigationToolbar(NavigationToolbar2QT):
         else:
             self.mode = _Mode.DELETE_WP
             self.canvas.widgetlock(self)
+        self._clear_wp_selection()
         for a in self.canvas.figure.get_axes():
             a.set_navigate_mode(self.mode._navigate_mode)
         self.set_message(self.mode)
@@ -280,6 +294,7 @@ class NavigationToolbar(NavigationToolbar2QT):
         else:
             self.mode = _Mode.MOVE_WP
             self.canvas.widgetlock(self)
+        self._clear_wp_selection()
         for a in self.canvas.figure.get_axes():
             a.set_navigate_mode(self.mode._navigate_mode)
         self.set_message(self.mode)
@@ -301,8 +316,14 @@ class NavigationToolbar(NavigationToolbar2QT):
         """
         overwrite mouse_move to print lon/lat instead of x/y coordinates.
         """
-        if self.mode == _Mode.MOVE_WP:
-            self.canvas.waypoints_interactor.motion_notify_callback(event)
+        wpi = self.canvas.waypoints_interactor
+        if not self.sideview and self.mode in (_Mode.MOVE_WP, _Mode.DELETE_WP) and \
+                getattr(wpi, "_rubberband_active", False) and wpi._press_xy is not None:
+            # A rubber-band selection box is being dragged over empty space.
+            x0, y0 = wpi._press_xy
+            self.draw_rubberband(event, x0, y0, event.x, event.y)
+        elif self.mode == _Mode.MOVE_WP:
+            wpi.motion_notify_callback(event)
 
         if isinstance(self.canvas.waypoints_interactor, mpl_pi.LPathInteractor):
             if not event.ydata or not event.xdata:

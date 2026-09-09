@@ -491,6 +491,7 @@ class PathH_Plotter(PathPlotter):
                          label_waypoints=label_waypoints)
         self.map = mplmap
         self.wp_scatter = None
+        self.wp_scatter_selected = None
         self.markerfacecolor = markerfacecolor
         self.tangent_lines = None
         self.show_tangent_points = False
@@ -515,12 +516,15 @@ class PathH_Plotter(PathPlotter):
         map_coords_per_px_x = map_delta_x / width
         return map_coords_per_px_x * px
 
-    def redraw_path(self, wp_vertices=None, waypoints_model_data=None):
+    def redraw_path(self, wp_vertices=None, waypoints_model_data=None, selected_indices=None):
         """Redraw the matplotlib artists that represent the flight track
            (path patch, line and waypoint scatter).
         If waypoint vertices are specified, they will be applied to the
         graphics output. Otherwise the vertex array obtained from the path
         patch will be used.
+
+        selected_indices -- optional collection of waypoint indices to
+                            highlight, e.g. a rubber-band multi-selection.
         """
         if waypoints_model_data is None:
             waypoints_model_data = []
@@ -568,6 +572,9 @@ class PathH_Plotter(PathPlotter):
         if self.wp_scatter is not None:
             self.wp_scatter.remove()
             self.wp_scatter = None
+        if self.wp_scatter_selected is not None:
+            self.wp_scatter_selected.remove()
+            self.wp_scatter_selected = None
 
         x, y = list(zip(*wp_vertices))
 
@@ -578,6 +585,14 @@ class PathH_Plotter(PathPlotter):
         # (animated is important to remove the old scatter points from the map)
         self.wp_scatter = self.ax.scatter(
             x, y, color=self.markerfacecolor, s=20, zorder=3, animated=True, visible=self.show_marker)
+
+        if selected_indices:
+            sel = sorted(i for i in selected_indices if 0 <= i < len(x))
+            if sel:
+                self.wp_scatter_selected = self.ax.scatter(
+                    [x[i] for i in sel], [y[i] for i in sel],
+                    s=90, facecolors='none', edgecolors='yellow', linewidths=2,
+                    zorder=4, animated=True, visible=self.show_marker)
 
         # Draw waypoint labels.
         label_offset = self.appropriate_epsilon(px=5)
@@ -606,6 +621,8 @@ class PathH_Plotter(PathPlotter):
         self.ax.draw_artist(self.line)
         if self.wp_scatter is not None:
             self.ax.draw_artist(self.wp_scatter)
+        if self.wp_scatter_selected is not None:
+            self.ax.draw_artist(self.wp_scatter_selected)
 
         for wp_label in self.wp_labels:
             self.ax.draw_artist(wp_label)
@@ -622,6 +639,8 @@ class PathH_Plotter(PathPlotter):
         super().draw_callback(event)
         if self.wp_scatter:
             self.ax.draw_artist(self.wp_scatter)
+        if self.wp_scatter_selected:
+            self.ax.draw_artist(self.wp_scatter_selected)
         if self.show_solar_angle:
             self.ax.draw_artist(self.solar_lines)
         if self.show_tangent_points:
@@ -939,6 +958,32 @@ class PathInteractor(QtCore.QObject):
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                 QtWidgets.QMessageBox.Yes) == QtWidgets.QMessageBox.Yes
 
+    def confirm_delete_waypoints(self, rows):
+        """Open a QMessageBox and ask the user if he really wants to
+           delete the waypoints at the given list of row indices.
+
+        Returns TRUE if the user confirms the deletion.
+
+        If deleting all of <rows> would leave the flight track with fewer
+        than two points, deletion is refused and the user is informed
+        correspondingly.
+        """
+        wps = self.waypoints_model.all_waypoint_data()
+        if len(wps) - len(rows) < 2:
+            QtWidgets.QMessageBox.warning(
+                None, "Remove waypoints",
+                "Cannot remove waypoints, the flight track needs to consist "
+                "of at least two points.")
+            return False
+        else:
+            text = "\n".join(
+                f"Remove waypoint no.{row:d} at {wps[row].lat:.2f}/{wps[row].lon:.2f}, "
+                f"flightlevel {wps[row].flightlevel:.2f}?" for row in rows)
+            return QtWidgets.QMessageBox.question(
+                None, "Remove waypoints", text,
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                QtWidgets.QMessageBox.Yes) == QtWidgets.QMessageBox.Yes
+
 
 class VPathInteractor(PathInteractor):
     """Subclass of PathInteractor that implements an interactively editable
@@ -1159,6 +1204,10 @@ class HPathInteractor(PathInteractor):
        horizontal flight track. Waypoints are connected with great circles.
     """
 
+    # Minimum drag distance (in display pixels) for a click-and-release to be
+    # treated as a rubber-band box rather than a plain click.
+    RUBBERBAND_MIN_DRAG = 3
+
     def __init__(self, mplmap, waypoints,
                  linecolor='blue', markerfacecolor='red', show_marker=True,
                  label_waypoints=True):
@@ -1169,6 +1218,16 @@ class HPathInteractor(PathInteractor):
         mplmap -- mpl_map.MapCanvas instance into which the path should be drawn.
         waypoints -- flighttrack.WaypointsModel instance.
         """
+        # Indices of waypoints currently selected via a rubber-band drag,
+        # used to move or delete several waypoints in one step. These need
+        # to be set up before the superclass constructor, as it triggers
+        # an initial redraw_path() call that reads self._selected.
+        self._selected = set()
+        self._press_xy = None  # display coords at button press
+        self._rubberband_active = False  # dragging a selection box over empty space
+        self._drag_pivot_start = None  # pivot waypoint's projection coords at drag start
+        self._drag_start_vertices = None  # {index: (x, y)} snapshot of selection at drag start
+
         plotter = PathH_Plotter(
             mplmap, mplpath=PathH([[0, 0]], map=mplmap),
             linecolor=linecolor, markerfacecolor=markerfacecolor,
@@ -1227,6 +1286,73 @@ class HPathInteractor(PathInteractor):
     def get_lat_lon(self, event):
         return self.plotter.map(event.xdata, event.ydata, inverse=True)[::-1]
 
+    def button_press_callback(self, event):
+        """Called whenever a mouse button is pressed. Determines the index of
+           the vertex closest to the click, as long as a vertex is within
+           epsilon tolerance of the click.
+
+        A click that misses every vertex is remembered as a possible
+        rubber-band selection origin (resolved on button release). A click
+        on a vertex that is already part of a multi-selection keeps that
+        whole selection, so that the following drag moves the group
+        together; a click elsewhere collapses the selection to just the
+        clicked vertex.
+        """
+        if not self.plotter.showverts:
+            return
+        if event.inaxes is None:
+            return
+        if event.button != 1:
+            return
+        self._press_xy = (event.x, event.y)
+        ind = self.get_ind_under_point(event)
+        self._rubberband_active = ind is None
+        if ind is not None and ind in self._selected and len(self._selected) > 1:
+            wp_vertices = self.plotter.pathpatch.get_path().wp_vertices
+            self._drag_pivot_start = tuple(wp_vertices[ind])
+            self._drag_start_vertices = {idx: tuple(wp_vertices[idx]) for idx in self._selected}
+        else:
+            self._selected = {ind} if ind is not None else set()
+            self._drag_pivot_start = None
+            self._drag_start_vertices = None
+        self._ind = ind
+
+    def get_inds_in_rect(self, x0, y0, x1, y1):
+        """Return the indices of all waypoints whose position (in display
+           coordinates) lies within the rectangle spanned by (x0, y0) and
+           (x1, y1).
+        """
+        xy = np.asarray(self.plotter.pathpatch.get_path().wp_vertices)
+        if self.plotter.map.projection == "cyl":  # hack for wraparound
+            lon_min, lon_max = self.plotter.map.llcrnrlon, self.plotter.map.urcrnrlon
+            xy[xy[:, 0] < lon_min, 0] += 360
+            xy[xy[:, 0] > lon_max, 0] -= 360
+        xyt = self.plotter.pathpatch.get_transform().transform(xy)
+        xmin, xmax = sorted((x0, x1))
+        ymin, ymax = sorted((y0, y1))
+        return {
+            i for i, (xt, yt) in enumerate(xyt)
+            if xmin <= xt <= xmax and ymin <= yt <= ymax
+        }
+
+    def _finish_rubberband_selection(self, event):
+        """Resolve a rubber-band drag on button release: select the
+           waypoints inside the dragged box, or -- if the mouse barely
+           moved -- treat it as a plain click on empty space and clear the
+           current selection.
+        """
+        was_active = self._rubberband_active
+        self._rubberband_active = False
+        if not was_active or self._press_xy is None:
+            return
+        x0, y0 = self._press_xy
+        x1, y1 = event.x, event.y
+        if math.hypot(x1 - x0, y1 - y0) < self.RUBBERBAND_MIN_DRAG:
+            self._selected = set()
+        else:
+            self._selected = self.get_inds_in_rect(x0, y0, x1, y1)
+        self.redraw_path()
+
     def button_release_insert_callback(self, event):
         """Called whenever a mouse button is released.
 
@@ -1274,38 +1400,85 @@ class HPathInteractor(PathInteractor):
     def button_release_move_callback(self, event):
         """Called whenever a mouse button is released.
         """
-        if not self.showverts or event.button != 1 or self._ind is None:
+        if not self.showverts or event.button != 1:
             return
 
-        # Submit the new position to the data model.
+        if self._ind is None:
+            # The drag (or click) started on empty space: resolve the
+            # rubber-band selection instead of moving anything.
+            self._finish_rubberband_selection(event)
+            return
+
         vertices = self.plotter.pathpatch.get_path().wp_vertices
-        lon, lat = self.plotter.map(vertices[self._ind][0], vertices[self._ind][1],
-                                    inverse=True)
-        loc = find_location(lat, lon, tolerance=self.appropriate_epsilon_km(px=15))
-        if loc is not None:
-            lat, lon = loc[0]
-        self.waypoints_model.setData(
-            self.waypoints_model.createIndex(self._ind, ft.LAT), QtCore.QVariant(lat), update=False)
-        self.waypoints_model.setData(
-            self.waypoints_model.createIndex(self._ind, ft.LON), QtCore.QVariant(lon))
+        if len(self._selected) > 1 and self._ind in self._selected:
+            # Group move: commit every selected waypoint's new position.
+            # Unlike a single-point move, this does not snap to a nearby
+            # known location, as that would pull the whole group towards
+            # just one of the selected points' surroundings.
+            for idx in sorted(self._selected):
+                lon, lat = self.plotter.map(vertices[idx][0], vertices[idx][1], inverse=True)
+                self.waypoints_model.setData(
+                    self.waypoints_model.createIndex(idx, ft.LAT), QtCore.QVariant(lat), update=False)
+                self.waypoints_model.setData(
+                    self.waypoints_model.createIndex(idx, ft.LON), QtCore.QVariant(lon))
+        else:
+            # Submit the new position to the data model.
+            lon, lat = self.plotter.map(vertices[self._ind][0], vertices[self._ind][1],
+                                        inverse=True)
+            loc = find_location(lat, lon, tolerance=self.appropriate_epsilon_km(px=15))
+            if loc is not None:
+                lat, lon = loc[0]
+            self.waypoints_model.setData(
+                self.waypoints_model.createIndex(self._ind, ft.LAT), QtCore.QVariant(lat), update=False)
+            self.waypoints_model.setData(
+                self.waypoints_model.createIndex(self._ind, ft.LON), QtCore.QVariant(lon))
 
         self._ind = None
+        self._drag_pivot_start = None
+        self._drag_start_vertices = None
 
     def button_release_delete_callback(self, event):
         """Called whenever a mouse button is released.
+
+        A plain click deletes the single waypoint under the cursor (as
+        before). A rubber-band drag over empty space selects every
+        waypoint inside the box and, after confirmation, deletes all of
+        them in one step; likewise, dragging a selection that already
+        contains several waypoints deletes the whole group.
         """
         if not self.showverts or event.button != 1:
             return
 
-        if self._ind is not None and self.confirm_delete_waypoint(self._ind):
+        if self._ind is None:
+            if self._rubberband_active and self._press_xy is not None:
+                x0, y0 = self._press_xy
+                x1, y1 = event.x, event.y
+                if math.hypot(x1 - x0, y1 - y0) >= self.RUBBERBAND_MIN_DRAG:
+                    rows = sorted(self.get_inds_in_rect(x0, y0, x1, y1))
+                    if rows and self.confirm_delete_waypoints(rows):
+                        for row in reversed(rows):
+                            self.waypoints_model.removeRows(row)
+            self._rubberband_active = False
+            self._selected = set()
+            return
+
+        if len(self._selected) > 1 and self._ind in self._selected:
+            rows = sorted(self._selected)
+            if self.confirm_delete_waypoints(rows):
+                for row in reversed(rows):
+                    self.waypoints_model.removeRows(row)
+        elif self.confirm_delete_waypoint(self._ind):
             # removeRows() will trigger a signal that will redraw the path.
             self.waypoints_model.removeRows(self._ind)
 
         self._ind = None
+        self._selected = set()
 
     def motion_notify_callback(self, event):
         """Called on mouse movement. Redraws the path if a vertex has been
-           picked and dragged.
+           picked and dragged. If several waypoints are selected, all of
+           them are dragged together, offset by the same amount as the
+           pivot waypoint under the cursor.
         """
         if not self.showverts:
             return
@@ -1316,8 +1489,16 @@ class HPathInteractor(PathInteractor):
         if event.button != 1:
             return
         wp_vertices = self.plotter.pathpatch.get_path().wp_vertices
-        wp_vertices[self._ind] = event.xdata, event.ydata
-        self.plotter.redraw_path(wp_vertices, waypoints_model_data=self.waypoints_model.all_waypoint_data())
+        if len(self._selected) > 1 and self._ind in self._selected and self._drag_start_vertices is not None:
+            dx = event.xdata - self._drag_pivot_start[0]
+            dy = event.ydata - self._drag_pivot_start[1]
+            for idx, (sx, sy) in self._drag_start_vertices.items():
+                wp_vertices[idx] = sx + dx, sy + dy
+        else:
+            wp_vertices[self._ind] = event.xdata, event.ydata
+        self.plotter.redraw_path(
+            wp_vertices, waypoints_model_data=self.waypoints_model.all_waypoint_data(),
+            selected_indices=self._selected)
 
     def qt_data_changed_listener(self, index1, index2):
         """Listens to dataChanged() signals emitted by the flight track
@@ -1344,10 +1525,20 @@ class HPathInteractor(PathInteractor):
         graphics output. Otherwise the vertex array obtained from the path
         patch will be used.
         """
-        self.plotter.redraw_path(wp_vertices=wp_vertices, waypoints_model_data=self.waypoints_model.all_waypoint_data())
+        self.plotter.redraw_path(
+            wp_vertices=wp_vertices, waypoints_model_data=self.waypoints_model.all_waypoint_data(),
+            selected_indices=self._selected)
 
     # Link redraw_figure() to redraw_path().
     redraw_figure = redraw_path
+
+    def qt_insert_remove_point_listener(self, index, first, last):
+        """Listens to rowsInserted() and rowsRemoved() signals. Any
+           existing rubber-band selection is invalidated, as its indices
+           may no longer refer to the same waypoints, then redraws.
+        """
+        self._selected = set()
+        super().qt_insert_remove_point_listener(index, first, last)
 
     def draw_callback(self, event):
         """Extends PathInteractor.draw_callback() by drawing the scatter
