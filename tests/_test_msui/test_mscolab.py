@@ -37,9 +37,10 @@ from PIL import Image
 from tests.constants import ROOT_DIR, MSCOLAB_DATA_DIR
 from tests import constants
 import mslib.utils.auth
+from mslib.mscolab.message_type import MessageType
 from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
-from PyQt5 import QtCore, QtTest, QtWidgets
+from PyQt5 import QtCore, QtGui, QtTest, QtWidgets
 from mslib.utils.config import MSUIDefaultConfig, read_config_file, config_loader, modify_config_file
 from tests.utils import create_msui_settings_file, ExceptionMock
 from mslib.msui import msui
@@ -908,6 +909,32 @@ class Test_Mscolab:
         self.window.actionChat.trigger()
         self.window.mscolab.close_chat_window()
         assert self.window.mscolab.chat_window is None
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok)
+    def test_paste_image_into_chat(self, mockbox, qtbot):
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: "pasteuser@something.org"}})
+        self._create_user(qtbot, "pasteuser", "pasteuser@something.org", "something", "Test User")
+        self._create_operation(qtbot, "flightpaste", "Description flightpaste")
+        self._activate_operation_at_index(0)
+        self.window.actionChat.trigger()
+        chat_window = self.window.mscolab.chat_window
+
+        image = QtGui.QImage(4, 4, QtGui.QImage.Format_RGB32)
+        image.fill(QtCore.Qt.red)
+        mime_data = QtCore.QMimeData()
+        mime_data.setImageData(image)
+        chat_window.messageText.insertFromMimeData(mime_data)
+
+        assert chat_window.attachment_type == MessageType.IMAGE
+        pasted_path = chat_window.attachment
+        assert os.path.exists(pasted_path)
+        assert chat_window.messageText.isReadOnly()
+
+        # cancelling (or sending) cleans up the temporary file
+        chat_window.send_message_state()
+        assert chat_window.attachment is None
+        assert not os.path.exists(pasted_path)
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok)
     def test_delete_operation_from_list(self, mockbox, qtbot):

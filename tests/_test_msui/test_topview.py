@@ -209,6 +209,12 @@ class Test_MSSTopViewWindow:
     def test_open_kml(self):
         self.window.cbTools.currentIndexChanged.emit(4)
 
+    def test_copy_figure_to_clipboard(self):
+        QtWidgets.QApplication.clipboard().clear()
+        self.window.mpl.navbar._actions['copy_figure'].trigger()
+        image = QtWidgets.QApplication.clipboard().image()
+        assert not image.isNull()
+
     def test_insert_point(self):
         """
         Test inserting a point inside and outside the canvas
