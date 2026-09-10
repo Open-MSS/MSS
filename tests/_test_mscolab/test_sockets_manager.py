@@ -29,7 +29,6 @@ import pytest
 import datetime
 
 from mslib.msui.icons import icons
-from mslib.mscolab.app import APP
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation, get_operation
 from mslib.mscolab.models import Permission, User, Message, MessageType
 
@@ -44,15 +43,16 @@ class Test_Socket_Manager:
         self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
         self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20', 'User UVs'
         self.operation_name = "europe"
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
-        assert add_operation(self.operation_name, "test europe")
-        assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
-        self.user = get_user(self.userdata[0])
-        assert add_user(self.anotheruserdata[0], self.anotheruserdata[1], self.anotheruserdata[2],
-                        self.anotheruserdata[3])
-        self.anotheruser = get_user(self.anotheruserdata[0])
-        self.token = self.user.generate_auth_token()
-        self.operation = get_operation(self.operation_name)
+        with self.app.app_context():
+            assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+            assert add_operation(self.operation_name, "test europe")
+            assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
+            self.user = get_user(self.userdata[0])
+            assert add_user(self.anotheruserdata[0], self.anotheruserdata[1], self.anotheruserdata[2],
+                            self.anotheruserdata[3])
+            self.anotheruser = get_user(self.anotheruserdata[0])
+            self.token = self.user.generate_auth_token()
+            self.operation = get_operation(self.operation_name)
         yield
         for sock in self.sockets:
             sock.disconnect()
@@ -64,8 +64,9 @@ class Test_Socket_Manager:
         return sio
 
     def _new_operation(self, operation_name, description):
-        assert add_operation(operation_name, description)
-        operation = get_operation(operation_name)
+        with self.app.app_context():
+            assert add_operation(operation_name, description)
+            operation = get_operation(operation_name)
         return operation
 
     def test_handle_connect(self):
@@ -112,7 +113,8 @@ class Test_Socket_Manager:
         assert received_message_args["count"] == 1
 
         # Testing with multiple users
-        add_user_to_operation(path=self.operation_name, emailid=self.anotheruserdata[0])
+        with self.app.app_context():
+            add_user_to_operation(path=self.operation_name, emailid=self.anotheruserdata[0])
         another_sio = self._connect()
         another_sio.emit("operation-selected",
                          {"token": self.anotheruser.generate_auth_token(), "op_id": self.operation.id})
@@ -277,7 +279,7 @@ class Test_Socket_Manager:
         }
         with self.app.test_client() as c:
             c.post("message_attachment", data=data, content_type="multipart/form-data")
-        upload_dir = os.path.join(APP.config['UPLOAD_FOLDER'], str(self.user.id))
+        upload_dir = os.path.join(self.app.config['UPLOAD_FOLDER'], str(self.user.id))
         assert os.path.exists(upload_dir)
         file = os.listdir(upload_dir)[0]
         assert 'mss-logo' in file
