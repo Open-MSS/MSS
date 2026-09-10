@@ -28,7 +28,7 @@
 import os
 import pytest
 
-from mslib.mscolab.app import APP
+from flask import current_app
 from mslib.mscolab.models import User, Operation, Permission, Change, Message
 from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.utils import get_recent_op_id
@@ -45,15 +45,15 @@ class Test_Files:
         self.userdata = 'UV11@uv11', 'UV11', 'uv11', 'User UV'
         self.userdata2 = 'UV12@uv12', 'UV12', 'uv12', 'User UVs'
 
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
-        assert add_user(self.userdata2[0], self.userdata2[1], self.userdata2[2], self.userdata2[3])
-
-        self.user = get_user(self.userdata[0])
-        self.user2 = get_user(self.userdata2[0])
-        assert self.user is not None
-        self.file_message_counter = [0] * 2
-        self._example_data()
         with self.app.app_context():
+            assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+            assert add_user(self.userdata2[0], self.userdata2[1], self.userdata2[2], self.userdata2[3])
+
+            self.user = get_user(self.userdata[0])
+            self.user2 = get_user(self.userdata2[0])
+            assert self.user is not None
+            self.file_message_counter = [0] * 2
+            self._example_data()
             yield
 
     def test_create_operation(self):
@@ -65,7 +65,7 @@ class Test_Files:
             # test for '/' in path
             assert self.fm.create_operation('test/path', 'sth', self.user, content=XML_CONTENT_INIT) is False
             # check file existence
-            assert os.path.exists(os.path.join(APP.config['OPERATIONS_DATA'], 'test_path')) is True
+            assert os.path.exists(os.path.join(current_app.config['OPERATIONS_DATA'], 'test_path')) is True
             # check creation in db
             p = Operation.query.filter_by(path="test_path").first()
             assert p is not None
@@ -167,7 +167,7 @@ class Test_Files:
             assert self.fm.update_operation(op_id, 'path', 'dummy wrong', self.user) is False
             assert self.fm.update_operation(op_id, 'path', 'dummy/wrong', self.user) is False
             assert self.fm.update_operation(op_id, 'path', 'dummy', self.user) is True
-            assert os.path.exists(os.path.join(APP.config['OPERATIONS_DATA'], 'dummy'))
+            assert os.path.exists(os.path.join(current_app.config['OPERATIONS_DATA'], 'dummy'))
             assert self.fm.update_operation(op_id, 'description', 'dummy', self.user) is True
 
     def test_delete_operation(self):

@@ -42,11 +42,11 @@ class Test_Seed:
         self.userdata_1 = "UV1@uv1", "UV1", "UV1", "Userb UV"
         self.userdata_2 = "UV2@v2", "V2", "v2", "Userc UV"
 
-        assert add_user(self.userdata_0[0], self.userdata_0[1], self.userdata_0[2], self.userdata_0[3])
-        assert add_operation(self.operation_name, self.description)
-        assert add_user_to_operation(path=self.operation_name, emailid=self.userdata_0[0])
-        self.user = User(self.userdata_0[0], self.userdata_0[1], self.userdata_0[2])
         with self.app.app_context():
+            assert add_user(self.userdata_0[0], self.userdata_0[1], self.userdata_0[2], self.userdata_0[3])
+            assert add_operation(self.operation_name, self.description)
+            assert add_user_to_operation(path=self.operation_name, emailid=self.userdata_0[0])
+            self.user = User(self.userdata_0[0], self.userdata_0[1], self.userdata_0[2])
             yield
 
     def test_add_operation(self):
