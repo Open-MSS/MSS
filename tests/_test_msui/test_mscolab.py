@@ -49,14 +49,16 @@ from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_op
 
 class Test_Mscolab_connect_window:
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot, mscolab_server):
+    def setup(self, qtbot, mscolab_app, mscolab_server):
+        self.app = mscolab_app
         self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
         self.operation_name = "europe"
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
-        assert add_operation(self.operation_name, "test europe")
-        assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
-        self.user = get_user(self.userdata[0])
+        with self.app.app_context():
+            assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+            assert add_operation(self.operation_name, "test europe")
+            assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
+            self.user = get_user(self.userdata[0])
 
         self.main_window = msui.MSUIMainWindow(local_operations_data=ROOT_DIR)
         self.main_window.create_new_flight_track()
@@ -266,20 +268,22 @@ class Test_Mscolab:
         self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'UserUV10'
         self.operation_name = "europe"
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
-        assert add_operation(self.operation_name, "test europe")
-        assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
-        self.user = get_user(self.userdata[0])
-
         self.userdata2 = 'sree@sree.org', 'sree', 'sree', 'Sree'
         self.operation_name3 = "kerala"
-        assert add_user(self.userdata2[0], self.userdata2[1], self.userdata2[2], self.userdata2[3])
-        assert add_operation(self.operation_name3, "test kerala")
-        assert add_user_to_operation(path=self.operation_name3, emailid=self.userdata2[0])
-
         self.userdata3 = 'anand@anand.org', 'anand', 'anand', 'Anand Kumar'
-        assert add_user(self.userdata3[0], self.userdata3[1], self.userdata3[2], self.userdata3[3])
-        assert add_user_to_operation(path=self.operation_name3, access_level="collaborator", emailid=self.userdata3[0])
+        with self.app.app_context():
+            assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+            assert add_operation(self.operation_name, "test europe")
+            assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
+            self.user = get_user(self.userdata[0])
+
+            assert add_user(self.userdata2[0], self.userdata2[1], self.userdata2[2], self.userdata2[3])
+            assert add_operation(self.operation_name3, "test kerala")
+            assert add_user_to_operation(path=self.operation_name3, emailid=self.userdata2[0])
+
+            assert add_user(self.userdata3[0], self.userdata3[1], self.userdata3[2], self.userdata3[3])
+            assert add_user_to_operation(path=self.operation_name3, access_level="collaborator",
+                                         emailid=self.userdata3[0])
 
         self.window = msui.MSUIMainWindow(local_operations_data=ROOT_DIR)
         self.window.create_new_flight_track()
@@ -382,8 +386,9 @@ class Test_Mscolab:
         """
         # more operations for the user
         for op_name in ["second", "third"]:
-            assert add_operation(op_name, "description")
-            assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
+            with self.app.app_context():
+                assert add_operation(op_name, "description")
+                assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
 
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
@@ -457,8 +462,9 @@ class Test_Mscolab:
         """
         # more operations for the user
         for op_name in ["second", "third"]:
-            assert add_operation(op_name, "description")
-            assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
+            with self.app.app_context():
+                assert add_operation(op_name, "description")
+                assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
 
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
@@ -500,8 +506,9 @@ class Test_Mscolab:
         """
         # more operations for the user
         for op_name in ["second", "third"]:
-            assert add_operation(op_name, "description")
-            assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
+            with self.app.app_context():
+                assert add_operation(op_name, "description")
+                assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
 
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
@@ -529,8 +536,9 @@ class Test_Mscolab:
         """
         # more operations for the user
         for op_name in ["second", "third"]:
-            assert add_operation(op_name, "description")
-            assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
+            with self.app.app_context():
+                assert add_operation(op_name, "description")
+                assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
 
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})

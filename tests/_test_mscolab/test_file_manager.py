@@ -33,43 +33,44 @@ from werkzeug.datastructures import FileStorage
 
 from mslib.mscolab.models import Operation, User
 from mslib.mscolab.seed import add_user, get_user, add_operation
-from mslib.mscolab.app import APP
 from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX
 from mslib.mscolab.seed import XML_CONTENT_INIT
+
+from flask import current_app
 
 
 class Test_FileManager:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app, mscolab_managers):
-        self.APP = mscolab_app
+        self.app = mscolab_app
         _, _, self.fm = mscolab_managers
         self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
         self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20', 'User UVs'
 
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
-        self.user = get_user(self.userdata[0])
-        assert self.user is not None
-        assert add_user(self.anotheruserdata[0], self.anotheruserdata[1], self.anotheruserdata[2],
-                        self.anotheruserdata[3])
-        self.anotheruser = get_user(self.anotheruserdata[0])
-        assert add_user('UV30@uv30', 'UV30', 'uv30', 'User 30')
-        self.vieweruser = get_user('UV30@uv30')
-        assert add_user('UV40@uv40', 'UV40', 'uv40', 'User 40')
-        self.collaboratoruser = get_user('UV40@uv40')
-        assert add_user('UV50@uv50', 'UV50', 'uv50', 'User 50')
-        self.op2user = get_user('UV50@uv50')
-        assert add_user('UV60@uv60', 'UV60', 'uv60', 'User 60')
-        self.op2vieweruser = get_user('UV60@uv60')
-        assert add_user('UV70@uv70', 'UV70', 'uv70', 'User 70')
-        self.user1 = get_user('UV70@uv70')
-        assert add_user('UV80@uv80', 'UV80', 'uv80', 'User 80')
-        self.adminuser = get_user('UV80@uv80')
-        self._example_data()
-        with self.APP.app_context():
+        with self.app.app_context():
+            assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+            self.user = get_user(self.userdata[0])
+            assert self.user is not None
+            assert add_user(self.anotheruserdata[0], self.anotheruserdata[1], self.anotheruserdata[2],
+                            self.anotheruserdata[3])
+            self.anotheruser = get_user(self.anotheruserdata[0])
+            assert add_user('UV30@uv30', 'UV30', 'uv30', 'User 30')
+            self.vieweruser = get_user('UV30@uv30')
+            assert add_user('UV40@uv40', 'UV40', 'uv40', 'User 40')
+            self.collaboratoruser = get_user('UV40@uv40')
+            assert add_user('UV50@uv50', 'UV50', 'uv50', 'User 50')
+            self.op2user = get_user('UV50@uv50')
+            assert add_user('UV60@uv60', 'UV60', 'uv60', 'User 60')
+            self.op2vieweruser = get_user('UV60@uv60')
+            assert add_user('UV70@uv70', 'UV70', 'uv70', 'User 70')
+            self.user1 = get_user('UV70@uv70')
+            assert add_user('UV80@uv80', 'UV80', 'uv80', 'User 80')
+            self.adminuser = get_user('UV80@uv80')
+            self._example_data()
             yield
 
     def test_modify_user(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             user = User("user@example.com", "user", "password")
             assert user.id is None
             assert User.query.filter_by(emailid=user.emailid).first() is None
@@ -103,7 +104,7 @@ class Test_FileManager:
         assert self.fm.modify_user(user_query1, "emailid", user2.emailid) is False
 
     def test_fetch_operation_creator(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="more_than_one")
             self.fm.add_bulk_permission(operation.id, self.user, [self.collaboratoruser.id], "collaborator")
             self.fm.add_bulk_permission(operation.id, self.user, [self.vieweruser.id], "viewer")
@@ -119,7 +120,7 @@ class Test_FileManager:
             assert self.fm.fetch_operation_creator(operation.id, self.op2user.id) is False
 
     def test_create_operation(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="famous")
             assert operation.path == flight_path
             assert self.fm.create_operation(flight_path, "something to know", self.user,
@@ -128,7 +129,7 @@ class Test_FileManager:
             assert operation.path == flight_path
 
     def test_get_operation_details(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path='operation2')
             pd = self.fm.get_operation_details(operation.id, self.user)
             assert pd['description'] == operation.description
@@ -136,7 +137,7 @@ class Test_FileManager:
             assert pd['id'] == operation.id
 
     def test_list_operations(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             self.fm.create_operation("first", "info about first", self.user, content=XML_CONTENT_INIT)
             self.fm.create_operation("second", "info about second", self.user, content=XML_CONTENT_INIT)
             expected_result = [{'access_level': 'creator',
@@ -154,7 +155,7 @@ class Test_FileManager:
             assert self.fm.list_operations(self.user) == expected_result
 
     def test_list_operations_skip_archived(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             self.fm.create_operation("first", "info about first", self.user, content=XML_CONTENT_INIT, active=False)
             self.fm.create_operation("second", "info about second", self.user, content=XML_CONTENT_INIT)
             expected_result_all = [{'access_level': 'creator',
@@ -179,19 +180,19 @@ class Test_FileManager:
             assert self.fm.list_operations(self.user, skip_archived=True) == expected_result_skipped_true
 
     def test_is_creator(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path='third')
             assert self.fm.is_creator(self.user.id, operation.id)
 
     def test_is_collaborator(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path='fourth')
             assert self.anotheruser.id is not None
             self.fm.add_bulk_permission(operation.id, self.user, [self.anotheruser.id], "collaborator")
             assert self.fm.is_collaborator(self.anotheruser.id, operation.id)
 
     def test_is_non_admin_member(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path='fifth')
             assert self.anotheruser.id is not None
             self.fm.add_bulk_permission(operation.id, self.user, [self.vieweruser.id], "viewer")
@@ -199,7 +200,7 @@ class Test_FileManager:
             assert self.fm.is_admin(self.vieweruser.id, operation.id) is False
 
     def test_is_viewer(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="test_flight")
             assert operation.path == flight_path
             self.fm.add_bulk_permission(operation.id, self.user, [self.vieweruser.id], "viewer")
@@ -215,20 +216,20 @@ class Test_FileManager:
             assert self.fm.is_viewer(self.user.id, operation.id) is False
 
     def test_is_member(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="sunset")
             assert operation.path == flight_path
             assert self.fm.is_member(82322, operation.id) is False
             assert self.fm.is_member(self.user.id, operation.id) is True
 
     def test_auth_type(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="aa")
             assert self.fm.auth_type(self.user.id, operation.id) != "collaborator"
             assert self.fm.auth_type(self.user.id, operation.id) == "creator"
 
     def test_update_operation(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path='operation3')
             rename_to = "operation03"
             self.fm.update_operation(operation.id, "path", rename_to, self.user)
@@ -237,19 +238,19 @@ class Test_FileManager:
             assert ren_operation.path == rename_to
 
     def test_delete_operation(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path='operation4')
             assert self.fm.delete_operation(operation.id, self.user)
             assert Operation.query.filter_by(path=flight_path).first() is None
 
     def test_get_authorized_users(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path='operation5')
             assert self.fm.get_authorized_users(operation.id) == [{'access_level': 'creator',
                                                                    'username': self.userdata[1], 'id': 1}]
 
     def test_save_file(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation6", content=self.content1)
             # nothing changed
             assert self.fm.save_file(operation.id, self.content1, self.user) is False
@@ -286,7 +287,7 @@ class Test_FileManager:
 
         upload_folder = tmp_path / "uploadshaha"
         sample_path = os.path.join(os.path.dirname(__file__), "..", "data")
-        with mock.patch.dict(APP.config, {'UPLOAD_FOLDER': str(upload_folder)}):
+        with mock.patch.dict(current_app.config, {'UPLOAD_FOLDER': str(upload_folder)}):
             with open(os.path.join(sample_path, "example.csv"), 'rb') as fp:
                 file = FileStorage(fp, filename="example.csv", content_type="text/csv")
                 static_path = self.fm.upload_file(file, subfolder=str(operation.id), include_prefix=True)
@@ -308,7 +309,7 @@ class Test_FileManager:
             subfolder = 'test_subfolder'
             identifier = 'unique_identifier'
             relative_path = self.fm.upload_file(file, subfolder=subfolder, identifier=identifier)
-            full_path = os.path.join(APP.config['UPLOAD_FOLDER'], relative_path)
+            full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], relative_path)
 
             assert os.path.isfile(full_path)
             assert identifier in relative_path
@@ -320,12 +321,12 @@ class Test_FileManager:
                 assert uploaded_file_content == file_content
 
     def test_get_file(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation7")
             assert self.fm.get_file(operation.id, self.user).startswith('<?xml version="1.0" encoding="utf-8"?>')
 
     def test_get_all_changes(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation8")
             assert self.fm.get_all_changes(operation.id, self.user) == []
             assert self.fm.save_file(operation.id, self.content1, self.user)
@@ -334,7 +335,7 @@ class Test_FileManager:
             assert len(changes) == 2
 
     def test_get_change_content(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation8")
             assert self.fm.get_all_changes(operation.id, self.user) == []
             assert self.fm.save_file(operation.id, self.content1, self.user)
@@ -343,7 +344,7 @@ class Test_FileManager:
             assert self.fm.get_change_content(all_changes[1]["id"], self.user) == self.content1
 
     def test_set_version_name(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation8")
             assert self.fm.get_all_changes(operation.id, self.user) == []
             assert self.fm.save_file(operation.id, self.content1, self.user)
@@ -361,7 +362,7 @@ class Test_FileManager:
             assert self.fm.set_version_name(all_changes[1]["id"], operation.id, self.vieweruser.id, "THIS") is False
 
     def test_undo(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation8")
             assert self.fm.get_all_changes(operation.id, self.user) == []
             assert self.fm.save_file(operation.id, self.content1, self.user)
@@ -379,17 +380,17 @@ class Test_FileManager:
             assert self.fm.undo_changes(all_changes[1]["id"], self.vieweruser) is False
 
     def test_fetch_users_without_permission(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation9")
             assert len(self.fm.fetch_users_without_permission(operation.id, self.user.id)) == 7
 
     def test_fetch_users_with_permission(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation9")
             assert self.fm.fetch_users_with_permission(operation.id, self.user.id) == []
 
     def test_delete_bulk_permission_for_creators(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation1 = self._create_operation(flight_path="testflight", user=self.user)
             assert self.fm.is_creator(self.user.id, operation1.id)
             assert self.user.id is not None
@@ -410,7 +411,7 @@ class Test_FileManager:
             assert self.fm.delete_bulk_permission(operation2.id, self.op2user, [self.anotheruser.id]) is False
 
     def test_delete_bulk_permission_for_members(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation1 = self._create_operation(flight_path="testflight", user=self.user)
             assert self.fm.is_creator(self.user.id, operation1.id)
             assert self.user.id is not None
@@ -440,7 +441,7 @@ class Test_FileManager:
             ) is False
 
     def test_delete_bulk_permission_for_non_members(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation1 = self._create_operation(flight_path="testflight", user=self.user)
             assert self.fm.is_creator(self.user.id, operation1.id)
             assert self.user.id is not None
@@ -456,7 +457,7 @@ class Test_FileManager:
         # admin is a role to add users.
         # the creator has also this role. But there could be more admins
         # admins have the right to remove themselves
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="saturn")
             assert operation.path == flight_path
             self.fm.add_bulk_permission(operation.id, self.user, [self.adminuser.id], "admin")
@@ -465,7 +466,7 @@ class Test_FileManager:
             assert self.fm.delete_bulk_permission(operation.id, self.adminuser, [self.adminuser.id]) is True
 
     def test_group_permissions(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path_oslo, operation_oslo = self._create_operation(flight_path="flightoslo", category="oslo")
 
             flight_path_no1, operation_no_1 = self._create_operation(flight_path="flightno1", category="bergen")
@@ -490,7 +491,7 @@ class Test_FileManager:
             assert self.fm.is_member(self.collaboratoruser.id, operation_group.id) is False
 
     def test_existing_operation_renaming_to_a_group(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             _, operation_b1 = self._create_operation(flight_path="flightb1", category="morning")
             self.fm.add_bulk_permission(operation_b1.id, self.user, [self.collaboratoruser.id], "collaborator")
             assert self.fm.is_collaborator(self.collaboratoruser.id, operation_b1.id)
@@ -513,7 +514,7 @@ class Test_FileManager:
             assert self.fm.is_collaborator(self.collaboratoruser.id, operation_b2.id) is False
 
     def test_import_permission(self):
-        with self.APP.test_client():
+        with self.app.test_client():
             flight_path10, operation10 = self._create_operation(flight_path="operation10")
             flight_path11, operation11 = self._create_operation(flight_path="operation11")
             flight_path12, operation12 = self._create_operation(flight_path="operation12", user=self.anotheruser)

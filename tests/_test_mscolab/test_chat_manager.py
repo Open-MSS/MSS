@@ -38,12 +38,12 @@ class Test_Chat_Manager:
         self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
         self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20', 'User UVs'
         self.operation_name = "europe"
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
-        assert add_operation(self.operation_name, "test europe")
-        assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
-        self.user = get_user(self.userdata[0])
-        self.operation = get_operation(self.operation_name)
         with self.app.app_context():
+            assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+            assert add_operation(self.operation_name, "test europe")
+            assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
+            self.user = get_user(self.userdata[0])
+            self.operation = get_operation(self.operation_name)
             yield
 
     def test_add_message(self):
