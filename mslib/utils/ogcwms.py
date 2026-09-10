@@ -178,45 +178,37 @@ class WebMapService(wms111.WebMapService_1_1_1):
                 auth.username = username
             if password:
                 auth.password = password
-        self.url = url
-        self.version = version
-        self.timeout = timeout
-        self.headers = headers
-        self._capabilities = None
-        self.auth = auth or Authentication(username, password)
+        else:
+            auth = Authentication(username, password)
 
         # Authentication handled by Reader
-        reader = WMSCapabilitiesReader(self.version, url=self.url, headers=headers, auth=self.auth)
+        reader = WMSCapabilitiesReader(version, url=url, headers=headers, auth=auth)
         if xml:
             # read from stored xml
-            self._capabilities = reader.readString(xml)
+            capabilities = reader.readString(xml)
         else:
             # read from server
-            self._capabilities = reader.read(self.url, timeout=self.timeout)
+            capabilities = reader.read(url, timeout=timeout)
+            xml = reader.capabilities_document
 
-        self.request = reader.request
-        if not self.version:
-            self.version = self._capabilities.attrib["version"]
-            if self.version not in ["1.1.1", "1.3.0"]:
-                self.version = "1.1.1"
-            reader.version = self.version
+        if not version:
+            version = capabilities.attrib["version"]
+            if version not in ["1.1.1", "1.3.0"]:
+                version = "1.1.1"
 
-        self.WMS_NAMESPACE = "{http://www.opengis.net/wms}" if self.version == "1.3.0" else ""
-        self.OGC_NAMESPACE = "{http://www.opengis.net/ogc}" if self.version == "1.3.0" else ""
-
-        # avoid building capabilities metadata if the
-        # response is a ServiceExceptionReport
-        se = self._capabilities.find('ServiceException')
-        if se is not None:
-            err_message = str(se.text).strip()
-            raise ServiceException(err_message)
+        self.WMS_NAMESPACE = "{http://www.opengis.net/wms}" if version == "1.3.0" else ""
+        self.OGC_NAMESPACE = "{http://www.opengis.net/ogc}" if version == "1.3.0" else ""
 
         # (mss) Store capabilities document.
         self.capabilities_document = reader.capabilities_document
-        # (mss)
 
-        # build metadata objects
-        self._buildMetadata(parse_remote_metadata)
+        if isinstance(xml, str):
+            # (mss) owslib parses with lxml, which rejects str input carrying an
+            # encoding declaration.
+            xml = xml.encode("utf-8")
+
+        super().__init__(url, version=version, xml=xml, parse_remote_metadata=parse_remote_metadata,
+                         headers=headers, timeout=timeout, auth=auth)
 
     def _buildMetadata(self, parse_remote_metadata=False):
         """ set up capabilities metadata objects """
@@ -304,14 +296,15 @@ def ContentMetadata(elem, parent=None, children=None, index=0,
     metadata.extents = {}
     for dim in elem.findall(f'{WMS_NAMESPACE}Dimension'):
         dimname = dim.attrib.get("name").lower()
-        metadata.dimensions[dimname] = dim.attrib
+        # (mss) A copy, the attributes of an element are read-only when parsed by lxml.
+        metadata.dimensions[dimname] = dict(dim.attrib)
         if version == "1.3.0":
-            metadata.extents[dimname] = dim.attrib
+            metadata.extents[dimname] = metadata.dimensions[dimname]
             metadata.extents[dimname]["values"] = dim.text.strip().split(",")
     if version == "1.1.1":
         for extent in elem.findall(f'{WMS_NAMESPACE}Extent'):
             extname = extent.attrib.get("name").lower()
-            metadata.extents[extname] = extent.attrib
+            metadata.extents[extname] = dict(extent.attrib)
             if extent.text:
                 metadata.extents[extname]["values"] = extent.text.strip().split(",")
             else:
