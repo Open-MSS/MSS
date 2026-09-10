@@ -58,3 +58,6 @@ ENV PATH=/opt/vp_pixi/.pixi/envs/default/bin:$PATH
 RUN printf 'detached-environments = "/workspace/.pixi-linux-%s"\n' "$(uname -m)" \
     > ${PIXI_HOME}/config.toml && \
     cat ${PIXI_HOME}/config.toml
+
+# The user of the harness needs write access to PIXI_HOME
+RUN chmod -R a+rwX ${PIXI_HOME}
