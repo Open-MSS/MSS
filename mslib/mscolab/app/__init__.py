@@ -34,11 +34,10 @@ import sqlalchemy
 from flask_mail import Mail
 
 from flask_migrate import Migrate
-from flask import Flask
+from flask import Flask, current_app, url_for
 
 import mslib
 
-from flask import url_for
 from flask_sqlalchemy import SQLAlchemy
 
 from mslib.mscolab.conf import mscolab_settings
@@ -64,15 +63,20 @@ if update:
     logging.warning(message)
 
 
-# in memory database for testing
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'
-APP = Flask(__name__, template_folder=os.path.join(DOCS_TEMPLATES_DIR))
-APP.jinja_env.globals.setdefault("imprint", "")
-APP.jinja_env.globals.setdefault("gdpr", "")
-APP.config.from_object(mscolab_settings)
-# Expose docs path for callers/tests and make it part of Flask config for consistency.
-APP.config['DOCS_SERVER_PATH'] = DOCS_SERVER_PATH
-APP.route = prefix_route(APP.route, SCRIPT_NAME)
+db = SQLAlchemy(
+    metadata=sqlalchemy.MetaData(
+        naming_convention={
+            # For reference: https://alembic.sqlalchemy.org/en/latest/naming.html#the-importance-of-naming-constraints
+            "ix": "ix_%(column_0_label)s",
+            "uq": "uq_%(table_name)s_%(column_0_name)s",
+            "ck": "ck_%(table_name)s_`%(constraint_name)s`",
+            "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+            "pk": "pk_%(table_name)s",
+        },
+    ),
+)
+mail = Mail()
+migrate = Migrate(render_as_batch=True, user_module_prefix="cu.")
 
 
 def _xstatic(name):
@@ -93,17 +97,21 @@ def _xstatic(name):
         return None
 
 
-# Keep backward compatibility with callers/tests expecting an app attribute.
-APP.xstatic = _xstatic
-
-
 def create_files():
-    Path(APP.config['OPERATIONS_DATA']).mkdir(parents=True, exist_ok=True)
-    Path(APP.config['UPLOAD_FOLDER']).mkdir(parents=True, exist_ok=True)
-    Path(APP.config['SSO_DIR']).mkdir(parents=True, exist_ok=True)
+    Path(current_app.config['OPERATIONS_DATA']).mkdir(parents=True, exist_ok=True)
+    Path(current_app.config['UPLOAD_FOLDER']).mkdir(parents=True, exist_ok=True)
+    Path(current_app.config['SSO_DIR']).mkdir(parents=True, exist_ok=True)
 
 
-def _handle_db_upgrade():
+def initialise_db():
+    """Create the data directories and bring the database up to the latest revision.
+
+    Must be called in an application context. This is not part of
+    :func:`create_app`, so that creating an app has no side effects on the
+    database (the CLI e.g. creates an app to then reset the database).
+    """
+    # imported here because mslib.mscolab.models imports db from this module; the
+    # import also registers the models on the metadata, which the migrations need
     from mslib.mscolab.models import db
 
     # Remove any stale session state before inspecting the schema; a lingering
@@ -130,9 +138,9 @@ your database MSColab will abort. Please follow the documentation for a manual d
         and db.session.execute(sqlalchemy.text("SELECT * FROM alembic_version")).first() is None
     )
     # If a database connection to migrate from is set and the target database is empty, then migrate the existing data
-    if is_empty_database and APP.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'] is not None:
+    if is_empty_database and current_app.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'] is not None:
         logging.info("The target database is empty and a database to migrate from is set, starting the data migration")
-        source_engine = sqlalchemy.create_engine(APP.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'])
+        source_engine = sqlalchemy.create_engine(current_app.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'])
         source_metadata = sqlalchemy.MetaData()
         source_metadata.reflect(bind=source_engine)
         # Determine the previous MSColab version based on the database content and upgrade to the corresponding revision
@@ -144,7 +152,7 @@ your database MSColab will abort. Please follow the documentation for a manual d
             flask_migrate.upgrade(directory=migrations.__path__[0], revision="92eaba86a92e")
         # Copy over the existing data.
         # Use db.engine.url (the resolved absolute URL) rather than
-        # APP.config['SQLALCHEMY_DATABASE_URI'], which may be a relative SQLite
+        # current_app.config['SQLALCHEMY_DATABASE_URI'], which may be a relative SQLite
         # path that Flask-SQLAlchemy expands via instance_path — plain
         # sqlalchemy.create_engine would resolve it against CWD instead.
         target_engine = sqlalchemy.create_engine(str(db.engine.url))
@@ -194,7 +202,7 @@ ORDER BY sequence_namespace.nspname, class_sequence.relname;
                 target_connection.commit()
         logging.info("Data migration finished")
         # Dispose the temporary copy engine so it doesn't hold SQLite
-        # connections across subsequent _handle_db_upgrade() iterations.
+        # connections across subsequent initialise_db() iterations.
         target_engine.dispose()
         source_engine.dispose()
 
@@ -204,18 +212,34 @@ ORDER BY sequence_namespace.nspname, class_sequence.relname;
     logging.info("Database initialised successfully!")
 
 
-def create_app(imprint=None, gdpr=None):
-    imprint_file = imprint
-    gdpr_file = gdpr
-    APP.mail = Mail(APP)
+def create_app(config_object=mscolab_settings):
+    """Create and configure an MSColab Flask application.
 
-    with APP.app_context():
-        _handle_db_upgrade()
+    :param config_object: the object the configuration is read from, by default the
+        :class:`mslib.mscolab.conf.DefaultSettings` instance updated with the
+        settings of the users ``mscolab_settings`` module.
 
-    APP.jinja_env.globals.update(file_exists=file_exists)
-    APP.jinja_env.globals["imprint"] = imprint_file or ""
-    APP.jinja_env.globals["gdpr"] = gdpr_file or ""
-    APP.jinja_env.globals.update(get_topmenu=get_topmenu)
+    The returned app is not connected to a database schema yet, call
+    :func:`initialise_db` within an application context of it to do so.
+    """
+    app = Flask(__name__, template_folder=DOCS_TEMPLATES_DIR)
+    app.config.from_object(config_object)
+    # Expose docs path for callers/tests and make it part of Flask config for consistency.
+    app.config['DOCS_SERVER_PATH'] = DOCS_SERVER_PATH
+    app.route = prefix_route(app.route, SCRIPT_NAME)
+    # Keep backward compatibility with callers/tests expecting an app attribute.
+    app.xstatic = _xstatic
+
+    db.init_app(app)
+    migrate.init_app(app, db)
+    mail.init_app(app)
+    # mslib.utils.auth.send_email sends its messages via current_app.mail
+    app.mail = mail
+
+    app.jinja_env.globals.update(file_exists=file_exists)
+    app.jinja_env.globals["imprint"] = app.config['IMPRINT'] or ""
+    app.jinja_env.globals["gdpr"] = app.config['GDPR'] or ""
+    app.jinja_env.globals.update(get_topmenu=get_topmenu)
 
     from mslib.mscolab.blueprints.auth import AUTH_BP
     from mslib.mscolab.blueprints.chat import CHAT_BP
@@ -223,36 +247,10 @@ def create_app(imprint=None, gdpr=None):
     from mslib.mscolab.blueprints.user import USER_BP
     from mslib.mscolab.blueprints.docs import DOCS_BP
 
-    if AUTH_BP.name not in APP.blueprints:
-        APP.register_blueprint(AUTH_BP)
-    if CHAT_BP.name not in APP.blueprints:
-        APP.register_blueprint(CHAT_BP)
-    if USER_BP.name not in APP.blueprints:
-        APP.register_blueprint(USER_BP)
-    if OPERATION_BP.name not in APP.blueprints:
-        APP.register_blueprint(OPERATION_BP)
-    if DOCS_BP.name not in APP.blueprints:
-        APP.register_blueprint(DOCS_BP)
+    for bp in (AUTH_BP, CHAT_BP, OPERATION_BP, USER_BP, DOCS_BP):
+        app.register_blueprint(bp)
 
-    return APP
-
-
-db = SQLAlchemy(
-    metadata=sqlalchemy.MetaData(
-        naming_convention={
-            # For reference: https://alembic.sqlalchemy.org/en/latest/naming.html#the-importance-of-naming-constraints
-            "ix": "ix_%(column_0_label)s",
-            "uq": "uq_%(table_name)s_%(column_0_name)s",
-            "ck": "ck_%(table_name)s_`%(constraint_name)s`",
-            "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-            "pk": "pk_%(table_name)s",
-        },
-    ),
-)
-db.init_app(APP)
-
-migrate = Migrate(render_as_batch=True, user_module_prefix="cu.")
-migrate.init_app(APP, db)
+    return app
 
 
 def get_topmenu():

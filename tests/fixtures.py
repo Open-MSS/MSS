@@ -29,12 +29,13 @@ import multiprocessing
 import time
 import urllib
 import socketio
+
 import mslib.mswms.mswms
 from werkzeug.serving import make_server
 
 from PyQt5 import QtWidgets
 from contextlib import contextmanager
-from mslib.mscolab.server import APP, sockio, cm, fm
+from mslib.mscolab.server import create_server_app
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.utils.config import modify_config_file
 from tests.utils import is_url_response_ok
@@ -98,11 +99,7 @@ def mscolab_session_app():
     This fixture should not be used in tests. Instead use :func:`mscolab_app`, which
     handles per-test cleanup as well.
     """
-    _app = APP
-    _app.config['SQLALCHEMY_DATABASE_URI'] = APP.config['SQLALCHEMY_DATABASE_URI']
-    _app.config['OPERATIONS_DATA'] = APP.config['OPERATIONS_DATA']
-    _app.config['UPLOAD_FOLDER'] = APP.config['UPLOAD_FOLDER']
-    return _app
+    return create_server_app()
 
 
 @pytest.fixture(scope="session")
@@ -112,7 +109,9 @@ def mscolab_session_managers(mscolab_session_app):
     This fixture should not be used in tests. Instead use :func:`mscolab_managers`,
     which handles per-test cleanup as well.
     """
-    return sockio, cm, fm
+    return (mscolab_session_app.extensions['sockio'],
+            mscolab_session_app.extensions['cm'],
+            mscolab_session_app.extensions['fm'])
 
 
 # TODO: Having this fixture be autouse is a crutch. It seems like if it is not autouse some tests can bring the pytest

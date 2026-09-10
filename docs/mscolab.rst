@@ -121,9 +121,11 @@ address and using the token that the system sent along with the email.
 Instructions to use mscolab wsgi
 ................................
 
-Create a file called :code:`server.py` having this line::
+Create a file called :code:`server.py` having these lines::
 
-  from mslib.mscolab.server import _app as app
+  from mslib.mscolab.server import create_server_app
+
+  app = create_server_app()
 
 Then install gunicorn by pixi::
 

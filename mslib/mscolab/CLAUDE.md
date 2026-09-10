@@ -6,8 +6,10 @@ Global map: ../../ARCHITECTURE.md
 
 ## Layout
 
-- `server.py` — thin assembly: HTTP basic auth hooks, blueprint registration
-- `app/__init__.py` — Flask app factory (config, db, socketio bindings)
+- `server.py` — thin assembly: `create_server_app()` adds db migration, CORS,
+  HTTP basic auth and the socket.io managers to the app
+- `app/__init__.py` — `create_app()` factory (config, extensions, blueprints)
+  and `initialise_db()`; there is no module level app instance
 - `blueprints/{operation,auth,chat,user,docs}/` — all ~50 REST routes; keep
   handlers thin, business logic belongs in the managers
 - `file_manager.py` — operations/permissions/versioning (git-backed) — core
