@@ -34,8 +34,9 @@ def test_xstatic():
 
 
 def test_app_loader():
-    assert app.APP.config['DOCS_SERVER_PATH'].endswith('mslib')
-    with app.APP.test_client() as c:
+    application = app.create_app()
+    assert application.config['DOCS_SERVER_PATH'].endswith('mslib')
+    with application.test_client() as c:
         response = c.get('/xstatic/bootstrap/css/bootstrap.css')
         assert response.status_code == 200
         response = c.get('mss_theme/img/wise12_overview.png')

@@ -37,23 +37,26 @@ import git
 import flask_migrate
 from pathlib import Path
 
+from flask import current_app
+
 from mslib import __version__
 from mslib.mscolab import migrations
-from mslib.mscolab.app import APP, create_files
+from mslib.mscolab.app import create_app, create_files
 from mslib.mscolab.seed import seed_data, add_user, add_all_users_default_operation, \
     add_all_users_to_all_operations, delete_user
 from mslib.utils import setup_logging
 
 
 def handle_start(args=None):
-    from mslib.mscolab.server import APP, sockio, cm, fm, start_server
+    from mslib.mscolab.server import create_server_app, start_server
     if args is not None:
         setup_logging(args)
     logging.info("MSS Version: %s", __version__)
     logging.info("Python Version: %s", sys.version)
     logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
     logging.info("Launching MSColab Server")
-    start_server(APP, sockio, cm, fm)
+    app = create_server_app()
+    start_server(app, app.extensions['sockio'], app.extensions['cm'], app.extensions['fm'])
 
 
 def confirm_action(confirmation_prompt, assume_yes=False):
@@ -90,12 +93,12 @@ def handle_db_reset(verbose=True):
         previous_levels = [logger.level for logger in alembic_loggers]
         for logger in alembic_loggers:
             logger.setLevel(logging.WARNING)
-    if APP.config['SQLALCHEMY_DATABASE_URI'].startswith("sqlite:///") and (
-        db_path := Path(APP.config['SQLALCHEMY_DATABASE_URI'].removeprefix("sqlite:///"))
-    ).is_relative_to(APP.config['DATA_DIR']):
+    if current_app.config['SQLALCHEMY_DATABASE_URI'].startswith("sqlite:///") and (
+        db_path := Path(current_app.config['SQLALCHEMY_DATABASE_URI'].removeprefix("sqlite:///"))
+    ).is_relative_to(current_app.config['DATA_DIR']):
         # Don't remove the database file
         # This would be easier if the database wasn't stored in DATA_DIR...
-        p = Path(APP.config['DATA_DIR'])
+        p = Path(current_app.config['DATA_DIR'])
         for root, dirs, files in os.walk(p, topdown=False):
             for name in files:
                 full_file_path = Path(root) / name
@@ -110,8 +113,8 @@ def handle_db_reset(verbose=True):
 
                     # Directory might not be empty or already removed
                     pass
-    elif Path(APP.config['DATA_DIR']).exists():
-        shutil.rmtree(APP.config['DATA_DIR'])
+    elif Path(current_app.config['DATA_DIR']).exists():
+        shutil.rmtree(current_app.config['DATA_DIR'])
     create_files()
     try:
         flask_migrate.downgrade(directory=migrations.__path__[0], revision="base")
@@ -147,9 +150,9 @@ def handle_mscolab_certificate_init():
 
     try:
         cmd = ["openssl", "req", "-newkey", "rsa:4096", "-keyout",
-               os.path.join(APP.config['SSO_DIR'], "key_mscolab.key"),
+               os.path.join(current_app.config['SSO_DIR'], "key_mscolab.key"),
                "-nodes", "-x509", "-days", "365", "-batch", "-subj",
-               "/CN=localhost", "-out", os.path.join(APP.config['SSO_DIR'],
+               "/CN=localhost", "-out", os.path.join(current_app.config['SSO_DIR'],
                                                      "crt_mscolab.crt")]
         subprocess.run(cmd, check=True)
         logging.info("generated CRTs for the mscolab server.")
@@ -164,9 +167,9 @@ def handle_local_idp_certificate_init():
 
     try:
         cmd = ["openssl", "req", "-newkey", "rsa:4096", "-keyout",
-               os.path.join(APP.config['SSO_DIR'], "key_local_idp.key"),
+               os.path.join(current_app.config['SSO_DIR'], "key_local_idp.key"),
                "-nodes", "-x509", "-days", "365", "-batch", "-subj",
-               "/CN=localhost", "-out", os.path.join(APP.config['SSO_DIR'], "crt_local_idp.crt")]
+               "/CN=localhost", "-out", os.path.join(current_app.config['SSO_DIR'], "crt_local_idp.crt")]
         subprocess.run(cmd, check=True)
         logging.info("generated CRTs for the local identity provider")
         return True
@@ -297,7 +300,7 @@ config:
   #       name_id_format_allow_create: true
 """
     try:
-        file_path = os.path.join(APP.config['SSO_DIR'], "mss_saml2_backend.yaml")
+        file_path = os.path.join(current_app.config['SSO_DIR'], "mss_saml2_backend.yaml")
         with open(file_path, "w", encoding="utf-8") as file:
             file.write(saml_2_backend_yaml_content)
         return True
@@ -323,7 +326,7 @@ def handle_mscolab_metadata_init(repo_exists):
         process = subprocess.Popen(command)
         cmd_curl = ["curl", "--retry", "5", "--retry-connrefused", "--retry-delay", "3",
                     "http://localhost:8083/metadata/localhost_test_idp",
-                    "-o", os.path.join(APP.config['SSO_DIR'], "metadata_sp.xml")]
+                    "-o", os.path.join(current_app.config['SSO_DIR'], "metadata_sp.xml")]
         subprocess.run(cmd_curl, check=True)
         process.terminate()
         logging.info('mscolab metadata file generated succesfully')
@@ -338,8 +341,8 @@ def handle_local_idp_metadata_init(repo_exists):
     print('generating metadata for localhost identity provider')
 
     try:
-        if os.path.exists(os.path.join(APP.config['SSO_DIR'], "idp.xml")):
-            os.remove(os.path.join(APP.config['SSO_DIR'], "idp.xml"))
+        if os.path.exists(os.path.join(current_app.config['SSO_DIR'], "idp.xml")):
+            os.remove(os.path.join(current_app.config['SSO_DIR'], "idp.xml"))
 
         idp_conf_path = os.path.join("mslib", "msidp", "idp_conf.py")
 
@@ -350,15 +353,15 @@ def handle_local_idp_metadata_init(repo_exists):
 
         cmd = ["make_metadata", idp_conf_path]
 
-        with open(os.path.join(APP.config['SSO_DIR'], "idp.xml"),
+        with open(os.path.join(current_app.config['SSO_DIR'], "idp.xml"),
                   "w", encoding="utf-8") as output_file:
             subprocess.run(cmd, stdout=output_file, check=True)
         logging.info("idp metadata file generated successfully")
         return True
     except subprocess.CalledProcessError as error:
         # Delete the idp.xml file when the subprocess fails
-        if os.path.exists(os.path.join(APP.config['SSO_DIR'], "idp.xml")):
-            os.remove(os.path.join(APP.config['SSO_DIR'], "idp.xml"))
+        if os.path.exists(os.path.join(current_app.config['SSO_DIR'], "idp.xml")):
+            os.remove(os.path.join(current_app.config['SSO_DIR'], "idp.xml"))
         print(f"Error while generating metadata for localhost identity provider: {error}")
         return False
 
@@ -368,8 +371,8 @@ def handle_sso_crts_init():
         This will generate necessary CRTs files for sso in mscolab through localhost idp
     """
     print("\n\nmscolab sso conf initiating......")
-    if os.path.exists(APP.config['SSO_DIR']):
-        shutil.rmtree(APP.config['SSO_DIR'])
+    if os.path.exists(current_app.config['SSO_DIR']):
+        shutil.rmtree(current_app.config['SSO_DIR'])
     create_files()
     if not handle_mscolab_certificate_init():
         print('Error while handling mscolab certificate.')
@@ -464,83 +467,83 @@ def main():
         handle_start(args)
 
     elif args.action == "db":
-        if args.reset:
-            confirmation = confirm_action(
-                "Are you sure you want to reset the database? This would delete "
-                "all your data! (y/[n]):",
-                assume_yes=args.yes)
-            if confirmation is True:
-                with APP.app_context():
+        with create_app().app_context():
+            if args.reset:
+                confirmation = confirm_action(
+                    "Are you sure you want to reset the database? This would delete "
+                    "all your data! (y/[n]):",
+                    assume_yes=args.yes)
+                if confirmation is True:
                     handle_db_reset()
-        elif args.seed:
-            confirmation = confirm_action(
-                "Are you sure you want to seed the database? Seeding will delete all your "
-                "existing data and replace it with seed data (y/[n]):",
-                assume_yes=args.yes)
-            if confirmation is True:
-                with APP.app_context():
+            elif args.seed:
+                confirmation = confirm_action(
+                    "Are you sure you want to seed the database? Seeding will delete all your "
+                    "existing data and replace it with seed data (y/[n]):",
+                    assume_yes=args.yes)
+                if confirmation is True:
                     handle_db_seed()
-        elif args.users_by_file is not None:
-            # fileformat: suggested_username  name   <email>
-            confirmation = confirm_action(
-                "Are you sure you want to add users to the database? (y/[n]):",
-                assume_yes=args.yes)
-            if confirmation is True:
-                for line in args.users_by_file.readlines():
-                    info = line.split()
-                    username = info[0]
-                    fullname = info[1]
-                    emailid = info[-1][1:-1]
-                    password = secrets.token_hex(8)
-                    add_user(emailid, username, password, fullname)
-        elif args.default_operation:
-            confirmation = confirm_action(
-                "Are you sure you want to add users to the default TEMPLATE operation? (y/[n]):",
-                assume_yes=args.yes)
-            if confirmation is True:
-                # adds all users as collaborator on the operation TEMPLATE if not added, command can be repeated
-                add_all_users_default_operation(access_level='admin')
-        elif args.add_all_to_all_operation:
-            confirmation = confirm_action(
-                "Are you sure you want to add users to the ALL operations? (y/[n]):",
-                assume_yes=args.yes)
-            if confirmation is True:
-                # adds all users to all Operations
-                add_all_users_to_all_operations()
-        elif args.delete_users_by_file:
-            confirmation = confirm_action(
-                "Are you sure you want to delete a user? (y/[n]):",
-                assume_yes=args.yes)
-            if confirmation is True:
-                # deletes users from the db
-                for email in args.delete_users_by_file.readlines():
-                    delete_user(email.strip())
+            elif args.users_by_file is not None:
+                # fileformat: suggested_username  name   <email>
+                confirmation = confirm_action(
+                    "Are you sure you want to add users to the database? (y/[n]):",
+                    assume_yes=args.yes)
+                if confirmation is True:
+                    for line in args.users_by_file.readlines():
+                        info = line.split()
+                        username = info[0]
+                        fullname = info[1]
+                        emailid = info[-1][1:-1]
+                        password = secrets.token_hex(8)
+                        add_user(emailid, username, password, fullname)
+            elif args.default_operation:
+                confirmation = confirm_action(
+                    "Are you sure you want to add users to the default TEMPLATE operation? (y/[n]):",
+                    assume_yes=args.yes)
+                if confirmation is True:
+                    # adds all users as collaborator on the operation TEMPLATE if not added, command can be repeated
+                    add_all_users_default_operation(access_level='admin')
+            elif args.add_all_to_all_operation:
+                confirmation = confirm_action(
+                    "Are you sure you want to add users to the ALL operations? (y/[n]):",
+                    assume_yes=args.yes)
+                if confirmation is True:
+                    # adds all users to all Operations
+                    add_all_users_to_all_operations()
+            elif args.delete_users_by_file:
+                confirmation = confirm_action(
+                    "Are you sure you want to delete a user? (y/[n]):",
+                    assume_yes=args.yes)
+                if confirmation is True:
+                    # deletes users from the db
+                    for email in args.delete_users_by_file.readlines():
+                        delete_user(email.strip())
 
     elif args.action == "sso_conf":
-        if args.init_sso_crts:
-            confirmation = confirm_action(
-                "This will reset and initiation all CRTs and SAML yaml file as default. "
-                "Are you sure to continue? (y/[n]):")
-            if confirmation is True:
-                handle_sso_crts_init()
-        if args.init_sso_metadata:
-            confirmation = confirm_action(
-                "Are you sure you executed --init_sso_crts before running this? (y/[n]):")
-            if confirmation is True:
+        with create_app().app_context():
+            if args.init_sso_crts:
                 confirmation = confirm_action(
-                    """
-                    This will generate necessary metada data file for sso in mscolab through localhost idp
-
-                    Before running this function:
-                    - Ensure that USE_SAML2 is set to True.
-                    - Generate the necessary keys and certificates and configure them in the .yaml
-                    file for the local IDP.
-
-                    Are you sure you set all correctly as per the documentation? (y/[n]):
-                    """
-                )
+                    "This will reset and initiation all CRTs and SAML yaml file as default. "
+                    "Are you sure to continue? (y/[n]):")
                 if confirmation is True:
-                    handle_sso_metadata_init(repo_exists)
+                    handle_sso_crts_init()
+            if args.init_sso_metadata:
+                confirmation = confirm_action(
+                    "Are you sure you executed --init_sso_crts before running this? (y/[n]):")
+                if confirmation is True:
+                    confirmation = confirm_action(
+                        """
+                        This will generate necessary metada data file for sso in mscolab through localhost idp
+
+                        Before running this function:
+                        - Ensure that USE_SAML2 is set to True.
+                        - Generate the necessary keys and certificates and configure them in the .yaml
+                        file for the local IDP.
+
+                        Are you sure you set all correctly as per the documentation? (y/[n]):
+                        """
+                    )
+                    if confirmation is True:
+                        handle_sso_metadata_init(repo_exists)
 
 
 if __name__ == '__main__':
