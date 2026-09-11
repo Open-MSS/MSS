@@ -119,7 +119,7 @@ entry.
 ### mslib/utils — shared utilities (the base layer)
 
 - `coordinate.py`, `units.py`, `time.py`, `thermolib.py` — pure science helpers
-- `netCDF4tools.py` — NetCDF helpers; `get_projection_params.py`
+- `netCDF4tools.py` — xarray-based NetCDF helpers; `get_projection_params.py`
 - `basic_auth.py` — basic HTTP auth passwords of mswms and mscolab (argon2)
 - `file_exists.py`, `get_content.py` — docs pages of the servers;
   `release_info.py`, `loggerdef.py`, `verify_waypoint_data.py`
