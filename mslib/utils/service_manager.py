@@ -30,10 +30,16 @@ def strip_request_params(url):
     """Remove the OGC request parameters (service, request) from an url.
 
     All other query parameters are kept in their original order, so the result
-    can be used as base url for further requests to the same service.
+    can be used as base url for further requests to the same service. This
+    includes parameters without a value, e.g. "?dataset=" or "?debug", which
+    may well be what distinguishes one service from another.
+
+    Their spelling is not preserved though, because the query is rebuilt by
+    urlencode(): a parameter given without a value comes back as an empty one
+    ("?debug" -> "?debug=") and percent encoding is applied anew.
     """
     scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url)
-    kept = [(key, value) for key, value in urllib.parse.parse_qsl(query)
+    kept = [(key, value) for key, value in urllib.parse.parse_qsl(query, keep_blank_values=True)
             if key.lower() not in ("service", "request")]
     return urllib.parse.urlunparse(
         (scheme, netloc, path, params, urllib.parse.urlencode(kept), fragment))
@@ -57,7 +63,7 @@ def service_cache_key(url):
     "http://example.com:1/wms" and "http://example.com/1/wms".
     """
     scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(strip_request_params(url))
-    query = urllib.parse.urlencode(sorted(urllib.parse.parse_qsl(query)))
+    query = urllib.parse.urlencode(sorted(urllib.parse.parse_qsl(query, keep_blank_values=True)))
     return urllib.parse.urlunparse(
         (scheme.lower(), netloc.lower(), path, params, query, fragment))
 

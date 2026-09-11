@@ -36,6 +36,10 @@ class TestStripRequestParams:
         ("http://example.com/wms?dataset=a&service=WMS", "http://example.com/wms?dataset=a"),
         # other parameters keep their original order
         ("http://example.com/wms?b=2&a=1", "http://example.com/wms?b=2&a=1"),
+        # a parameter without a value is a parameter too, it survives as an
+        # empty one
+        ("http://example.com/wms?dataset=&service=WMS", "http://example.com/wms?dataset="),
+        ("http://example.com/wms?debug&service=WMS", "http://example.com/wms?debug="),
     ])
     def test_strip_request_params(self, url, expected):
         assert strip_request_params(url) == expected
@@ -55,6 +59,9 @@ class TestServiceCacheKey:
         ("http://example.com/wms?dataset=a&layer=b", "http://example.com/wms?dataset=a-layer-b"),
         # a parameter value separator is not a parameter separator
         ("http://example.com/wms?dataset=a&layer=b", "http://example.com/wms?dataset=a%26layer%3Db"),
+        # an empty parameter is not the same as no parameter at all
+        ("http://example.com/wms", "http://example.com/wms?dataset="),
+        ("http://example.com/wms", "http://example.com/wms?debug"),
     ])
     def test_distinct_urls_get_distinct_keys(self, url, other):
         assert service_cache_key(url) != service_cache_key(other)
