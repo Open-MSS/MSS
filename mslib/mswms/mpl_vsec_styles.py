@@ -308,8 +308,6 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
     title = "Temperature (K) Vertical Section"
     abstract = "Temperature (K) and potential temperature (K)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("ml", "air_pressure", "Pa"),
         ("ml", "air_temperature", "K")]
@@ -375,8 +373,6 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
     title = "Cloud Cover (0-1) Vertical Section"
     abstract = "Cloud cover (0-1) with temperature (K) and potential temperature (K)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("ml", "air_pressure", "Pa"),
         ("ml", "air_temperature", "K"),
@@ -453,8 +449,6 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
     title = "Cloud Cover (0-1) and Wind Speed (m/s) Vertical Section"
     abstract = "Cloud cover (0-1) with wind speed (m/s) and potential temperature (K)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("ml", "air_pressure", "Pa"),
         ("ml", "air_temperature", "K"),
@@ -531,8 +525,6 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
     title = "Relative Humdity (%) Vertical Section"
     abstract = "Relative humdity (%) with temperature (K) and potential temperature (K)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("ml", "air_pressure", "Pa"),
         ("ml", "air_temperature", "K"),
@@ -628,8 +620,6 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
     title = "Specific Humdity (g/kg) Vertical Section"
     abstract = "Specific humdity (g/kg) with temperature (K) and potential temperature (K)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("ml", "air_pressure", "Pa"),
         ("ml", "air_temperature", "K"),
@@ -722,8 +712,6 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
     title = "Vertical Velocity (cm/s) Vertical Section"
     abstract = "Veertical velocity (cm/s) with temperature (K) and potential temperature (K)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("ml", "air_pressure", "Pa"),
         ("ml", "air_temperature", "K"),
@@ -808,8 +796,6 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
     # that it always requests air_pressure, air_temperature, eastward_wind,
     # northward_wind! (mr, 2012Nov09)
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("ml", "air_pressure", "Pa"),
         ("ml", "air_temperature", "K"),
@@ -1025,8 +1011,6 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
         ("NH", "Northern Hemisphere"),
         ("SH", "Southern Hemisphere, neg. PVU")]
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("ml", "air_pressure", "Pa"),
         ("ml", "air_temperature", "K"),
@@ -1134,8 +1118,6 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
     title = "Probability of WCB (%) Vertical Section"
     abstract = "Probability of WCB (%) with CLWC/CIWC (g/kg) and potential temperature (K)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("ml", "air_pressure", "Pa"),
         ("ml", "air_temperature", "K"),
@@ -1222,8 +1204,6 @@ class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
     title = "Cirrus density, insitu red, mix blue, wcb colour (1E-6/km^2/hPa) Vertical Section"
     abstract = "Cirrus density, insitu red, mix blue, wcb colour (1E-6/km^2/hPa)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("pl", "air_pressure", "Pa"),
         ("pl", "number_of_wcb_trajectories", 'dimensionless'),
@@ -1275,8 +1255,6 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
     title = "EMAC Eyjafjallajokull Tracer (relative) Vertical Section"
     abstract = "EMAC Eyjafjallajokull Tracer (relative) with temperature (K) and potential temp. (K)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("ml", "air_pressure", "Pa"),
         ("ml", "air_temperature", "K"),
