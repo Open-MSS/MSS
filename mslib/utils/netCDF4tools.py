@@ -4,7 +4,7 @@
     mslib.utils.netCDF4tools
     ~~~~~~~~~~~~~~~~~~
 
-    Some useful functions for handling NetCDF files with the netCDF4 library.
+    Some useful functions for handling NetCDF files with the xarray library.
 
     This file is part of MSS.
 
@@ -29,6 +29,7 @@
 import glob
 import numpy as np
 import netCDF4
+import xarray as xr
 
 
 VERTICAL_AXIS = {
@@ -48,18 +49,19 @@ def identify_variable(ncfile, standard_names, check=False):
     Identify the variable in ncfile that is described by specified rules.
 
     Arguments:
-    ncfile -- Handle to open netCDF4.Dataset().
+    ncfile -- Handle to an open xarray.Dataset().
 
     check (default False) -- Throw an exception if variable has not been
                              found. If False, return None.
 
+    Returns: var_name, variable (as xarray.DataArray)
     """
     if not isinstance(standard_names, list):
         standard_names = [standard_names]
 
     for var_name, variable in ncfile.variables.items():
-        if "standard_name" in variable.ncattrs() and variable.standard_name in standard_names:
-            return var_name, variable
+        if variable.attrs.get("standard_name") in standard_names:
+            return var_name, ncfile[var_name]
     if check:
         raise IOError("cannot identify NetCDF variable "
                       f"specified by {standard_names}")
@@ -88,7 +90,7 @@ def hybrid_orientation(hybrid_var):
     """
     if hybrid_var is None:
         return None
-    hybrid_levels = hybrid_var[:]
+    hybrid_levels = np.asarray(hybrid_var)
     if hybrid_levels[0] > hybrid_levels[-1]:
         # Vertical axis INDEX orientation is down (largest value is the first,
         # for ECMWF data this is level closest to the surface).
@@ -112,7 +114,7 @@ def identify_vertical_axis(dataset):
         name, var = identify_variable(dataset, standard_name)
         orientation = hybrid_orientation(var)
         if var is not None:
-            units = getattr(var, "units", "dimensionless")
+            units = var.attrs.get("units", "dimensionless")
             result.append((name, var, orientation, units, layertype))
     if len(result) == 0:
         return None, None, None, None, "sfc"
@@ -155,7 +157,7 @@ def get_latlon_data(ncfile, autoreverse=True):
     """
     Get data arrays of latitude and longitude in a NetCDF file.
 
-    ncfile needs to be an open netCDF4.Dataset.
+    ncfile needs to be an open xarray.Dataset.
 
     Returns: lat_data, lon_data, lat_order
 
@@ -173,149 +175,75 @@ def get_latlon_data(ncfile, autoreverse=True):
     # in decreasing order, to make it strictly increasing (needed for the
     # interpolation routine below).
     lat_order = 1
-    lat_data = lat_var[:]
+    lat_data = np.asarray(lat_var)
     if lat_data[0] > lat_data[1] and autoreverse:
         lat_data = lat_data[::-1]
         lat_order = -1
 
     # If longitudes are already stored in -180..180 the transformation won't
-    # change anything.
-    lon_data = ((lon_var[:] + 180) % 360) - 180
+    # change anything. It is done in double precision, as a modulo on single
+    # precision longitudes would lose accuracy.
+    lon_data = ((np.asarray(lon_var, dtype=np.float64) + 180) % 360) - 180
 
     return lat_data, lon_data, lat_order
 
 
-class MFDatasetCommonDims(netCDF4.MFDataset):
-    """MFDatasetCommonDims(self, files, exclude=[], require_dim_num=False)
-
-    Class for reading multi-file netCDF Datasets with common dimensions,
-    making variables in different files appear as if they were in one file.
-
-    Datasets must be in C{NETCDF4_CLASSIC, NETCDF3_CLASSIC or NETCDF3_64BIT}
-    format (C{NETCDF4} Datasets won't work).
-
-    Inherits MFDataset from the U{netcdf4-python
-    <http://netcdf4-python.googlecode.com/>} library by Jeffrey Whitaker.
+def open_mfdataset_commondims(files, skip_dim_check=None):
     """
+    Open several NetCDF files that share common dimensions as a single dataset,
+    making the variables of all files appear as if they were in one file.
 
-    def __init__(self, files, exclude=None, skip_dim_check=None,
-                 require_dim_num=False):
-        """
-        Open a Dataset spanning multiple files sharing common dimensions but
-        containing different record variables, making it look as if it was a
-        single file.
+    Arguments:
+    files -- either a sequence of NetCDF files or a string with a wildcard
+    (converted to a sorted list of files using glob). The files are opened in
+    read-only mode. The first file in the list acts as the 'master' file: global
+    attributes, coordinate variables and, in case a variable is present in
+    several files, the variable data are taken from it.
 
-        Inherits MFDataset from the U{netcdf4-python
-        <http://netcdf4-python.googlecode.com/>} library by Jeffrey Whitaker.
+    skip_dim_check -- Only use this parameter if you know what you are doing.
+    The dimensions in this list of dimension names are not compared between the
+    files; everything depending on them is taken from the 'master' file only.
+    Use this parameter as a workaround for numerical inaccuracies when opening
+    NetCDF files converted from mixed GRIB1/2 files. (mr 03Aug2012)
 
-        Usage:
+    Returns an xarray.Dataset. The files are only read when the data is
+    accessed; closing the returned dataset closes all of them.
 
-        nc = MFDatasetCommonDims(files, exclude=[], skip_dim_check=[],
-                                 require_dim_num=False)
+    The dimensions of the files need to agree, but they may contain different
+    subsets of the dimensions (e.g. a file with only surface and no upper air
+    fields), and dimensions without a coordinate variable are only checked for
+    their length. Note that this does not concatenate along any dimension; use
+    xarray.open_mfdataset() (which requires dask) for that.
+    """
+    skip_dim_check = set(skip_dim_check or [])
+    if isinstance(files, str):
+        files = sorted(glob.glob(files))
+    if len(files) == 0:
+        raise IOError("no NetCDF files to open")
 
-        @param files: either a sequence of netCDF files or a string with a
-        wildcard (converted to a sorted list of files using glob)  The first file
-        in the list will become the 'master' file, defining all the record
-        variables (variables with an unlimited dimension) which may span
-        subsequent files. Attribute access returns attributes only from 'master'
-        file. The files are always opened in read-only mode.
+    datasets = []
 
-        NOTE: Files may contain only a subset of the dimensions contained in
-        the 'master' file (e.g. a file with only surface and no upper air
-        fields). They may *not* contain any other dimension as the master.
-        Exactly the same dimensions in every file can be forced by setting
-        require_dim_num to True.
+    def close_all():
+        for opened in datasets:
+            opened.close()
 
-        @param exclude: A list of variable names to exclude from aggregation.
-        Default is an empty list.
-        @param skip_dim_check: Only use this parameter if you know what you are
-        doing. Each dimension in this list of dimension names is not checked
-        against the master dimension. Use this parameter as a workaround for
-        numerical inaccuracies when opening NetCDF files converted from mixed
-        GRIB1/2 files. (mr 03Aug2012)
-        @param require_dim_num: see above.
-        """
-        # Open the master file in the base class, so that the CDFMF instance
-        # can be used like a CDF instance.
+    try:
+        for _file in files:
+            datasets.append(xr.open_dataset(_file, decode_times=False))
+        # Dimensions excluded from the consistency check may differ between the
+        # files, so all variables depending on them are taken from the master.
+        to_merge = [datasets[0]] + [
+            dataset.drop_vars([name for name, variable in dataset.variables.items()
+                               if not skip_dim_check.isdisjoint(variable.dims)])
+            for dataset in datasets[1:]]
+        dataset = xr.merge(to_merge, join="exact", compat="override",
+                           combine_attrs="override")
+    except xr.AlignmentError as ex:
+        close_all()
+        raise IOError(f"dimensions of the files {files} do not match: {ex}") from ex
+    except Exception:
+        close_all()
+        raise
 
-        exclude = exclude or []
-        skip_dim_check = skip_dim_check or []
-        if isinstance(files, str):
-            files = sorted(glob.glob(files))
-
-        master = files[0]
-
-        # Open the master again, this time as a classic CDF instance. This will avoid
-        # calling methods of the CDFMF subclass when querying the master file.
-        cdfm = netCDF4.Dataset(master)
-        # copy attributes from master.
-        self.__dict__.update(cdfm.__dict__)
-
-        # Get names of master dimensions.
-        masterDims = list(cdfm.dimensions.keys())
-        # Check that each dimension has a coordinate dimension
-        for dimName in masterDims:
-            if dimName not in cdfm.variables and dimName not in skip_dim_check:
-                raise IOError(f"dimension '{dimName}' has no coordinate variable in master '{master}'")
-
-        # Create the following:
-        #   cdf       list of Dataset instances
-        #   cdfVar    dictionary indexed by the variable names
-        cdf = [cdfm]
-        self._cdf = cdf  # Store this now, because dim() method needs it
-        cdfVar = {}
-        cdfOrigin = {}
-        for vName, v in cdfm.variables.items():
-            if vName in exclude:
-                continue
-            cdfVar[vName] = v
-            cdfOrigin[vName] = (master, cdfm)
-        if len(cdfVar) == 0:
-            raise IOError(f"master dataset '{master}' does not have any variable")
-
-        # Open each remaining file in read-only mode.
-        # Make sure each file defines the same record variables as the master
-        # and that the variables are defined in the same way (name, shape and type)
-        for f in files[1:]:
-            part = netCDF4.Dataset(f)
-            # Make sure dimension of new dataset are contained in the master.
-            for dimName in part.dimensions:
-                # (..except those that shall not be tested..)
-                if dimName not in skip_dim_check:
-                    if dimName not in masterDims:
-                        raise IOError(f"dimension '{dimName}' not defined in master '{master}'")
-                    if dimName not in part.variables:
-                        raise IOError(f"dimension '{dimName}' has no coordinate variable in file '{f}'")
-                    if len(part.dimensions[dimName]) != len(cdfm.dimensions[dimName]) or \
-                            (part.variables[dimName][:] != cdfm.variables[dimName][:]).any():
-                        raise IOError(f"dimension '{dimName}' differs in master '{master}' and "
-                                      f"file '{f}'")
-
-            if require_dim_num:
-                if len(part.dimensions) != len(masterDims):
-                    raise IOError("number of dimensions not consistent in master "
-                                  f"'{master}' and '{f}'")
-
-            for vName, v in part.variables.items():
-                # Exclude dimension variables.
-                if (vName in exclude) or (vName in masterDims):
-                    continue
-                cdfVar[vName] = v
-                cdfOrigin[vName] = (f, part)
-
-            cdf.append(part)
-
-        # Attach attributes to the MFDataset instance.
-        # A local __setattr__() method is required for them.
-        self._files = files  # list of cdf file names in the set
-        self._dims = cdfm.dimensions
-        self._vars = cdfVar
-        self._cdfOrigin = cdfOrigin
-
-        self._file_format = []
-        for dset in self._cdf:
-            if dset.file_format == "NETCDF4":
-                raise ValueError("MFNetCDF4 only works with NETCDF3_CLASSIC, "
-                                 "NETCDF3_64BIT and NETCDF4_CLASSIC "
-                                 "formatted files, not NETCDF4")
-            self._file_format.append(dset.file_format)
+    dataset.set_close(close_all)
+    return dataset
