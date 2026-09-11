@@ -465,3 +465,58 @@ class Test_TableView:
         # Remove connection
         self.window.waypoints_model.removeRows(count, 1)
         assert len(self.window.waypoints_model.waypoints) == count
+
+    def _copy_table_to_clipboard_csv(self, locale, delimiter):
+        """
+        Trigger the copy-to-clipboard button under a fixed QLocale (so the
+        test does not depend on the locale of the machine it runs on) and
+        return the clipboard content parsed as CSV rows.
+        """
+        import csv
+        import io
+
+        previous_locale = QtCore.QLocale()
+        QtCore.QLocale.setDefault(locale)
+        try:
+            QtWidgets.QApplication.clipboard().clear()
+            QtTest.QTest.mouseClick(self.window.btCopyToClipboard, QtCore.Qt.LeftButton)
+            text = QtWidgets.QApplication.clipboard().text()
+        finally:
+            QtCore.QLocale.setDefault(previous_locale)
+        assert text
+        return list(csv.reader(io.StringIO(text), delimiter=delimiter))
+
+    def test_copy_table_to_clipboard(self):
+        """
+        Copying the table to the clipboard produces CSV text with the
+        columns currently shown, leaving out columns that are empty for
+        every waypoint (e.g. the performance columns hidden by default).
+        Numbers use the decimal point of the active QLocale ('.' for the
+        C locale used here), which also determines the field delimiter.
+        """
+        self.window.waypoints_model.performance_settings = DEFAULT_PERFORMANCE
+        self.window.resizeColumns()
+
+        rows = self._copy_table_to_clipboard_csv(QtCore.QLocale.c(), delimiter=",")
+        header = [cell.strip() for cell in rows[0]]
+        expected_header = [
+            "Location", "Lat (+-90)", "Lon (+-180)", "Flightlevel", "Pressure (hPa)",
+            "Leg dist. (km [nm])", "Cum. dist. (km [nm])", "Comments"]
+        assert header == expected_header
+        assert len(rows) == 1 + len(self.window.waypoints_model.waypoints)
+        assert rows[1][0] == "EDMO"
+        assert rows[1][-1] == "take off OP"
+        assert rows[2][1:3] == ["48.1", "10.27"]
+        assert rows[-1][0] == "Hamburg"
+        assert rows[-1][-1] == "landing HH"
+
+    def test_copy_table_to_clipboard_uses_locale_decimal_point(self):
+        """
+        With a locale that uses a comma as decimal point, numbers are
+        copied with a comma, and the field delimiter switches to ";" so the
+        CSV stays unambiguous to parse (the usual European CSV/Excel
+        convention).
+        """
+        de_locale = QtCore.QLocale(QtCore.QLocale.German, QtCore.QLocale.Germany)
+        rows = self._copy_table_to_clipboard_csv(de_locale, delimiter=";")
+        assert rows[2][1:3] == ["48,1", "10,27"]
