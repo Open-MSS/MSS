@@ -284,8 +284,6 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
         ("MED", "Medium Cloud Cover"),
         ("HIGH", "High Cloud Cover")]
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ('sfc', 'low_cloud_area_fraction', 'dimensionless'),
         ('sfc', 'medium_cloud_area_fraction', 'dimensionless'),
@@ -353,8 +351,6 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
     name = "MSLP"
     title = "Mean Sea Level Pressure (hPa)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("sfc", "air_pressure_at_sea_level", "hPa"),
         ("sfc", "surface_eastward_wind", "knots"),
@@ -426,8 +422,6 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
     name = "SEA"
     title = "Solar Elevation Angle (degrees)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("sfc", "solar_elevation_angle", "degree")]
 
@@ -487,8 +481,6 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
         ("PCOL", "pseudocolor plot"),
         ("CONT", "contour plot")]
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("sfc", "sea_ice_area_fraction", 'dimensionless')]
 
@@ -538,8 +530,6 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
     name = "MLTemp01"
     title = "Temperature (Model Level) (degC)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("ml", "air_temperature", "degC")]
 
@@ -593,8 +583,6 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     name = "PLTemp01"
     title = "Temperature (degC) and Geopotential Height (m)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("pl", "air_temperature", "degC"),
         ("pl", "geopotential_height", "m")]
@@ -671,8 +659,6 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
         ("wind_20_55", "Wind Speed 20-55 m/s"),
         ("wind_15_55", "Wind Speed 15-55 m/s")]
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("pl", "geopotential_height", "m"),
         ("pl", "eastward_wind", "m/s"),
@@ -769,8 +755,6 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     name = "PLRelHum01"
     title = "Relative Humditiy (%) and Geopotential Height (m)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("pl", "air_temperature", "K"),
         ("pl", "geopotential_height", "m"),
@@ -846,8 +830,6 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     name = "PLEQPT01"
     title = "Equivalent Potential Temperature (degC) and Geopotential Height (m)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("pl", "air_temperature", "K"),
         ("pl", "geopotential_height", "m"),
@@ -926,8 +908,6 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     name = "PLW01"
     title = "Vertical Velocity (cm/s) and Geopotential Height (m)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("pl", "lagrangian_tendency_of_air_pressure", "Pa/s"),
         ("pl", "air_temperature", "K"),
@@ -1004,8 +984,6 @@ class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     name = "PLDiv01"
     title = "Divergence and Geopotential Height (m)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("pl", "divergence_of_wind", "1/s"),
         ("pl", "geopotential_height", "m")]
@@ -1065,8 +1043,6 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
     name = "EMAC_Eyja_Tracer"
     title = "EMAC Eyjafjallajokull Tracer (Model Level) (relative)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("ml", "emac_R12", 'dimensionless')]
 
@@ -1114,8 +1090,6 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
     name = "EMAC_Eyja_TotalColumn"
     title = "EMAC Eyjafjallajokull Tracer Total Column Density (kg/m^2)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("sfc", "emac_column_density", "kg/m^2")]
 
@@ -1164,8 +1138,6 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
     name = "PVTropo01"
     title = "Dynamical Tropopause"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("pv", "air_potential_temperature", "K"),
         ("pv", "geopotential_height", "m"),
@@ -1260,8 +1232,6 @@ class HS_ThermalTropoStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
     name = "ThermalTropo01"
     title = "Thermal Tropopause"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("sfc", "tropopause_altitude", "km"),
         ("sfc", "secondary_tropopause_altitude", "km"),
@@ -1332,8 +1302,6 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
     name = "VIProbWCB"
     title = "Total Column Probability of WCB (%)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("sfc", "air_pressure_at_sea_level", "hPa"),
         ("sfc", "vertically_integrated_probability_of_wcb_occurrence", 'dimensionless')
@@ -1389,8 +1357,6 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     name = "PLLagrantoTraj"
     title = "Cirrus density, insitu red, mix blue, wcb colour (1E-6/km^2/hPa)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("pl", "number_of_wcb_trajectories", 'dimensionless'),
         ("pl", "number_of_insitu_trajectories", 'dimensionless'),
@@ -1451,8 +1417,6 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
     name = "BLH"
     title = "Boundary Layer Height (m)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("sfc", "air_pressure_at_sea_level", "hPa"),
         ("sfc", "atmosphere_boundary_layer_thickness", "m")]
@@ -1509,8 +1473,6 @@ class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
     name = "MSG_BT108"
     title = "Brightness Temperature 10.8um (K)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("sfc", "msg_brightness_temperature_108", "K")]
 

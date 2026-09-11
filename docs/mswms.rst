@@ -312,11 +312,11 @@ the init time. Data for different time steps may be contained in one file or
 split over several ones.
 
 In case a file contains additional dimensions beyond the four required ones, MSS
-might discard the file, if they are inconsistently used among files or are
-missing coordinate variables, etc., even though they would not affect the
-operation of MSS. One may skip checks on these dimensions in the data access
-class by specifying a list of said dimensions in the "skip_dim_check"
-constructor parameter.
+might discard the file, if they are inconsistently used among files, even though
+they would not affect the operation of MSS. One may skip checks on these
+dimensions in the data access class by specifying a list of said dimensions in
+the "skip_dim_check" constructor parameter. Everything depending on such a
+dimension is then taken from the first of the files that are opened together.
 
 An exemplary header for a file containing ozone on a vertical pressure
 coordinate and a 3-D tropopause would look as follows:

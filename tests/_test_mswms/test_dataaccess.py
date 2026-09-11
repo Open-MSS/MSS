@@ -77,11 +77,11 @@ class Test_DefaultDataAccess:
         all_init_times = self.dut.get_init_times()
         assert all_init_times == [datetime(2012, 10, 17, 12, 0)]
 
-    def test_mfDatasetArgs(self):
-        mfDatasetArgs = self.dut.mfDatasetArgs()
-        assert mfDatasetArgs == {'skip_dim_check': []}
-        mfDatasetArgs2 = DefaultDataAccess(MSWMS_DATA_DIR, "EUR_LL015", skip_dim_check=["time1"]).mfDatasetArgs()
-        assert mfDatasetArgs2 == {'skip_dim_check': ['time1']}
+    def test_dataset_kwargs(self):
+        dataset_kwargs = self.dut.dataset_kwargs()
+        assert dataset_kwargs == {'skip_dim_check': []}
+        dataset_kwargs2 = DefaultDataAccess(MSWMS_DATA_DIR, "EUR_LL015", skip_dim_check=["time1"]).dataset_kwargs()
+        assert dataset_kwargs2 == {'skip_dim_check': ['time1']}
 
     def test_get_valid_times(self):
         valid_times = self.dut.get_valid_times("air_pressure", "ml", datetime(2012, 10, 17, 12, 0))
