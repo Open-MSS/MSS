@@ -28,7 +28,7 @@
 import os
 import pytest
 import datetime
-from netCDF4 import Dataset
+import xarray as xr
 from mslib.utils.netCDF4tools import (
     identify_variable, identify_CF_lonlat,
     identify_vertical_axis, identify_CF_time, num2date, get_latlon_data
@@ -44,11 +44,11 @@ DATA_FILE_AL = os.path.join(MSWMS_DATA_DIR, "20121017_12_ecmwf_forecast.ALTITUDE
 
 class Test_netCDF4tools:
     def setup_method(self):
-        self.ncfile_ml = Dataset(DATA_FILE_ML, 'r')
-        self.ncfile_pl = Dataset(DATA_FILE_PL, 'r')
-        self.ncfile_pv = Dataset(DATA_FILE_PV, 'r')
-        self.ncfile_tl = Dataset(DATA_FILE_TL, 'r')
-        self.ncfile_al = Dataset(DATA_FILE_AL, 'r')
+        self.ncfile_ml = xr.open_dataset(DATA_FILE_ML, decode_times=False)
+        self.ncfile_pl = xr.open_dataset(DATA_FILE_PL, decode_times=False)
+        self.ncfile_pv = xr.open_dataset(DATA_FILE_PV, decode_times=False)
+        self.ncfile_tl = xr.open_dataset(DATA_FILE_TL, decode_times=False)
+        self.ncfile_al = xr.open_dataset(DATA_FILE_AL, decode_times=False)
 
     def teardown_method(self):
         self.ncfile_ml.close()

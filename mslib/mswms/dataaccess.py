@@ -30,9 +30,9 @@ from abc import ABCMeta, abstractmethod
 import itertools
 import os
 import logging
-import netCDF4
 import numpy as np
 import pint
+import xarray as xr
 
 from mslib.utils import netCDF4tools
 from mslib.utils.units import units
@@ -179,18 +179,18 @@ class NWPDataAccess(metaclass=ABCMeta):
         """
         pass
 
-    _mfDatasetArgsDict = {}
+    _dataset_kwargs = {}
 
-    def mfDatasetArgs(self):
+    def dataset_kwargs(self):
         """
-        Returns additional keyword for the MFDatasetCommonDims instance that
-        handles the input data of this dataset. See the MFDatasetCommonDims
-        documentation for further details.
+        Returns additional keywords for the netCDF4tools.open_mfdataset_commondims()
+        call that handles the input data of this dataset. See the
+        open_mfdataset_commondims() documentation for further details.
         Mainly provided as a workaround for numerical inaccuracies introduced
         to the NetCDF files by netcdf-java 4.3.
         (mr, 16Oct2012)
         """
-        return self._mfDatasetArgsDict
+        return self._dataset_kwargs
 
 
 class DefaultDataAccess(NWPDataAccess):
@@ -213,7 +213,7 @@ class DefaultDataAccess(NWPDataAccess):
         self._domain_id = domain_id
         self._available_files = None
         self._filetree = None
-        self._mfDatasetArgsDict = {"skip_dim_check": skip_dim_check}
+        self._dataset_kwargs = {"skip_dim_check": skip_dim_check}
         self._file_cache = {}
 
     def _determine_filename(self, variable, vartype, init_time, valid_time, reload=True):
@@ -240,12 +240,12 @@ class DefaultDataAccess(NWPDataAccess):
 
     def _parse_file(self, filename):
         elevations = {"filename": filename, "levels": [], "units": None}
-        with netCDF4.Dataset(os.path.join(self._root_path, filename)) as dataset:
+        with xr.open_dataset(os.path.join(self._root_path, filename), decode_times=False) as dataset:
             time_name, time_var = netCDF4tools.identify_CF_time(dataset)
-            init_time = netCDF4tools.num2date(0, time_var.units)
+            init_time = netCDF4tools.num2date(0, time_var.attrs["units"])
             if not self.uses_inittime_dimension():
                 init_time = None
-            valid_times = netCDF4tools.num2date(time_var[:], time_var.units)
+            valid_times = netCDF4tools.num2date(time_var.values, time_var.attrs["units"])
             if not self.uses_validtime_dimension():
                 if len(valid_times) > 0:
                     raise IOError(f"Skipping file '{filename}: no support for valid time, but multiple "
@@ -254,23 +254,24 @@ class DefaultDataAccess(NWPDataAccess):
             lat_name, lat_var, lon_name, lon_var = netCDF4tools.identify_CF_lonlat(dataset)
             vert_name, vert_var, _, _, vert_type = netCDF4tools.identify_vertical_axis(dataset)
 
-            if len(time_var.dimensions) != 1 or time_var.dimensions[0] != time_name:
+            if len(time_var.dims) != 1 or time_var.dims[0] != time_name:
                 raise IOError("Problem with time coordinate variable")
-            if len(lat_var.dimensions) != 1 or lat_var.dimensions[0] != lat_name:
+            if len(lat_var.dims) != 1 or lat_var.dims[0] != lat_name:
                 raise IOError("Problem with latitude coordinate variable")
-            if len(lon_var.dimensions) != 1 or lon_var.dimensions[0] != lon_name:
+            if len(lon_var.dims) != 1 or lon_var.dims[0] != lon_name:
                 raise IOError("Problem with longitude coordinate variable")
 
             if vert_type != "sfc":
+                vert_levels = np.asarray(vert_var)
                 elevations = {
                     "filename": filename,
-                    "levels": vert_var[:],
-                    "units": getattr(vert_var, "units", "dimensionless")}
+                    "levels": vert_levels,
+                    "units": vert_var.attrs.get("units", "dimensionless")}
                 if vert_type in self._elevations:
-                    if len(vert_var[:]) != len(self._elevations[vert_type]["levels"]):
+                    if len(vert_levels) != len(self._elevations[vert_type]["levels"]):
                         raise IOError(f"Number of vertical levels does not fit to levels of "
                                       f"previous file '{self._elevations[vert_type]['filename']}'.")
-                    if not np.allclose(vert_var[:], self._elevations[vert_type]["levels"]):
+                    if not np.allclose(vert_levels, self._elevations[vert_type]["levels"]):
                         raise IOError(f"vertical levels do not fit to levels of previous "
                                       f"file '{self._elevations[vert_type]['filename']}'.")
                     if elevations["units"] != self._elevations[vert_type]["units"]:
@@ -279,28 +280,28 @@ class DefaultDataAccess(NWPDataAccess):
 
             standard_names = []
             for ncvarname, ncvar in dataset.variables.items():
-                if hasattr(ncvar, "standard_name") and (len(ncvar.dimensions) >= 3):
-                    if (ncvar.dimensions[0] != time_name or
-                            ncvar.dimensions[-2] != lat_name or
-                            ncvar.dimensions[-1] != lon_name):
+                if "standard_name" in ncvar.attrs and (len(ncvar.dims) >= 3):
+                    if (ncvar.dims[0] != time_name or
+                            ncvar.dims[-2] != lat_name or
+                            ncvar.dims[-1] != lon_name):
                         logging.error("Skipping variable '%s' in file '%s': Incorrect order of dimensions",
                                       ncvarname, filename)
                         continue
-                    if not hasattr(ncvar, "units"):
+                    if "units" not in ncvar.attrs:
                         logging.error("Skipping variable '%s' in file '%s': No units attribute",
                                       ncvarname, filename)
                         continue
-                    if ncvar.standard_name != "time":
+                    if ncvar.attrs["standard_name"] != "time":
                         try:
-                            units(ncvar.units)
+                            units(ncvar.attrs["units"])
                         except (AttributeError, ValueError, pint.UndefinedUnitError, pint.DefinitionSyntaxError):
                             logging.error("Skipping variable '%s' in file '%s': unparsable units attribute '%s'",
-                                          ncvarname, filename, ncvar.units)
+                                          ncvarname, filename, ncvar.attrs["units"])
                             continue
-                    if len(ncvar.shape) == 4 and vert_name in ncvar.dimensions:
-                        standard_names.append(ncvar.standard_name)
+                    if len(ncvar.shape) == 4 and vert_name in ncvar.dims:
+                        standard_names.append(ncvar.attrs["standard_name"])
                     elif len(ncvar.shape) == 3 and vert_type == "sfc":
-                        standard_names.append(ncvar.standard_name)
+                        standard_names.append(ncvar.attrs["standard_name"])
         return {
             "vert_type": vert_type,
             "elevations": elevations,

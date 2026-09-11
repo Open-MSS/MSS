@@ -156,14 +156,14 @@ class MSSPlotDriver(metaclass=ABCMeta):
 
         # Open NetCDF files as one dataset with common dimensions.
         logging.debug("opening datasets.")
-        dsKWargs = self.data_access.mfDatasetArgs()
-        dataset = netCDF4tools.MFDatasetCommonDims(self.filenames, **dsKWargs)
+        dataset = netCDF4tools.open_mfdataset_commondims(
+            self.filenames, **self.data_access.dataset_kwargs())
 
         # Load and check time dimension. self.dataset will remain None
         # if an Exception is raised here.
         timename, timevar = netCDF4tools.identify_CF_time(dataset)
 
-        times = netCDF4tools.num2date(timevar[:], timevar.units)
+        times = netCDF4tools.num2date(timevar.values, timevar.attrs["units"])
         # removed after discussion, see
         # https://mss-devel.slack.com/archives/emerge/p1486658769000007
         # if init_time != netCDF4tools.num2date(0, timevar.units):
@@ -185,7 +185,7 @@ class MSSPlotDriver(metaclass=ABCMeta):
             raise
 
         _, vert_data, vert_orientation, vert_units, _ = netCDF4tools.identify_vertical_axis(dataset)
-        self.vert_data = vert_data[:] if vert_data is not None else None
+        self.vert_data = np.asarray(vert_data) if vert_data is not None else None
         self.vert_order = vert_orientation
         self.vert_units = vert_units
 
@@ -204,8 +204,8 @@ class MSSPlotDriver(metaclass=ABCMeta):
         Find NetCDF variables of required data fields.
 
         A dictionary data_vars is created. Its keys are the CF standard names
-        of the variables provided by the plot object. The values are pointers
-        to the NetCDF variable objects.
+        of the variables provided by the plot object. The values are the
+        corresponding (not yet loaded) xarray.DataArray objects.
 
         <data_vars> can be accessed as <self.data_vars>.
         """
@@ -215,7 +215,7 @@ class MSSPlotDriver(metaclass=ABCMeta):
             varname, var = netCDF4tools.identify_variable(self.dataset, df_name, check=True)
             logging.debug("\tidentified variable <%s> for field <%s>", varname, df_name)
             self.data_vars[df_name] = var
-            self.data_units[df_name] = getattr(var, "units", None)
+            self.data_units[df_name] = var.attrs.get("units")
 
     def have_data(self, plot_object, init_time, valid_time):
         """
@@ -487,9 +487,9 @@ class VerticalSectionDriver(MSSPlotDriver):
 
         for name, var in self.data_vars.items():
             if len(var.shape) == 4:
-                var_data = var[timestep, ::-self.vert_order, ::self.lat_order, :]
+                var_data = np.asarray(var[timestep, ::-self.vert_order, ::self.lat_order, :])
             else:
-                var_data = var[:][timestep, np.newaxis, ::self.lat_order, :]
+                var_data = np.asarray(var[timestep, ::self.lat_order, :])[np.newaxis]
             logging.debug("\tLoaded %.2f Mbytes from data field <%s> at timestep %s.",
                           var_data.nbytes / 1048576., name, timestep)
             logging.debug("\tVertical dimension direction is %s.",
@@ -648,10 +648,10 @@ class HorizontalSectionDriver(MSSPlotDriver):
         for name, var in self.data_vars.items():
             if level is None or len(var.shape) == 3:
                 # 2D fields: time, lat, lon.
-                var_data = var[timestep, ::self.lat_order, :]
+                var_data = np.asarray(var[timestep, ::self.lat_order, :])
             else:
                 # 3D fields: time, level, lat, lon.
-                var_data = var[timestep, level, ::self.lat_order, :]
+                var_data = np.asarray(var[timestep, level, ::self.lat_order, :])
             logging.debug("\tLoaded %.2f Mbytes from data field <%s>.",
                           var_data.nbytes / 1048576., name)
             data[name] = var_data
@@ -830,9 +830,9 @@ class LinearSectionDriver(VerticalSectionDriver):
             var = self.data_vars[name]
             data[name] = []
             if len(var.shape) == 4:
-                var_data = var[:][timestep, ::-self.vert_order, ::self.lat_order, :]
+                var_data = np.asarray(var[timestep, ::-self.vert_order, ::self.lat_order, :])
             else:
-                var_data = var[:][timestep, np.newaxis, ::self.lat_order, :]
+                var_data = np.asarray(var[timestep, ::self.lat_order, :])[np.newaxis]
             logging.debug("\tLoaded %.2f Mbytes from data field <%s> at timestep %s.",
                           var_data.nbytes / 1048576., name, timestep)
             logging.debug("\tVertical dimension direction is %s.",
