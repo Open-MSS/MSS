@@ -36,6 +36,7 @@
 
 import datetime
 import logging
+import math
 import os
 from pathlib import Path
 
@@ -92,6 +93,90 @@ TABLE_FULL = [
 ]
 
 TABLE_SHORT = [TABLE_FULL[_i] for _i in range(7)] + [TABLE_FULL[-1]] + [("", lambda _: "", False)] * 8
+
+# Number of the first table column that is filled with data retrieved by the
+# linear view. All columns left of it are described by TABLE_FULL/TABLE_SHORT.
+LINEAR_DATA_COLUMN = len(TABLE_FULL)
+
+
+def values_at_waypoints(path_lats, path_lons, values, waypoints, tolerance=1e-6):
+    """
+    Pick those values of a linear section that belong to the given waypoints.
+
+    A linear section is computed for interpolated points along the flight
+    path, of which only a few coincide with a waypoint. The waypoints are
+    matched in the order in which they appear along the path.
+
+    Arguments:
+    path_lats, path_lons -- coordinates of the interpolated points of the
+                            linear section
+    values -- one data value per interpolated point
+    waypoints -- list of Waypoint objects the values are mapped onto
+    tolerance -- maximum deviation of a coordinate that is still considered
+                 to be the same point
+
+    Returns a list with one entry per waypoint. Waypoints that are not part
+    of the section, and waypoints where the data field is undefined (NaN),
+    get None assigned.
+    """
+    result = [None] * len(waypoints)
+    index = 0
+    for i, (lat, lon) in enumerate(zip(path_lats, path_lons)):
+        if index >= len(waypoints):
+            break
+        waypoint = waypoints[index]
+        # The path is sent to the WMS server rounded to two decimals, hence
+        # the returned coordinates have to be compared to rounded waypoints.
+        if abs(lat - float(f"{waypoint.lat:.2f}")) < tolerance and \
+                abs(lon - float(f"{waypoint.lon:.2f}")) < tolerance:
+            if i < len(values) and not math.isnan(values[i]):
+                result[index] = values[i]
+            index += 1
+    return result
+
+
+def linear_data_columns(xmls, waypoints):
+    """
+    Convert the linear section responses of the WMS server into data columns
+    at the positions of the given waypoints.
+
+    Arguments:
+    xmls -- list of XML elements as returned for a "LINE:1" request, see
+            mslib.mswms.mpl_lsec
+    waypoints -- list of Waypoint objects the values are mapped onto
+
+    Returns a list of dictionaries with the keys "name", "unit" and "values",
+    ready to be passed to WaypointsTableModel.set_linear_data().
+    """
+    columns = []
+    names = set()
+    for element in xmls:
+        data = element.find("Data")
+        lats = element.find("Latitude")
+        lons = element.find("Longitude")
+        if any(node is None or node.text is None for node in (data, lats, lons)):
+            logging.debug("incomplete linear section data, skipping")
+            continue
+        title = element.find("Title")
+        name = title.text if title is not None and title.text else "Data"
+        # The name identifies the column, therefore it has to be unique.
+        unique_name = name
+        suffix = 1
+        while unique_name in names:
+            suffix += 1
+            unique_name = f"{name} ({suffix})"
+        names.add(unique_name)
+
+        columns.append({
+            "name": unique_name,
+            "unit": data.attrib.get("unit", ""),
+            "values": values_at_waypoints(
+                [float(value) for value in lats.text.split(",")],
+                [float(value) for value in lons.text.split(",")],
+                [float(value) for value in data.text.split(",")],
+                waypoints),
+        })
+    return columns
 
 
 def load_from_xml_data(xml_content, name="Flight track"):
@@ -156,6 +241,10 @@ class Waypoint:
         self.wpnumber_major = None
         self.wpnumber_minor = None
 
+        # Data values retrieved by the linear view for the position of this
+        # waypoint (column name -> value).
+        self.linear_data = {}
+
     def __str__(self):
         """
         String representation of the waypoint (e.g., when used with the print
@@ -179,6 +268,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
     # Signal emitted when a waypoint is moved, inserted or deleted
     changeMessageSignal = QtCore.pyqtSignal(str)
+    # Signal emitted when the data columns filled by the linear view have
+    # changed. This is deliberately not the dataChanged() signal, as the data
+    # does not belong to the flight plan itself and must not trigger a redraw
+    # of the flight path or an update of an MSColab operation.
+    linearDataChanged = QtCore.pyqtSignal()
 
     def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False,
                  data_dir=config_loader(dataset="mss_dir"),
@@ -191,6 +285,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         self.waypoints = []  # user-defined waypoints
         # file-save events are handled in a different manner
         self.mscolab_mode = mscolab_mode
+
+        # Data columns filled by the linear view, a list of (name, unit)
+        # tuples. The values themselves are stored per waypoint.
+        self.linear_data_columns = []
+        self.linear_data_visible = False
 
         # self.aircraft.setErrorHandling("permissive")
         self.settings_tag = "performance"
@@ -235,7 +334,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         table = TABLE_SHORT
         if self.performance_settings["visible"]:
             table = TABLE_FULL
-        if table[column][2]:
+        # The data columns of the linear view are read only.
+        if column < LINEAR_DATA_COLUMN and table[column][2]:
             return QtCore.Qt.ItemFlags(
                 int(QtCore.QAbstractTableModel.flags(self, index) |
                     QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsDragEnabled |
@@ -263,6 +363,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         waypoint = waypoints[index.row()]
         column = index.column()
         if role == QtCore.Qt.DisplayRole:
+            if column >= LINEAR_DATA_COLUMN:
+                return QtCore.QVariant(self.linear_data_value(waypoint, column))
             if self.performance_settings["visible"]:
                 return QtCore.QVariant(TABLE_FULL[column][1](waypoint))
             else:
@@ -310,6 +412,12 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             return QtCore.QVariant()
         # Return the names of the table columns.
         if orientation == QtCore.Qt.Horizontal:
+            if section >= LINEAR_DATA_COLUMN:
+                columns = self.visible_linear_data_columns()
+                if not 0 <= section - LINEAR_DATA_COLUMN < len(columns):
+                    return QtCore.QVariant()
+                name, unit = columns[section - LINEAR_DATA_COLUMN]
+                return QtCore.QVariant(f"{name}\n({unit})" if unit else name)
             if self.performance_settings["visible"]:
                 return QtCore.QVariant(TABLE_FULL[section][0])
             else:
@@ -325,7 +433,102 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         return len(self.waypoints)
 
     def columnCount(self, index=QtCore.QModelIndex()):
-        return len(TABLE_FULL)
+        return LINEAR_DATA_COLUMN + len(self.visible_linear_data_columns())
+
+    def visible_linear_data_columns(self):
+        """
+        Return the (name, unit) tuples of the data columns of the linear view
+        that are currently appended to the table.
+        """
+        return self.linear_data_columns if self.linear_data_visible else []
+
+    def linear_data_value(self, waypoint, column):
+        """
+        Return the value of the linear view data column <column> at the given
+        waypoint, formatted for display. Waypoints without data (e.g. because
+        the aircraft is on the ground) give an empty string.
+        """
+        columns = self.visible_linear_data_columns()
+        if not 0 <= column - LINEAR_DATA_COLUMN < len(columns):
+            return ""
+        value = waypoint.linear_data.get(columns[column - LINEAR_DATA_COLUMN][0])
+        return "" if value is None else f"{value:.4g}"
+
+    def set_linear_data_visible(self, visible):
+        """
+        Show or hide the data columns filled by the linear view.
+        """
+        visible = bool(visible)
+        if visible == self.linear_data_visible:
+            return
+        count = len(self.linear_data_columns)
+        if count == 0:
+            self.linear_data_visible = visible
+        elif visible:
+            self.beginInsertColumns(QtCore.QModelIndex(), LINEAR_DATA_COLUMN, LINEAR_DATA_COLUMN + count - 1)
+            self.linear_data_visible = True
+            self.endInsertColumns()
+        else:
+            self.beginRemoveColumns(QtCore.QModelIndex(), LINEAR_DATA_COLUMN, LINEAR_DATA_COLUMN + count - 1)
+            self.linear_data_visible = False
+            self.endRemoveColumns()
+        self.linearDataChanged.emit()
+
+    def set_linear_data(self, columns):
+        """
+        Store the data retrieved by the linear view.
+
+        Arguments:
+        columns -- list of dictionaries with the keys "name", "unit" and
+                   "values", where "values" contains one value per waypoint
+                   (None where no data is available). The names have to be
+                   unique, they identify the columns. See
+                   linear_data_columns().
+        """
+        for i, waypoint in enumerate(self.waypoints):
+            waypoint.linear_data = {
+                column["name"]: column["values"][i] for column in columns
+                if i < len(column["values"]) and column["values"][i] is not None}
+        self._set_linear_data_columns([(column["name"], column["unit"]) for column in columns])
+
+    def set_linear_data_from_xml(self, xmls):
+        """
+        Store the linear section data of the given WMS responses, see
+        linear_data_columns().
+        """
+        self.set_linear_data(linear_data_columns(xmls, self.waypoints))
+
+    def clear_linear_data(self):
+        """
+        Drop all data retrieved by the linear view.
+        """
+        for waypoint in self.waypoints:
+            waypoint.linear_data = {}
+        self._set_linear_data_columns([])
+
+    def _set_linear_data_columns(self, columns):
+        """
+        Adapt the table to the given list of (name, unit) data columns and
+        notify the connected views.
+        """
+        previous = len(self.linear_data_columns)
+        count = len(columns)
+        if not self.linear_data_visible or previous == count:
+            self.linear_data_columns = columns
+        elif count > previous:
+            self.beginInsertColumns(
+                QtCore.QModelIndex(), LINEAR_DATA_COLUMN + previous, LINEAR_DATA_COLUMN + count - 1)
+            self.linear_data_columns = columns
+            self.endInsertColumns()
+        else:
+            self.beginRemoveColumns(
+                QtCore.QModelIndex(), LINEAR_DATA_COLUMN + count, LINEAR_DATA_COLUMN + previous - 1)
+            self.linear_data_columns = columns
+            self.endRemoveColumns()
+        if self.linear_data_visible and count > 0:
+            self.headerDataChanged.emit(
+                QtCore.Qt.Horizontal, LINEAR_DATA_COLUMN, LINEAR_DATA_COLUMN + count - 1)
+        self.linearDataChanged.emit()
 
     def setData(self, index, value, role=QtCore.Qt.EditRole, update=True):
         """
