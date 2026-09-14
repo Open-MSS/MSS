@@ -316,6 +316,15 @@ class SocketsManager:
     def emit_operation_delete(self, op_id):
         self.socketio.emit(SocketEvents.OPERATION_DELETED, json.dumps({"op_id": op_id}))
 
+    def emit_operation_list_update(self):
+        """
+        Broadcasts that operation lists may be stale, e.g. after an operation was
+        archived. Unlike update_operation_list, this doesn't require a client token
+        since it's also called from the internal admin notify endpoint on behalf of
+        the CLI, which has no client session.
+        """
+        self.socketio.emit(SocketEvents.UPDATE_OPERATION_LIST)
+
 
 def _setup_managers(app):
     """

@@ -10,8 +10,10 @@ Global map: ../../ARCHITECTURE.md
   HTTP basic auth and the socket.io managers to the app
 - `app/__init__.py` — `create_app()` factory (config, extensions, blueprints)
   and `initialise_db()`; there is no module level app instance
-- `blueprints/{operation,auth,chat,user,docs}/` — all ~50 REST routes; keep
-  handlers thin, business logic belongs in the managers
+- `blueprints/{operation,auth,chat,user,docs,admin}/` — all ~50 REST routes; keep
+  handlers thin, business logic belongs in the managers. `admin` is
+  token-authenticated (`ADMIN_TOKEN`) and localhost-only, not per-user — it's the
+  CLI's only way to trigger a socket.io event on the live server (see `cli_notify.py`)
 - `file_manager.py` — operations/permissions/versioning (git-backed) — core
 - `chat_manager.py`, `sockets_manager.py` — chat + socket.io event handlers;
   `_setup_managers(app)` builds a SocketIO instance per app, never a shared one
@@ -20,6 +22,10 @@ Global map: ../../ARCHITECTURE.md
   modules the GUI client may import; they define the shared vocabulary
 - `conf.py` — `DefaultSettings`; overridden by a `mscolab_settings` module
 - `mscolab.py` — CLI (`mscolab start|db --init|--seed|--reset`); `seed.py` — demo data
+- `cli_notify.py` — best-effort HTTP call from CLI actions in `seed.py` to the
+  running server's `admin` blueprint, so connected clients get the same socket.io
+  events a REST-triggered equivalent action would emit; no-ops if the server isn't
+  reachable (e.g. `db --seed` before any server has started)
 
 ## May import
 
