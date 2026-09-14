@@ -33,7 +33,8 @@ from datetime import datetime
 import mock
 import pytest
 
-from mslib.mswms.dataaccess import DefaultDataAccess, CachedDataAccess, WatchModificationDataAccess
+from mslib.mswms.dataaccess import (
+    DefaultDataAccess, CachedDataAccess, WatchModificationDataAccess, _file_fingerprint)
 from tests.constants import MSWMS_DATA_DIR
 
 ML_FILE = "20121017_12_ecmwf_forecast.P_derived.EUR_LL015.036.ml.nc"
@@ -125,8 +126,9 @@ class Test_CachedDataAccess(Test_DefaultDataAccess):
         self.dut._add_to_filetree = mock.MagicMock()
         n = len(self.dut.get_all_datafiles())
         fn = list(self.dut._file_cache.keys())[0]
+        size, ino, mtime_ns = self.dut._file_cache[fn][0]
         self.dut._file_cache[fn] = (
-            self.dut._file_cache[fn][0] + 1,
+            (size, ino, mtime_ns + 1),
             self.dut._file_cache[fn][1])
         self.dut.setup()
         self.dut._parse_file.assert_called_once_with(fn)
@@ -246,7 +248,7 @@ class Test_DefaultDataAccessReload:
 class Test_WatchModificationDataAccessReload:
     """
     Tests the reload mechanism of WatchModificationDataAccess, which additionally
-    watches the modification times of the files it has already read.
+    watches the files it has already read for changes.
     """
 
     @pytest.fixture(autouse=True)
@@ -270,12 +272,13 @@ class Test_WatchModificationDataAccessReload:
 
     def test_modified_file_triggers_reload(self):
         """A file modified after the last read is re-read on the next request."""
-        mtime = self._touch(ML_FILE)
+        self._touch(ML_FILE)
+        path = os.path.join(self.data_dir, ML_FILE)
 
         with mock.patch.object(self.dut, "setup", wraps=self.dut.setup) as setup:
             assert self.dut.get_filename("air_pressure", "ml", INIT_TIME, VALID_TIME) == ML_FILE
             setup.assert_called_once_with()
-        assert self.dut._file_cache[ML_FILE][0] == mtime
+        assert self.dut._file_cache[ML_FILE][0] == _file_fingerprint(path)
 
     def test_new_file_triggers_reload(self):
         _copy_datafile(SFC_FILE, self.data_dir)
@@ -306,14 +309,23 @@ class Test_WatchModificationDataAccessReload:
 
     def test_is_reload_required_modified(self):
         """A modified file reports a reload once, the rescan makes the next check quiet."""
-        mtime = self._touch(ML_FILE)
+        self._touch(ML_FILE)
         fullpath = os.path.join(self.data_dir, ML_FILE)
 
         with mock.patch.object(self.dut, "setup", wraps=self.dut.setup) as setup:
             assert self.dut.is_reload_required([fullpath]) is True
             setup.assert_called_once_with()
-        assert self.dut._file_cache[ML_FILE][0] == mtime
+        assert self.dut._file_cache[ML_FILE][0] == _file_fingerprint(fullpath)
         assert self.dut.is_reload_required([fullpath]) is False
+
+    def test_is_reload_required_detects_change_with_unchanged_mtime(self):
+        """A size change is still detected even if mtime is preserved (the mtime-only bug, #2123)."""
+        fullpath = os.path.join(self.data_dir, ML_FILE)
+        original_mtime = os.path.getmtime(fullpath)
+        with open(fullpath, "ab") as f:
+            f.write(b"\0" * 64)
+        os.utime(fullpath, (original_mtime, original_mtime))
+        assert self.dut.is_reload_required([fullpath]) is True
 
     def test_is_reload_required_removed(self):
         os.remove(os.path.join(self.data_dir, ML_FILE))

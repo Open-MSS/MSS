@@ -38,6 +38,17 @@ from mslib.utils import netCDF4tools
 from mslib.utils.units import units
 
 
+def _file_fingerprint(path):
+    """
+    A cheaper, more reliable proxy for "did this file change" than mtime alone:
+    combines size, inode and mtime (nanosecond resolution) from a single stat()
+    call, so replacing a file (new inode) or changing its size is caught even
+    when mtime doesn't move.
+    """
+    st = os.stat(path)
+    return (st.st_size, st.st_ino, st.st_mtime_ns)
+
+
 class NWPDataAccess(metaclass=ABCMeta):
     """Abstract superclass providing a framework to let the user query
        in which data file a given variable at a given time can be found.
@@ -349,8 +360,8 @@ class DefaultDataAccess(NWPDataAccess):
 
         # Build the tree structure.
         for filename in self._available_files:
-            mtime = os.path.getmtime(os.path.join(self._root_path, filename))
-            if (filename in self._file_cache) and (mtime == self._file_cache[filename][0]):
+            fingerprint = _file_fingerprint(os.path.join(self._root_path, filename))
+            if (filename in self._file_cache) and (fingerprint == self._file_cache[filename][0]):
                 logging.info("Using cached candidate '%s'", filename)
                 content = self._file_cache[filename][1]
                 if content["vert_type"] != "sfc":
@@ -372,7 +383,7 @@ class DefaultDataAccess(NWPDataAccess):
                 except IOError as ex:
                     logging.error("Skipping file '%s' (%s: %s)", filename, type(ex), ex)
                     continue
-                self._file_cache[filename] = (mtime, content)
+                self._file_cache[filename] = (fingerprint, content)
                 if content["vert_type"] not in self._elevations:
                     self._elevations[content["vert_type"]] = content["elevations"]
             self._add_to_filetree(filename, content)
@@ -448,8 +459,8 @@ class WatchModificationDataAccess(DefaultDataAccess):
         assert self._filetree is not None, "filetree is None. Forgot to call setup()?"
         try:
             filename = self._filetree[vartype][init_time][variable][valid_time]
-            mtime = os.path.getmtime(os.path.join(self._root_path, filename))
-            if filename in self._file_cache and mtime == self._file_cache[filename][0]:
+            fingerprint = _file_fingerprint(os.path.join(self._root_path, filename))
+            if filename in self._file_cache and fingerprint == self._file_cache[filename][0]:
                 return filename
             raise KeyError
         except (KeyError, OSError) as ex:
@@ -470,8 +481,8 @@ class WatchModificationDataAccess(DefaultDataAccess):
                 fullname = os.path.join(self._root_path, basename)
                 if not os.path.exists(fullname):
                     raise OSError
-                mtime = os.path.getmtime(fullname)
-                if mtime != self._file_cache[basename][0]:
+                fingerprint = _file_fingerprint(fullname)
+                if fingerprint != self._file_cache[basename][0]:
                     raise OSError
         except OSError:
             self.setup()
