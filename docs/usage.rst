@@ -19,6 +19,33 @@ interface (top view and side view).
 
 .. _msui-configuration:
 
+HINT Changes Version 12
+-----------------------
+
+Default storage directories now follow the XDG convention (via the `platformdirs`
+library) instead of being hardcoded relative to your home directory:
+
+ - ``data_dir`` (flight tracks, exported plots) now defaults to ``~/Documents/mss``
+   instead of ``~/mssdata``.
+ - The mscolab local operations mirror now has its own config key,
+   ``mscolab_local_data_dir``, which defaults to your XDG data directory
+   (e.g. ``~/.local/share/msui/mss`` on Linux) instead of ``~/mss``. If your
+   msui_settings.json still had the old ``mss_dir`` key, it is renamed to
+   ``mscolab_local_data_dir`` automatically the next time msui starts, and the
+   previous file is kept as a ``.bak`` backup.
+
+These are only the *default* locations used when a value isn't set. If you rely on
+the previous defaults, e.g. because you already have flight tracks stored in
+``~/mssdata`` or a local mscolab mirror in ``~/mss``, add the paths explicitly to
+your msui_settings.json to keep using them::
+
+    {
+        "data_dir": "~/mssdata",
+        "mscolab_local_data_dir": "~/mss"
+    }
+
+Existing files are never moved automatically.
+
 HINT Changes Version 11
 -----------------------
 
@@ -54,7 +81,7 @@ by the environment variable MSUI_SETTINGS pointing to your msui_settings.json.
 File I/O
 ........
 
-The default data dir is predefined as a directory: `~/mssdata`.
+The default data dir is predefined as a directory: `~/Documents/mss` (see :ref:`msui-configuration`).
 
 
 

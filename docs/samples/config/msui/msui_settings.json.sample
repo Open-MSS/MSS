@@ -1,6 +1,6 @@
 
 {
-    "data_dir": "~/mssdata",
+    "data_dir": "~/Documents/mss",
     "filepicker_default": "default",
 
     "import_plugins": {
