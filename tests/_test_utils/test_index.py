@@ -24,6 +24,16 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from tests.server_setup import ensure_mscolab_config
+
+# Must run before mslib.mscolab.server is imported: it binds its SQLAlchemy
+# URI from mscolab_settings at import time.
+ensure_mscolab_config()
+
+# Import side effect: mslib.mscolab.server calls create_app() at module scope,
+# which registers the blueprints (docs/xstatic among them) onto the shared
+# mslib.mscolab.app.APP Flask instance that this test then exercises.
+import mslib.mscolab.server  # noqa: E402,F401
 from mslib.mscolab import app
 
 
