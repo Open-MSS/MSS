@@ -514,7 +514,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             "Save JSON File",
-            const.MSUI_CONFIG_PATH,
+            const.MSUI_CONFIG_SYSPATH,
             "JSON Files (*.json);;All Files (*)",
             options=options
         )
