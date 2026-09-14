@@ -445,14 +445,17 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     def linear_data_value(self, waypoint, column):
         """
         Return the value of the linear view data column <column> at the given
-        waypoint, formatted for display. Waypoints without data (e.g. because
-        the aircraft is on the ground) give an empty string.
+        waypoint, rounded to four significant digits. As for the other numeric
+        columns this is the number itself, not a preformatted string, so that
+        the table and the clipboard copy write it with the decimal point of
+        the locale of the user. Waypoints without data (e.g. because the
+        aircraft is on the ground) give an empty string.
         """
         columns = self.visible_linear_data_columns()
         if not 0 <= column - LINEAR_DATA_COLUMN < len(columns):
             return ""
         value = waypoint.linear_data.get(columns[column - LINEAR_DATA_COLUMN][0])
-        return "" if value is None else f"{value:.4g}"
+        return "" if value is None else float(f"{value:.2f}")
 
     def set_linear_data_visible(self, visible):
         """
