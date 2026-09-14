@@ -35,6 +35,9 @@ class Ui_TableViewWindow(object):
         self.verticalLayout.addWidget(self.tableWayPoints)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
+        self.btCopyToClipboard = QtWidgets.QToolButton(self.centralwidget)
+        self.btCopyToClipboard.setObjectName("btCopyToClipboard")
+        self.horizontalLayout.addWidget(self.btCopyToClipboard)
         self.cbTools = QtWidgets.QComboBox(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -82,6 +85,8 @@ class Ui_TableViewWindow(object):
     def retranslateUi(self, TableViewWindow):
         _translate = QtCore.QCoreApplication.translate
         TableViewWindow.setWindowTitle(_translate("TableViewWindow", "Table View - Mission Support System"))
+        self.btCopyToClipboard.setToolTip(_translate("TableViewWindow", "Copy table as CSV to clipboard (Ctrl+C)"))
+        self.btCopyToClipboard.setText(_translate("TableViewWindow", "Copy"))
         self.cbTools.setItemText(0, _translate("TableViewWindow", "(select to open control)"))
         self.cbShowLinearData.setToolTip(_translate("TableViewWindow", "Show a column with the data values of the linear view at each waypoint"))
         self.cbShowLinearData.setText(_translate("TableViewWindow", "show data"))

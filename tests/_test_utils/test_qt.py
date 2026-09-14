@@ -76,6 +76,11 @@ def test_variant_to_float():
     for value, string in [(5, "5"), (5.5, "5,5"), (1000, "1.000")]:
         conv_value = mqt.variant_to_float(pqt.QtCore.QVariant(string), locale=german_locale)
         assert conv_value == value
+    # A plain "." decimal point is accepted even under a locale that
+    # expects a comma, e.g. text handed back unmodified by QItemDelegate's
+    # default setEditorData, which does not reformat it for the locale.
+    conv_value = mqt.variant_to_float(pqt.QtCore.QVariant("40.66"), locale=german_locale)
+    assert conv_value == 40.66
     french_locale = pqt.QtCore.QLocale(pqt.QtCore.QLocale.French)
     for value, string in [(5, "5"), (5.5, "5,5"), (1000, "1 000")]:
         conv_value = mqt.variant_to_float(pqt.QtCore.QVariant(string), locale=french_locale)

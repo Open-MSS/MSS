@@ -36,9 +36,9 @@ import types
 
 from mslib.msui import hexagon_dockwidget as hex_dock
 from mslib.msui import performance_settings as perfset
-from PyQt5 import QtWidgets, QtGui
+from PyQt5 import QtCore, QtWidgets, QtGui
 from mslib.msui.qt5 import ui_tableview_window as ui
-from mslib.utils.qt import dropEvent, dragEnterEvent
+from mslib.utils.qt import dropEvent, dragEnterEvent, table_to_csv_clipboard
 from mslib.msui import flighttrack as ft
 from mslib.msui.viewwindows import MSUIViewWindow
 from mslib.msui.icons import icons
@@ -65,6 +65,11 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
         self.settings_tag = "tableview"
+
+        self.btCopyToClipboard.setIcon(QtGui.QIcon(icons('32x32', 'copy_image.png')))
+        self.btCopyToClipboard.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
+        self.btCopyToClipboard.setShortcut(QtGui.QKeySequence.Copy)
+        self.btCopyToClipboard.clicked.connect(self.copy_table_to_clipboard)
 
         # Tooltip of <cbShowLinearData> while it is usable, a different one
         # explains the greyed out checkbox.
@@ -316,6 +321,14 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
 
     def update_roundtrip_enabled(self):
         self.btRoundtrip.setEnabled(self.is_roundtrip_possible())
+
+    def copy_table_to_clipboard(self):
+        """
+        Copy the currently displayed table content to the system clipboard
+        as CSV, so it can be pasted into a spreadsheet, or any other
+        application, without saving it to disk first.
+        """
+        table_to_csv_clipboard(self.tableWayPoints)
 
     def resizeColumns(self):
         for column in range(self.waypoints_model.columnCount()):

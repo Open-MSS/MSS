@@ -52,6 +52,16 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
+       <widget class="QToolButton" name="btCopyToClipboard">
+        <property name="toolTip">
+         <string>Copy table as CSV to clipboard (Ctrl+C)</string>
+        </property>
+        <property name="text">
+         <string>Copy</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QComboBox" name="cbTools">
         <property name="sizePolicy">
          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">

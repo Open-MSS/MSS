@@ -25,6 +25,7 @@
     limitations under the License.
 """
 
+import csv
 import io
 import logging
 import os
@@ -135,6 +136,12 @@ def variant_to_float(variant, locale=QtCore.QLocale()):
         logging.error("Unexpected type in float conversion: %s=%s",
                       type(value), value)
         float_value = float(value)
+    except ValueError:
+        # Not parseable with the locale's decimal point, e.g. a plain "."
+        # on a locale that expects a "," (QItemDelegate's default
+        # setEditorData does not reformat the value for the locale).
+        # Fall back to Python's locale-independent parser.
+        float_value = float(value)
     return float_value
 
 
@@ -186,6 +193,45 @@ def figure_to_clipboard(figure):
     figure.savefig(buf, format="png")
     image = QtGui.QImage.fromData(buf.getvalue(), "PNG")
     QtWidgets.QApplication.clipboard().setImage(image)
+
+
+def table_to_csv_clipboard(view):
+    """
+    Copy the content of a QTableView to the system clipboard as CSV text, so
+    it can be pasted into a spreadsheet, or any other application, without
+    saving it to disk first. Columns that are empty in every row are left
+    out, e.g. those hidden behind a collapsed performance settings view.
+
+    Numbers are formatted with the system locale's decimal point, the same
+    one Qt's item views use to display a raw int/float value, so the copy
+    matches what is shown on screen. Where that decimal point is a comma,
+    the field delimiter switches to ";" (the usual European CSV/Excel
+    convention) so the text stays unambiguous to parse.
+    """
+    model = view.model()
+    rows = range(model.rowCount())
+    locale = QtCore.QLocale()
+
+    def cell_text(row, column):
+        variant = model.index(row, column).data()
+        value = variant.value() if isinstance(variant, QtCore.QVariant) else variant
+        if isinstance(value, bool):
+            return str(value)
+        if isinstance(value, (int, float)):
+            return locale.toString(value)
+        return str(value)
+
+    columns = [column for column in range(model.columnCount())
+               if any(cell_text(row, column).strip() for row in rows)]
+    delimiter = ";" if locale.decimalPoint() == "," else ","
+    buf = io.StringIO()
+    csv_writer = csv.writer(buf, delimiter=delimiter)
+    csv_writer.writerow(
+        [variant_to_string(model.headerData(column, QtCore.Qt.Horizontal)).replace("\n", " ")
+         for column in columns])
+    for row in rows:
+        csv_writer.writerow([cell_text(row, column) for column in columns])
+    QtWidgets.QApplication.clipboard().setText(buf.getvalue())
 
 
 def show_popup(parent, title, message, icon=0):
