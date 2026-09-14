@@ -53,7 +53,7 @@ from mslib.msui.qt5 import ui_wms_password_dialog as ui_pw
 from mslib.utils.qt import Worker
 from mslib.msui.multilayers import Multilayers, Layer
 import mslib.utils.ogcwms as ogcwms
-from mslib.utils.service_manager import WMSServiceManager
+from mslib.utils.service_manager import WMSServiceManager, strip_request_params
 from mslib.utils.time import parse_iso_datetime, parse_iso_duration
 from mslib.utils.auth import save_password_to_keyring, get_auth_from_url_and_name
 from mslib.utils.config import modify_config_file
@@ -988,11 +988,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         def on_success(request):
             self.cpdlg.setValue(5)
-            # url shortener url translated
-            url = request.url
-
-            url = url.replace("?service=WMS", "").replace("&service=WMS", "") \
-                .replace("?request=GetCapabilities", "").replace("&request=GetCapabilities", "")
+            # url shortener url translated, service specific parameters are kept
+            url = strip_request_params(request.url)
             logging.debug("requesting capabilities from %s", url)
             self.initialise_wms(url, None, level=level)
 
