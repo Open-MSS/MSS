@@ -180,7 +180,7 @@ class Test_TableView:
             column, QtCore.Qt.Horizontal).value() == "Mole fraction of ozone (Linear)\n(ppmv)"
         # no values where the aircraft is on the ground
         assert [model.data(model.index(row, column)).value() for row in range(model.rowCount())] == \
-            ["", "0.05", "0.06", "0.07", ""]
+            ["", 0.05, 0.06, 0.07, ""]
 
         QtTest.QTest.mouseClick(self.window.cbShowLinearData, QtCore.Qt.LeftButton)
         assert not self.window.cbShowLinearData.isChecked()
@@ -220,9 +220,9 @@ class Test_TableView:
         assert [other.headerData(column + i, QtCore.Qt.Horizontal).value() for i in range(2)] == \
             ["Ozone\n(ppmv)", "Water vapour\n(ppmv)"]
         assert [other.data(other.index(row, column)).value() for row in range(other.rowCount())] == \
-            ["0.1", "0.2", "0.3"]
+            [0.1, 0.2, 0.3]
         assert [other.data(other.index(row, column + 1)).value() for row in range(other.rowCount())] == \
-            ["1", "2", ""]
+            [1., 2., ""]
 
         # the data of the other flight track is hidden again on demand
         QtTest.QTest.mouseClick(self.window.cbShowLinearData, QtCore.Qt.LeftButton)
@@ -316,7 +316,7 @@ class Test_TableView:
         assert self.window.cbShowLinearData.isChecked()
         assert other.columnCount() == 16
         assert [other.data(other.index(row, ft.LINEAR_DATA_COLUMN)).value()
-                for row in range(other.rowCount())] == ["0.1", "0.2"]
+                for row in range(other.rowCount())] == [0.1, 0.2]
 
         # ... and the same when switching back to the first flight track
         other.clear_linear_data()
@@ -326,7 +326,7 @@ class Test_TableView:
         assert self.window.cbShowLinearData.isChecked()
         assert model.columnCount() == 16
         assert [model.data(model.index(row, ft.LINEAR_DATA_COLUMN)).value()
-                for row in range(model.rowCount())] == ["", "0.05", "0.06", "0.07", ""]
+                for row in range(model.rowCount())] == ["", 0.05, 0.06, 0.07, ""]
 
     def test_show_linear_data_not_wanted_stays_hidden_on_switch(self):
         """

@@ -158,7 +158,7 @@ class Test_LinearData:
             LINEAR_DATA_COLUMN, QtCore.Qt.Horizontal).value() == "Mole fraction of ozone (Linear)\n(ppmv)"
         values = [self.model.data(self.model.index(row, LINEAR_DATA_COLUMN)).value()
                   for row in range(self.model.rowCount())]
-        assert values == ["", "10", "20", ""]
+        assert values == ["", 10., 20., ""]
         # The data columns cannot be edited.
         assert not self.model.flags(self.model.index(0, LINEAR_DATA_COLUMN)) & QtCore.Qt.ItemIsEditable
 
@@ -171,7 +171,7 @@ class Test_LinearData:
         self.model.insertRows(0, waypoints=[Waypoint(10., 10., 0.)])
         values = [self.model.data(self.model.index(row, LINEAR_DATA_COLUMN)).value()
                   for row in range(self.model.rowCount())]
-        assert values == ["", "", "10", "20", ""]
+        assert values == ["", "", 10., 20., ""]
 
     def test_clear_linear_data(self):
         self.model.set_linear_data_from_xml([lsec_xml()])
