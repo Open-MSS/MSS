@@ -139,19 +139,24 @@ class MSSPlotDriver(metaclass=ABCMeta):
         # requested time:
 
         # Create the names of the files containing the required parameters.
-        self.filenames = []
+        # Resolved into a local list first and only assigned to self.filenames once
+        # complete, so that a failed lookup (e.g. for an unavailable variable or time)
+        # does not leave self.filenames in a partial state for the next request to
+        # reuse this driver instance.
+        filenames = []
         for vartype, var, _ in self.plot_object.required_datafields:
             filename = self.data_access.get_filename(
                 var, vartype, init_time, fc_time, fullpath=True)
-            if filename not in self.filenames:
-                self.filenames.append(filename)
+            if filename not in filenames:
+                filenames.append(filename)
             logging.debug("\tvariable '%s' requires input file '%s'",
                           var, os.path.basename(filename))
 
-        if len(self.filenames) == 0:
+        if len(filenames) == 0:
             raise ValueError("no files found that correspond to the specified "
                              "datafields. Aborting..")
 
+        self.filenames = filenames
         self.init_time = init_time
 
         # Open NetCDF files as one dataset with common dimensions.
