@@ -185,6 +185,31 @@ def get_latlon_data(ncfile, autoreverse=True):
     return lat_data, lon_data, lat_order
 
 
+def _identify_aggregation_dim(dataset, exclude):
+    """
+    Identify a dimension of an open netCDF4.Dataset that can serve as
+    aggregation dimension of a netCDF4.MFDataset.
+
+    netCDF4.MFDataset insists on a dimension along which the variables of the
+    files of the set are concatenated, and this dimension has to be the
+    leftmost dimension of at least one variable. MFDatasetCommonDims does not
+    concatenate anything (all its files share the same dimensions), it
+    nevertheless has to name such a dimension when calling the constructor of
+    its base class. An unlimited dimension is preferred, as this is the
+    dimension the base class would choose itself.
+
+    Returns None if no suitable dimension exists, leaving the error reporting
+    to the base class.
+    """
+    for dim_name, dim in dataset.dimensions.items():
+        if dim.isunlimited():
+            return dim_name
+    for var_name, variable in dataset.variables.items():
+        if var_name not in exclude and len(variable.dimensions) > 0:
+            return variable.dimensions[0]
+    return None
+
+
 class MFDatasetCommonDims(netCDF4.MFDataset):
     """MFDatasetCommonDims(self, files, exclude=[], require_dim_num=False)
 
@@ -235,9 +260,6 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         GRIB1/2 files. (mr 03Aug2012)
         @param require_dim_num: see above.
         """
-        # Open the master file in the base class, so that the CDFMF instance
-        # can be used like a CDF instance.
-
         exclude = exclude or []
         skip_dim_check = skip_dim_check or []
         if isinstance(files, str):
@@ -245,11 +267,20 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
 
         master = files[0]
 
-        # Open the master again, this time as a classic CDF instance. This will avoid
-        # calling methods of the CDFMF subclass when querying the master file.
-        cdfm = netCDF4.Dataset(master)
-        # copy attributes from master.
-        self.__dict__.update(cdfm.__dict__)
+        # Open the master file in the base class, so that this instance can be
+        # used like a Dataset of the master file: the base class copies the
+        # attributes of the master and sets up the dimensions, the variables
+        # and the file format information of this instance.
+        # Only the master is handed over, because netCDF4.MFDataset joins the
+        # *equally* named variables of all files of the set along an
+        # aggregation dimension, while this class joins the *differently* named
+        # variables of files that all share the same dimensions. The
+        # aggregation dimension required by the base class is looked up in
+        # advance, as the master is not open yet at this point.
+        with netCDF4.Dataset(master) as cdf_master:
+            aggdim = _identify_aggregation_dim(cdf_master, exclude)
+        super().__init__([master], exclude=exclude, aggdim=aggdim)
+        cdfm = self._cdf[0]
 
         # Get names of master dimensions.
         masterDims = list(cdfm.dimensions.keys())
@@ -259,16 +290,21 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
                 raise IOError(f"dimension '{dimName}' has no coordinate variable in master '{master}'")
 
         # Create the following:
-        #   cdf       list of Dataset instances
         #   cdfVar    dictionary indexed by the variable names
-        cdf = [cdfm]
-        self._cdf = cdf  # Store this now, because dim() method needs it
+        #   cdfOrigin dictionary of (file name, Dataset instance), indexed by
+        #             the variable names
+        # The base class has replaced the variables spanning the aggregation
+        # dimension by wrappers that concatenate the data of all files of the
+        # set. As nothing is concatenated here, the plain variables of the
+        # master are used instead (the wrappers do not support negative
+        # strides, which are used to reorder data fields). Variables excluded
+        # from the aggregation are not part of this dataset at all.
         cdfVar = {}
         cdfOrigin = {}
         for vName, v in cdfm.variables.items():
             if vName in exclude:
                 continue
-            cdfVar[vName] = v
+            cdfVar[vName] = self._cdfRecVar[vName][0] if vName in self._cdfRecVar else v
             cdfOrigin[vName] = (master, cdfm)
         if len(cdfVar) == 0:
             raise IOError(f"master dataset '{master}' does not have any variable")
@@ -296,6 +332,11 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
                     raise IOError("number of dimensions not consistent in master "
                                   f"'{master}' and '{f}'")
 
+            if part.file_format == "NETCDF4":
+                raise ValueError("MFNetCDF4 only works with NETCDF3_CLASSIC, "
+                                 "NETCDF3_64BIT and NETCDF4_CLASSIC "
+                                 "formatted files, not NETCDF4")
+
             for vName, v in part.variables.items():
                 # Exclude dimension variables.
                 if (vName in exclude) or (vName in masterDims):
@@ -303,19 +344,15 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
                 cdfVar[vName] = v
                 cdfOrigin[vName] = (f, part)
 
-            cdf.append(part)
+            # Register the file in the same way as the base class does it for
+            # the master.
+            self._cdf.append(part)
+            self._file_format.append(part.file_format)
+            self._data_model.append(part.data_model)
+            self._disk_format.append(part.disk_format)
 
         # Attach attributes to the MFDataset instance.
         # A local __setattr__() method is required for them.
         self._files = files  # list of cdf file names in the set
-        self._dims = cdfm.dimensions
         self._vars = cdfVar
         self._cdfOrigin = cdfOrigin
-
-        self._file_format = []
-        for dset in self._cdf:
-            if dset.file_format == "NETCDF4":
-                raise ValueError("MFNetCDF4 only works with NETCDF3_CLASSIC, "
-                                 "NETCDF3_64BIT and NETCDF4_CLASSIC "
-                                 "formatted files, not NETCDF4")
-            self._file_format.append(dset.file_format)
