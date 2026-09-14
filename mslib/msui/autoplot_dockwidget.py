@@ -282,7 +282,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         options |= QFileDialog.DontUseNativeDialog
 
         fileName, _ = QFileDialog.getOpenFileName(
-            self, "Select .json Config File", const.MSUI_CONFIG_PATH, "JSON Files (*.json)", options=options)
+            self, "Select .json Config File", const.MSUI_CONFIG_SYSPATH, "JSON Files (*.json)", options=options)
 
         if fileName != "":
             self.cpath = fileName
