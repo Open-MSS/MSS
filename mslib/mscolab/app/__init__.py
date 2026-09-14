@@ -217,12 +217,15 @@ def create_app(imprint=None, gdpr=None):
     APP.jinja_env.globals["gdpr"] = gdpr_file or ""
     APP.jinja_env.globals.update(get_topmenu=get_topmenu)
 
+    from mslib.mscolab.blueprints.admin import ADMIN_BP
     from mslib.mscolab.blueprints.auth import AUTH_BP
     from mslib.mscolab.blueprints.chat import CHAT_BP
     from mslib.mscolab.blueprints.operation import OPERATION_BP
     from mslib.mscolab.blueprints.user import USER_BP
     from mslib.mscolab.blueprints.docs import DOCS_BP
 
+    if ADMIN_BP.name not in APP.blueprints:
+        APP.register_blueprint(ADMIN_BP)
     if AUTH_BP.name not in APP.blueprints:
         APP.register_blueprint(AUTH_BP)
     if CHAT_BP.name not in APP.blueprints:

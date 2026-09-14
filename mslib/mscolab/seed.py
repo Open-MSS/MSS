@@ -30,6 +30,8 @@ from pathlib import Path
 from sqlalchemy.exc import IntegrityError
 
 from mslib.mscolab.app import APP
+from mslib.mscolab.cli_notify import notify_socket_event
+from mslib.mscolab.events import SocketEvents
 from mslib.mscolab.models import User, db, Permission, Operation
 
 
@@ -119,9 +121,14 @@ def delete_user(email):
         user = User.query.filter_by(emailid=str(email)).first()
         if user:
             logging.info("User: %s deleted from db", email)
+            u_id = user.id
+            op_ids = [permission.op_id for permission in user.permissions]
             db.session.delete(user)
             db.session.commit()
             db.session.close()
+            for op_id in op_ids:
+                notify_socket_event(SocketEvents.REVOKE_PERMISSION, u_id=u_id, op_id=op_id)
+                notify_socket_event(SocketEvents.OPERATION_PERMISSIONS_UPDATED, u_id=u_id, op_id=op_id)
             return True
         db.session.close()
         return False
@@ -193,9 +200,11 @@ def delete_operation(operation_name):
     with APP.app_context():
         operation = Operation.query.filter_by(path=operation_name).first()
         if operation:
+            op_id = operation.id
             db.session.delete(operation)
             db.session.commit()
             db.session.close()
+            notify_socket_event(SocketEvents.OPERATION_DELETED, op_id=op_id)
             return True
         db.session.close()
         return False
@@ -216,6 +225,7 @@ def add_user_to_operation(path=None, access_level='admin', emailid=None):
                 db.session.add_all(new_permissions)
                 try:
                     db.session.commit()
+                    notify_socket_event(SocketEvents.NEW_PERMISSION, u_id=user.id, op_id=operation.id)
                     return True
                 except IntegrityError as err:
                     db.session.rollback()
@@ -242,6 +252,7 @@ def archive_operation(path=None, emailid=None):
                     return False
                 operation.active = False
                 db.session.commit()
+                notify_socket_event(SocketEvents.UPDATE_OPERATION_LIST)
 
 
 def seed_data():
