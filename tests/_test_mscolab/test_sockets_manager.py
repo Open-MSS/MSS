@@ -115,9 +115,10 @@ class Test_Socket_Manager:
         # Testing with multiple users
         with self.app.app_context():
             add_user_to_operation(path=self.operation_name, emailid=self.anotheruserdata[0])
+            another_token = self.anotheruser.generate_auth_token()
         another_sio = self._connect()
         another_sio.emit("operation-selected",
-                         {"token": self.anotheruser.generate_auth_token(), "op_id": self.operation.id})
+                         {"token": another_token, "op_id": self.operation.id})
 
         # Check internal server tracking
         assert self.anotheruser.id in self.sm.active_users_per_operation[self.operation.id]
