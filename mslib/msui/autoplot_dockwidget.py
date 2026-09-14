@@ -39,6 +39,7 @@ from PyQt5 import QtCore
 from mslib.autoplot import main as cli_tool
 from mslib.msui.qt5.ui_mss_autoplot import Ui_AutoplotDockWidget
 from mslib.utils import constants as const
+from mslib.utils.qt import get_save_filename
 
 
 class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
@@ -508,15 +509,11 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             self.autoplotSecsTreeWidget.resizeColumnToContents(i)
 
     def update_config_file(self, config_settings):
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-
-        file_path, _ = QFileDialog.getSaveFileName(
+        file_path = get_save_filename(
             self,
             "Save JSON File",
             const.MSUI_CONFIG_SYSPATH,
-            "JSON Files (*.json);;All Files (*)",
-            options=options
+            "JSON Files (*.json);;All Files (*)"
         )
         if file_path:
             with open(file_path, 'w') as file:
