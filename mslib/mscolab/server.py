@@ -36,9 +36,6 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.sockets_manager import _setup_managers
 
 
-auth = HTTPBasicAuth()
-
-
 try:
     from mscolab_auth import mscolab_auth
 except ImportError as ex:
@@ -51,8 +48,6 @@ except ImportError as ex:
 
 
 # setup http auth
-# for current test setup of test_server_auth_required we need the definition on module level
-# so the import works regardless of when server was first loaded.
 def authfunc(username, password):
     for u, p in mscolab_auth.allowed_users:
         if (u == username) and (p == hashlib.md5(password.encode('utf-8')).hexdigest()):
@@ -74,7 +69,7 @@ def _initialize_managers(app):
     app.extensions['sockio'] = sockio
     app.extensions['fm'] = fm
     # initializing socketio, the configuration dependent options are passed here,
-    # because the SocketIO instance itself is created on import, without an app.
+    # because _setup_managers creates the SocketIO instance without an app.
     sockio.init_app(app,
                     logger=app.config['SOCKETIO_LOGGER'],
                     engineio_logger=app.config['ENGINEIO_LOGGER'],
@@ -102,11 +97,16 @@ def create_server_app(config_object=mscolab_settings):
         initialise_db()
 
     CORS(app, origins=app.config.get('CORS_ORIGINS', ["*"]))
-    app.extensions["basic_auth"] = auth
+    # Every app gets its own HTTPBasicAuth instance, so that apps existing side by side
+    # (e.g. in the tests) cannot overwrite each other's authentication callback. The
+    # callback is always registered; whether it is applied is decided per request from
+    # ENABLE_BASIC_HTTP_AUTHENTICATION, see mslib.mscolab.auth.
+    basic_auth = HTTPBasicAuth()
+    basic_auth.verify_password(verify_pw)
+    app.extensions["basic_auth"] = basic_auth
     if app.config.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
         logging.debug("Enabling basic HTTP authentication. Username and "
                       "password required to access the service.")
-        auth.verify_password(verify_pw)
     app.register_error_handler(413, error413)
 
     _initialize_managers(app)

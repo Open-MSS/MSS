@@ -129,10 +129,10 @@ def handle_db_reset(verbose=True):
     db.engine.dispose()
     # In-memory socket bookkeeping references database rows (user ids, operation ids)
     # that no longer exist after the reset, so drop it as part of the reset. When the
-    # server module has not been initialized (e.g. a CLI `db --reset`) there is no
-    # manager to clear.
-    from mslib.mscolab.sockets_manager import socketio
-    sm = getattr(socketio, "sm", None)
+    # app is not a served one (e.g. a CLI `db --reset`, which only creates the app via
+    # create_app) there is no manager to clear.
+    sockio = current_app.extensions.get('sockio')
+    sm = getattr(sockio, "sm", None)
     if sm is not None:
         sm.clear_state()
     if verbose is True:
