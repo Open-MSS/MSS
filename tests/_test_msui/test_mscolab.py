@@ -50,8 +50,8 @@ from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_op
 
 class Test_Mscolab_connect_window:
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot, mscolab_app, mscolab_server):
-        self.app = mscolab_app
+    def setup(self, qtbot, mscolab_server_app, mscolab_server):
+        self.app = mscolab_server_app
         self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
         self.operation_name = "europe"
@@ -264,8 +264,8 @@ class Test_Mscolab:
     }
 
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot, mscolab_app, mscolab_server):
-        self.app = mscolab_app
+    def setup(self, qtbot, mscolab_server_app, mscolab_server):
+        self.app = mscolab_server_app
         self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'UserUV10'
         self.operation_name = "europe"

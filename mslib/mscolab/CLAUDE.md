@@ -13,7 +13,8 @@ Global map: ../../ARCHITECTURE.md
 - `blueprints/{operation,auth,chat,user,docs}/` — all ~50 REST routes; keep
   handlers thin, business logic belongs in the managers
 - `file_manager.py` — operations/permissions/versioning (git-backed) — core
-- `chat_manager.py`, `sockets_manager.py` — chat + socket.io event handlers
+- `chat_manager.py`, `sockets_manager.py` — chat + socket.io event handlers;
+  `_setup_managers(app)` builds a SocketIO instance per app, never a shared one
 - `models.py` — SQLAlchemy models; `migrations/` — Alembic, never edit
 - `events.py` (`SocketEvents`) + `message_type.py` (`MessageType`) — the ONLY
   modules the GUI client may import; they define the shared vocabulary
@@ -32,6 +33,10 @@ Global map: ../../ARCHITECTURE.md
   change both sides in the same commit and grep the endpoint name.
 - Socket event names come from `SocketEvents`; never emit a bare string.
 - Tokens are validated per request; don't cache auth state in handlers.
+- No module level state that belongs to one app (app, db engine, SocketIO,
+  HTTPBasicAuth, managers). It lives on the app: `app.config` or
+  `app.extensions['sockio' | 'cm' | 'fm' | 'basic_auth']`, read via `current_app`.
+  Two apps must be able to exist side by side, that is what the tests rely on.
 - DB schema changes require an Alembic migration (see docs/development.rst).
 
 ## Verify
@@ -39,4 +44,7 @@ Global map: ../../ARCHITECTURE.md
 `pixi run -e dev test-mscolab`; client-side effects:
 `pixi run -e dev env QT_QPA_PLATFORM=offscreen pytest tests/_test_msui/test_mscolab.py -q`.
 The test server is forked once per session by an autouse fixture in
-`tests/fixtures.py`, only when a collected test needs it.
+`tests/fixtures.py`, only when a collected test needs it. Two app fixtures exist
+there: `mscolab_app` builds a fresh app with an empty database of its own for
+every test, `mscolab_server_app` is the shared app the forked server runs — use
+the latter only together with `mscolab_server`.

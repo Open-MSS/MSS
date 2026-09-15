@@ -26,13 +26,7 @@
 """
 import pytest
 
-from mslib.mscolab.conf import mscolab_settings
-
-try:
-    from mslib.mscolab.server import authfunc, verify_pw, _initialize_managers
-except ImportError:
-    pytest.skip("this test runs only by an explicit call "
-                "e.g. pytest tests/_test_mscolab/test_server_auth_required.py", allow_module_level=True)
+from mslib.mscolab.server import authfunc, verify_pw, _initialize_managers
 
 
 class Test_Server_Auth_Not_Valid:
@@ -40,15 +34,14 @@ class Test_Server_Auth_Not_Valid:
     def setup(self, mscolab_app):
         self.app = mscolab_app
         self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
-        # enable basic auth
+        # Enable basic auth. The app is created freshly for every test, so this does not
+        # leak into any other test.
         self.app.config['ENABLE_BASIC_HTTP_AUTHENTICATION'] = True
-        yield
-        self.app.config['ENABLE_BASIC_HTTP_AUTHENTICATION'] = False
 
     def test_initialize_managers(self):
         app, sockio, cm, fm = _initialize_managers(self.app)
 
-        assert app.config['OPERATIONS_DATA'] == mscolab_settings.OPERATIONS_DATA
+        assert app is self.app
         assert 'Create a Flask-SocketIO server.' in sockio.__doc__
         assert 'Class with handler functions for chat related functionalities' in cm.__doc__
         assert 'Class with handler functions for file related functionalities' in fm.__doc__

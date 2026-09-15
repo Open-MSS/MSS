@@ -42,8 +42,8 @@ from mslib.mscolab.seed import XML_CONTENT_INIT
 
 class Test_Mscolab_Merge_Waypoints:
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot, mscolab_app, mscolab_server):
-        self.app = mscolab_app
+    def setup(self, qtbot, mscolab_server_app, mscolab_server):
+        self.app = mscolab_server_app
         self.url = mscolab_server
         self.window = msui.MSUIMainWindow(local_operations_data=ROOT_DIR)
         self.window.create_new_flight_track()

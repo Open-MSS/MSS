@@ -37,8 +37,8 @@ from mslib.utils.config import modify_config_file
 
 class Test_MscolabAdminWindow:
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot, mscolab_app, mscolab_server):
-        self.app = mscolab_app
+    def setup(self, qtbot, mscolab_server_app, mscolab_server):
+        self.app = mscolab_server_app
         self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
         self.operation_name = "europe"
