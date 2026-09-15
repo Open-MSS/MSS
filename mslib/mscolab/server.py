@@ -25,22 +25,15 @@
     limitations under the License.
 """
 import logging
-import socketio
 import hashlib
 
-from flask import jsonify, request, current_app
+from flask import current_app, jsonify, request
 from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth
 
-from mslib.mscolab.app import create_app, APP
+from mslib.mscolab.app import create_app, initialise_db
+from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.sockets_manager import _setup_managers
-
-
-APP = create_app(imprint=APP.config['IMPRINT'], gdpr=APP.config['GDPR'])
-auth = HTTPBasicAuth()
-with APP.app_context():
-    CORS(APP, origins=current_app.config.get('CORS_ORIGINS', ["*"]))
-    current_app.extensions["basic_auth"] = auth
 
 
 try:
@@ -55,8 +48,6 @@ except ImportError as ex:
 
 
 # setup http auth
-# for current test setup of test_server_auth_required we need the definition on module level
-# so the import works regardless of when server was first loaded.
 def authfunc(username, password):
     for u, p in mscolab_auth.allowed_users:
         if (u == username) and (p == hashlib.md5(password.encode('utf-8')).hexdigest()):
@@ -72,45 +63,63 @@ def verify_pw(username, password):
     return authfunc(username, password)
 
 
-with APP.app_context():
-    if current_app.config.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
-        logging.debug("Enabling basic HTTP authentication. Username and "
-                      "password required to access the service.")
-        auth.verify_password(verify_pw)
-
-
 def _initialize_managers(app):
     sockio, cm, fm = _setup_managers(app)
     app.extensions['cm'] = cm
     app.extensions['sockio'] = sockio
     app.extensions['fm'] = fm
-    # initializing socketio and db
-    app.wsgi_app = socketio.Middleware(socketio.server, app.wsgi_app)
-    sockio.init_app(app)
-    # db.init_app(app)
+    # initializing socketio, the configuration dependent options are passed here,
+    # because _setup_managers creates the SocketIO instance without an app.
+    sockio.init_app(app,
+                    logger=app.config['SOCKETIO_LOGGER'],
+                    engineio_logger=app.config['ENGINEIO_LOGGER'],
+                    cors_allowed_origins=("*" if "*" in app.config['CORS_ORIGINS']
+                                          else app.config['CORS_ORIGINS']))
     return app, sockio, cm, fm
 
 
-_app, sockio, cm, fm = _initialize_managers(APP)
-
-
 # 413: Payload Too Large
-@APP.errorhandler(413)
 def error413(error):
-    upload_limit = APP.config['MAX_CONTENT_LENGTH'] / 1024 / 1024
+    upload_limit = current_app.config['MAX_CONTENT_LENGTH'] / 1024 / 1024
     return jsonify({"success": False, "message": f"File size too large. Upload limit is {upload_limit}MB"}), 413
 
 
+def create_server_app(config_object=mscolab_settings):
+    """Create the MSColab application ready to be served.
+
+    In addition to :func:`mslib.mscolab.app.create_app` this migrates the database
+    to the latest revision and sets up everything only a served app needs: CORS,
+    basic HTTP authentication and the socket.io managers. The managers are
+    available as ``app.extensions['sockio' | 'cm' | 'fm']``.
+    """
+    app = create_app(config_object)
+    with app.app_context():
+        initialise_db()
+
+    CORS(app, origins=app.config.get('CORS_ORIGINS', ["*"]))
+    # Every app gets its own HTTPBasicAuth instance, so that apps existing side by side
+    # (e.g. in the tests) cannot overwrite each other's authentication callback. The
+    # callback is always registered; whether it is applied is decided per request from
+    # ENABLE_BASIC_HTTP_AUTHENTICATION, see mslib.mscolab.auth.
+    basic_auth = HTTPBasicAuth()
+    basic_auth.verify_password(verify_pw)
+    app.extensions["basic_auth"] = basic_auth
+    if app.config.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
+        logging.debug("Enabling basic HTTP authentication. Username and "
+                      "password required to access the service.")
+    app.register_error_handler(413, error413)
+
+    _initialize_managers(app)
+    return app
+
+
 def start_server(app, sockio, cm, fm, port=8083):
-    sockio.run(app, port=port, debug=APP.config['DEBUG'])
+    sockio.run(app, port=port, debug=app.config['DEBUG'])
 
 
 def main():
-    start_server(_app, sockio, cm, fm)
-
-
-# for wsgi
-application = socketio.WSGIApp(sockio)
+    app = create_server_app()
+    start_server(app, app.extensions['sockio'], app.extensions['cm'], app.extensions['fm'])
 
 
 if __name__ == '__main__':

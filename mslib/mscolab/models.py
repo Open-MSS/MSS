@@ -32,6 +32,7 @@ import jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 import sqlalchemy.types
+from flask import current_app
 
 from mslib.mscolab.app import db
 from mslib.mscolab.message_type import MessageType
@@ -102,32 +103,33 @@ class User(db.Model):
             return False
 
     def generate_auth_token(self, expiration=None):
-        # Importing conf here to avoid loading settings on opening chat window
-        from mslib.mscolab.app import APP
-        expiration = APP.__dict__.get('EXPIRATION', expiration)
+        """
+        Must be called within an application context, the token is signed with the
+        key of the current app.
+        """
         if expiration is None:
-            expiration = 864000
-            token = jwt.encode(
-                {
-                    "id": self.id,
-                    "exp": datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=expiration)
-                },
-                APP.config['SECRET_KEY'],
-                algorithm="HS256"
-            )
-            return token
+            expiration = current_app.config.get('EXPIRATION', 864000)
+        token = jwt.encode(
+            {
+                "id": self.id,
+                "exp": datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=expiration)
+            },
+            current_app.config['SECRET_KEY'],
+            algorithm="HS256"
+        )
+        return token
 
     @staticmethod
     def verify_auth_token(token):
         """
         token is the authentication string provided by client for each request
+
+        Must be called within an application context.
         """
-        # Importing conf here to avoid loading settings on opening chat window
-        from mslib.mscolab.conf import mscolab_settings
         try:
             data = jwt.decode(
                 token,
-                mscolab_settings.SECRET_KEY,
+                current_app.config['SECRET_KEY'],
                 leeway=datetime.timedelta(seconds=30),
                 algorithms=["HS256"]
             )

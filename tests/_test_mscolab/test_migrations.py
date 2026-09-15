@@ -24,14 +24,14 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import copy
 import pytest
 import itertools
-import flask
 import flask_migrate
 import sqlalchemy
 import mslib.mscolab.migrations
-from mslib.mscolab.app import db, migrate
-from mslib.mscolab.app import APP
+from mslib.mscolab.app import create_app, db
+from mslib.mscolab.conf import mscolab_settings
 
 
 def test_migrations(mscolab_app):
@@ -74,15 +74,11 @@ _cases = list(
 def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
     """Test upgrading from a pre-v10 database that wasn't yet automatically managed with flask-migrate."""
     migrations_path = mslib.mscolab.migrations.__path__[0]
-    # Construct a dummy flask app to create a separate database to migrate from
-    # TODO: this would be easier if it was possible to create multiple canonical MSColab Flask app instances,
-    # i.e. if there was a factory function instead of one global instance. This test could then check the correct
-    # functioning of the data migration while creating such an app instance, instead of having to call a private method.
-    app = flask.Flask("whatever")
+    # Construct a second app instance to create a separate database to migrate from
     # TODO: make this somehow configurable to use something other than sqlite as the source database
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + str(tmp_path.absolute() / "mscolab.db")
-    db.init_app(app)
-    migrate.init_app(app, db)
+    source_settings = copy.copy(mscolab_settings)
+    source_settings.SQLALCHEMY_DATABASE_URI = "sqlite:///" + str(tmp_path.absolute() / "mscolab.db")
+    app = create_app(source_settings)
     with app.app_context():
         # Seed the database and downgrade to the supplied revision
         mslib.mscolab.mscolab.handle_db_seed()
@@ -97,7 +93,7 @@ def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
         del expected_data["alembic_version"]  # the alembic_version table will be different, but that is expected
 
     try:
-        APP.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'] = app.config["SQLALCHEMY_DATABASE_URI"]
+        mscolab_app.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'] = app.config["SQLALCHEMY_DATABASE_URI"]
         with mscolab_app.app_context():
             db.drop_all()
             db.session.execute(sqlalchemy.text("DROP TABLE alembic_version"))
@@ -108,7 +104,7 @@ def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
 
             # Also try multiple applications of the db upgrade to ensure idempotence of the operation
             for _ in range(iterations):
-                mslib.mscolab.app._handle_db_upgrade()
+                mslib.mscolab.app.initialise_db()
 
             # Check that no further migration is required
             flask_migrate.check(directory=migrations_path)
@@ -134,4 +130,4 @@ def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
             flask_migrate.upgrade(directory=migrations_path)
             assert mslib.mscolab.seed.add_user('test123@test456', 'test123', 'test456', 'User test789')
     finally:
-        APP.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'] = None
+        mscolab_app.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'] = None

@@ -27,7 +27,8 @@
 import datetime
 from pathlib import Path
 
-from mslib.mscolab.app import APP
+from flask import current_app
+
 from mslib.mscolab.models import db, Message, MessageType
 from mslib.mscolab.utils import get_message_dict
 
@@ -88,7 +89,7 @@ class ChatManager:
         message = Message.query.filter(Message.id == message_id).first()
         if message.message_type == MessageType.IMAGE or message.message_type == MessageType.DOCUMENT:
             file_name = Path(message.text).name
-            upload_path = Path(APP.config['UPLOAD_FOLDER']) / str(message.op_id) / file_name
+            upload_path = Path(current_app.config['UPLOAD_FOLDER']) / str(message.op_id) / file_name
             upload_path.unlink()
         db.session.delete(message)
         db.session.commit()

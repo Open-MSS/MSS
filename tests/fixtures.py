@@ -23,16 +23,22 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import copy
 import pytest
 import mock
 import multiprocessing
 import time
 import urllib
 import socketio
+
+from pathlib import Path
 from werkzeug.serving import make_server
 
 from PyQt5 import QtWidgets
 from contextlib import contextmanager
+from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.models import db
+from mslib.mscolab.server import create_server_app
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.utils.config import modify_config_file
 from tests.utils import is_url_response_ok
@@ -100,33 +106,12 @@ def qtbot(qtbot, fail_if_open_message_boxes_left, msui_configs):
 
 @pytest.fixture(scope="session")
 def mscolab_session_app():
-    """Session-scoped fixture that provides the WSGI app instance for MSColab.
+    """Session-scoped fixture that provides the WSGI app instance MSColab is served with.
 
-    This fixture should not be used in tests. Instead use :func:`mscolab_app`, which
-    handles per-test cleanup as well.
-    """
-    # Must run before mslib.mscolab.server is imported: it binds its SQLAlchemy
-    # URI from mscolab_settings at import time (and runs the real DB migration).
-    from tests.server_setup import ensure_mscolab_config
-    ensure_mscolab_config()
-    from mslib.mscolab.server import APP
-
-    _app = APP
-    _app.config['SQLALCHEMY_DATABASE_URI'] = APP.config['SQLALCHEMY_DATABASE_URI']
-    _app.config['OPERATIONS_DATA'] = APP.config['OPERATIONS_DATA']
-    _app.config['UPLOAD_FOLDER'] = APP.config['UPLOAD_FOLDER']
-    return _app
-
-
-@pytest.fixture(scope="session")
-def mscolab_session_managers(mscolab_session_app):
-    """Session-scoped fixture that provides the managers for the MSColab app.
-
-    This fixture should not be used in tests. Instead use :func:`mscolab_managers`,
+    This fixture should not be used in tests. Instead use :func:`mscolab_server_app`,
     which handles per-test cleanup as well.
     """
-    from mslib.mscolab.server import sockio, cm, fm
-    return sockio, cm, fm
+    return create_server_app()
 
 
 # TODO: This fixture used to be autouse here, which is a crutch. It seems like if it is not autouse
@@ -146,8 +131,8 @@ def mscolab_session_managers(mscolab_session_app):
 #
 # This issue would also be avoided if the background server process wasn't started with multiprocessing and a fork, but
 # with a real subprocess, which would solve some other issues (e.g. testing on Windows) as well.
-@pytest.fixture(scope="session")
-def mscolab_session_server(mscolab_session_app, mscolab_session_managers):
+@pytest.fixture(scope="session", autouse=True)
+def mscolab_session_server(mscolab_session_app):
     """Session-scoped fixture that provides a running MSColab server.
 
     This fixture should not be used in tests. Instead use :func:`mscolab_server`, which
@@ -173,22 +158,65 @@ def reset_mscolab(mscolab_session_app):
         handle_db_reset(verbose=False)
 
 
+def _isolated_mscolab_settings(tmp_path):
+    """Build a copy of the MSColab settings with every path below ``tmp_path``.
+
+    An app created from these settings has a database and an operations data directory
+    of its own, so it shares no state with any other app.
+    """
+    settings = copy.copy(mscolab_settings)
+    data_dir = tmp_path / "mscolab"
+    settings.DATA_DIR = str(data_dir)
+    settings.OPERATIONS_DATA = str(data_dir / "filedata")
+    settings.UPLOAD_FOLDER = str(data_dir / "filedata" / "uploads")
+    settings.SSO_DIR = str(data_dir / "datasso")
+    settings.SQLALCHEMY_DATABASE_URI = "sqlite:///" + str(data_dir / "mscolab.db")
+    return settings
+
+
 @pytest.fixture
-def mscolab_app(mscolab_session_app, reset_mscolab):
-    """Fixture that provides the MSColab WSGI app instance and does cleanup actions.
+def mscolab_app(tmp_path):
+    """Fixture that provides an MSColab WSGI app instance of its own.
+
+    The app is created freshly for every test and brings its own, empty database along,
+    so tests using it are independent of each other. Tests that need to look into the
+    database of the server started by :func:`mscolab_server` have to use
+    :func:`mscolab_server_app` instead.
+
+    :returns: A WSGI app instance.
+    """
+    settings = _isolated_mscolab_settings(tmp_path)
+    Path(settings.DATA_DIR).mkdir(parents=True, exist_ok=True)
+    app = create_server_app(settings)
+    yield app
+    # Release the connections this app's engine holds, they would otherwise stay open
+    # until the app is garbage collected.
+    with app.app_context():
+        db.engine.dispose()
+
+
+@pytest.fixture
+def mscolab_managers(mscolab_app):
+    """Fixture that provides the managers of the app of :func:`mscolab_app`.
+
+    :returns: A tuple (SocketIO, ChatManager, FileManager).
+    """
+    return (mscolab_app.extensions['sockio'],
+            mscolab_app.extensions['cm'],
+            mscolab_app.extensions['fm'])
+
+
+@pytest.fixture
+def mscolab_server_app(mscolab_session_app, reset_mscolab):
+    """Fixture that provides the WSGI app instance MSColab is served with.
+
+    Use this to inspect the state of the server provided by :func:`mscolab_server`; it
+    is the same app, so it shares the database with it. Tests that do not need a running
+    server should use the independent :func:`mscolab_app` instead.
 
     :returns: A WSGI app instance.
     """
     return mscolab_session_app
-
-
-@pytest.fixture
-def mscolab_managers(mscolab_session_managers, reset_mscolab):
-    """Fixture that provides the MSColab managers and does cleanup actions.
-
-    :returns: A tuple (SocketIO, ChatManager, FileManager).
-    """
-    return mscolab_session_managers
 
 
 @pytest.fixture

@@ -6,6 +6,9 @@
 
     Seeder utility for database
 
+    All functions of this module access the database and the app configuration, so
+    they have to be called within an application context.
+
     This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
@@ -29,7 +32,7 @@ import git
 from pathlib import Path
 from sqlalchemy.exc import IntegrityError
 
-from mslib.mscolab.app import APP
+from flask import current_app
 from mslib.mscolab.models import User, db, Permission, Operation
 
 
@@ -50,12 +53,8 @@ XML_CONTENT_INIT = """<?xml version="1.0" encoding="utf-8"?>
 # Todo: refactor move to mscolab.utils
 def add_all_users_to_all_operations(access_level='collaborator'):
     """ on db level we add all users as collaborator to all operations """
-    APP.config['SQLALCHEMY_DATABASE_URI'] = APP.config['SQLALCHEMY_DATABASE_URI']
-    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    with APP.app_context():
-        all_operations = Operation.query.all()
-        all_path = [operation.path for operation in all_operations]
-        db.session.close()
+    all_operations = Operation.query.all()
+    all_path = [operation.path for operation in all_operations]
     for path in all_path:
         if path == "TEMPLATE":
             access_level = 'admin'
@@ -64,163 +63,134 @@ def add_all_users_to_all_operations(access_level='collaborator'):
 
 def add_all_users_default_operation(path='TEMPLATE', description="Operation to keep all users", access_level='admin'):
     """ on db level we add all users to the operation TEMPLATE for user handling"""
-    APP.config['SQLALCHEMY_DATABASE_URI'] = APP.config['SQLALCHEMY_DATABASE_URI']
-    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    operation_available = Operation.query.filter_by(path=path).first()
+    if not operation_available:
+        operation = Operation(path, description)
+        db.session.add(operation)
+        db.session.commit()
+        operation_file_name = Path(current_app.config['OPERATIONS_DATA']) / path
+        if not operation_file_name.exists():
+            operation_file_name.mkdir(parents=True, exist_ok=True)
+            operation_file_path = operation_file_name / "main.ftml"
+            xml_content = '''<?xml version="1.0" encoding="UTF-8"?>
+            <waypoints>
+            </waypoints>'''
+            operation_file_path.write_text(xml_content, encoding='utf-8')
+            git_repo_path = Path(current_app.config['OPERATIONS_DATA']) / path
+            git_repo_path.mkdir(parents=True, exist_ok=True)
+            r = git.Repo.init(str(git_repo_path))
+            r.git.clear_cache()
+            main_file_git = git_repo_path / "main.ftml"
+            main_file_git.write_text(XML_CONTENT_INIT, encoding='utf-8')
+            r.index.add(['main.ftml'])
+            r.index.commit("initial commit")
 
-    with APP.app_context():
-        operation_available = Operation.query.filter_by(path=path).first()
-        if not operation_available:
-            operation = Operation(path, description)
-            db.session.add(operation)
-            db.session.commit()
-            operation_file_name = Path(APP.config['OPERATIONS_DATA']) / path
-            if not operation_file_name.exists():
-                operation_file_name.mkdir(parents=True, exist_ok=True)
-                operation_file_path = operation_file_name / "main.ftml"
-                xml_content = '''<?xml version="1.0" encoding="UTF-8"?>
-                <waypoints>
-                </waypoints>'''
-                operation_file_path.write_text(xml_content, encoding='utf-8')
-                git_repo_path = Path(APP.config['OPERATIONS_DATA']) / path
-                git_repo_path.mkdir(parents=True, exist_ok=True)
-                r = git.Repo.init(str(git_repo_path))
-                r.git.clear_cache()
-                main_file_git = git_repo_path / "main.ftml"
-                main_file_git.write_text(XML_CONTENT_INIT, encoding='utf-8')
-                r.index.add(['main.ftml'])
-                r.index.commit("initial commit")
+    operation = Operation.query.filter_by(path=path).first()
+    op_id = operation.id
+    user_list = User.query \
+        .join(Permission, (User.id == Permission.u_id) & (Permission.op_id == op_id), isouter=True) \
+        .add_columns(User.id, User.username) \
+        .filter(Permission.u_id.is_(None))
 
-        operation = Operation.query.filter_by(path=path).first()
-        op_id = operation.id
-        user_list = User.query \
-            .join(Permission, (User.id == Permission.u_id) & (Permission.op_id == op_id), isouter=True) \
-            .add_columns(User.id, User.username) \
-            .filter(Permission.u_id.is_(None))
-
-        new_u_ids = [user.id for user in user_list]
-        new_permissions = []
-        for u_id in new_u_ids:
-            if Permission.query.filter_by(u_id=u_id, op_id=op_id).first() is None:
-                new_permissions.append(Permission(u_id, operation.id, access_level))
-        db.session.add_all(new_permissions)
-        try:
-            db.session.commit()
-            return True
-        except IntegrityError as err:
-            db.session.rollback()
-            logging.debug("Error writing to db: %s", err)
-        db.session.close()
+    new_u_ids = [user.id for user in user_list]
+    new_permissions = []
+    for u_id in new_u_ids:
+        if Permission.query.filter_by(u_id=u_id, op_id=op_id).first() is None:
+            new_permissions.append(Permission(u_id, operation.id, access_level))
+    db.session.add_all(new_permissions)
+    try:
+        db.session.commit()
+        return True
+    except IntegrityError as err:
+        db.session.rollback()
+        logging.debug("Error writing to db: %s", err)
 
 
 def delete_user(email):
-    APP.config['SQLALCHEMY_DATABASE_URI'] = APP.config['SQLALCHEMY_DATABASE_URI']
-    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    with APP.app_context():
-        user = User.query.filter_by(emailid=str(email)).first()
-        if user:
-            logging.info("User: %s deleted from db", email)
-            db.session.delete(user)
-            db.session.commit()
-            db.session.close()
-            return True
-        db.session.close()
-        return False
+    user = User.query.filter_by(emailid=str(email)).first()
+    if user:
+        logging.info("User: %s deleted from db", email)
+        db.session.delete(user)
+        db.session.commit()
+        return True
+    return False
 
 
 def add_user(email, username, password, fullname):
     """
     on db level we add a user
     """
-    APP.config['SQLALCHEMY_DATABASE_URI'] = APP.config['SQLALCHEMY_DATABASE_URI']
-    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-    with APP.app_context():
-        user_email_exists = User.query.filter_by(emailid=str(email)).first()
-        user_name_exists = User.query.filter_by(username=str(username)).first()
-        if not user_email_exists and not user_name_exists:
-            db_user = User(email, username, password, fullname)
-            db.session.add(db_user)
-            db.session.commit()
-            db.session.close()
-            logging.info("Userdata: %s %s %s %s", email, username, password, fullname)
-            return True
-        else:
-            logging.info("%s already in db", user_name_exists)
+    user_email_exists = User.query.filter_by(emailid=str(email)).first()
+    user_name_exists = User.query.filter_by(username=str(username)).first()
+    if not user_email_exists and not user_name_exists:
+        db_user = User(email, username, password, fullname)
+        db.session.add(db_user)
+        db.session.commit()
+        logging.info("Userdata: %s %s %s %s", email, username, password, fullname)
+        return True
+    else:
+        logging.info("%s already in db", user_name_exists)
     return False
 
 
 def get_user(email):
-    with APP.app_context():
-        return User.query.filter_by(emailid=str(email)).first()
+    return User.query.filter_by(emailid=str(email)).first()
 
 
 def get_operation(operation_name):
-    with APP.app_context():
-        return Operation.query.filter_by(path=operation_name).first()
+    return Operation.query.filter_by(path=operation_name).first()
 
 
 def add_operation(operation_name, description):
-    APP.config['SQLALCHEMY_DATABASE_URI'] = APP.config['SQLALCHEMY_DATABASE_URI']
-    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    with APP.app_context():
-        operation_available = Operation.query.filter_by(path=operation_name).first()
-        if not operation_available:
-            operation = Operation(operation_name, description)
-            db.session.add(operation)
-            db.session.commit()
-            operation_file_name = Path(APP.config['OPERATIONS_DATA']) / operation_name
+    operation_available = Operation.query.filter_by(path=operation_name).first()
+    if not operation_available:
+        operation = Operation(operation_name, description)
+        db.session.add(operation)
+        db.session.commit()
+        operation_file_name = Path(current_app.config['OPERATIONS_DATA']) / operation_name
 
-            if not operation_file_name.exists():
-                operation_file_name.mkdir(parents=True, exist_ok=True)
-                operation_file_path = operation_file_name / "main.ftml"
-                operation_file_path.write_text(XML_CONTENT_INIT, encoding='utf-8')
-                git_repo_path = Path(APP.config['OPERATIONS_DATA']) / operation_name
-                git_repo_path.mkdir(parents=True, exist_ok=True)
-                r = git.Repo.init(str(git_repo_path))
-                r.git.clear_cache()
-                main_file_git = git_repo_path / "main.ftml"
-                main_file_git.write_text(XML_CONTENT_INIT, encoding='utf-8')
-                r.index.add(['main.ftml'])
-                r.index.commit("initial commit")
-            return True
-        else:
-            return False
+        if not operation_file_name.exists():
+            operation_file_name.mkdir(parents=True, exist_ok=True)
+            operation_file_path = operation_file_name / "main.ftml"
+            operation_file_path.write_text(XML_CONTENT_INIT, encoding='utf-8')
+            git_repo_path = Path(current_app.config['OPERATIONS_DATA']) / operation_name
+            git_repo_path.mkdir(parents=True, exist_ok=True)
+            r = git.Repo.init(str(git_repo_path))
+            r.git.clear_cache()
+            main_file_git = git_repo_path / "main.ftml"
+            main_file_git.write_text(XML_CONTENT_INIT, encoding='utf-8')
+            r.index.add(['main.ftml'])
+            r.index.commit("initial commit")
+        return True
+    else:
+        return False
 
 
 def delete_operation(operation_name):
-    APP.config['SQLALCHEMY_DATABASE_URI'] = APP.config['SQLALCHEMY_DATABASE_URI']
-    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    with APP.app_context():
-        operation = Operation.query.filter_by(path=operation_name).first()
-        if operation:
-            db.session.delete(operation)
-            db.session.commit()
-            db.session.close()
-            return True
-        db.session.close()
-        return False
+    operation = Operation.query.filter_by(path=operation_name).first()
+    if operation:
+        db.session.delete(operation)
+        db.session.commit()
+        return True
+    return False
 
 
 def add_user_to_operation(path=None, access_level='admin', emailid=None):
     """ on db level we add all users to the operation TEMPLATE for user handling"""
     if None in (path, emailid):
         return False
-    APP.config['SQLALCHEMY_DATABASE_URI'] = APP.config['SQLALCHEMY_DATABASE_URI']
-    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    with APP.app_context():
-        operation = Operation.query.filter_by(path=path).first()
-        if operation:
-            user = User.query.filter_by(emailid=emailid).first()
-            if user:
-                new_permissions = [Permission(user.id, operation.id, access_level)]
-                db.session.add_all(new_permissions)
-                try:
-                    db.session.commit()
-                    return True
-                except IntegrityError as err:
-                    db.session.rollback()
-                    logging.debug("Error writing to db: %s", err)
-                db.session.close()
+    operation = Operation.query.filter_by(path=path).first()
+    if operation:
+        user = User.query.filter_by(emailid=emailid).first()
+        if user:
+            new_permissions = [Permission(user.id, operation.id, access_level)]
+            db.session.add_all(new_permissions)
+            try:
+                db.session.commit()
+                return True
+            except IntegrityError as err:
+                db.session.rollback()
+                logging.debug("Error writing to db: %s", err)
     return False
 
 
@@ -228,20 +198,17 @@ def archive_operation(path=None, emailid=None):
     """ this archives an existing operation """
     if None in (path, emailid):
         return False
-    APP.config['SQLALCHEMY_DATABASE_URI'] = APP.config['SQLALCHEMY_DATABASE_URI']
-    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    with APP.app_context():
-        operation = Operation.query.filter_by(path=path).first()
-        if operation:
-            user = User.query.filter_by(emailid=emailid).first()
-            if user:
-                perm = Permission.query.filter_by(u_id=user.id, op_id=operation.id).first()
-                if perm is None:
-                    return False
-                elif perm.access_level not in ["admin", "creator"]:
-                    return False
-                operation.active = False
-                db.session.commit()
+    operation = Operation.query.filter_by(path=path).first()
+    if operation:
+        user = User.query.filter_by(emailid=emailid).first()
+        if user:
+            perm = Permission.query.filter_by(u_id=user.id, op_id=operation.id).first()
+            if perm is None:
+                return False
+            elif perm.access_level not in ["admin", "creator"]:
+                return False
+            operation.active = False
+            db.session.commit()
 
 
 def seed_data():
@@ -423,17 +390,16 @@ def seed_data():
         db_perm = Permission(perm['u_id'], perm['op_id'], perm['access_level'])
         db.session.add(db_perm)
     db.session.commit()
-    db.session.close()
 
     file_paths = ['one', 'two', 'three', 'four', 'Admin_Test', 'test_mscolab']
     for file_path in file_paths:
-        operation_dir = Path(APP.config['OPERATIONS_DATA']) / file_path
+        operation_dir = Path(current_app.config['OPERATIONS_DATA']) / file_path
         operation_dir.mkdir(parents=True, exist_ok=True)
         operation_file = operation_dir / 'main.ftml'
         operation_file.write_text(XML_CONTENT_INIT)
 
         # initiate git in the same directory where the file is created
-        git_dir = Path(APP.config['OPERATIONS_DATA']) / file_path
+        git_dir = Path(current_app.config['OPERATIONS_DATA']) / file_path
         git_dir.mkdir(parents=True, exist_ok=True)
 
         # Create the main.ftml file in the git directory as well
