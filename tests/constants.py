@@ -64,3 +64,7 @@ os.environ["XDG_CACHE_HOME"] = _xdg_cache_home_temporary_directory.name
 MSCOLAB_URL = "http://localhost:8083"
 # mscolab test server's url
 MSCOLAB_URL_TEST = "http://localhost:8084"
+
+
+def create_msui_settings_file(content):
+    MSUI_CONFIG_FILE_PATH.write_text(content)
