@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab.message_type.py
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    mslib.mscolab.api.message_type
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This file is part of MSS.
 

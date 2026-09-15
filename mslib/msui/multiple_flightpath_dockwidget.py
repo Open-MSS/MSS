@@ -26,7 +26,6 @@
 """
 import random
 import requests
-import json
 from PyQt5 import QtWidgets, QtGui, QtCore
 from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
 from mslib.msui import flighttrack as ft
@@ -35,6 +34,13 @@ from mslib.utils.qt import Worker
 from mslib.utils.config import config_loader
 from urllib.parse import urljoin
 from mslib.utils.colordialog import CustomColorDialog
+from mslib.mscolab.api import endpoints
+from mslib.mscolab.api.schemas import (
+    GetOperationByIdRequest,
+    GetOperationByIdResponse,
+    GetOperationsRequest,
+    GetOperationsResponse,
+)
 
 
 class QMscolabOperationsListWidgetItem(QtWidgets.QListWidgetItem):
@@ -768,13 +774,13 @@ class MultipleFlightpathOperations:
 
         # Load operations from wps server
         server_operations = self.get_wps_from_server()
-        sorted_server_operations = sorted(server_operations, key=lambda d: d["path"])
+        sorted_server_operations = sorted(server_operations, key=lambda op: op.path)
 
         for operations in sorted_server_operations:
-            op_id = operations["op_id"]
+            op_id = operations.op_id
             xml_content = self.request_wps_from_server(op_id)
             wp_model = ft.WaypointsTableModel(xml_content=xml_content)
-            wp_model.name = operations["path"]
+            wp_model.name = operations.path
             self.create_operation(op_id, wp_model)
 
         # This needs to be done after operations are loaded
@@ -793,32 +799,30 @@ class MultipleFlightpathOperations:
             self.draw_inactive_operations()
 
     def get_wps_from_server(self):
-        operations = {}
+        operations = []
         skip_archived = config_loader(dataset="MSCOLAB_skip_archived_operations")
-        data = {
-            "token": self.token,
-            "skip_archived": skip_archived
-        }
-        url = urljoin(self.mscolab_server_url, "operations")
-        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-        if r.text != "False":
-            _json = json.loads(r.text)
-            operations = _json["operations"]
+        req = GetOperationsRequest(skip_archived=skip_archived)
+        url = urljoin(self.mscolab_server_url, endpoints.OPERATIONS)
+        r = requests.get(
+            url, data={**req.to_form_data(), "token": self.token},
+            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        parsed = GetOperationsResponse.from_text(r.text)
+        if parsed is not None:
+            operations = parsed.operations
         selected_category = self.parent.msc_category.currentText()
         if selected_category != "*ANY*":
-            operations = [op for op in operations if op['category'] == selected_category]
+            operations = [op for op in operations if op.category == selected_category]
         return operations
 
     def request_wps_from_server(self, op_id):
-        data = {
-            "token": self.token,
-            "op_id": op_id
-        }
-        url = urljoin(self.mscolab_server_url, "get_operation_by_id")
-        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-        if r.text != "False":
-            xml_content = json.loads(r.text)["content"]
-            return xml_content
+        req = GetOperationByIdRequest(op_id=op_id)
+        url = urljoin(self.mscolab_server_url, endpoints.GET_OPERATION_BY_ID)
+        r = requests.get(
+            url, data={**req.to_form_data(), "token": self.token},
+            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        parsed = GetOperationByIdResponse.from_text(r.text)
+        if parsed is not None:
+            return parsed.content
 
     def load_wps_from_server(self, op_id):
         xml_content = self.request_wps_from_server(op_id)
