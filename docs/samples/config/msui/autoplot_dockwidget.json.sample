@@ -1,6 +1,6 @@
 {
     "filepicker_default": "default",
-    "data_dir": "~/mssdata",
+    "data_dir": "~/Documents/mss",
     "layout": {
         "topview": [
             963,
@@ -232,7 +232,7 @@
     "new_flighttrack_flightlevel": 0,
     "proxies": {},
     "mscolab_server_url": "http://localhost:8083",
-    "mss_dir": "~/mss",
+    "mscolab_local_data_dir": "~/.local/share/msui/mss",
     "gravatar_ids": [],
     "export_plugins": {},
     "import_plugins": {},

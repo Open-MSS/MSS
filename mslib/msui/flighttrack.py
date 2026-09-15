@@ -275,7 +275,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     linearDataChanged = QtCore.pyqtSignal()
 
     def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False,
-                 data_dir=config_loader(dataset="mss_dir"),
+                 data_dir=None,
                  xml_content=None):
         super().__init__()
         self.name = name  # a name for this flight track

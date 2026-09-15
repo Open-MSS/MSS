@@ -184,6 +184,33 @@ class TestConfigLoader:
         with pytest.raises(utils.FatalUserError):
             read_config_file(path=config_file)
 
+    def test_deprecated_mss_dir_key_is_migrated(self):
+        """
+        an old msui_settings.json using the removed 'mss_dir' key gets migrated to
+        'mscolab_local_data_dir', with the original file kept as a .bak backup
+        """
+        create_msui_settings_file('{"mss_dir": "/tmp/legacy_dir"}')
+        config_file = MSUI_CONFIG_FILE_PATH
+        read_config_file(path=config_file)
+        assert config_loader(dataset="mscolab_local_data_dir") == "/tmp/legacy_dir"
+        file_content = config_file.read_text()
+        assert '"mss_dir"' not in file_content
+        backup = config_file.with_suffix(".bak")
+        assert backup.exists()
+        assert '"mss_dir": "/tmp/legacy_dir"' in backup.read_text()
+        backup.unlink()
+
+    def test_deprecated_mss_dir_key_does_not_override_new_key(self):
+        """
+        if both the old and new key are present, the explicit new key wins
+        """
+        create_msui_settings_file(
+            '{"mss_dir": "/tmp/legacy_dir", "mscolab_local_data_dir": "/tmp/new_dir"}')
+        config_file = MSUI_CONFIG_FILE_PATH
+        read_config_file(path=config_file)
+        assert config_loader(dataset="mscolab_local_data_dir") == "/tmp/new_dir"
+        config_file.with_suffix(".bak").unlink()
+
     def test_modify_config_file_with_empty_parameters(self):
         """
         Test to check if modify_config_file properly stores a key-value pair in an empty config file

@@ -59,8 +59,8 @@ class MSUIDefaultConfig:
     # Default for general filepicker. Pick "default", "qt"
     filepicker_default = "default"
 
-    # dir where msui output files are stored
-    data_dir = str(Path.home() / "mssdata")
+    # dir where msui output files (flight tracks, exported plots) are stored
+    data_dir = str(constants.MSUI_DOCUMENTS_PATH)
 
     # layout of different views, with immutable they can't resized
     layout = {"topview": [963, 702],
@@ -275,9 +275,8 @@ class MSUIDefaultConfig:
     # ToDo configurable later
     # mscolab server
     mscolab_server_url = "http://localhost:8083"
-    # ToDo refactor to rename this to data_dir/mss_data_dir
-    # mss dir
-    mss_dir = "~/mss"
+    # local mirror of MSColab operations (git checkouts, local FTML cache)
+    mscolab_local_data_dir = str(constants.MSUI_DATA_PATH)
 
     # list of gravatar email ids to automatically fetch
     gravatar_ids = []
@@ -312,7 +311,7 @@ class MSUIDefaultConfig:
     # Fixed key/value pair options
     key_value_options = [
         'filepicker_default',
-        'mss_dir',
+        'mscolab_local_data_dir',
         'data_dir',
         'num_labels',
         'num_interpolation_points',
@@ -397,7 +396,7 @@ class MSUIDefaultConfig:
         "new_flighttrack_flightlevel": "Default flight level for waypoints inserted by the flighttrack template",
         "proxies": "Proxy settings for network requests",
         "mscolab_server_url": "URL of the MSColab server",
-        "mss_dir": "Directory path used for MSS",  # ToDo is this needed or can be replaced by data_dir?
+        "mscolab_local_data_dir": "Directory for the local mirror of MSColab operations",
         "gravatar_ids": "List of gravatar email ids to automatically fetch",
         "export_plugins": "Dictionary of export plugins",
         "import_plugins": "Dictionary of import plugins",
@@ -429,6 +428,34 @@ for key in [
 user_options = copy.deepcopy(default_options)
 
 
+# Renamed config keys: {old_name: new_name}. Values from the old key are carried
+# over to the new key the first time an outdated msui_settings.json is read.
+DEPRECATED_KEY_ALIASES = {
+    "mss_dir": "mscolab_local_data_dir",
+}
+
+
+def _migrate_deprecated_keys(json_file_data, path):
+    """
+    Renames deprecated keys found in an already-parsed settings file in place,
+    backing up the original file once before rewriting it.
+    """
+    present = [key for key in DEPRECATED_KEY_ALIASES if key in json_file_data]
+    if not present:
+        return json_file_data
+
+    backup = path.with_suffix(".bak")
+    backup.write_text(path.read_text())
+    for old_key, new_key in DEPRECATED_KEY_ALIASES.items():
+        if old_key in json_file_data:
+            json_file_data.setdefault(new_key, json_file_data[old_key])
+            del json_file_data[old_key]
+            logging.info(
+                "Migrated deprecated config key '%s' to '%s' (backup saved to %s)", old_key, new_key, backup)
+    path.write_text(json.dumps(json_file_data, indent=4))
+    return json_file_data
+
+
 def read_config_file(path=constants.MSUI_SETTINGS):
     """
     reads a config file and updates global user_options
@@ -453,6 +480,8 @@ def read_config_file(path=constants.MSUI_SETTINGS):
             logging.error("Error while loading json file %s", e)
             error_message = f"Invalid keys detected in config\n{e}"
             raise FatalUserError(error_message)
+        if json_file_data:
+            json_file_data = _migrate_deprecated_keys(json_file_data, path)
     else:
         error_message = f"MSS config File '{path}' not found"
         raise FileNotFoundError(error_message)
