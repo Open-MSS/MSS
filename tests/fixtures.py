@@ -44,6 +44,15 @@ from mslib.mscolab.mscolab import handle_db_reset
 from mslib.utils.config import modify_config_file
 from tests.utils import is_url_response_ok
 
+# mslib.mscolab.server and mslib.mswms.mswms are imported lazily, inside the
+# fixtures that need them (mscolab_session_app/mscolab_session_managers,
+# mswms_app) rather than at module scope here. Both bind their config from
+# mscolab_settings/mswms_settings at import time and mscolab.server also runs
+# a real DB migration, so importing this module must stay cheap and
+# side-effect-free -- tests/_test_msui/conftest.py and root conftest.py rely
+# on tests.fixtures being safely importable regardless of which test
+# directories are in scope.
+
 
 @pytest.fixture
 def fail_if_open_message_boxes_left():
@@ -106,10 +115,20 @@ def mscolab_session_app():
     return create_server_app()
 
 
-# TODO: Having this fixture be autouse is a crutch. It seems like if it is not autouse some tests can bring the pytest
-# processes objects into a state in which the MSColab server will have trouble starting the Flask-SocketIO server once
-# it is forked. With autouse the fork happens first, before any test runs. After that, the pytest process can no longer
-# affect the now-running server, thus mitigating the issue. This is my understanding at time of writing.
+# TODO: This fixture used to be autouse here, which is a crutch. It seems like if it is not autouse
+# some tests can bring the pytest processes objects into a state in which the MSColab server will have
+# trouble starting the Flask-SocketIO server once it is forked. With autouse the fork happens first,
+# before any test runs. After that, the pytest process can no longer affect the now-running server, thus
+# mitigating the issue. This is my understanding at time of writing.
+#
+# It's no longer unconditionally autouse here (that forked a server even for sessions that never touch
+# mscolab/msui, e.g. test-fast). Instead, root conftest.py's `_ensure_mscolab_server_if_needed` fixture
+# is autouse and forces this fixture -- still as the very first thing in the session, before any test
+# touches Qt or multiprocessing state -- whenever the collected tests actually need it (checked via
+# `mscolab_session_server` appearing in some item's fixture closure). That check has to live in root
+# conftest.py rather than a directory-scoped one: fixture autouse-ness only applies within its own
+# directory subtree, but the fork-before-Qt ordering constraint is a whole-session/whole-process concern
+# that can't be satisfied if some other directory's test runs first in the same worker.
 #
 # This issue would also be avoided if the background server process wasn't started with multiprocessing and a fork, but
 # with a real subprocess, which would solve some other issues (e.g. testing on Windows) as well.
@@ -215,6 +234,12 @@ def mscolab_server(mscolab_session_server, reset_mscolab):
 @pytest.fixture(scope="session")
 def mswms_app():
     """Fixture that provides the MSWMS WSGI app instance."""
+    # Must run before mslib.mswms.mswms is imported: it binds its config from
+    # mswms_settings (and registers the demo layers) at import time.
+    from tests.server_setup import ensure_mswms_testdata
+    ensure_mswms_testdata()
+    import mslib.mswms.mswms
+
     yield mslib.mswms.mswms.application
     # Close all open NetCDF4 datasets to release file handles
     from mslib.mswms import wms

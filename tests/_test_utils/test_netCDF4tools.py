@@ -34,6 +34,11 @@ from mslib.utils.netCDF4tools import (
     identify_vertical_axis, identify_CF_time, num2date, get_latlon_data
 )
 from tests.constants import MSWMS_DATA_DIR
+from tests.server_setup import ensure_mswms_testdata
+
+# Only this file (of the whole test-fast subset) needs the demo NetCDF data;
+# ensure it exists without pulling the cost into every other utils/plugins test.
+ensure_mswms_testdata()
 
 DATA_FILE_ML = os.path.join(MSWMS_DATA_DIR, "20121017_12_ecmwf_forecast.CC.EUR_LL015.036.ml.nc")
 DATA_FILE_PL = os.path.join(MSWMS_DATA_DIR, "20121017_12_ecmwf_forecast.PRESSURE_LEVELS.EUR_LL015.036.pl.nc")

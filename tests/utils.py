@@ -33,7 +33,7 @@ from urllib.parse import urljoin
 from flask import json
 
 from mslib.mscolab.auth import register_user
-from tests.constants import MSUI_CONFIG_FILE_PATH
+from tests.constants import create_msui_settings_file  # noqa: F401
 from mslib.mscolab.seed import XML_CONTENT_INIT
 
 
@@ -231,10 +231,6 @@ def mscolab_get_operation_id(app, msc_url, email, password, username, fullname, 
     for p in response['operations']:
         if p['path'] == path:
             return p['op_id']
-
-
-def create_msui_settings_file(content):
-    MSUI_CONFIG_FILE_PATH.write_text(content)
 
 
 def is_url_response_ok(url):
