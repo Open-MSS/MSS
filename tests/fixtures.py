@@ -31,7 +31,6 @@ import time
 import urllib
 import socketio
 
-import mslib.mswms.mswms
 from pathlib import Path
 from werkzeug.serving import make_server
 
