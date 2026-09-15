@@ -26,13 +26,19 @@
 """
 
 import io
-import json
 from pathlib import Path
 
 from PIL import Image
 from flask import Blueprint, g, request, jsonify, send_from_directory, current_app
 
 from mslib.mscolab.auth import verify_user
+from mslib.mscolab.api.schemas import (
+    DeleteOwnAccountResponse,
+    FetchProfileImageRequest,
+    GetUserResponse,
+    ProfileImageMessageResponse,
+    UserInfo,
+)
 
 USER_BP = Blueprint('user', __name__)
 
@@ -40,7 +46,8 @@ USER_BP = Blueprint('user', __name__)
 @USER_BP.route('/user', methods=["GET"])
 @verify_user
 def get_user():
-    return json.dumps({'user': {'id': g.user.id, 'username': g.user.username, 'fullname': g.user.fullname}})
+    user = UserInfo(id=g.user.id, username=g.user.username, fullname=g.user.fullname)
+    return GetUserResponse(user=user).to_text()
 
 
 @USER_BP.route('/upload_profile_image', methods=["POST"])
@@ -49,36 +56,34 @@ def upload_profile_image():
     user_id = g.user.id
     file = request.files['image']
     if not file:
-        return jsonify({'message': 'No file provided or invalid file type'}), 400
+        return jsonify(ProfileImageMessageResponse(message='No file provided or invalid file type').to_dict()), 400
     data = file.read()
     if len(data) > current_app.config['MAX_UPLOAD_SIZE']:
-        return jsonify({'message': 'File too large'}), 413
+        return jsonify(ProfileImageMessageResponse(message='File too large').to_dict()), 413
     try:
         img = Image.open(io.BytesIO(data))
         img.verify()
     except Exception:
-        return jsonify({'message': 'Invalid file type'}), 400
+        return jsonify(ProfileImageMessageResponse(message='Invalid file type').to_dict()), 400
     file.seek(0)
     fm = current_app.extensions['fm']
     success, message = fm.save_user_profile_image(user_id, file)
-    if success:
-        return jsonify({'message': message}), 200
-    else:
-        return jsonify({'message': message}), 400
+    status_code = 200 if success else 400
+    return jsonify(ProfileImageMessageResponse(message=message).to_dict()), status_code
 
 
 @USER_BP.route('/fetch_profile_image', methods=["GET"])
 @verify_user
 def fetch_profile_image():
     fm = current_app.extensions['fm']
-    user_id = request.form['user_id']
-    op_id = request.args.get("op_id", request.form.get("op_id", None))
-    success, filename = fm.get_user_profile_image(user_id, op_id, g.user.id)
+    req = FetchProfileImageRequest.from_args_and_form(request.args, request.form)
+    success, filename = fm.get_user_profile_image(req.user_id, req.op_id, g.user.id)
     if success:
         base_path = current_app.config['UPLOAD_FOLDER']
         return send_from_directory(Path(base_path), filename)
     else:
-        return jsonify({'message': 'User or profile image not found'}), 404
+        response = ProfileImageMessageResponse(message='User or profile image not found')
+        return jsonify(response.to_dict()), 404
 
 
 @USER_BP.route("/delete_own_account", methods=["POST"])
@@ -90,4 +95,4 @@ def delete_own_account():
     fm = current_app.extensions['fm']
     user = g.user
     result = fm.modify_user(user, action="delete")
-    return jsonify({"success": result}), 200
+    return jsonify(DeleteOwnAccountResponse(success=result).to_dict()), 200

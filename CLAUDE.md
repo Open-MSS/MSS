@@ -16,7 +16,7 @@ Python constraint: **< 3.12** (pinned in pixi.toml).
 pixi run -e dev lint            # flake8 over tracked .py files
 pixi run -e dev lint-imports    # architectural import contracts (setup.cfg)
 pixi run -e dev codespell       # spelling
-pixi run -e dev test-fast       # plugins + utils + meta; no servers, fastest signal
+pixi run -e dev test-fast       # api + plugins + utils + meta; no servers, fastest signal
 pixi run -e dev test-msui       # GUI suite (offscreen Qt)
 pixi run -e dev test-mscolab    # collaboration-server suite
 pixi run -e dev test-mswms      # WMS-server suite
@@ -45,7 +45,7 @@ Single package `mslib` with four main subpackages:
 
 CLI entrypoints (pixi env): `msui`, `mscolab`, `mswms`, `msidp`, `mssautoplot`, `mss`.
 
-Tests mirror the package structure under `tests/` with subdirectories `_test_mscolab/`, `_test_msui/`, `_test_mswms/`, `_test_plugins/`, `_test_utils/`.
+Tests mirror the package structure under `tests/` with subdirectories `_test_api/`, `_test_mscolab/`, `_test_msui/`, `_test_mswms/`, `_test_plugins/`, `_test_utils/`.
 
 ## Testing notes
 
