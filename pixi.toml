@@ -107,7 +107,8 @@ pytest-xdist = "*"
 lint = { cmd = "git ls-files -z '**.py' | xargs -0 flake8" }
 lint-imports = "lint-imports"
 codespell = { cmd = "git ls-files -z | xargs -0 codespell --check-filenames" }
-test-fast = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_plugins tests/_test_utils tests/test_meta.py"
+test-fast = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_api tests/_test_plugins tests/_test_utils tests/test_meta.py"
+test-api = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_api"
 test-plugins = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_plugins"
 test-utils = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_utils"
 test-msui = "env QT_QPA_PLATFORM=offscreen pytest -v -n logical tests/_test_msui"
