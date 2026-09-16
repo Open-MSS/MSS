@@ -363,6 +363,9 @@ class Worker(QtCore.QThread):
             result = self.function()
             # ToDo the capbilities worker member needs the possibility to terminate itself.
             # ToDo refactoring needed
+            # The name is matched instead of the class, this module may not import
+            # mslib.msui (see the gui-isolation contract in setup.cfg). The service
+            # classes in mslib.msui.wms_control are named accordingly.
             if "MSUIWebMapService" in repr(result) and not result.contents:
                 raise NoLayersError
             else:
