@@ -124,6 +124,19 @@ class DefaultSettings:
     # accounts on a database on the server
     DIRECT_LOGIN = True
 
+    # base URL of the running mscolab server. Used by the `mscolab db` CLI actions
+    # (e.g. --delete_users_by_file) to reach the live server and trigger the same
+    # socket.io notifications connected clients get when the equivalent action is
+    # done through the REST API. The CLI runs as its own process, separate from the
+    # server, so it cannot emit socket.io events directly.
+    SERVER_URL = "http://localhost:8083"
+
+    # shared secret the CLI uses to authenticate against the server's internal
+    # notify endpoint (see SERVER_URL above). Like SECRET_KEY, this is randomized
+    # per process by default, so set it explicitly in your mscolab_settings when the
+    # CLI and the server run as separate process invocations that need to agree on it.
+    ADMIN_TOKEN = secrets.token_urlsafe(16)
+
 
 mscolab_settings = DefaultSettings()
 

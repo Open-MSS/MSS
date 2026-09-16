@@ -241,13 +241,14 @@ def create_app(config_object=mscolab_settings):
     app.jinja_env.globals["gdpr"] = app.config['GDPR'] or ""
     app.jinja_env.globals.update(get_topmenu=get_topmenu)
 
+    from mslib.mscolab.blueprints.admin import ADMIN_BP
     from mslib.mscolab.blueprints.auth import AUTH_BP
     from mslib.mscolab.blueprints.chat import CHAT_BP
     from mslib.mscolab.blueprints.operation import OPERATION_BP
     from mslib.mscolab.blueprints.user import USER_BP
     from mslib.mscolab.blueprints.docs import DOCS_BP
 
-    for bp in (AUTH_BP, CHAT_BP, OPERATION_BP, USER_BP, DOCS_BP):
+    for bp in (ADMIN_BP, AUTH_BP, CHAT_BP, OPERATION_BP, USER_BP, DOCS_BP):
         app.register_blueprint(bp)
 
     return app
