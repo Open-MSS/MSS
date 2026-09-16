@@ -52,11 +52,11 @@ def test_main():
 
 
 def test_keep_config_file(qtbot):
-    # in conftest we set always the mss_dir in the config file
-    mss_dir = config_loader(dataset="mss_dir")
+    # in conftest we set always the mscolab_local_data_dir in the config file
+    mscolab_local_data_dir = config_loader(dataset="mscolab_local_data_dir")
     _config = MSUI_CONFIG_FILE_PATH.read_text()
     assert _config == f'''{{
-    "mss_dir": "{mss_dir}"
+    "mscolab_local_data_dir": "{mscolab_local_data_dir}"
 }}'''
     config = """{
             "MSCOLAB_skip_archived_operations": true

@@ -71,7 +71,7 @@ def fail_if_open_message_boxes_left():
 
 @pytest.fixture
 def msui_configs(tmp_path):
-    modify_config_file({"mss_dir": str(tmp_path)})
+    modify_config_file({"mscolab_local_data_dir": str(tmp_path)})
 
 
 @pytest.fixture

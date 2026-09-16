@@ -38,6 +38,12 @@ MSUI_CONFIG_SYSPATH = str(MSUI_CONFIG_PATH.resolve())
 
 MSUI_CACHE_PATH = platformdirs.user_cache_path("msui", "mss")
 
+# XDG-style directory for user-authored MSS output (flight tracks, exported plots).
+MSUI_DOCUMENTS_PATH = Path(os.getenv("MSUI_DOCUMENTS_PATH", platformdirs.user_documents_path() / "mss"))
+
+# XDG-style directory for local, non-user-authored MSS state (e.g. the MSColab local operations mirror).
+MSUI_DATA_PATH = Path(os.getenv("MSUI_DATA_PATH", platformdirs.user_data_path("msui", "mss")))
+
 GRAVATAR_DIR_PATH = MSUI_CONFIG_PATH / "gravatars"
 
 MSUI_SETTINGS = Path(os.getenv('MSUI_SETTINGS', MSUI_CONFIG_PATH / "msui_settings.json"))

@@ -183,7 +183,7 @@ class MSUIMscolab(QtCore.QObject):
 
         # set data dir, uri
         if local_operations_data is None:
-            self.data_dir = Path(config_loader(dataset="mss_dir"))
+            self.data_dir = Path(config_loader(dataset="mscolab_local_data_dir"))
         else:
             self.data_dir = Path(local_operations_data)
         self.create_dir()
