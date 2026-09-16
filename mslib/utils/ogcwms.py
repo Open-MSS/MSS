@@ -47,6 +47,9 @@
 #   -- renamed to ogcwms (2017-04-28)
 #   -- PEP8 review
 #   -- adopted it to the recent 0.14 version https://pypi.python.org/pypi/OWSLib/0.14.0
+#   -- reduced to what MSS actually adds to owslib, everything else is owslib's
+#      again: version negotiation, the capabilities document, the full set of
+#      dimensions, proxy support (2026-09)
 # ******************************************************************************
 #
 # =============================================================================
@@ -55,6 +58,10 @@
 API for Web Map Service (WMS) methods and metadata.
 
 Currently supports only versions 1.1.1/1.3.0 of the WMS protocol.
+
+Only what MSS needs on top of owslib lives here, see `WebMapService`. The
+`openURL` below is owslib's, with proxy support added; it is used for the
+capabilities request and by `mslib.msui.wms_control` for GetMap.
 """
 
 import defusedxml.ElementTree as etree
@@ -68,12 +75,27 @@ from owslib.util import ResponseWrapper, Authentication, strip_bom
 from mslib.utils.config import config_loader
 
 
+#: The version assumed for servers announcing one MSS does not implement.
+DEFAULT_VERSION = "1.1.1"
+
+#: The owslib service class per WMS version, as owslib.wms.WebMapService dispatches them.
+SERVICE_CLASSES = {
+    "1.1.1": wms111.WebMapService_1_1_1,
+    "1.3.0": wms130.WebMapService_1_3_0,
+}
+
+#: The XML namespace of the layer elements per WMS version, 1.1.1 has none.
+WMS_NAMESPACES = {
+    "1.1.1": "",
+    "1.3.0": "{http://www.opengis.net/wms}",
+}
+
+
 def openURL(url_base, data=None, method='Get', cookies=None,
-            username=None, password=None,
-            timeout=config_loader(dataset="WMS_request_timeout"),
+            username=None, password=None, timeout=None,
             headers=None, verify=None, cert=None, auth=None, proxies=None):
     # (mss) added proxies
-    # (mss) timeout default of 30secs set by the config_loader
+    # (mss) timeout defaults to the configured WMS_request_timeout
     """
     Function to open URLs.
 
@@ -83,7 +105,8 @@ def openURL(url_base, data=None, method='Get', cookies=None,
     headers = headers if headers is not None else {}
     rkwargs = {}
 
-    rkwargs['timeout'] = timeout
+    # (mss) read at call time, the configuration may have changed since import
+    rkwargs['timeout'] = config_loader(dataset="WMS_request_timeout") if timeout is None else timeout
 
     if auth:
         if username:
@@ -161,223 +184,137 @@ def openURL(url_base, data=None, method='Get', cookies=None,
     return ResponseWrapper(req)
 
 
-class WebMapService(wms111.WebMapService_1_1_1):
-    """Abstraction for OGC Web Map Service (WMS).
+def _parse_dimensions(elem, version):
+    """(mss) Parse all dimensions of a layer element and their extents.
 
-    Implements IWebMapService.
+    owslib only keeps the two dimensions the standard predefines, "time" and
+    "elevation". MSS offers whatever a server announces, e.g. "init_time".
+
+    Up to 1.1.1 the values of a dimension live in a separate <Extent> element,
+    1.3.0 merged them into <Dimension>. Both are reported as `extents` here.
     """
+    namespace = WMS_NAMESPACES[version]
+    dimensions, extents = {}, {}
 
-    def __init__(self, url, version=None, xml=None, username=None, password=None,
-                 parse_remote_metadata=False, headers=None,
-                 timeout=config_loader(dataset="WMS_request_timeout"),
-                 auth=None):
-        """Initialize."""
+    def values(element):
+        return element.text.strip().split(",") if element.text else []
 
-        if auth:
-            if username:
-                auth.username = username
-            if password:
-                auth.password = password
-        self.url = url
-        self.version = version
-        self.timeout = timeout
-        self.headers = headers
-        self._capabilities = None
-        self.auth = auth or Authentication(username, password)
-
-        # Authentication handled by Reader
-        reader = WMSCapabilitiesReader(self.version, url=self.url, headers=headers, auth=self.auth)
-        if xml:
-            # read from stored xml
-            self._capabilities = reader.readString(xml)
-        else:
-            # read from server
-            self._capabilities = reader.read(self.url, timeout=self.timeout)
-
-        self.request = reader.request
-        if not self.version:
-            self.version = self._capabilities.attrib["version"]
-            if self.version not in ["1.1.1", "1.3.0"]:
-                self.version = "1.1.1"
-            reader.version = self.version
-
-        self.WMS_NAMESPACE = "{http://www.opengis.net/wms}" if self.version == "1.3.0" else ""
-        self.OGC_NAMESPACE = "{http://www.opengis.net/ogc}" if self.version == "1.3.0" else ""
-
-        # avoid building capabilities metadata if the
-        # response is a ServiceExceptionReport
-        se = self._capabilities.find('ServiceException')
-        if se is not None:
-            err_message = str(se.text).strip()
-            raise ServiceException(err_message)
-
-        # (mss) Store capabilities document.
-        self.capabilities_document = reader.capabilities_document
-        # (mss)
-
-        # build metadata objects
-        self._buildMetadata(parse_remote_metadata)
-
-    def _buildMetadata(self, parse_remote_metadata=False):
-        """ set up capabilities metadata objects """
-
-        # serviceIdentification metadata
-        serviceelem = self._capabilities.find(f'{self.WMS_NAMESPACE}Service')
-        self.identification = (wms130 if self.version == "1.3.0" else wms111)\
-            .ServiceIdentification(serviceelem, self.version)
-
-        # serviceProvider metadata
-        self.provider = (wms130 if self.version == "1.3.0" else wms111).ServiceProvider(serviceelem)
-
-        # serviceOperations metadata
-        self.operations = []
-        for elem in self._capabilities.find(f'{self.WMS_NAMESPACE}Capability/{self.WMS_NAMESPACE}Request')[:]:
-            self.operations.append((wms130 if self.version == "1.3.0" else wms111).OperationMetadata(elem))
-
-        # serviceContents metadata: our assumption is that services use a top-level
-        # layer as a metadata organizer, nothing more.
-        self.contents = {}
-        caps = self._capabilities.find(f'{self.WMS_NAMESPACE}Capability')
-
-        def gather_layers(parent_elem, parent_metadata):
-            layers = []
-            for index, elem in enumerate(parent_elem.findall(f'{self.WMS_NAMESPACE}Layer')):
-                cm = ContentMetadata(elem, parent=parent_metadata,
-                                     index=index + 1,
-                                     parse_remote_metadata=parse_remote_metadata,
-                                     version=self.version)
-                if cm.id:
-                    if cm.id in self.contents:
-                        logging.debug('Content metadata for layer "%s" already exists. Using child layer' % cm.id)
-                    layers.append(cm)
-                    self.contents[cm.id] = cm
-                cm.children = gather_layers(elem, cm)
-            return layers
-        gather_layers(caps, None)
-
-        # for elem in caps.findall(f'{self.WMS_NAMESPACE}Layer'):
-        #    cm = ContentMetadata(elem, version=self.version)
-        #    self.contents[cm.id] = cm
-        #    for subelem in elem.findall(f'{self.WMS_NAMESPACE}Layer'):
-        #        subcm = ContentMetadata(subelem, cm, version=self.version)
-        #        self.contents[subcm.id] = subcm
-
-        # exceptions
-        self.exceptions = [f.text for f in self._capabilities.findall(
-            f'{self.WMS_NAMESPACE}Capability/{self.WMS_NAMESPACE}Exception/{self.WMS_NAMESPACE}Format')]
-
-    @property
-    def getcapabilities(self):
-        """ Request and return capabilities document from the WMS as a
-            file-like object.
-            NOTE: this is effectively redundant now
-        """
-        reader = WMSCapabilitiesReader(self.version, url=self.url, auth=self.auth)
-        u = self._open(reader.capabilities_url(self.url))
-        # check for service exceptions, and return
-        if u.info()['Content-Type'] == 'application/vnd.ogc.se_xml':
-            se_xml = u.read()
-            se_tree = etree.fromstring(se_xml)
-            err_message = str(se_tree.find(f'{self.OGC_NAMESPACE}ServiceException').text).strip()
-            raise ServiceException(err_message, se_xml)
-        return u
-
-    def getfeatureinfo(self):
-        raise NotImplementedError
-
-
-def ContentMetadata(elem, parent=None, children=None, index=0,
-                    parse_remote_metadata=False,
-                    timeout=config_loader(dataset="WMS_request_timeout"),
-                    auth=None, version="1.3.0"):
-    WMS_NAMESPACE = "{http://www.opengis.net/wms}" if version == "1.3.0" else ""
-
-    if version == "1.3.0":
-        metadata = wms130.ContentMetadata(elem, parent=parent, children=children, index=index,
-                                          parse_remote_metadata=parse_remote_metadata, timeout=timeout, auth=auth)
-    else:
-        metadata = wms111.ContentMetadata(elem, parent=parent, children=children, index=index,
-                                          parse_remote_metadata=parse_remote_metadata, timeout=timeout, auth=auth)
-
-    # (mss) Parse dimensions and their extents.
-    metadata.dimensions = {}
-    metadata.extents = {}
-    for dim in elem.findall(f'{WMS_NAMESPACE}Dimension'):
-        dimname = dim.attrib.get("name").lower()
-        metadata.dimensions[dimname] = dim.attrib
+    for dimension in elem.findall(f"{namespace}Dimension"):
+        name = dimension.attrib.get("name").lower()
+        dimensions[name] = dict(dimension.attrib)
         if version == "1.3.0":
-            metadata.extents[dimname] = dim.attrib
-            metadata.extents[dimname]["values"] = dim.text.strip().split(",")
-    if version == "1.1.1":
-        for extent in elem.findall(f'{WMS_NAMESPACE}Extent'):
-            extname = extent.attrib.get("name").lower()
-            metadata.extents[extname] = extent.attrib
-            if extent.text:
-                metadata.extents[extname]["values"] = extent.text.strip().split(",")
-            else:
-                metadata.extents[extname]["values"] = []
-    # (mss)
+            extents[name] = dict(dimension.attrib, values=values(dimension))
+    for extent in elem.findall(f"{namespace}Extent"):
+        name = extent.attrib.get("name").lower()
+        extents[name] = dict(extent.attrib, values=values(extent))
 
-    # (mss) Added "Abstract".
-    for key in ('Name', 'Title', 'Abstract'):
-        val = elem.find(WMS_NAMESPACE + key)
-        # (mss) Added " and val.text is not None".
-        if val is not None and val.text is not None:
-            setattr(metadata, key.lower(), val.text.strip())
-        else:
-            setattr(metadata, key.lower(), None)
-        metadata.id = metadata.name  # conform to new interface
-
-    # (mss) Replace owslib ContentMetadata children with ogcwms ContentMetadata
-    metadata.layers = []
-    for child in elem.findall('Layer'):
-        metadata.layers.append(ContentMetadata(child, metadata, version=version))
-
-    return metadata
+    return dimensions, extents
 
 
-class WMSCapabilitiesReader(common.WMSCapabilitiesReader):
-    """Read and parse capabilities document into a lxml.etree infoset
+def _patch_content_metadata(module, version):
+    """(mss) Let owslib's layer metadata carry every dimension a layer announces.
+
+    owslib instantiates ContentMetadata in two places, WebMapService._buildMetadata
+    and the recursion that builds layer.layers, and both resolve the class through
+    the module globals. Those are two parallel trees of distinct objects and MSS
+    reads dimensions from either, so extending __init__ in place is the one spot
+    that covers all of them. Replacing the class by a subclass would not work:
+    owslib calls `super(ContentMetadata, self)` with the patched module global and
+    would recurse endlessly.
     """
+    original_init = module.ContentMetadata.__init__
 
-    def __init__(self, version='1.3.0', url=None, un=None, pw=None, headers=None, auth=None):
-        """Initialize"""
-        super().__init__(version, url, un, pw, headers, auth)
-        # (mss) Store capabilities document.
-        self.capabilities_document = None
-        # (mss)
+    def patched_init(self, elem, *args, **kwargs):
+        original_init(self, elem, *args, **kwargs)
+        self.dimensions, self.extents = _parse_dimensions(elem, version)
 
-    def read(self, service_url,
-             timeout=config_loader(dataset="WMS_request_timeout")):
-        """Get and parse a WMS capabilities document, returning an
-        elementtree instance
+    module.ContentMetadata.__init__ = patched_init
 
-        service_url is the base url, to which is appended the service,
-        version, and request parameters
-        """
-        getcaprequest = self.capabilities_url(service_url)
 
-        # Don't specify a version if it is to be determined
-        getcaprequest = getcaprequest.replace("&version=None", "").replace("?version=None", "")
+for _version, _module in (("1.1.1", wms111), ("1.3.0", wms130)):
+    _patch_content_metadata(_module, _version)
 
-        proxies = config_loader(dataset="proxies")
 
-        # now split it up again to use the generic openURL function...
-        spliturl = getcaprequest.split('?')
-        u = openURL(spliturl[0], spliturl[1], method='Get', auth=self.auth, proxies=proxies)
+def _capabilities_version(capabilities_document):
+    """(mss) The WMS version a capabilities document announces, as far as MSS implements it."""
+    version = etree.fromstring(capabilities_document).attrib.get("version")
+    if version not in SERVICE_CLASSES:
+        logging.debug("WMS version '%s' is not supported, reading the document as '%s'",
+                      version, DEFAULT_VERSION)
+        version = DEFAULT_VERSION
+    return version
 
-        # (mss) Store capabilities document.
-        self.capabilities_document = strip_bom(u.read())
-        return etree.fromstring(self.capabilities_document)
-        # (mss)
 
-    def readString(self, st):
-        """Parse a WMS capabilities document, returning an elementtree instance
-                string should be an XML capabilities document
-                """
-        if not isinstance(st, str):
-            raise ValueError("String must be of type string, not %s" % type(st))
-        return etree.fromstring(st)
+def _read_capabilities(url, version=None, headers=None, auth=None, timeout=None):
+    """(mss) Request a capabilities document through the configured proxies.
+
+    Returns the document and the URL it was requested from. A `version` of None
+    leaves the choice to the server.
+    """
+    request = common.WMSCapabilitiesReader(version, url=url, headers=headers, auth=auth) \
+        .capabilities_url(url)
+    # (mss) Don't specify a version if it is to be determined
+    request = request.replace("&version=None", "").replace("?version=None", "")
+
+    base_url, _, query = request.partition("?")
+    response = openURL(base_url, query, method='Get', headers=headers, auth=auth,
+                       timeout=timeout, proxies=config_loader(dataset="proxies"))
+    return strip_bom(response.read()), request
+
+
+def WebMapService(url, version=None, xml=None, username=None, password=None,
+                  parse_remote_metadata=False, headers=None, timeout=None, auth=None,
+                  service_classes=None):
+    """(mss) The MSS counterpart of owslib.wms.WebMapService.
+
+    Like owslib it returns a version specific owslib service object, but on top
+    of that it
+
+      * negotiates the version with the server if none is given -- MSS talks to
+        servers it knows nothing about beforehand,
+      * keeps the capabilities document as `capabilities_document`, MSS shows it
+        and compares it against the cached one,
+      * routes the request through the proxies configured for MSS,
+      * reports every dimension a layer announces, not just time and elevation,
+        see `_patch_content_metadata`.
+
+    `service_classes` maps a version to the class to instantiate, it exists so
+    that mslib.msui.wms_control can add its own GetMap implementation.
+    """
+    if auth:
+        if username:
+            auth.username = username
+        if password:
+            auth.password = password
+    else:
+        auth = Authentication(username, password)
+
+    if service_classes is None:
+        service_classes = SERVICE_CLASSES
+    if version is not None and version not in service_classes:
+        raise NotImplementedError(
+            f"The WMS version ({version}) you requested is not implemented. Please use 1.1.1 or 1.3.0.")
+
+    request = None
+    if xml is None:
+        xml, request = _read_capabilities(url, version, headers=headers, auth=auth, timeout=timeout)
+    elif isinstance(xml, str):
+        # (mss) owslib parses with lxml, which refuses a str with an encoding declaration
+        xml = xml.encode("utf-8")
+
+    if version is None:
+        version = _capabilities_version(xml)
+
+    service = service_classes[version](
+        url, version=version, xml=xml, parse_remote_metadata=parse_remote_metadata, headers=headers,
+        timeout=config_loader(dataset="WMS_request_timeout") if timeout is None else timeout, auth=auth)
+
+    # (mss) Store capabilities document.
+    service.capabilities_document = xml
+    if request is not None:
+        # (mss) owslib only knows the request URL when it did the request itself
+        service.request = request
+    return service
 
 
 def removeXMLNamespace(tree):
