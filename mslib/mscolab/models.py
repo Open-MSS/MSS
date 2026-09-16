@@ -35,7 +35,7 @@ import sqlalchemy.types
 from flask import current_app
 
 from mslib.mscolab.app import db
-from mslib.mscolab.message_type import MessageType
+from mslib.mscolab.api.message_type import MessageType
 
 
 PH = PasswordHasher(
