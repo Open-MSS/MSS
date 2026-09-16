@@ -108,8 +108,8 @@ under `ignore_imports` and must only shrink):
 1. Never hand-edit `mslib/msui/qt5/ui_*.py` (pyuic5 output; sources in
    `mslib/msui/ui/`) or `mslib/mscolab/migrations/` (Alembic).
 2. Client/server shared vocabulary lives ONLY in `mslib/mscolab/api/` (typed
-   REST schemas + endpoint names) and `mslib/mscolab/{events,message_type}.py`
-   (socket vocabulary). Most REST payloads are still implicit dicts — when
+   REST schemas + endpoint names, plus `events.py`/`message_type.py` for the
+   socket vocabulary). Most REST payloads are still implicit dicts — when
    touching one that has no schema yet, update BOTH the blueprint handler and
    the client call site in `mslib/msui/mscolab.py`, and grep for the endpoint
    name. A route with a schema in `mslib/mscolab/api/schemas.py` only needs
