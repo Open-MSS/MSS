@@ -115,6 +115,15 @@ def _ensure_mscolab_server_if_needed(request):
         request.getfixturevalue("mscolab_session_server")
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _ensure_mswms_server_if_needed(request):
+    """Fork the mswms server before anything else in this worker touches Qt,
+    multiprocessing state, or opens netCDF/HDF5 datasets in-process.
+    """
+    if any("mswms_server" in item.fixturenames for item in request.session.items):
+        request.getfixturevalue("mswms_server")
+
+
 # Make fixtures available everywhere. tests.fixtures itself has no
 # mscolab/mswms/Qt side effects at import time (those are lazy, inside the
 # fixtures that need them), so this is safe and cheap regardless of which
