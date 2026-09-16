@@ -387,13 +387,6 @@ class Test_WMS:
         assert mslib.mswms.wms.mswms_settings.__file__ is not None
         assert mslib.mswms.wms.mswms_auth.__file__ is not None
 
-    @pytest.mark.skip("""\
-There is a race condition between modifying with ncap2 and asserting that the file changed where the server might not
-see the change before the request is made, which leads to a failure of the following assert.
-
-This test fails on macOS 14 and can also fail on Linux when the pytest test order is randomized.
-""".strip(),
-    )
     def test_files_changed(self):
         def do_test():
             environ = {
