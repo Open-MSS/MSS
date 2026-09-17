@@ -56,6 +56,12 @@ The **left treewidget** is used to configure the automated plotting flights list
 - Flight, filename, and section parameters are configured in the **Top View**.
 - The vertical parameter is configured in the **Side View**.
 
+The filename is taken from the flight track currently loaded. The treewidget shows the
+file name alone, while the configuration file stores it with its path, so that
+mssautoplot finds it independent of the directory it is started in. A flight track
+which was never saved has no file yet, for that one only its name is stored and the
+file is looked up in the current working directory.
+
 The **right treewidget** is used to configure the automated plotting flight sections, which are based on the view:
 
 - For **Top View**, it is `"automated_plotting_hsecs": [["URL", "Layer", "Styles", "Level"]]`.
