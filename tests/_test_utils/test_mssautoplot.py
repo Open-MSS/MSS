@@ -27,8 +27,9 @@
 
 
 import os
+from pathlib import Path
 
-from mslib.autoplot import load_from_ftml
+from mslib.autoplot import load_from_ftml, resolve_ftml_path
 
 
 def test_load_from_ftml():
@@ -43,3 +44,36 @@ def test_load_from_ftml():
                          (63.74, 1.73, 0.0, 'C', 'Landing')]
     assert len(wp_list) == 5
     assert type(wp_list[0]).__name__ == 'Waypoint'
+
+
+class TestResolveFtmlPath:
+    """
+    The flight track of an "automated_plotting_flights" entry is stored as path + file name,
+    --fpath overrides the directory of that entry.
+    """
+    def test_absolute_path_is_kept(self):
+        assert resolve_ftml_path("/home/mss/flights/example.ftml") == Path("/home/mss/flights/example.ftml")
+
+    def test_bare_filename_relative_to_working_directory(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        assert resolve_ftml_path("example.ftml") == Path(tmp_path).resolve() / "example.ftml"
+
+    def test_relative_path_relative_to_working_directory(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        assert resolve_ftml_path(os.path.join("flights", "example.ftml")) == \
+            Path(tmp_path).resolve() / "flights" / "example.ftml"
+
+    def test_user_directory_is_expanded(self):
+        resolved = resolve_ftml_path(os.path.join("~", "example.ftml"))
+        assert resolved == Path.home().resolve() / "example.ftml"
+
+    def test_fpath_overrides_directory(self):
+        assert resolve_ftml_path("/home/mss/flights/example.ftml", "/data/campaign") == \
+            Path("/data/campaign/example.ftml")
+
+    def test_fpath_overrides_bare_filename(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        assert resolve_ftml_path("example.ftml", "/data/campaign") == Path("/data/campaign/example.ftml")
+
+    def test_empty_fpath_is_ignored(self):
+        assert resolve_ftml_path("/home/mss/flights/example.ftml", "") == Path("/home/mss/flights/example.ftml")
