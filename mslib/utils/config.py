@@ -35,7 +35,7 @@ from pathlib import Path
 
 from mslib.utils import FatalUserError
 from mslib.utils import constants
-from mslib.support.qt_json_view.datatypes import match_type, UrlType, StrType
+from mslib.support.qt_json_view.datatypes import match_type
 
 
 class MSUIDefaultConfig:
@@ -665,7 +665,10 @@ def compare_data(default, user_data):
     if not isinstance(default, dict) and not isinstance(default, list):
         if isinstance(default, float) and isinstance(user_data, int):
             user_data = float(default)
-        if isinstance(match_type(default), UrlType) and isinstance(match_type(user_data), StrType):
+        if isinstance(default, str) and isinstance(user_data, str):
+            # A string option takes any string. match_type() maps urls to UrlType and
+            # absolute paths to FilepathType, so matching the types would drop e.g. the
+            # flight track path of an "automated_plotting_flights" entry.
             return user_data, True
         if isinstance(match_type(default), type(match_type(user_data))):
             return user_data, True
