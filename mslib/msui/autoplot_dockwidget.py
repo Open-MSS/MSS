@@ -31,6 +31,7 @@ import os
 import json
 import logging
 from datetime import datetime
+from pathlib import Path
 
 import click
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem, QMessageBox
@@ -301,6 +302,39 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             parent.refresh_signal_emit.emit()
             self.resize_treewidgets()
 
+    @staticmethod
+    def flighttrack_filename(parent, name):
+        """
+        Path and file name of the flight track currently shown in <parent>.
+
+        mssautoplot needs the directory too, otherwise it only finds the flight
+        track when it is started in the directory the file lives in. A track
+        which was never saved has no file yet, for that one the name is all we
+        have to offer.
+        """
+        filename = parent.waypoints_model.get_filename()
+        if not filename:
+            return f"{name}.ftml"
+        return str(Path(filename).expanduser().resolve())
+
+    @staticmethod
+    def filename_to_show(filename):
+        """
+        The flight track as it is shown in the tree widget: the file name alone.
+
+        The configuration stores it with its path, that one is only needed by
+        mssautoplot to find the file from any working directory.
+        """
+        return Path(filename).name if filename else filename
+
+    @staticmethod
+    def flights_row_to_show(row):
+        """An "automated_plotting_flights" entry as it is shown in the tree widget."""
+        if len(row) > 3:
+            row = list(row)
+            row[3] = AutoplotDockWidget.filename_to_show(row[3])
+        return row
+
     def add_to_treewidget(self, parent, parent2, config_settings, treewidget, flight, sections, vertical, filename,
                           itime, vtime, url, layer, styles, level):
         if treewidget.objectName() == "autoplotTreeWidget":
@@ -316,8 +350,9 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 flight = ""
             else:
                 if filename != parent2.mscolab.active_operation_name:
-                    filename += ".ftml"
-            item = QTreeWidgetItem([flight, sections, vertical, filename, itime, vtime])
+                    filename = self.flighttrack_filename(parent, filename)
+            item = QTreeWidgetItem(
+                self.flights_row_to_show([flight, sections, vertical, filename, itime, vtime]))
             self.autoplotTreeWidget.addTopLevelItem(item)
             self.autoplotTreeWidget.setCurrentItem(item)
             config_settings["automated_plotting_flights"].append([flight, sections, vertical, filename, itime, vtime])
@@ -350,11 +385,11 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             flight = ""
         else:
             if filename != parent2.mscolab.active_operation_name:
-                filename += ".ftml"
+                filename = self.flighttrack_filename(parent, filename)
         if treewidget.objectName() == "autoplotTreeWidget":
             selected_item = self.autoplotTreeWidget.currentItem()
             selected_item.setText(0, flight)
-            selected_item.setText(3, filename)
+            selected_item.setText(3, self.filename_to_show(filename))
             selected_item.setText(5, vtime)
             if self.view == "Top View":
                 selected_item.setText(1, sections)
@@ -415,7 +450,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
         self.autoplotTreeWidget.clear()
         for row in autoplot_flights:
-            item = QTreeWidgetItem(row)
+            item = QTreeWidgetItem(self.flights_row_to_show(row))
             self.autoplotTreeWidget.addTopLevelItem(item)
 
         self.autoplotSecsTreeWidget.clear()
