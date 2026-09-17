@@ -286,3 +286,17 @@ class TestMergeDict:
         users_options_dict = {"export_plugins": {"Text": ["txt", "mslib.plugins.io.text", "save_to_txt"]}}
         changed_dict = merge_dict(self.default_dict, users_options_dict)
         assert changed_dict["export_plugins"]["Text"] == ["txt", "mslib.plugins.io.text", "save_to_txt", "default"]
+
+    def test_user_option_with_path(self):
+        """
+        A string option takes any string, an absolute path included. The flight track of an
+        "automated_plotting_flights" entry is stored as path + file name.
+        """
+        users_options_dict = {
+            "automated_plotting_flights": [["flight1", "01 SADPAP (stereo)", "", "/home/mss/example.ftml", "", ""]],
+            "data_dir": "/home/mss/mssdata",
+        }
+        changed_dict = merge_dict(self.default_dict, users_options_dict)
+        assert changed_dict["automated_plotting_flights"] == [
+            ["flight1", "01 SADPAP (stereo)", "", "/home/mss/example.ftml", "", ""]]
+        assert changed_dict["data_dir"] == "/home/mss/mssdata"
