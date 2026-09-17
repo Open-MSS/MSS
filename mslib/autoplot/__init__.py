@@ -41,6 +41,7 @@ import click
 import defusedxml.ElementTree as etree
 import PIL.Image
 import matplotlib
+import matplotlib.backends.backend_agg
 from slugify import slugify
 
 import mslib
