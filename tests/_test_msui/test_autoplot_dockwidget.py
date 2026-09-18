@@ -94,6 +94,72 @@ class TestResolveFlightsPaths:
         assert flights == [["flight1", "", "", "example.ftml", "", ""]]
 
 
+class TestMissingFlighttrack:
+    """
+    The download button stops on a flight track file which is not there, instead of
+    letting mssautoplot leave through SystemExit.
+    """
+    def test_all_files_are_there(self, tmp_path):
+        example = tmp_path / "example.ftml"
+        shutil.copy(os.path.join(os.path.dirname(__file__), "..", "data", "example.ftml"), example)
+        flights = [["flight1", "", "", str(example), "", ""]]
+        assert AutoplotDockWidget.missing_flighttrack(flights) is None
+
+    def test_missing_file(self, tmp_path):
+        missing = tmp_path / "example.ftml"
+        flights = [["flight1", "", "", str(missing), "", ""]]
+        assert AutoplotDockWidget.missing_flighttrack(flights) == ("flight1", str(missing), missing)
+
+    def test_flighttrack_which_was_never_saved(self, tmp_path, monkeypatch):
+        # only the name of the track is stored, it is looked up in the working directory
+        monkeypatch.chdir(tmp_path)
+        flights = [["flight1", "", "", "flight1.ftml", "", ""]]
+        assert AutoplotDockWidget.missing_flighttrack(flights) == (
+            "flight1", "flight1.ftml", Path(tmp_path).resolve() / "flight1.ftml")
+
+    def test_operation_and_empty_entries(self):
+        flights = [["operation1", "", "", "operation1", "", ""], ["", "", "", "", "", ""], []]
+        assert AutoplotDockWidget.missing_flighttrack(flights) is None
+
+
+class TestMissingFlighttrackMessage:
+    """
+    The path a lookup fails at is rarely the one the user typed, so the message says
+    where it comes from.
+    """
+    def test_relative_name_of_a_configuration(self):
+        message = AutoplotDockWidget.missing_flighttrack_message(
+            "flight1", "/home/mss/example.ftml", Path("/home/mss/example.ftml"),
+            ("/home/mss/mssautoplot.json", "example.ftml"))
+        assert message == (
+            "The flight track file of 'flight1' does not exist:\n"
+            "/home/mss/example.ftml\n"
+            "\n"
+            "The configuration /home/mss/mssautoplot.json names it 'example.ftml', "
+            "without a directory, so it is looked up next to that file.\n"
+            "Correct it there, or open the flight track in the MSUI, save it and add the row again.")
+
+    def test_path_of_a_configuration(self):
+        message = AutoplotDockWidget.missing_flighttrack_message(
+            "flight1", "/home/mss/flights/example.ftml", Path("/home/mss/flights/example.ftml"),
+            ("/home/mss/mssautoplot.json", "/home/mss/flights/example.ftml"))
+        assert "This path is stored in the configuration /home/mss/mssautoplot.json." in message
+        assert "names it" not in message
+
+    def test_flighttrack_which_was_never_saved(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        message = AutoplotDockWidget.missing_flighttrack_message(
+            "flight1", "flight1.ftml", Path(tmp_path).resolve() / "flight1.ftml")
+        assert "The flight track was never saved" in message
+        assert f"working directory {Path(tmp_path).resolve()}" in message
+        assert "Save the flight track and add the row again." in message
+
+    def test_file_of_a_row_the_dockwidget_wrote(self):
+        message = AutoplotDockWidget.missing_flighttrack_message(
+            "flight1", "/home/mss/flights/example.ftml", Path("/home/mss/flights/example.ftml"))
+        assert "The file was moved or deleted after the row was added." in message
+
+
 class TestRowToShow:
     """
     The tree widget shows the file name alone, the path stays in the configuration.

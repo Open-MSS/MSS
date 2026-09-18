@@ -37,7 +37,7 @@ import click
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem, QMessageBox
 from PyQt5 import QtCore
 
-from mslib.autoplot import main as cli_tool
+from mslib.autoplot import main as cli_tool, resolve_ftml_path
 from mslib.msui.qt5.ui_mss_autoplot import Ui_AutoplotDockWidget
 from mslib.utils import constants as const
 from mslib.utils.qt import get_save_filename
@@ -70,6 +70,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.stime = ""
         self.etime = ""
         self.intv = ""
+        # flight track file -> (configuration file it came from, its name in there)
+        self.flighttrack_sources = {}
 
         self.refresh_sig(config_settings)
 
@@ -164,6 +166,15 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 self,
                 "WARNING",
                 "Cannot download empty treewidget"
+            )
+            return
+        missing = self.missing_flighttrack(config_settings["automated_plotting_flights"])
+        if missing is not None:
+            flight, entry, path = missing
+            QMessageBox.information(
+                self,
+                "WARNING",
+                self.missing_flighttrack_message(flight, entry, path, self.flighttrack_sources.get(entry))
             )
             return
         if self.intv == "":
@@ -289,8 +300,13 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             self.cpath = fileName
             with open(fileName, 'r') as file:
                 configure = json.load(file)
-            autoplot_flights = self.resolve_flights_paths(
-                configure["automated_plotting_flights"], Path(fileName).parent)
+            configured_flights = configure["automated_plotting_flights"]
+            autoplot_flights = self.resolve_flights_paths(configured_flights, Path(fileName).parent)
+            # for the message about a missing file: which configuration named the
+            # flight track, and how it was named there
+            self.flighttrack_sources = {
+                row[3]: (fileName, source[3])
+                for source, row in zip(configured_flights, autoplot_flights) if len(row) > 3 and row[3]}
             autoplot_hsecs = configure["automated_plotting_hsecs"]
             autoplot_vsecs = configure["automated_plotting_vsecs"]
             autoplot_lsecs = configure["automated_plotting_lsecs"]
@@ -325,6 +341,54 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 row[3] = str(path.resolve())
             resolved.append(row)
         return resolved
+
+    @staticmethod
+    def missing_flighttrack(flights):
+        """
+        The first "automated_plotting_flights" entry whose flight track file is not
+        there, as a (flight, entry, path) triple, None when all of them are readable.
+
+        <entry> is the file as the configuration stores it, <path> the file mssautoplot
+        looks it up at. A flight track which was never saved has no file, its entry only
+        carries the name of the track. Plots cannot be drawn for it, so the download
+        stops before it opens its progress dialog.
+        """
+        for row in flights:
+            if len(row) > 3 and row[3] and row[3] != row[0]:
+                path = resolve_ftml_path(row[3])
+                if not path.exists():
+                    return row[0], row[3], path
+        return None
+
+    @staticmethod
+    def missing_flighttrack_message(flight, entry, path, source=None):
+        """
+        Why the flight track file of <flight> is looked up at <path>, and what to do.
+
+        The path a lookup fails at is rarely the path the user typed: a name without a
+        directory is resolved against a working directory the GUI user never chose, and
+        a name from a configuration file against the directory of that file. <source>,
+        the (configuration file, name in there) pair of the entry, tells the two apart.
+        It is None for an entry which the dockwidget itself wrote from a flight track.
+        """
+        text = [f"The flight track file of '{flight}' does not exist:", str(path), ""]
+        if source is not None:
+            config_file, name = source
+            if name != entry:
+                text.append(f"The configuration {config_file} names it '{name}', without a "
+                            "directory, so it is looked up next to that file.")
+            else:
+                text.append(f"This path is stored in the configuration {config_file}.")
+            text.append("Correct it there, or open the flight track in the MSUI, save it "
+                        "and add the row again.")
+        elif Path(entry).parent == Path("."):
+            text.append("The flight track was never saved, only its name is stored, so the "
+                        f"file is looked up in the working directory {Path.cwd()}.")
+            text.append("Save the flight track and add the row again.")
+        else:
+            text.append("The file was moved or deleted after the row was added.")
+            text.append("Open the flight track in the MSUI, save it and add the row again.")
+        return "\n".join(text)
 
     @staticmethod
     def flighttrack_filename(parent, name):
