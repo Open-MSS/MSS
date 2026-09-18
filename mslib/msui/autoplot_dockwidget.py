@@ -289,7 +289,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             self.cpath = fileName
             with open(fileName, 'r') as file:
                 configure = json.load(file)
-            autoplot_flights = configure["automated_plotting_flights"]
+            autoplot_flights = self.resolve_flights_paths(
+                configure["automated_plotting_flights"], Path(fileName).parent)
             autoplot_hsecs = configure["automated_plotting_hsecs"]
             autoplot_vsecs = configure["automated_plotting_vsecs"]
             autoplot_lsecs = configure["automated_plotting_lsecs"]
@@ -301,6 +302,29 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
             parent.refresh_signal_emit.emit()
             self.resize_treewidgets()
+
+    @staticmethod
+    def resolve_flights_paths(flights, directory):
+        """
+        "automated_plotting_flights" entries of a configuration file, with their
+        flight track files resolved against the directory of that file.
+
+        A configuration which the dockwidget did not write can name the flight track
+        without a path, or relative to the directory the configuration lives in. The
+        GUI is started from an arbitrary working directory, so resolving such a name
+        against the configuration file is the only lookup which finds the file.
+        Operations, which carry the operation name instead of a file, stay untouched.
+        """
+        resolved = []
+        for row in flights:
+            row = list(row)
+            if len(row) > 3 and row[3] and row[3] != row[0]:
+                path = Path(row[3]).expanduser()
+                if not path.is_absolute():
+                    path = Path(directory) / path
+                row[3] = str(path.resolve())
+            resolved.append(row)
+        return resolved
 
     @staticmethod
     def flighttrack_filename(parent, name):

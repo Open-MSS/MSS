@@ -26,6 +26,7 @@
 
 import os
 import shutil
+from pathlib import Path
 
 from mslib.msui import flighttrack as ft
 from mslib.msui.autoplot_dockwidget import AutoplotDockWidget
@@ -52,6 +53,45 @@ class TestFlighttrackFilename:
     def test_flighttrack_without_a_file(self):
         view = FakeView(ft.WaypointsTableModel(name="flight1"))
         assert AutoplotDockWidget.flighttrack_filename(view, "flight1") == "flight1.ftml"
+
+
+class TestResolveFlightsPaths:
+    """
+    A configuration file can name the flight track relative to its own directory,
+    the GUI is started from an arbitrary working directory and has to resolve it.
+    """
+    def test_bare_filename_next_to_the_config(self, tmp_path):
+        flights = [["flight1", "01 SADPAP (stereo)", "", "example.ftml", "", ""]]
+        assert AutoplotDockWidget.resolve_flights_paths(flights, tmp_path) == [
+            ["flight1", "01 SADPAP (stereo)", "", str(tmp_path.resolve() / "example.ftml"), "", ""]]
+
+    def test_relative_directory(self, tmp_path):
+        flights = [["flight1", "", "", os.path.join("flights", "example.ftml"), "", ""]]
+        assert AutoplotDockWidget.resolve_flights_paths(flights, tmp_path)[0][3] == \
+            str(tmp_path.resolve() / "flights" / "example.ftml")
+
+    def test_absolute_path_is_kept(self, tmp_path):
+        flights = [["flight1", "", "", "/home/mss/flights/example.ftml", "", ""]]
+        assert AutoplotDockWidget.resolve_flights_paths(flights, tmp_path)[0][3] == \
+            "/home/mss/flights/example.ftml"
+
+    def test_home_is_expanded(self, tmp_path):
+        flights = [["flight1", "", "", os.path.join("~", "example.ftml"), "", ""]]
+        assert AutoplotDockWidget.resolve_flights_paths(flights, tmp_path)[0][3] == \
+            str(Path.home().resolve() / "example.ftml")
+
+    def test_operation_is_unchanged(self, tmp_path):
+        flights = [["operation1", "01 SADPAP (stereo)", "", "operation1", "", ""]]
+        assert AutoplotDockWidget.resolve_flights_paths(flights, tmp_path) == flights
+
+    def test_entries_without_a_flighttrack(self, tmp_path):
+        flights = [["", "", "", "", "", ""], []]
+        assert AutoplotDockWidget.resolve_flights_paths(flights, tmp_path) == flights
+
+    def test_the_configuration_is_not_modified(self, tmp_path):
+        flights = [["flight1", "", "", "example.ftml", "", ""]]
+        AutoplotDockWidget.resolve_flights_paths(flights, tmp_path)
+        assert flights == [["flight1", "", "", "example.ftml", "", ""]]
 
 
 class TestRowToShow:
