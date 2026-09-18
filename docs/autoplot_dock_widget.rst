@@ -62,6 +62,12 @@ mssautoplot finds it independent of the directory it is started in. A flight tra
 which was never saved has no file yet, for that one only its name is stored and the
 file is looked up in the current working directory.
 
+A configuration file selected with the **Select configuration file** button may name
+its flight tracks without a path, or relative to its own directory, as long as it was
+not written by this dockwidget. Such a name is resolved against the directory of the
+selected configuration file, the working directory the GUI happens to be started in
+is of no use here.
+
 The **right treewidget** is used to configure the automated plotting flight sections, which are based on the view:
 
 - For **Top View**, it is `"automated_plotting_hsecs": [["URL", "Layer", "Styles", "Level"]]`.
