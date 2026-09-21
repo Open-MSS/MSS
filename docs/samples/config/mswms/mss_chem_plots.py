@@ -183,8 +183,6 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
         ("auto", "auto colour scale"),
         ("autolog", "auto log colour scale"), ]
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [("ml", "air_pressure", "Pa")]
 
     # In order to use information from the DataAccess class to construct the titles, we override the set_driver to set

@@ -56,8 +56,6 @@ class LS_RelativeHumdityStyle_01(AbstractLinearSectionStyle):
     title = "Relative Humdity (%) Linear Plot"
     abstract = "Relative humdity (%)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("ml", "air_pressure", "Pa"),
         ("ml", "air_temperature", "K"),
@@ -84,8 +82,6 @@ class LS_VerticalVelocityStyle_01(AbstractLinearSectionStyle):
     title = "Vertical Velocity (cm/s) Linear Plot"
     abstract = "Vertical velocity (cm/s)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("ml", "air_pressure", "Pa"),
         ("ml", "air_temperature", "K"),
@@ -113,8 +109,6 @@ class LS_HorizontalVelocityStyle_01(AbstractLinearSectionStyle):
     title = "Horizontal Wind (m/s) Linear Plot"
     abstract = "Horizontal wind speed (m/s)"
 
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("ml", "air_pressure", "Pa"),
         ("ml", "eastward_wind", "m/s"),

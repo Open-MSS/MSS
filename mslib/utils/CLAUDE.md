@@ -12,7 +12,9 @@ Global map: ../../ARCHITECTURE.md
 - `constants.py` — MSUI config/cache paths (`MSUI_CONFIG_PATH`, `MSUI_SETTINGS`)
 - `coordinate.py`, `units.py`, `time.py`, `thermolib.py` — pure functions; the
   safest modules to edit; keep them dependency-free
-- `netCDF4tools.py` — NetCDF read helpers; `ogcwms.py` — hardened OWSLib WMS
+- `netCDF4tools.py` — xarray-based NetCDF read helpers (variable identification
+  by CF standard name, `open_mfdataset_commondims()`); `ogcwms.py` — hardened
+  OWSLib WMS
 - `auth.py` — keyring-backed credential storage (tests mock the keyring)
 - `qt.py`, `colordialog.py` — Qt helpers (the only Qt code outside msui/support)
 - `airdata.py` — airport/airspace downloads; `find_location.py`,

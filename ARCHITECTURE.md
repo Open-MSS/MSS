@@ -87,7 +87,7 @@ under `ignore_imports` and must only shrink):
 - `config.py` — `MSUIDefaultConfig` defaults + `config_loader` (THE config API)
 - `constants.py` — MSUI config paths (moved here from msui in v11.1)
 - `coordinate.py`, `units.py`, `time.py`, `thermolib.py` — pure science helpers
-- `netCDF4tools.py` — NetCDF helpers; `ogcwms.py` — OWSLib WMS subclass
+- `netCDF4tools.py` — xarray-based NetCDF helpers; `ogcwms.py` — OWSLib WMS subclass
 - `auth.py` — keyring/password handling; `qt.py` — Qt helpers
 - `colordialog.py` — CustomColorDialog; `airdata.py` — airport/airspace download
 - `migration/` — config-format migrations between major versions
