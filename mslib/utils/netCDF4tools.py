@@ -26,6 +26,7 @@
     limitations under the License.
 """
 
+import contextlib
 import glob
 import numpy as np
 import netCDF4
@@ -212,38 +213,33 @@ def open_mfdataset_commondims(files, skip_dim_check=None):
     The dimensions of the files need to agree, but they may contain different
     subsets of the dimensions (e.g. a file with only surface and no upper air
     fields), and dimensions without a coordinate variable are only checked for
-    their length. Note that this does not concatenate along any dimension; use
-    xarray.open_mfdataset() (which requires dask) for that.
+    their length. Nothing is concatenated along any dimension.
+
+    This deliberately does not use xarray.open_mfdataset(): that function always
+    hands the variables to dask, which pulls in a dependency we do not otherwise
+    need and, with the one-chunk-per-variable default of a NetCDF file without
+    internal chunking, reads a whole 4-D field from disk for every single 2-D
+    slice the plot drivers ask for. Merging lazily opened datasets ourselves
+    keeps the slicing in the NetCDF library, where it costs one read.
     """
-    skip_dim_check = set(skip_dim_check or [])
     if isinstance(files, str):
         files = sorted(glob.glob(files))
     if len(files) == 0:
         raise IOError("no NetCDF files to open")
 
-    datasets = []
-
-    def close_all():
-        for opened in datasets:
-            opened.close()
-
-    try:
-        for _file in files:
-            datasets.append(xr.open_dataset(_file, decode_times=False))
+    with contextlib.ExitStack() as stack:
+        datasets = [stack.enter_context(xr.open_dataset(_file, decode_times=False))
+                    for _file in files]
         # Dimensions excluded from the consistency check may differ between the
         # files, so all variables depending on them are taken from the master.
-        to_merge = [datasets[0]] + [
-            dataset.drop_vars([name for name, variable in dataset.variables.items()
-                               if not skip_dim_check.isdisjoint(variable.dims)])
-            for dataset in datasets[1:]]
-        dataset = xr.merge(to_merge, join="exact", compat="override",
-                           combine_attrs="override")
-    except xr.AlignmentError as ex:
-        close_all()
-        raise IOError(f"dimensions of the files {files} do not match: {ex}") from ex
-    except Exception:
-        close_all()
-        raise
-
-    dataset.set_close(close_all)
+        to_merge = [datasets[0]] + [dataset.drop_dims(skip_dim_check or [], errors="ignore")
+                                    for dataset in datasets[1:]]
+        try:
+            dataset = xr.merge(to_merge, join="exact", compat="override",
+                               combine_attrs="override")
+        except xr.AlignmentError as ex:
+            raise IOError(f"dimensions of the files {files} do not match: {ex}") from ex
+        # Opening succeeded, so the files must stay open until the caller is done
+        # with the merged dataset.
+        dataset.set_close(stack.pop_all().close)
     return dataset
