@@ -77,3 +77,18 @@ class TestResolveFtmlPath:
 
     def test_empty_fpath_is_ignored(self):
         assert resolve_ftml_path("/home/mss/flights/example.ftml", "") == Path("/home/mss/flights/example.ftml")
+
+    def test_directory_anchors_a_relative_name(self, tmp_path, monkeypatch):
+        # the directory of the configuration file which named the flight track,
+        # not the working directory
+        monkeypatch.chdir(tmp_path)
+        assert resolve_ftml_path("example.ftml", directory="/home/mss/flights") == \
+            Path("/home/mss/flights/example.ftml")
+
+    def test_directory_does_not_touch_an_absolute_path(self):
+        assert resolve_ftml_path("/home/mss/example.ftml", directory="/data/campaign") == \
+            Path("/home/mss/example.ftml")
+
+    def test_fpath_wins_over_directory(self):
+        assert resolve_ftml_path("example.ftml", fpath="/data/campaign", directory="/home/mss/flights") == \
+            Path("/data/campaign/example.ftml")

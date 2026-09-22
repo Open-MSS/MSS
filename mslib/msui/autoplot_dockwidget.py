@@ -320,7 +320,20 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             self.resize_treewidgets()
 
     @staticmethod
-    def resolve_flights_paths(flights, directory):
+    def flighttrack_entry(row):
+        """
+        The flight track file an "automated_plotting_flights" entry names, None when it
+        does not name one.
+
+        An entry of an operation carries the operation name instead of a file, an entry
+        without a flight track carries nothing.
+        """
+        if len(row) > 3 and row[3] and row[3] != row[0]:
+            return row[3]
+        return None
+
+    @classmethod
+    def resolve_flights_paths(cls, flights, directory):
         """
         "automated_plotting_flights" entries of a configuration file, with their
         flight track files resolved against the directory of that file.
@@ -334,30 +347,32 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         resolved = []
         for row in flights:
             row = list(row)
-            if len(row) > 3 and row[3] and row[3] != row[0]:
-                path = Path(row[3]).expanduser()
-                if not path.is_absolute():
-                    path = Path(directory) / path
-                row[3] = str(path.resolve())
+            entry = cls.flighttrack_entry(row)
+            if entry is not None:
+                row[3] = str(resolve_ftml_path(entry, directory=directory))
             resolved.append(row)
         return resolved
 
-    @staticmethod
-    def missing_flighttrack(flights):
+    @classmethod
+    def missing_flighttrack(cls, flights):
         """
         The first "automated_plotting_flights" entry whose flight track file is not
         there, as a (flight, entry, path) triple, None when all of them are readable.
 
         <entry> is the file as the configuration stores it, <path> the file mssautoplot
-        looks it up at. A flight track which was never saved has no file, its entry only
-        carries the name of the track. Plots cannot be drawn for it, so the download
-        stops before it opens its progress dialog.
+        looks it up at. The entries of a selected configuration file are resolved
+        already, the ones of the configuration loaded at startup and the ones of a
+        flight track which was never saved are not, so the lookup goes through
+        resolve_ftml_path() again, the one place which defines it. Plots cannot be
+        drawn for a missing file, so the download stops before it opens its progress
+        dialog.
         """
         for row in flights:
-            if len(row) > 3 and row[3] and row[3] != row[0]:
-                path = resolve_ftml_path(row[3])
+            entry = cls.flighttrack_entry(row)
+            if entry is not None:
+                path = resolve_ftml_path(entry)
                 if not path.exists():
-                    return row[0], row[3], path
+                    return row[0], entry, path
         return None
 
     @staticmethod

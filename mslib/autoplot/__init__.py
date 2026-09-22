@@ -71,18 +71,25 @@ TEXT_CONFIG = {
 mpl_logger = configure_mpl_logger()
 
 
-def resolve_ftml_path(filename, fpath=None):
+def resolve_ftml_path(filename, fpath=None, directory=None):
     """Resolve the flight track file of an "automated_plotting_flights" entry.
 
-    The entry stores the path together with the file name. A bare file name is
-    taken relative to the current working directory, "~" is expanded. <fpath>,
-    the --fpath option of the CLI, replaces the directory of the entry.
+    The single place which defines where such an entry is looked up, used by the
+    CLI and by the dockwidget which writes the entries.
+
+    The entry stores the path together with the file name, "~" is expanded. A
+    relative name is taken relative to <directory>, the directory of the
+    configuration file which named it, and relative to the current working
+    directory without one. <fpath>, the --fpath option of the CLI, replaces the
+    directory of the entry altogether.
 
     Returns an absolute Path, which does not need to exist.
     """
     path = Path(filename).expanduser()
     if fpath:
         path = Path(fpath).expanduser() / path.name
+    elif directory is not None and not path.is_absolute():
+        path = Path(directory) / path
     return path.resolve()
 
 
