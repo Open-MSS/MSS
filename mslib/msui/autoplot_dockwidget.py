@@ -302,11 +302,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 configure = json.load(file)
             configured_flights = configure["automated_plotting_flights"]
             autoplot_flights = self.resolve_flights_paths(configured_flights, Path(fileName).parent)
-            # for the message about a missing file: which configuration named the
-            # flight track, and how it was named there
-            self.flighttrack_sources = {
-                row[3]: (fileName, source[3])
-                for source, row in zip(configured_flights, autoplot_flights) if len(row) > 3 and row[3]}
+            self.flighttrack_sources = self.flights_sources(fileName, configured_flights, autoplot_flights)
             autoplot_hsecs = configure["automated_plotting_hsecs"]
             autoplot_vsecs = configure["automated_plotting_vsecs"]
             autoplot_lsecs = configure["automated_plotting_lsecs"]
@@ -352,6 +348,25 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 row[3] = str(resolve_ftml_path(entry, directory=directory))
             resolved.append(row)
         return resolved
+
+    @classmethod
+    def flights_sources(cls, config_file, configured_flights, resolved_flights):
+        """
+        Where the flight track file of a resolved entry came from: resolved file ->
+        (configuration file, name as that file stores it).
+
+        Only used to explain a file which is not there, see
+        missing_flighttrack_message(). Two entries can name the same file, one with and
+        one without its directory. The first of them wins: both explanations name the
+        same missing file and the same configuration to correct it in, so which of the
+        two names is quoted does not change what the user has to do.
+        """
+        sources = {}
+        for configured, resolved in zip(configured_flights, resolved_flights):
+            entry = cls.flighttrack_entry(resolved)
+            if entry is not None:
+                sources.setdefault(entry, (config_file, configured[3]))
+        return sources
 
     @classmethod
     def missing_flighttrack(cls, flights):

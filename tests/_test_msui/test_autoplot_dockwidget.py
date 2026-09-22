@@ -160,6 +160,37 @@ class TestMissingFlighttrackMessage:
         assert "The file was moved or deleted after the row was added." in message
 
 
+class TestFlightsSources:
+    """
+    Which configuration file named a flight track, and how, is kept to explain a file
+    which is not there.
+    """
+    def test_name_and_path_of_the_configuration(self, tmp_path):
+        configured = [["flight1", "", "", "example.ftml", "", ""],
+                      ["flight2", "", "", "/home/mss/other.ftml", "", ""]]
+        resolved = AutoplotDockWidget.resolve_flights_paths(configured, tmp_path)
+        sources = AutoplotDockWidget.flights_sources("/home/mss/mssautoplot.json", configured, resolved)
+        assert sources == {
+            str(tmp_path.resolve() / "example.ftml"): ("/home/mss/mssautoplot.json", "example.ftml"),
+            "/home/mss/other.ftml": ("/home/mss/mssautoplot.json", "/home/mss/other.ftml")}
+
+    def test_entries_without_a_flighttrack_file_are_skipped(self, tmp_path):
+        configured = [["", "", "", "", "", ""], ["operation1", "", "", "operation1", "", ""], []]
+        resolved = AutoplotDockWidget.resolve_flights_paths(configured, tmp_path)
+        assert AutoplotDockWidget.flights_sources("mssautoplot.json", configured, resolved) == {}
+
+    def test_two_entries_of_the_same_file(self, tmp_path):
+        """
+        The first entry wins, both explanations name the same missing file and the same
+        configuration to correct it in.
+        """
+        configured = [["flight1", "", "", "example.ftml", "", ""],
+                      ["flight2", "", "", str(tmp_path / "example.ftml"), "", ""]]
+        resolved = AutoplotDockWidget.resolve_flights_paths(configured, tmp_path)
+        sources = AutoplotDockWidget.flights_sources("mssautoplot.json", configured, resolved)
+        assert sources == {str(tmp_path.resolve() / "example.ftml"): ("mssautoplot.json", "example.ftml")}
+
+
 class TestRowToShow:
     """
     The tree widget shows the file name alone, the path stays in the configuration.
