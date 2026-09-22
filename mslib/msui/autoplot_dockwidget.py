@@ -397,9 +397,12 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
         The path a lookup fails at is rarely the path the user typed: a name without a
         directory is resolved against a working directory the GUI user never chose, and
-        a name from a configuration file against the directory of that file. <source>,
-        the (configuration file, name in there) pair of the entry, tells the two apart.
-        It is None for an entry which the dockwidget itself wrote from a flight track.
+        a name from a selected configuration file against the directory of that file.
+        <source>, the (configuration file, name in there) pair of the entry, tells the
+        two apart. It is None for an entry which no selected configuration provided:
+        one the dockwidget wrote from a flight track, or one of the configuration
+        loaded at startup. Which of the two it is cannot be told from the entry, so a
+        name without a directory names both remedies instead of guessing one.
         """
         text = [f"The flight track file of '{flight}' does not exist:", str(path), ""]
         if source is not None:
@@ -412,9 +415,10 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             text.append("Correct it there, or open the flight track in the MSUI, save it "
                         "and add the row again.")
         elif Path(entry).parent == Path("."):
-            text.append("The flight track was never saved, only its name is stored, so the "
-                        f"file is looked up in the working directory {Path.cwd()}.")
-            text.append("Save the flight track and add the row again.")
+            text.append(f"Only the name '{entry}' is stored, without a directory, so the file "
+                        f"is looked up in the working directory {Path.cwd()}.")
+            text.append("Save the flight track in the MSUI and add the row again, or store the "
+                        "name with its directory in the configuration file.")
         else:
             text.append("The file was moved or deleted after the row was added.")
             text.append("Open the flight track in the MSUI, save it and add the row again.")

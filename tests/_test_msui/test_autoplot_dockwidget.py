@@ -146,13 +146,21 @@ class TestMissingFlighttrackMessage:
         assert "This path is stored in the configuration /home/mss/mssautoplot.json." in message
         assert "names it" not in message
 
-    def test_flighttrack_which_was_never_saved(self, tmp_path, monkeypatch):
+    def test_name_without_a_directory(self, tmp_path, monkeypatch):
+        """
+        Such an entry is either a flight track which was never saved, or a
+        configuration which names the file without a directory. The entry does not
+        tell which of the two, so the message names both remedies and does not
+        claim the track was never saved.
+        """
         monkeypatch.chdir(tmp_path)
         message = AutoplotDockWidget.missing_flighttrack_message(
             "flight1", "flight1.ftml", Path(tmp_path).resolve() / "flight1.ftml")
-        assert "The flight track was never saved" in message
+        assert "Only the name 'flight1.ftml' is stored, without a directory" in message
         assert f"working directory {Path(tmp_path).resolve()}" in message
-        assert "Save the flight track and add the row again." in message
+        assert "Save the flight track in the MSUI and add the row again, or store the name " \
+               "with its directory in the configuration file." in message
+        assert "never saved" not in message
 
     def test_file_of_a_row_the_dockwidget_wrote(self):
         message = AutoplotDockWidget.missing_flighttrack_message(

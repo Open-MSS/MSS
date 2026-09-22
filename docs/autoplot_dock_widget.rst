@@ -62,8 +62,8 @@ mssautoplot finds it independent of the directory it is started in. A flight tra
 which was never saved has no file yet, for that one only its name is stored and the
 file is looked up in the current working directory. Because a flight track without a
 file cannot be plotted, the **Download Plots Button** stops before it downloads anything
-and tells you where the file was looked up: next to the configuration file which named
-it, or in the working directory for a flight track which was never saved.
+and tells you where the file was looked up: next to the selected configuration file
+which named it, or in the working directory for a name stored without a directory.
 
 A configuration file selected with the **Select configuration file** button may name
 its flight tracks without a path, or relative to its own directory, as long as it was
