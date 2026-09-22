@@ -35,7 +35,7 @@ from pathlib import Path
 
 from mslib.utils import FatalUserError
 from mslib.utils import constants
-from mslib.support.qt_json_view.datatypes import match_type
+from mslib.support.qt_json_view.datatypes import match_type, UrlType, StrType
 
 
 class MSUIDefaultConfig:
@@ -694,10 +694,16 @@ def compare_data(default, user_data):
     if not isinstance(default, dict) and not isinstance(default, list):
         if isinstance(default, float) and isinstance(user_data, int):
             user_data = float(default)
-        if isinstance(default, str) and isinstance(user_data, str):
-            # A string option takes any string. match_type() maps urls to UrlType and
-            # absolute paths to FilepathType, so matching the types would drop e.g. the
-            # flight track path of an "automated_plotting_flights" entry.
+        if isinstance(match_type(default), StrType) and isinstance(user_data, str):
+            # A default which is a plain string takes any string, a path included.
+            # match_type() maps absolute paths to FilepathType and urls to UrlType, so
+            # comparing the types would drop e.g. the flight track path of an
+            # "automated_plotting_flights" entry, whose default is "". Defaults which
+            # are a path ("data_dir", "wms_cache", "mscolab_local_data_dir") or a url
+            # ("mscolab_server_url", "default_WMS") keep their own type below and still
+            # require a path, respectively a url.
+            return user_data, True
+        if isinstance(match_type(default), UrlType) and isinstance(match_type(user_data), StrType):
             return user_data, True
         if isinstance(match_type(default), type(match_type(user_data))):
             return user_data, True
