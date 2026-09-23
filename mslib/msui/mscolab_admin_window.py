@@ -288,9 +288,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 self.load_users_without_permission()
                 self.load_users_with_permission()
             else:
-                # NOTE: pre-existing bug, self.show_error_popup does not exist on this
-                # class -- preserved as-is rather than silently fixed by this migration.
-                self.show_error_popup(parsed.message)
+                show_popup(self, "Error", parsed.message)
         else:
             # this triggers disconnect
             self.conn.signal_reload.emit(self.op_id)
@@ -312,9 +310,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 self.load_users_without_permission()
                 self.load_users_with_permission()
             else:
-                # NOTE: pre-existing bug, self.show_error_popup does not exist on this
-                # class -- preserved as-is rather than silently fixed by this migration.
-                self.show_error_popup(parsed.message)
+                show_popup(self, "Error", parsed.message)
         else:
             # this triggers disconnect
             self.conn.signal_reload.emit(self.op_id)
