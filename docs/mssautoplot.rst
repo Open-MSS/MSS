@@ -15,8 +15,9 @@ The CLI tool has the following parameters:
 +--------------+-------+----------------------------------------------------------------------+
 | ``--ftrack`` | TEXT  |   Flight track.                                                      |
 +--------------+-------+----------------------------------------------------------------------+
-| ``--fpath``  | TEXT  |   Directory of the flight track files. Overrides the directory       |
-|              |       |   stored with the file name in the config file.                      |
+| ``--fpath``  | TEXT  |   Directory of the flight track files. Replaces the directory        |
+|              |       |   stored with the file name in the config file;                      |
+|              |       |   only the base name of the entry is kept.                           |
 +--------------+-------+----------------------------------------------------------------------+
 | ``--itime``  | TEXT  |   Initial time.                                                      |
 +--------------+-------+----------------------------------------------------------------------+
@@ -72,8 +73,11 @@ of topview in the mssautoplot.json.
 5. ``mssautoplot --cpath mssautoplot.json --fpath ~/flights/campaign2``
 
 This command reads the flight tracks from the given directory instead of the directory
-stored in mss_autoplot.json. The file names themselves stay as configured, so the same
-configuration can be used for the flight tracks of several campaigns.
+stored in mss_autoplot.json. Only the base name of each stored flight track is kept,
+any subdirectory stored with it is discarded, so the "/home/mss/campaign1/example.ftml"
+of the configuration is loaded from "~/flights/campaign2/example.ftml".
+This lets the same configuration be used for the flight tracks of several campaigns,
+provided they share the file names.
 
 
 Settings file
