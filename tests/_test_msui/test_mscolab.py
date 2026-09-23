@@ -37,7 +37,7 @@ from PIL import Image
 from tests.constants import ROOT_DIR, MSCOLAB_DATA_DIR
 from tests import constants
 import mslib.utils.auth
-from mslib.mscolab.message_type import MessageType
+from mslib.mscolab.api.message_type import MessageType
 from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
 from PyQt5 import QtCore, QtGui, QtTest, QtWidgets
@@ -891,8 +891,8 @@ class Test_Mscolab:
         self._create_operation(qtbot, "flight1234", "Description flight1234")
         self._activate_operation_at_index(0)
         operation = self.window.mscolab.get_recent_operation()
-        assert operation["path"] == "flight1234"
-        assert operation["access_level"] == "creator"
+        assert operation.path == "flight1234"
+        assert operation.access_level == "creator"
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok)
     def test_open_chat_window(self, mockbox, qtbot):

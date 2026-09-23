@@ -27,6 +27,8 @@
 import pytest
 import datetime
 
+import mock
+
 from tests.constants import ROOT_DIR
 from mslib.mscolab.models import Message, MessageType
 from PyQt5 import QtCore, QtTest, QtWidgets
@@ -86,6 +88,12 @@ class Test_MscolabOperation:
             result = get_message_dict(message)
             assert result["message_type"] == MessageType.TEXT
             assert datetime.datetime.fromisoformat(result["time"]) == message.created_at
+
+    def test_load_users_with_expired_token_shows_popup(self):
+        self.chat_window.token = "expired-token"
+        with mock.patch("mslib.msui.mscolab_chat.show_popup") as popup:
+            self.chat_window.load_users()
+        popup.assert_called_once_with(self.chat_window, "Error", "Session expired, new login required")
 
     def test_search_message(self, qtbot):
         self._send_message(qtbot, "**test message**")

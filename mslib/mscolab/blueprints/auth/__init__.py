@@ -41,45 +41,49 @@ from mslib.mscolab.auth import optional_auth
 from mslib.mscolab.conf import setup_saml2_backend
 from mslib.mscolab.forms import ResetPasswordForm, ResetRequestForm
 from mslib.mscolab.models import User
+from mslib.mscolab.api import endpoints
+from mslib.mscolab.api.schemas import (
+    IdpLoginAuthRequest,
+    IdpLoginAuthResponse,
+    IdpUserInfo,
+    LoginRequest,
+    LoginResponse,
+    RegisterRequest,
+    RegisterResponse,
+    StatusResponse,
+    UserInfo,
+)
 from mslib.utils.auth import send_email
 
 AUTH_BP = Blueprint('auth', __name__, template_folder='templates')
 
 
-@AUTH_BP.route("/status")
+@AUTH_BP.route(f"/{endpoints.STATUS}")
 @optional_auth
 def hello():
     if request.authorization is not None and current_app.config.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
         current_app.extensions['basic_auth'].login_required()
-    return json.dumps({
-        'message': "Mscolab server",
-        'use_saml2': current_app.config['USE_SAML2'],
-        'direct_login': current_app.config['DIRECT_LOGIN']
-    })
+    response = StatusResponse(
+        message="Mscolab server",
+        use_saml2=current_app.config['USE_SAML2'],
+        direct_login=current_app.config['DIRECT_LOGIN'],
+    )
+    return json.dumps(response.to_dict())
 
 
-@AUTH_BP.route('/token', methods=["POST"])
+@AUTH_BP.route(f"/{endpoints.TOKEN}", methods=["POST"])
 @optional_auth
 def get_auth_token():
-    emailid = request.form['email']
-    password = request.form['password']
-    user = check_login(emailid, password)
+    req = LoginRequest.from_form(request.form)
+    user = check_login(req.email, req.password)
     if user is not False:
-        if current_app.config['MAIL_ENABLED']:
-            if user.confirmed:
-                token = user.generate_auth_token()
-                return json.dumps({
-                    'token': token,
-                    'user': {'username': user.username, 'id': user.id, 'fullname': user.fullname}})
-            else:
-                return "False"
-        else:
-            token = user.generate_auth_token()
-            return json.dumps({
-                'token': token,
-                'user': {'username': user.username, 'id': user.id, 'fullname': user.fullname}})
+        if current_app.config['MAIL_ENABLED'] and not user.confirmed:
+            return "False"
+        token = user.generate_auth_token()
+        user_info = UserInfo(id=user.id, username=user.username, fullname=user.fullname)
+        return LoginResponse(token=token, user=user_info).to_text()
     else:
-        logging.debug("Unauthorized user: %s", emailid)
+        logging.debug("Unauthorized user: %s", req.email)
         return "False"
 
 
@@ -99,28 +103,26 @@ def authorized():
         return "False"
 
 
-@AUTH_BP.route("/register", methods=["POST"])
+@AUTH_BP.route(f"/{endpoints.REGISTER}", methods=["POST"])
 @optional_auth
 def user_register_handler():
-    email = request.form['email']
-    password = request.form['password']
-    username = request.form['username']
-    fullname = request.form['fullname']
-    result = register_user(email, password, username, fullname)
+    req = RegisterRequest.from_form(request.form)
+    result = register_user(req.email, req.password, req.username, req.fullname)
     status_code = 200
     try:
         if result["success"]:
             status_code = 201
             if current_app.config['MAIL_ENABLED']:
                 status_code = 204
-                token = generate_confirmation_token(email)
+                token = generate_confirmation_token(req.email)
                 confirm_url = url_for('auth.confirm_email', token=token, _external=True)
-                html = render_template('auth/user/activate.html', username=username, confirm_url=confirm_url)
+                html = render_template('auth/user/activate.html', username=req.username, confirm_url=confirm_url)
                 subject = "MSColab Please confirm your email"
-                send_email(email, subject, html)
+                send_email(req.email, subject, html)
     except TypeError:
         result, status_code = {"success": False}, 401
-    return jsonify(result), status_code
+    response = RegisterResponse(success=result["success"], message=result.get("message"))
+    return jsonify(response.to_dict()), status_code
 
 
 def init_saml(state):
@@ -236,29 +238,26 @@ def register_saml_routes():
         except (NameError, AttributeError):
             return render_template('auth/errors/403.html'), 403
 
-    @AUTH_BP.route('/idp_login_auth/', methods=['POST'])
+    @AUTH_BP.route(f"/{endpoints.IDP_LOGIN_AUTH}/", methods=['POST'])
     def idp_login_auth():
         """Handle the SAML authentication validation of client application."""
         try:
-            data = request.get_json()
-            token = data.get('token')
-            email = confirm_token(token, expiration=1200)
+            req = IdpLoginAuthRequest.from_json_data(request.get_json())
+            email = confirm_token(req.token, expiration=1200)
             if email:
-                user = check_login(email, token)
+                user = check_login(email, req.token)
                 if user:
                     fm = current_app.extensions['fm']
                     random_token = secrets.token_hex(16)
                     user.hash_password(random_token)
                     fm.modify_user(user, action="update_idp_user")
-                    return json.dumps({
-                        "success": True,
-                        'token': random_token,
-                        'user': {'username': user.username, 'id': user.id, 'emailid': user.emailid}
-                    })
-                return jsonify({"success": False}), 401
-            return jsonify({"success": False}), 401
+                    user_info = IdpUserInfo(username=user.username, id=user.id, emailid=user.emailid)
+                    response = IdpLoginAuthResponse(success=True, token=random_token, user=user_info)
+                    return response.to_text()
+                return jsonify(IdpLoginAuthResponse(success=False).to_dict()), 401
+            return jsonify(IdpLoginAuthResponse(success=False).to_dict()), 401
         except TypeError:
-            return jsonify({"success": False}), 401
+            return jsonify(IdpLoginAuthResponse(success=False).to_dict()), 401
 
     @AUTH_BP.route("/metadata/<idp_identity_name>", methods=['GET'])
     def metadata(idp_identity_name):

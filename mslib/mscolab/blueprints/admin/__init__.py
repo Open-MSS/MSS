@@ -34,7 +34,7 @@ import logging
 
 from flask import Blueprint, current_app, jsonify, request
 
-from mslib.mscolab.events import SocketEvents
+from mslib.mscolab.api.events import SocketEvents
 
 ADMIN_BP = Blueprint('admin', __name__)
 

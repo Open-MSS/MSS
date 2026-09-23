@@ -67,8 +67,11 @@ under `ignore_imports` and must only shrink):
 - `file_manager.py` — operations, permissions, git-backed versioning (core logic)
 - `chat_manager.py` — chat persistence; `sockets_manager.py` — socket.io events
 - `models.py` — SQLAlchemy models; `migrations/` — Alembic, NEVER edit by hand
-- `events.py` — `SocketEvents` name registry (shared with client — contract)
-- `message_type.py` — chat message enum (shared with client — contract)
+- `api/schemas.py` — request/response dataclasses per migrated REST route
+  (type hints only, not checked at runtime); `api/endpoints.py` —
+  endpoint-name registry (contract, growing)
+- `api/events.py` — `SocketEvents` name registry (shared with client — contract)
+- `api/message_type.py` — chat message enum (shared with client — contract)
 - `conf.py` — `DefaultSettings`; `mscolab.py` — CLI (db init/seed/reset)
 - `seed.py` — demo users/operations; `utils.py`, `auth.py`, `forms.py`
 
@@ -105,10 +108,14 @@ under `ignore_imports` and must only shrink):
 
 1. Never hand-edit `mslib/msui/qt5/ui_*.py` (pyuic5 output; sources in
    `mslib/msui/ui/`) or `mslib/mscolab/migrations/` (Alembic).
-2. Client/server shared vocabulary lives ONLY in `mslib/mscolab/events.py` and
-   `mslib/mscolab/message_type.py`. REST payloads are implicit dicts today —
-   when touching one, update BOTH the blueprint handler and the client call
-   site in `mslib/msui/mscolab.py`, and grep for the endpoint name.
+2. Client/server shared vocabulary lives ONLY in `mslib/mscolab/api/` (typed
+   REST schemas + endpoint names, plus `events.py`/`message_type.py` for the
+   socket vocabulary). Most REST payloads are still implicit dicts — when
+   touching one that has no schema yet, update BOTH the blueprint handler and
+   the client call site in `mslib/msui/mscolab.py`, and grep for the endpoint
+   name. A route with a schema in `mslib/mscolab/api/schemas.py` only needs
+   the dataclass changed; run `pixi run -e dev test-api` (schema self-consistency)
+   and `tests/_test_mscolab/test_api_contract.py` (schemas against real routes).
 3. All configuration access goes through `mslib.utils.config.config_loader`;
    never read the settings JSON directly.
 4. Qt imports are allowed only in `mslib/msui`, `mslib/utils/{qt,colordialog}.py`,
@@ -123,7 +130,8 @@ under `ignore_imports` and must only shrink):
 | `pixi run -e dev lint` | flake8 | seconds |
 | `pixi run -e dev lint-imports` | architecture contracts | seconds |
 | `pixi run -e dev codespell` | spelling | seconds |
-| `pixi run -e dev test-fast` | plugins + utils + meta, no servers | ~30 s |
+| `pixi run -e dev test-fast` | api + plugins + utils + meta, no servers | ~30 s |
+| `pixi run -e dev test-api` | mscolab contract schema round-trips only | <1 s |
 | `pixi run -e dev test-mscolab` / `test-mswms` | one server suite | minutes |
 | `pixi run -e dev test-msui` | full GUI suite (offscreen Qt) | ~10 min |
 | `pixi run -e dev test` | everything | ~13 min |
