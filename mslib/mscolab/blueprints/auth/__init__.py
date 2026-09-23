@@ -41,6 +41,7 @@ from mslib.mscolab.auth import optional_auth
 from mslib.mscolab.conf import setup_saml2_backend
 from mslib.mscolab.forms import ResetPasswordForm, ResetRequestForm
 from mslib.mscolab.models import User
+from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.schemas import (
     IdpLoginAuthRequest,
     IdpLoginAuthResponse,
@@ -57,7 +58,7 @@ from mslib.utils.auth import send_email
 AUTH_BP = Blueprint('auth', __name__, template_folder='templates')
 
 
-@AUTH_BP.route("/status")
+@AUTH_BP.route(f"/{endpoints.STATUS}")
 @optional_auth
 def hello():
     if request.authorization is not None and current_app.config.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
@@ -70,7 +71,7 @@ def hello():
     return json.dumps(response.to_dict())
 
 
-@AUTH_BP.route('/token', methods=["POST"])
+@AUTH_BP.route(f"/{endpoints.TOKEN}", methods=["POST"])
 @optional_auth
 def get_auth_token():
     req = LoginRequest.from_form(request.form)
@@ -102,7 +103,7 @@ def authorized():
         return "False"
 
 
-@AUTH_BP.route("/register", methods=["POST"])
+@AUTH_BP.route(f"/{endpoints.REGISTER}", methods=["POST"])
 @optional_auth
 def user_register_handler():
     req = RegisterRequest.from_form(request.form)
@@ -237,7 +238,7 @@ def register_saml_routes():
         except (NameError, AttributeError):
             return render_template('auth/errors/403.html'), 403
 
-    @AUTH_BP.route('/idp_login_auth/', methods=['POST'])
+    @AUTH_BP.route(f"/{endpoints.IDP_LOGIN_AUTH}/", methods=['POST'])
     def idp_login_auth():
         """Handle the SAML authentication validation of client application."""
         try:

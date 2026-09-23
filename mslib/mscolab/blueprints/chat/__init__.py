@@ -34,6 +34,7 @@ from mslib.mscolab.auth import verify_user
 from mslib.mscolab.api.events import SocketEvents
 from mslib.mscolab.api.message_type import MessageType
 from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX, get_message_dict
+from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.schemas import (
     GetMessagesRequest,
     GetMessagesResponse,
@@ -44,7 +45,7 @@ from mslib.mscolab.api.schemas import (
 CHAT_BP = Blueprint('chat', __name__)
 
 
-@CHAT_BP.route("/messages", methods=["GET"])
+@CHAT_BP.route(f"/{endpoints.MESSAGES}", methods=["GET"])
 @verify_user
 def messages():
     fm = current_app.extensions['fm']
@@ -58,7 +59,7 @@ def messages():
     return "False"
 
 
-@CHAT_BP.route("/message_attachment", methods=["POST"])
+@CHAT_BP.route(f"/{endpoints.MESSAGE_ATTACHMENT}", methods=["POST"])
 @verify_user
 def message_attachment():
     user = g.user

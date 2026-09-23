@@ -32,6 +32,7 @@ from flask import Blueprint, request, g, jsonify, current_app
 
 from mslib.mscolab.auth import verify_user
 from mslib.mscolab.models import Change
+from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.schemas import (
     BulkPermissionsRequest,
     BulkPermissionsResponse,
@@ -70,7 +71,7 @@ from mslib.mscolab.api.schemas import (
 OPERATION_BP = Blueprint('operation', __name__)
 
 
-@OPERATION_BP.route('/create_operation', methods=["POST"])
+@OPERATION_BP.route(f"/{endpoints.CREATE_OPERATION}", methods=["POST"])
 @verify_user
 def create_operation():
     fm = current_app.extensions['fm']
@@ -88,7 +89,7 @@ def create_operation():
     return response.to_text()
 
 
-@OPERATION_BP.route('/get_operation_by_id', methods=['GET'])
+@OPERATION_BP.route(f"/{endpoints.GET_OPERATION_BY_ID}", methods=['GET'])
 @verify_user
 def get_operation_by_id():
     fm = current_app.extensions['fm']
@@ -100,7 +101,7 @@ def get_operation_by_id():
     return GetOperationByIdResponse(content=result).to_text()
 
 
-@OPERATION_BP.route('/get_all_changes', methods=['GET'])
+@OPERATION_BP.route(f"/{endpoints.GET_ALL_CHANGES}", methods=['GET'])
 @verify_user
 def get_all_changes():
     fm = current_app.extensions['fm']
@@ -115,7 +116,7 @@ def get_all_changes():
     return jsonify(GetAllChangesResponse(success=True, changes=result).to_dict())
 
 
-@OPERATION_BP.route('/get_change_content', methods=['GET'])
+@OPERATION_BP.route(f"/{endpoints.GET_CHANGE_CONTENT}", methods=['GET'])
 @verify_user
 def get_change_content():
     fm = current_app.extensions['fm']
@@ -127,7 +128,7 @@ def get_change_content():
     return jsonify(GetChangeContentResponse(content=result).to_dict())
 
 
-@OPERATION_BP.route('/set_version_name', methods=['POST'])
+@OPERATION_BP.route(f"/{endpoints.SET_VERSION_NAME}", methods=['POST'])
 @verify_user
 def set_version_name():
     fm = current_app.extensions['fm']
@@ -140,7 +141,7 @@ def set_version_name():
     return jsonify(SetVersionNameResponse(success=True, message="Successfully set version name").to_dict())
 
 
-@OPERATION_BP.route('/authorized_users', methods=['GET'])
+@OPERATION_BP.route(f"/{endpoints.AUTHORIZED_USERS}", methods=['GET'])
 @verify_user
 def authorized_users():
     fm = current_app.extensions['fm']
@@ -148,7 +149,7 @@ def authorized_users():
     return GetAuthorizedUsersResponse(users=fm.get_authorized_users(req.op_id)).to_text()
 
 
-@OPERATION_BP.route('/active_users', methods=["GET"])
+@OPERATION_BP.route(f"/{endpoints.ACTIVE_USERS}", methods=["GET"])
 @verify_user
 def active_users():
     sockio = current_app.extensions['sockio']
@@ -157,7 +158,7 @@ def active_users():
     return jsonify(response.to_dict())
 
 
-@OPERATION_BP.route('/operations', methods=['GET'])
+@OPERATION_BP.route(f"/{endpoints.OPERATIONS}", methods=['GET'])
 @verify_user
 def get_operations():
     fm = current_app.extensions['fm']
@@ -167,7 +168,7 @@ def get_operations():
     return GetOperationsResponse(operations=operations).to_text()
 
 
-@OPERATION_BP.route('/delete_operation', methods=["POST"])
+@OPERATION_BP.route(f"/{endpoints.DELETE_OPERATION}", methods=["POST"])
 @verify_user
 def delete_operation():
     fm = current_app.extensions['fm']
@@ -182,7 +183,7 @@ def delete_operation():
     return jsonify(DeleteOperationResponse(success=True, message="Operation was successfully deleted!").to_dict())
 
 
-@OPERATION_BP.route('/update_operation', methods=['POST'])
+@OPERATION_BP.route(f"/{endpoints.UPDATE_OPERATION}", methods=['POST'])
 @verify_user
 def update_operation():
     fm = current_app.extensions['fm']
@@ -226,7 +227,7 @@ def set_last_used():
     return jsonify({"success": True}), 200
 
 
-@OPERATION_BP.route('/undo_changes', methods=["POST"])
+@OPERATION_BP.route(f"/{endpoints.UNDO_CHANGES}", methods=["POST"])
 @verify_user
 def undo_changes():
     fm = current_app.extensions['fm']
@@ -241,7 +242,7 @@ def undo_changes():
     return UndoChangesResponse(success=result).to_text()
 
 
-@OPERATION_BP.route("/creator_of_operation", methods=["GET"])
+@OPERATION_BP.route(f"/{endpoints.GET_CREATOR_OF_OPERATION}", methods=["GET"])
 @verify_user
 def get_creator_of_operation():
     fm = current_app.extensions['fm']
@@ -255,7 +256,7 @@ def get_creator_of_operation():
     return jsonify(response.to_dict()), 200
 
 
-@OPERATION_BP.route("/users_without_permission", methods=["GET"])
+@OPERATION_BP.route(f"/{endpoints.USERS_WITHOUT_PERMISSION}", methods=["GET"])
 @verify_user
 def get_users_without_permission():
     fm = current_app.extensions['fm']
@@ -269,7 +270,7 @@ def get_users_without_permission():
     return jsonify(GetOperationUsersResponse(success=True, users=users).to_dict()), 200
 
 
-@OPERATION_BP.route("/users_with_permission", methods=["GET"])
+@OPERATION_BP.route(f"/{endpoints.USERS_WITH_PERMISSION}", methods=["GET"])
 @verify_user
 def get_users_with_permission():
     fm = current_app.extensions['fm']
@@ -283,7 +284,7 @@ def get_users_with_permission():
     return jsonify(GetOperationUsersResponse(success=True, users=users).to_dict()), 200
 
 
-@OPERATION_BP.route("/add_bulk_permissions", methods=["POST"])
+@OPERATION_BP.route(f"/{endpoints.ADD_BULK_PERMISSIONS}", methods=["POST"])
 @verify_user
 def add_bulk_permissions():
     fm = current_app.extensions['fm']
@@ -301,7 +302,7 @@ def add_bulk_permissions():
         BulkPermissionsResponse(success=False, message="Some error occurred. Please try again.").to_dict())
 
 
-@OPERATION_BP.route("/modify_bulk_permissions", methods=["POST"])
+@OPERATION_BP.route(f"/{endpoints.MODIFY_BULK_PERMISSIONS}", methods=["POST"])
 @verify_user
 def modify_bulk_permissions():
     fm = current_app.extensions['fm']
@@ -320,7 +321,7 @@ def modify_bulk_permissions():
         BulkPermissionsResponse(success=False, message="Some error occurred. Please try again.").to_dict())
 
 
-@OPERATION_BP.route("/delete_bulk_permissions", methods=["POST"])
+@OPERATION_BP.route(f"/{endpoints.DELETE_BULK_PERMISSIONS}", methods=["POST"])
 @verify_user
 def delete_bulk_permissions():
     fm = current_app.extensions['fm']
@@ -340,7 +341,7 @@ def delete_bulk_permissions():
     return jsonify(response.to_dict())
 
 
-@OPERATION_BP.route('/import_permissions', methods=['POST'])
+@OPERATION_BP.route(f"/{endpoints.IMPORT_PERMISSIONS}", methods=['POST'])
 @verify_user
 def import_permissions():
     fm = current_app.extensions['fm']

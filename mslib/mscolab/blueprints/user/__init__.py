@@ -32,6 +32,7 @@ from PIL import Image
 from flask import Blueprint, g, request, jsonify, send_from_directory, current_app
 
 from mslib.mscolab.auth import verify_user
+from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.schemas import (
     DeleteOwnAccountResponse,
     FetchProfileImageRequest,
@@ -43,14 +44,14 @@ from mslib.mscolab.api.schemas import (
 USER_BP = Blueprint('user', __name__)
 
 
-@USER_BP.route('/user', methods=["GET"])
+@USER_BP.route(f"/{endpoints.USER}", methods=["GET"])
 @verify_user
 def get_user():
     user = UserInfo(id=g.user.id, username=g.user.username, fullname=g.user.fullname)
     return GetUserResponse(user=user).to_text()
 
 
-@USER_BP.route('/upload_profile_image', methods=["POST"])
+@USER_BP.route(f"/{endpoints.UPLOAD_PROFILE_IMAGE}", methods=["POST"])
 @verify_user
 def upload_profile_image():
     user_id = g.user.id
@@ -72,7 +73,7 @@ def upload_profile_image():
     return jsonify(ProfileImageMessageResponse(message=message).to_dict()), status_code
 
 
-@USER_BP.route('/fetch_profile_image', methods=["GET"])
+@USER_BP.route(f"/{endpoints.FETCH_PROFILE_IMAGE}", methods=["GET"])
 @verify_user
 def fetch_profile_image():
     fm = current_app.extensions['fm']
@@ -86,7 +87,7 @@ def fetch_profile_image():
         return jsonify(response.to_dict()), 404
 
 
-@USER_BP.route("/delete_own_account", methods=["POST"])
+@USER_BP.route(f"/{endpoints.DELETE_OWN_ACCOUNT}", methods=["POST"])
 @verify_user
 def delete_own_account():
     """
