@@ -611,8 +611,9 @@ class LinearViewPlotting(Plotting):
 @click.option('--cpath', default=constants.MSS_AUTOPLOT, help='Path of the configuration file.')
 @click.option('--view', default="top", help='View of the plot (top/side/linear).')
 @click.option('--ftrack', default="", help='Flight track.')
-@click.option('--fpath', default="", help='Directory of the flight track files. Overrides the directory stored '
-                                          'with the file name in the configuration file.')
+@click.option('--fpath', default="", help='Directory of the flight track files. Replaces the directory stored '
+                                          'with the file name in the configuration file, '
+                                          'any subdirectory of that stored path is discarded.')
 @click.option('--itime', default="", help='Initial time.')
 @click.option('--vtime', default="", help='Valid time.')
 @click.option('--intv', default=0, help='Time interval.')
