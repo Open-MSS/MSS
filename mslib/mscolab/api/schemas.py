@@ -13,8 +13,9 @@
 
     Only migrated routes have a schema here -- see endpoints.py for which
     ones. This is stdlib dataclasses only (Python <3.12 pin, no new runtime
-    dependency); the round-trip tests in tests/_test_api/ are the tripwire
-    that keeps a schema and its route's actual wire format in sync.
+    dependency). tests/_test_api/ only checks each schema against itself;
+    tests/_test_mscolab/test_api_contract.py checks schemas against the real
+    Flask routes.
 
     This file is part of MSS.
 
@@ -36,7 +37,7 @@
 
 import json
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, Union
 from urllib.parse import urlencode
 
 # mslib.mscolab.auth.verify_user (the @verify_user decorator wrapping every
@@ -47,6 +48,12 @@ from urllib.parse import urlencode
 # it rather than raising a JSON-decode error, matching what the routes have
 # always actually done on the wire.
 AUTH_FAILED_TEXT = "False"
+
+
+def _record_dict(record):
+    # Server routes pass the managers' plain dicts through unchanged, so list
+    # responses serialize either a typed record or the dict it models.
+    return record.to_dict() if hasattr(record, "to_dict") else record
 
 
 @dataclass
@@ -158,12 +165,16 @@ class GetOperationsRequest:
 
 @dataclass
 class GetOperationsResponse:
-    """Response body for GET endpoints.OPERATIONS."""
+    """Response body for GET endpoints.OPERATIONS.
 
-    operations: List[OperationInfo] = field(default_factory=list)
+    The server passes FileManager.list_operations' dicts through; from_text()
+    returns OperationInfo entries.
+    """
+
+    operations: List[Union[OperationInfo, dict]] = field(default_factory=list)
 
     def to_text(self):
-        return json.dumps({"operations": [op.to_dict() for op in self.operations]})
+        return json.dumps({"operations": [_record_dict(op) for op in self.operations]})
 
     @classmethod
     def from_text(cls, text):
@@ -690,12 +701,16 @@ class GetAuthorizedUsersRequest:
 
 @dataclass
 class GetAuthorizedUsersResponse:
-    """Response body for GET endpoints.AUTHORIZED_USERS."""
+    """Response body for GET endpoints.AUTHORIZED_USERS.
 
-    users: List[AuthorizedUserInfo]
+    The server passes FileManager.get_authorized_users' dicts through;
+    from_text() returns AuthorizedUserInfo entries.
+    """
+
+    users: List[Union[AuthorizedUserInfo, dict]]
 
     def to_text(self):
-        return json.dumps({"users": [u.to_dict() for u in self.users]})
+        return json.dumps({"users": [_record_dict(u) for u in self.users]})
 
     @classmethod
     def from_text(cls, text):
@@ -814,12 +829,12 @@ class GetAllChangesResponse:
     """
 
     success: bool
-    changes: List[ChangeInfo]
+    changes: List[Union[ChangeInfo, dict]]
 
     def to_dict(self):
         changes = self.changes
         if isinstance(changes, list):
-            changes = [c.to_dict() if isinstance(c, ChangeInfo) else c for c in changes]
+            changes = [_record_dict(c) for c in changes]
         return {"success": self.success, "changes": changes}
 
     @classmethod
@@ -1171,12 +1186,15 @@ class GetMessagesResponse:
     verify_user, but the same wire value) -- from_text() treats it the same
     way as the shared AUTH_FAILED_TEXT sentinel, since the client can't
     (and doesn't) distinguish the two cases either.
+
+    The server passes ChatManager.get_messages' dicts through; from_text()
+    returns ChatMessageInfo entries.
     """
 
-    messages: List[ChatMessageInfo]
+    messages: List[Union[ChatMessageInfo, dict]]
 
     def to_dict(self):
-        return {"messages": [m.to_dict() for m in self.messages]}
+        return {"messages": [_record_dict(m) for m in self.messages]}
 
     @classmethod
     def from_text(cls, text):

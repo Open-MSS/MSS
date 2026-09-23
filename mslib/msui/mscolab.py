@@ -515,8 +515,10 @@ class MSUIMscolab(QtCore.QObject):
         except requests.exceptions.RequestException as ex:
             raise MSColabConnectionError(f"Some error occurred ({ex})! Please reconnect.")
         else:
+            if response.status_code != 200:
+                return
             parsed = DeleteOwnAccountResponse.from_text(response.text)
-            if response.status_code == 200 and parsed is not None and parsed.success is True:
+            if parsed is not None and parsed.success is True:
                 self.logout()
 
     def add_operation_handler(self, _=None):

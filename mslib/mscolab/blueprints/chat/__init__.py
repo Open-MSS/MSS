@@ -35,7 +35,6 @@ from mslib.mscolab.api.events import SocketEvents
 from mslib.mscolab.api.message_type import MessageType
 from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX, get_message_dict
 from mslib.mscolab.api.schemas import (
-    ChatMessageInfo,
     GetMessagesRequest,
     GetMessagesResponse,
     MessageAttachmentRequest,
@@ -54,7 +53,7 @@ def messages():
 
     if fm.is_member(user.id, req.op_id):
         cm = current_app.extensions['cm']
-        chat_messages = [ChatMessageInfo.from_dict(m) for m in cm.get_messages(req.op_id, req.timestamp)]
+        chat_messages = cm.get_messages(req.op_id, req.timestamp)
         return jsonify(GetMessagesResponse(messages=chat_messages).to_dict())
     return "False"
 

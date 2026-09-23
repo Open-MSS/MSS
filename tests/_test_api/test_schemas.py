@@ -5,11 +5,9 @@
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Round-trip tests for mslib.mscolab.api.schemas: for each dataclass,
-    serialize -> parse -> compare. This is the fast tripwire meant to catch a
-    client/server wire-format mismatch in milliseconds instead of a 13-minute
-    integration suite -- see mslib/mscolab/api/schemas.py and
-    tests/_test_mscolab, tests/_test_msui for the corresponding server/client
-    tests.
+    serialize -> parse -> compare. These only check each schema against
+    itself; tests/_test_mscolab/test_api_contract.py checks the schemas
+    against the real Flask routes.
 
     This file is part of MSS.
 
@@ -179,6 +177,11 @@ class Test_GetOperationsResponse:
     def test_round_trip_empty(self):
         response = GetOperationsResponse(operations=[])
         assert GetOperationsResponse.from_text(response.to_text()) == response
+
+    def test_manager_dicts_serialize_like_typed_entries(self):
+        op = OperationInfo(op_id=1, access_level="creator", path="a", description=None, category="default")
+        typed = GetOperationsResponse(operations=[op])
+        assert GetOperationsResponse(operations=[op.to_dict()]).to_text() == typed.to_text()
 
     def test_auth_failure_sentinel(self):
         assert GetOperationsResponse.from_text(AUTH_FAILED_TEXT) is None

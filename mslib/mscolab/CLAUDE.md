@@ -40,7 +40,8 @@ Global map: ../../ARCHITECTURE.md
 - Every REST payload has a mirror-image consumer in `mslib/msui/mscolab.py` —
   change both sides in the same commit and grep the endpoint name. For a
   route migrated to `api/schemas.py`, change the dataclass instead and both
-  sides pick it up; run `pixi run -e dev test-api` (round-trip tests) first.
+  sides pick it up; run `pixi run -e dev test-api` (schema round-trips) and
+  `tests/_test_mscolab/test_api_contract.py` (schemas against real routes).
 - Socket event names come from `SocketEvents`; never emit a bare string.
 - Tokens are validated per request; don't cache auth state in handlers.
 - No module level state that belongs to one app (app, db engine, SocketIO,

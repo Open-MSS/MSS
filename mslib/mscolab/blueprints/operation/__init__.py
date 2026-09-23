@@ -33,7 +33,6 @@ from flask import Blueprint, request, g, jsonify, current_app
 from mslib.mscolab.auth import verify_user
 from mslib.mscolab.models import Change
 from mslib.mscolab.api.schemas import (
-    AuthorizedUserInfo,
     BulkPermissionsRequest,
     BulkPermissionsResponse,
     CreateOperationRequest,
@@ -60,7 +59,6 @@ from mslib.mscolab.api.schemas import (
     GetOperationUsersResponse,
     ImportPermissionsRequest,
     ImportPermissionsResponse,
-    OperationInfo,
     SetVersionNameRequest,
     SetVersionNameResponse,
     UndoChangesRequest,
@@ -147,8 +145,7 @@ def set_version_name():
 def authorized_users():
     fm = current_app.extensions['fm']
     req = GetAuthorizedUsersRequest.from_args_and_form(request.args, request.form)
-    users = [AuthorizedUserInfo.from_dict(u) for u in fm.get_authorized_users(req.op_id)]
-    return GetAuthorizedUsersResponse(users=users).to_text()
+    return GetAuthorizedUsersResponse(users=fm.get_authorized_users(req.op_id)).to_text()
 
 
 @OPERATION_BP.route('/active_users', methods=["GET"])
@@ -166,7 +163,7 @@ def get_operations():
     fm = current_app.extensions['fm']
     req = GetOperationsRequest.from_args_and_form(request.args, request.form)
     user = g.user
-    operations = [OperationInfo.from_dict(op) for op in fm.list_operations(user, skip_archived=req.skip_archived)]
+    operations = fm.list_operations(user, skip_archived=req.skip_archived)
     return GetOperationsResponse(operations=operations).to_text()
 
 

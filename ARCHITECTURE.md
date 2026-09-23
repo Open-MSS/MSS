@@ -113,7 +113,8 @@ under `ignore_imports` and must only shrink):
    touching one that has no schema yet, update BOTH the blueprint handler and
    the client call site in `mslib/msui/mscolab.py`, and grep for the endpoint
    name. A route with a schema in `mslib/mscolab/api/schemas.py` only needs
-   the dataclass changed; run `pixi run -e dev test-api` first.
+   the dataclass changed; run `pixi run -e dev test-api` (schema self-consistency)
+   and `tests/_test_mscolab/test_api_contract.py` (schemas against real routes).
 3. All configuration access goes through `mslib.utils.config.config_loader`;
    never read the settings JSON directly.
 4. Qt imports are allowed only in `mslib/msui`, `mslib/utils/{qt,colordialog}.py`,
