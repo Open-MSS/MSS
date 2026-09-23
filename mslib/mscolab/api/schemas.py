@@ -4,7 +4,7 @@
     mslib.mscolab.api.schemas
     ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Typed request/response payloads for mscolab REST routes. Each dataclass
+    Request/response dataclasses for mscolab REST routes. Each dataclass
     owns both directions of its wire format (building the form-encoded dict
     the client posts / parsing the Flask request.form on the server; building
     the response text / parsing it back on the client), so a field rename is
@@ -13,7 +13,10 @@
 
     Only migrated routes have a schema here -- see endpoints.py for which
     ones. This is stdlib dataclasses only (Python <3.12 pin, no new runtime
-    dependency). tests/_test_api/ only checks each schema against itself;
+    dependency). The type hints are documentation for readers and IDEs
+    only: nothing checks them at runtime, and ``op_id: object`` marks
+    fields the server does not convert to int. tests/_test_api/ only checks
+    each schema against itself;
     tests/_test_mscolab/test_api_contract.py checks schemas against the real
     Flask routes.
 
@@ -1214,14 +1217,17 @@ class MessageAttachmentRequest:
     """
 
     op_id: object
-    message_type: int
+    message_type: Optional[int]
 
     def to_form_data(self):
         return {"op_id": self.op_id, "message_type": self.message_type}
 
     @classmethod
     def from_form(cls, form):
-        return cls(op_id=form.get("op_id", None), message_type=int(form.get("message_type")))
+        # a missing message_type must not fail before the route's membership check
+        message_type = form.get("message_type")
+        return cls(op_id=form.get("op_id", None),
+                   message_type=int(message_type) if message_type is not None else None)
 
 
 @dataclass

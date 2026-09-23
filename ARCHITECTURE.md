@@ -67,8 +67,9 @@ under `ignore_imports` and must only shrink):
 - `file_manager.py` — operations, permissions, git-backed versioning (core logic)
 - `chat_manager.py` — chat persistence; `sockets_manager.py` — socket.io events
 - `models.py` — SQLAlchemy models; `migrations/` — Alembic, NEVER edit by hand
-- `api/schemas.py` — typed request/response dataclasses per migrated REST
-  route; `api/endpoints.py` — endpoint-name registry (contract, growing)
+- `api/schemas.py` — request/response dataclasses per migrated REST route
+  (type hints only, not checked at runtime); `api/endpoints.py` —
+  endpoint-name registry (contract, growing)
 - `api/events.py` — `SocketEvents` name registry (shared with client — contract)
 - `api/message_type.py` — chat message enum (shared with client — contract)
 - `conf.py` — `DefaultSettings`; `mscolab.py` — CLI (db init/seed/reset)

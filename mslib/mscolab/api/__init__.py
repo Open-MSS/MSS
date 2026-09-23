@@ -4,8 +4,9 @@
     mslib.mscolab.api
     ~~~~~~~~~~~~~~~~~~
 
-    The typed client/server contract for mscolab: request/response dataclasses
-    (schemas.py) and the endpoint-name registry (endpoints.py). This is the
+    The client/server contract for mscolab: request/response dataclasses
+    (schemas.py, type hints only, not checked at runtime) and the
+    endpoint-name registry (endpoints.py). This is the
     ONLY part of mslib.mscolab that mslib.msui may import from -- see
     ../CLAUDE.md and ../../../ARCHITECTURE.md.
 

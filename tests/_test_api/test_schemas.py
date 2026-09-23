@@ -695,6 +695,9 @@ class Test_MessageAttachmentRequest:
         req = MessageAttachmentRequest(op_id=1, message_type=2)
         assert MessageAttachmentRequest.from_form(req.to_form_data()) == req
 
+    def test_missing_message_type_parses_to_none(self):
+        assert MessageAttachmentRequest.from_form({"op_id": "1"}).message_type is None
+
 
 class Test_MessageAttachmentResponse:
     def test_round_trip_success(self):
