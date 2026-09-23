@@ -58,6 +58,7 @@ from mslib.mscolab.api.schemas import (
     GetOperationByIdRequest,
     GetOperationByIdResponse,
     DeleteBulkPermissionsRequest,
+    DeleteBulkPermissionsResponse,
     DeleteOwnAccountResponse,
     FetchProfileImageRequest,
     GetCreatorOfOperationRequest,
@@ -801,10 +802,10 @@ class MSUIMscolab(QtCore.QObject):
                 response = self.conn.request_post(endpoints.DELETE_BULK_PERMISSIONS, req.to_form_data())
             except requests.exceptions.RequestException as ex:
                 raise MSColabConnectionError(f"Some error occurred ({ex})! Please reconnect.")
-            if response.text == "False":
+            parsed = DeleteBulkPermissionsResponse.from_text(response.text)
+            if parsed is None:
                 raise MSColabConnectionError("Your Connection is expired. New Login required!")
-            response = response.json()
-            if response["success"]:
+            if parsed.success:
                 for window in self.ui.get_active_views():
                     window.handle_force_close()
                 self.reload_operations()
