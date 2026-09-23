@@ -388,13 +388,12 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             active_users_url, data={**active_req.to_form_data(), "token": self.token},
             timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
 
-        # NOTE: pre-existing bug -- this compares a requests.Response object to the
-        # string "False", which is always true, so the else branch below is dead
-        # code. Preserved as-is rather than silently fixed by this migration.
-        if users_response != "False":
+        users_parsed = GetAuthorizedUsersResponse.from_text(users_response.text)
+        active_parsed = GetActiveUsersResponse.from_text(active_response.text)
+        if users_parsed is not None and active_parsed is not None:
             self.collaboratorsList.clear()
-            users = GetAuthorizedUsersResponse.from_text(users_response.text).users
-            active_users = set(GetActiveUsersResponse.from_text(active_response.text).active_users)
+            users = users_parsed.users
+            active_users = set(active_parsed.active_users)
             for user in users:
                 display_text = f'{user.username} - {user.access_level}'
                 item = QtWidgets.QListWidgetItem(display_text, parent=self.collaboratorsList)
