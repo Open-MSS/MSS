@@ -31,6 +31,7 @@ import pytest
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.schemas import (
     CreateOperationRequest, CreateOperationResponse,
+    GetAllChangesRequest, GetAllChangesResponse,
     GetOperationsRequest, GetOperationsResponse,
     GetCreatorOfOperationRequest, GetCreatorOfOperationResponse,
     LoginRequest, LoginResponse,
@@ -117,3 +118,15 @@ class Test_ApiContract:
         response = self._post(endpoints.MESSAGE_ATTACHMENT, {"op_id": op_id})
         assert response.status_code == 200
         assert MessageAttachmentResponse.from_text(response.text) is None
+
+    def test_get_all_changes_non_member(self):
+        self._create_operation()
+        op_id = self._op_id()
+        register_user("outsider2@example.org", "secret", "outsider2", "Outsider")
+        response = self.client.post(
+            "/" + endpoints.TOKEN,
+            data=LoginRequest(email="outsider2@example.org", password="secret").to_form_data())
+        self.token = LoginResponse.from_text(response.text).token
+        response = self._get(endpoints.GET_ALL_CHANGES, GetAllChangesRequest(op_id=op_id).to_form_data())
+        assert response.status_code == 200
+        assert GetAllChangesResponse.from_text(response.text) == GetAllChangesResponse(success=False, changes=[])

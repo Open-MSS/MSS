@@ -817,28 +817,15 @@ class GetAllChangesRequest:
 class GetAllChangesResponse:
     """Response body for GET endpoints.GET_ALL_CHANGES.
 
-    NOTE: pre-existing bug in the route -- its failure branch calls
-    jsonify({"success": False, ...}) without returning it, so the response is
-    *always* {"success": True, "changes": result}, even when
-    FileManager.get_all_changes returned False (caller isn't a member). In
-    that case "changes" is the JSON boolean false, not a list.
-
-    to_dict() (server side, feeds jsonify) tolerates that -- jsonify itself
-    never needed to iterate `changes`, so this must not turn a working-but-
-    wrong response into a 500. from_text() (client side) does NOT guard
-    against it: the original client's own `for change in changes:` loop
-    would have raised the same TypeError in that case, so the same crash is
-    preserved there rather than silently swallowed.
+    A caller who isn't a member of the operation gets success=False with an
+    empty changes list.
     """
 
     success: bool
     changes: List[Union[ChangeInfo, dict]]
 
     def to_dict(self):
-        changes = self.changes
-        if isinstance(changes, list):
-            changes = [_record_dict(c) for c in changes]
-        return {"success": self.success, "changes": changes}
+        return {"success": self.success, "changes": [_record_dict(c) for c in self.changes]}
 
     @classmethod
     def from_text(cls, text):

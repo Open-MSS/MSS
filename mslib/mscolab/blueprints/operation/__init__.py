@@ -109,10 +109,7 @@ def get_all_changes():
     user = g.user
     result = fm.get_all_changes(req.op_id, user, req.named_version)
     if result is False:
-        # NOTE: pre-existing bug -- this response is never returned, so the
-        # success path below always runs even when result is False. Preserved
-        # as-is rather than silently fixed by this migration.
-        jsonify(GetAllChangesResponse(success=False, changes=[]).to_dict())
+        return jsonify(GetAllChangesResponse(success=False, changes=[]).to_dict())
     return jsonify(GetAllChangesResponse(success=True, changes=result).to_dict())
 
 

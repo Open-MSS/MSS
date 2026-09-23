@@ -511,18 +511,9 @@ class Test_GetAllChangesResponse:
     def test_auth_failure_sentinel(self):
         assert GetAllChangesResponse.from_text(AUTH_FAILED_TEXT) is None
 
-    def test_to_dict_tolerates_the_bool_changes_bug(self):
-        # See the pre-existing-bug NOTE on GetAllChangesResponse: the route
-        # can send changes=false instead of a list. to_dict() must not crash
-        # (jsonify itself never needed to iterate it either).
-        response = GetAllChangesResponse(success=True, changes=False)
-        assert response.to_dict() == {"success": True, "changes": False}
-
-    def test_from_text_reproduces_the_bool_changes_crash(self):
-        # ... but from_text() (client side) crashes the same way the
-        # original `for change in changes:` loop would have.
-        with pytest.raises(TypeError):
-            GetAllChangesResponse.from_text(json.dumps({"success": True, "changes": False}))
+    def test_round_trip_failure(self):
+        response = GetAllChangesResponse(success=False, changes=[])
+        assert GetAllChangesResponse.from_text(json.dumps(response.to_dict())) == response
 
 
 class Test_GetChangeContentRequest:
