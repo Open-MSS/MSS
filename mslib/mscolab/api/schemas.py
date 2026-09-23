@@ -1111,7 +1111,7 @@ class IdpLoginAuthResponse:
 @dataclass
 class ChatMessageInfo:
     """One message or reply, as returned by ChatManager.get_messages() and
-    embedded in the mscolab.events.SocketEvents.CHAT_MESSAGE_CLIENT
+    embedded in the mscolab.api.events.SocketEvents.CHAT_MESSAGE_CLIENT
     real-time event (that socket payload is a separate, not-yet-typed
     contract -- see restructuring notes -- this dataclass only models the
     REST side, endpoints.MESSAGES).
