@@ -287,8 +287,9 @@ class Plotting:
         """
         Flight track file of an "automated_plotting_flights" entry, checked for existence.
 
-        Leaves through SystemExit when the file is not there, the GUI shows that message
-        in its error dialog.
+        Raises FileNotFoundError when the file is not there. draw() in main() catches it,
+        so a missing file skips the plots of that entry only and the run goes on with
+        the next one.
         """
         file_path = resolve_ftml_path(filename, self.fpath)
         if not file_path.exists():
@@ -296,7 +297,7 @@ class Plotting:
             print(message)
             if self.pdlg is not None:
                 self.pdlg.close()
-            raise SystemExit(message)
+            raise FileNotFoundError(message)
         return file_path
 
     def read_ftml(self, filename):
