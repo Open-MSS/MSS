@@ -31,7 +31,7 @@ import mock
 
 from werkzeug.datastructures import FileStorage
 
-from mslib.mscolab.models import Operation, User
+from mslib.mscolab.models import db, Operation, User
 from mslib.mscolab.seed import add_user, get_user, add_operation
 from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX
 from mslib.mscolab.seed import XML_CONTENT_INIT
@@ -242,6 +242,43 @@ class Test_FileManager:
             flight_path, operation = self._create_operation(flight_path='operation4')
             assert self.fm.delete_operation(operation.id, self.user)
             assert Operation.query.filter_by(path=flight_path).first() is None
+
+    @pytest.mark.parametrize("bad_path", ["", ".", "..", "a/b", "a\\b", "a b", "a.b", "C:x", "abc\n"])
+    def test_create_operation_rejects_invalid_path(self, bad_path):
+        with self.app.test_client():
+            data_dir = self.fm.data_dir
+            assert self.fm.create_operation(bad_path, "desc", self.user, content=XML_CONTENT_INIT) is False
+            assert Operation.query.filter_by(path=bad_path).first() is None
+            for directory in (data_dir, os.path.dirname(data_dir)):
+                assert not os.path.exists(os.path.join(directory, "main.ftml"))
+                assert not os.path.exists(os.path.join(directory, ".git"))
+
+    def test_create_operation_refuses_existing_directory(self):
+        with self.app.test_client():
+            # the test settings nest UPLOAD_FOLDER inside OPERATIONS_DATA
+            assert os.path.isdir(os.path.join(self.fm.data_dir, "uploads"))
+            assert self.fm.create_operation("uploads", "desc", self.user, content=XML_CONTENT_INIT) is False
+            assert Operation.query.filter_by(path="uploads").first() is None
+
+    @pytest.mark.parametrize("bad_path", ["", ".", "..", "a/b", "a b", "abc\n"])
+    def test_update_operation_rejects_invalid_path(self, bad_path):
+        with self.app.test_client():
+            flight_path, operation = self._create_operation(flight_path="operation3b")
+            assert self.fm.update_operation(operation.id, "path", bad_path, self.user) is False
+            assert Operation.query.filter_by(id=operation.id).first().path == flight_path
+            assert os.path.exists(os.path.join(self.fm.data_dir, flight_path, "main.ftml"))
+
+    def test_delete_operation_refuses_path_outside_data_dir(self):
+        # an operation named ".." as it could have been stored before names were validated
+        with self.app.test_client():
+            flight_path, operation = self._create_operation(flight_path="legacy")
+            operation.path = ".."
+            db.session.commit()
+            db_file = os.path.join(os.path.dirname(self.fm.data_dir), "mscolab.db")
+            assert os.path.exists(db_file)
+            assert self.fm.delete_operation(operation.id, self.user) is False
+            assert os.path.exists(db_file)
+            assert Operation.query.filter_by(id=operation.id).first() is not None
 
     def test_get_authorized_users(self):
         with self.app.test_client():

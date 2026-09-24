@@ -37,6 +37,7 @@ from flask import current_app
 from mslib.mscolab.cli_notify import notify_socket_event
 from mslib.mscolab.events import SocketEvents
 from mslib.mscolab.models import User, db, Permission, Operation
+from mslib.mscolab.utils import is_valid_operation_path
 
 
 XML_CONTENT_INIT = """<?xml version="1.0" encoding="utf-8"?>
@@ -150,6 +151,9 @@ def get_operation(operation_name):
 
 
 def add_operation(operation_name, description):
+    if not is_valid_operation_path(operation_name):
+        logging.error("invalid operation name %r", operation_name)
+        return False
     operation_available = Operation.query.filter_by(path=operation_name).first()
     if not operation_available:
         operation = Operation(operation_name, description)

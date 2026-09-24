@@ -40,7 +40,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
-from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX
+from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX, is_valid_operation_path, get_operation_dir
 
 
 class FileManager:
@@ -77,11 +77,16 @@ class FileManager:
         if content is not None and not verify_waypoint_data(content):
             return False
         # set codes on these later
-        if path.find("/") != -1 or path.find("\\") != -1 or (" " in path):
+        if not is_valid_operation_path(path):
             logging.debug("malicious request: %s", user)
             return False
         proj_available = Operation.query.filter_by(path=path).first()
         if proj_available is not None:
+            return False
+        operation_dir = get_operation_dir(self.data_dir, path)
+        if operation_dir.exists():
+            # never take over a directory which does not belong to an operation, e.g. a nested UPLOAD_FOLDER
+            logging.error("refusing to create operation %s, %s already exists", path, operation_dir)
             return False
         if last_used is None:
             last_used = datetime.datetime.now(tz=datetime.timezone.utc)
@@ -101,8 +106,6 @@ class FileManager:
                 import_op = Operation.query.filter_by(path=f"{category}{current_app.config['GROUP_POSTFIX']}").first()
                 if import_op is not None:
                     self.import_permissions(import_op.id, operation_id, user.id)
-            data_dir = Path(self.data_dir)
-            operation_dir = data_dir / operation.path
             operation_dir.mkdir(parents=True, exist_ok=True)
 
             operation_file_path = operation_dir / 'main.ftml'
@@ -374,13 +377,15 @@ class FileManager:
             return False
         operation = Operation.query.filter_by(id=op_id).first()
         if attribute == "path":
-            if value.find("/") != -1 or value.find("\\") != -1 or (" " in value):
+            if not is_valid_operation_path(value):
                 logging.debug("malicious request: %s", user)
                 return False
-
-            data_dir = Path(self.data_dir)
-            new_path = data_dir / value
-            old_path = data_dir / operation.path
+            try:
+                new_path = get_operation_dir(self.data_dir, value)
+                old_path = get_operation_dir(self.data_dir, operation.path)
+            except ValueError as ex:
+                logging.error("refusing to rename operation %s: %s", op_id, ex)
+                return False
 
             if new_path.exists():
                 return False
@@ -415,12 +420,15 @@ class FileManager:
         """
         if not self.is_creator(user.id, op_id):
             return False
+        operation = Operation.query.filter_by(id=op_id).first()
+        try:
+            operation_dir = get_operation_dir(self.data_dir, operation.path)
+        except ValueError as ex:
+            logging.error("refusing to delete operation %s: %s", op_id, ex)
+            return False
         Permission.query.filter_by(op_id=op_id).delete()
         Change.query.filter_by(op_id=op_id).delete()
         Message.query.filter_by(op_id=op_id).delete()
-        operation = Operation.query.filter_by(id=op_id).first()
-        data_dir = Path(self.data_dir)
-        operation_dir = data_dir / operation.path
         shutil.rmtree(operation_dir)
         db.session.delete(operation)
         db.session.commit()

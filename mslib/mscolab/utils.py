@@ -23,6 +23,13 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
+import re
+from pathlib import Path
+
+# Operation names become directory names below OPERATIONS_DATA. The msui client
+# applies the same rule before sending a new operation.
+OPERATION_PATH_PATTERN = re.compile(r"[a-zA-Z0-9_-]+")
 
 # URL namespace under which chat attachments are served by the chat blueprint.
 # This is deliberately independent of the directory name configured as
@@ -65,3 +72,23 @@ def get_message_dict(message):
         "replies": [],
         "time": message.created_at.isoformat()
     }
+
+
+def is_valid_operation_path(path):
+    """True if path is usable as an operation name, i.e. as a single directory name"""
+    return isinstance(path, str) and OPERATION_PATH_PATTERN.fullmatch(path) is not None
+
+
+def get_operation_dir(data_dir, path):
+    """
+    Return the directory of the operation named path below data_dir.
+
+    Raises ValueError if that directory would not be a direct child of data_dir,
+    e.g. for names like "", "." or ".." stored before names were validated.
+    """
+    # normalised lexically, so that symlinked operation directories keep working
+    data_dir = Path(os.path.abspath(data_dir))
+    operation_dir = Path(os.path.normpath(data_dir / path))
+    if not path or operation_dir.parent != data_dir:
+        raise ValueError(f"operation path {path!r} is outside of {data_dir}")
+    return operation_dir
