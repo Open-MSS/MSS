@@ -407,9 +407,15 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         text = [f"The flight track file of '{flight}' does not exist:", str(path), ""]
         if source is not None:
             config_file, name = source
-            if name != entry:
+            if name != entry and Path(name).parent == Path("."):
                 text.append(f"The configuration {config_file} names it '{name}', without a "
                             "directory, so it is looked up next to that file.")
+            elif name != entry:
+                # A name with a directory changes on resolving too: "~" is expanded, a
+                # relative directory is joined onto the one of the configuration file
+                # and symlinks are followed.
+                text.append(f"The configuration {config_file} names it '{name}', which "
+                            "resolves to this path.")
             else:
                 text.append(f"This path is stored in the configuration {config_file}.")
             text.append("Correct it there, or open the flight track in the MSUI, save it "
