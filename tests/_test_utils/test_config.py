@@ -290,9 +290,9 @@ class TestMergeDict:
 
     def test_user_option_with_path(self):
         """
-        An option whose default is a plain string takes any string, a path included.
-        The flight track of an "automated_plotting_flights" entry is stored as path
-        + file name, its default is "".
+        The entries of an option in free_string_list_options take any string, a path
+        included. The flight track of an "automated_plotting_flights" entry is stored
+        as path + file name, its default is "".
         """
         users_options_dict = {
             "automated_plotting_flights": [["flight1", "01 SADPAP (stereo)", "", "/home/mss/example.ftml", "", ""]],
@@ -300,6 +300,16 @@ class TestMergeDict:
         changed_dict = merge_dict(self.default_dict, users_options_dict)
         assert changed_dict["automated_plotting_flights"] == [
             ["flight1", "01 SADPAP (stereo)", "", "/home/mss/example.ftml", "", ""]]
+
+    def test_string_option_outside_free_string_list_needs_its_type(self):
+        """
+        Only the options in free_string_list_options take any string. A plain string
+        option elsewhere keeps its type check, a path is not taken over.
+        """
+        assert self.default_dict["filepicker_default"] == "default"
+        users_options_dict = {"filepicker_default": "/tmp/x"}
+        changed_dict = merge_dict(self.default_dict, users_options_dict)
+        assert changed_dict["filepicker_default"] == "default"
 
     def test_path_option_needs_a_path(self):
         """
