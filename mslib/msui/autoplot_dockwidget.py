@@ -31,12 +31,13 @@ import os
 import json
 import logging
 from datetime import datetime
+from pathlib import Path
 
 import click
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem, QMessageBox
 from PyQt5 import QtCore
 
-from mslib.autoplot import main as cli_tool
+from mslib.autoplot import main as cli_tool, resolve_ftml_path
 from mslib.msui.qt5.ui_mss_autoplot import Ui_AutoplotDockWidget
 from mslib.utils import constants as const
 from mslib.utils.qt import get_save_filename
@@ -69,6 +70,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.stime = ""
         self.etime = ""
         self.intv = ""
+        # flight track file -> (configuration file it came from, its name in there)
+        self.flighttrack_sources = {}
 
         self.refresh_sig(config_settings)
 
@@ -163,6 +166,15 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 self,
                 "WARNING",
                 "Cannot download empty treewidget"
+            )
+            return
+        missing = self.missing_flighttrack(config_settings["automated_plotting_flights"])
+        if missing is not None:
+            flight, entry, path = missing
+            QMessageBox.information(
+                self,
+                "WARNING",
+                self.missing_flighttrack_message(flight, entry, path, self.flighttrack_sources.get(entry))
             )
             return
         if self.intv == "":
@@ -288,7 +300,9 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             self.cpath = fileName
             with open(fileName, 'r') as file:
                 configure = json.load(file)
-            autoplot_flights = configure["automated_plotting_flights"]
+            configured_flights = configure["automated_plotting_flights"]
+            autoplot_flights = self.resolve_flights_paths(configured_flights, Path(fileName).parent)
+            self.flighttrack_sources = self.flights_sources(fileName, configured_flights, autoplot_flights)
             autoplot_hsecs = configure["automated_plotting_hsecs"]
             autoplot_vsecs = configure["automated_plotting_vsecs"]
             autoplot_lsecs = configure["automated_plotting_lsecs"]
@@ -300,6 +314,154 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
             parent.refresh_signal_emit.emit()
             self.resize_treewidgets()
+
+    @staticmethod
+    def flighttrack_entry(row):
+        """
+        The flight track file an "automated_plotting_flights" entry names, None when it
+        does not name one.
+
+        An entry of an operation carries the operation name instead of a file, an entry
+        without a flight track carries nothing.
+        """
+        if len(row) > 3 and row[3] and row[3] != row[0]:
+            return row[3]
+        return None
+
+    @classmethod
+    def resolve_flights_paths(cls, flights, directory):
+        """
+        "automated_plotting_flights" entries of a configuration file, with their
+        flight track files resolved against the directory of that file.
+
+        A configuration which the dockwidget did not write can name the flight track
+        without a path, or relative to the directory the configuration lives in. The
+        GUI is started from an arbitrary working directory, so resolving such a name
+        against the configuration file is the only lookup which finds the file.
+        Operations, which carry the operation name instead of a file, stay untouched.
+        """
+        resolved = []
+        for row in flights:
+            row = list(row)
+            entry = cls.flighttrack_entry(row)
+            if entry is not None:
+                row[3] = str(resolve_ftml_path(entry, directory=directory))
+            resolved.append(row)
+        return resolved
+
+    @classmethod
+    def flights_sources(cls, config_file, configured_flights, resolved_flights):
+        """
+        Where the flight track file of a resolved entry came from: resolved file ->
+        (configuration file, name as that file stores it).
+
+        Only used to explain a file which is not there, see
+        missing_flighttrack_message(). Two entries can name the same file, one with and
+        one without its directory. The first of them wins: both explanations name the
+        same missing file and the same configuration to correct it in, so which of the
+        two names is quoted does not change what the user has to do.
+        """
+        sources = {}
+        for configured, resolved in zip(configured_flights, resolved_flights):
+            entry = cls.flighttrack_entry(resolved)
+            if entry is not None:
+                sources.setdefault(entry, (config_file, configured[3]))
+        return sources
+
+    @classmethod
+    def missing_flighttrack(cls, flights):
+        """
+        The first "automated_plotting_flights" entry whose flight track file is not
+        there, as a (flight, entry, path) triple, None when all of them are readable.
+
+        <entry> is the file as the configuration stores it, <path> the file mssautoplot
+        looks it up at. The entries of a selected configuration file are resolved
+        already, the ones of the configuration loaded at startup and the ones of a
+        flight track which was never saved are not, so the lookup goes through
+        resolve_ftml_path() again, the one place which defines it. Plots cannot be
+        drawn for a missing file, so the download stops before it opens its progress
+        dialog.
+        """
+        for row in flights:
+            entry = cls.flighttrack_entry(row)
+            if entry is not None:
+                path = resolve_ftml_path(entry)
+                if not path.exists():
+                    return row[0], entry, path
+        return None
+
+    @staticmethod
+    def missing_flighttrack_message(flight, entry, path, source=None):
+        """
+        Why the flight track file of <flight> is looked up at <path>, and what to do.
+
+        The path a lookup fails at is rarely the path the user typed: a name without a
+        directory is resolved against a working directory the GUI user never chose, and
+        a name from a selected configuration file against the directory of that file.
+        <source>, the (configuration file, name in there) pair of the entry, tells the
+        two apart. It is None for an entry which no selected configuration provided:
+        one the dockwidget wrote from a flight track, or one of the configuration
+        loaded at startup. Which of the two it is cannot be told from the entry, so a
+        name without a directory names both remedies instead of guessing one.
+        """
+        text = [f"The flight track file of '{flight}' does not exist:", str(path), ""]
+        if source is not None:
+            config_file, name = source
+            if name != entry and Path(name).parent == Path("."):
+                text.append(f"The configuration {config_file} names it '{name}', without a "
+                            "directory, so it is looked up next to that file.")
+            elif name != entry:
+                # A name with a directory changes on resolving too: "~" is expanded, a
+                # relative directory is joined onto the one of the configuration file
+                # and symlinks are followed.
+                text.append(f"The configuration {config_file} names it '{name}', which "
+                            "resolves to this path.")
+            else:
+                text.append(f"This path is stored in the configuration {config_file}.")
+            text.append("Correct it there, or open the flight track in the MSUI, save it "
+                        "and add the row again.")
+        elif Path(entry).parent == Path("."):
+            text.append(f"Only the name '{entry}' is stored, without a directory, so the file "
+                        f"is looked up in the working directory {Path.cwd()}.")
+            text.append("Save the flight track in the MSUI and add the row again, or store the "
+                        "name with its directory in the configuration file.")
+        else:
+            text.append("The file was moved or deleted after the row was added.")
+            text.append("Open the flight track in the MSUI, save it and add the row again.")
+        return "\n".join(text)
+
+    @staticmethod
+    def flighttrack_filename(parent, name):
+        """
+        Path and file name of the flight track currently shown in <parent>.
+
+        mssautoplot needs the directory too, otherwise it only finds the flight
+        track when it is started in the directory the file lives in. A track
+        which was never saved has no file yet, for that one the name is all we
+        have to offer.
+        """
+        filename = parent.waypoints_model.get_filename()
+        if not filename:
+            return f"{name}.ftml"
+        return str(Path(filename).expanduser().resolve())
+
+    @staticmethod
+    def filename_to_show(filename):
+        """
+        The flight track as it is shown in the tree widget: the file name alone.
+
+        The configuration stores it with its path, that one is only needed by
+        mssautoplot to find the file from any working directory.
+        """
+        return Path(filename).name if filename else filename
+
+    @staticmethod
+    def flights_row_to_show(row):
+        """An "automated_plotting_flights" entry as it is shown in the tree widget."""
+        if len(row) > 3:
+            row = list(row)
+            row[3] = AutoplotDockWidget.filename_to_show(row[3])
+        return row
 
     def add_to_treewidget(self, parent, parent2, config_settings, treewidget, flight, sections, vertical, filename,
                           itime, vtime, url, layer, styles, level):
@@ -316,8 +478,9 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 flight = ""
             else:
                 if filename != parent2.mscolab.active_operation_name:
-                    filename += ".ftml"
-            item = QTreeWidgetItem([flight, sections, vertical, filename, itime, vtime])
+                    filename = self.flighttrack_filename(parent, filename)
+            item = QTreeWidgetItem(
+                self.flights_row_to_show([flight, sections, vertical, filename, itime, vtime]))
             self.autoplotTreeWidget.addTopLevelItem(item)
             self.autoplotTreeWidget.setCurrentItem(item)
             config_settings["automated_plotting_flights"].append([flight, sections, vertical, filename, itime, vtime])
@@ -350,11 +513,11 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             flight = ""
         else:
             if filename != parent2.mscolab.active_operation_name:
-                filename += ".ftml"
+                filename = self.flighttrack_filename(parent, filename)
         if treewidget.objectName() == "autoplotTreeWidget":
             selected_item = self.autoplotTreeWidget.currentItem()
             selected_item.setText(0, flight)
-            selected_item.setText(3, filename)
+            selected_item.setText(3, self.filename_to_show(filename))
             selected_item.setText(5, vtime)
             if self.view == "Top View":
                 selected_item.setText(1, sections)
@@ -415,7 +578,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
         self.autoplotTreeWidget.clear()
         for row in autoplot_flights:
-            item = QTreeWidgetItem(row)
+            item = QTreeWidgetItem(self.flights_row_to_show(row))
             self.autoplotTreeWidget.addTopLevelItem(item)
 
         self.autoplotSecsTreeWidget.clear()
