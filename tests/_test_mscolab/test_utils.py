@@ -33,7 +33,8 @@ from mslib.mscolab.models import Operation, Message, MessageType, User
 from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.utils import (get_recent_op_id, get_session_id,
                                  get_message_dict,
-                                 get_user_id)
+                                 get_user_id, is_valid_operation_path,
+                                 get_operation_dir)
 from mslib.mscolab.seed import XML_CONTENT_INIT
 
 from flask import current_app
@@ -97,3 +98,21 @@ class Test_Utils:
         assert response.data.decode('utf-8') == "True"
         operation = Operation.query.filter_by(path=path).first()
         return operation, token
+
+
+@pytest.mark.parametrize("path", ["op", "Admin_Test", "flight-2024", "defaultGroup", "0"])
+def test_is_valid_operation_path_accepts(path):
+    assert is_valid_operation_path(path)
+
+
+@pytest.mark.parametrize("path", ["", ".", "..", "a/b", "a\\b", "a b", "a.b", "C:x", "abc\n", "\u00e4", None, 1])
+def test_is_valid_operation_path_rejects(path):
+    assert not is_valid_operation_path(path)
+
+
+def test_get_operation_dir(tmp_path):
+    assert get_operation_dir(tmp_path, "op") == tmp_path / "op"
+    assert get_operation_dir(str(tmp_path), "op") == tmp_path / "op"
+    for path in ["", ".", "..", "../x", "a/b", "a/..", str(tmp_path.parent)]:
+        with pytest.raises(ValueError):
+            get_operation_dir(tmp_path, path)
