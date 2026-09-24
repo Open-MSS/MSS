@@ -70,14 +70,17 @@ This command stores the data of topview as PNG for overlays without axis, titles
 This could be used in systems like PLANET. You may want to set large values in the layout
 of topview in the mssautoplot.json.
 
-5. ``mssautoplot --cpath mssautoplot.json --fpath ~/flights/campaign2``
+5. ``mssautoplot --cpath mssautoplot.json --fpath /home/mss/flights/campaign2``
 
 This command reads the flight tracks from the given directory instead of the directory
 stored in mss_autoplot.json. Only the base name of each stored flight track is kept,
 any subdirectory stored with it is discarded, so the "/home/mss/campaign1/example.ftml"
-of the configuration is loaded from "~/flights/campaign2/example.ftml".
+of the configuration is loaded from "/home/mss/flights/campaign2/example.ftml".
 This lets the same configuration be used for the flight tracks of several campaigns,
 provided they share the file names.
+
+On Windows give the directory in full, e.g. ``--fpath C:\Users\mss\flights\campaign2``,
+recent Windows shells do not expand "~" reliably.
 
 
 Settings file
