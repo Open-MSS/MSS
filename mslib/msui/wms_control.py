@@ -718,11 +718,17 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     break
 
     def leftrow_is_selected(self, vtime):
+        layer = self.multilayers.get_current_layer()
+        if layer is None:
+            # A row of the autoplot dockwidget can be selected before this widget is
+            # connected to a server, there is no layer to apply the time to then.
+            logging.debug("No layer selected, ignoring the selected row.")
+            return
+
         if vtime is not None:
             self.cbValidTime.setCurrentText(vtime)
             self.valid_time_changed()
 
-        layer = self.multilayers.get_current_layer()
         crs = layer.get_allowed_crs()
         if crs and \
            self.parent() is not None and \

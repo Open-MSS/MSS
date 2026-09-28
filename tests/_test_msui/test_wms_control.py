@@ -145,6 +145,15 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
             self.query_server(qtbot, f"{self.scheme}://.....{self.host}:{self.port}")
             qtbot.wait_until(mock_critical.assert_called_once)
 
+    def test_leftrow_is_selected_without_a_layer(self, qtbot):
+        """
+        A row of the autoplot dockwidget can be selected before this widget is connected
+        to a server. There is no layer to apply the valid time to then, which must not
+        end in an AttributeError on None.
+        """
+        assert self.window.multilayers.get_current_layer() is None
+        self.window.leftrow_is_selected("2012-10-17T12:00:00Z")
+
     @pytest.mark.skip("Breaks other tests in this class because of a lingering message box, for some reason")
     def test_forward_backward_clicks(self, qtbot):
         self.query_server(qtbot, self.url)
