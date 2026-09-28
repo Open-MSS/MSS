@@ -22,16 +22,20 @@ Global map: ../../ARCHITECTURE.md
 
 ## May import
 
-`mslib.utils`, `mslib.support`, and ONLY `mslib.mscolab.{events,message_type}`
-from the server package (enforced: `server-isolation` contract in setup.cfg).
-Never `mslib.mswms` — WMS is consumed over HTTP.
+`mslib.utils`, `mslib.support`, and ONLY `mslib.mscolab.{events,message_type,
+api.schemas,api.endpoints}` from the server package (enforced:
+`server-isolation` contract in setup.cfg). Never `mslib.mswms` — WMS is
+consumed over HTTP.
 
 ## Invariants
 
 - Never edit `qt5/ui_*.py`; change the `.ui` file and regenerate with pyuic5.
-- REST payloads to MSColab are implicit dicts: when changing a call in
-  `mscolab.py`, update the matching blueprint in
-  `mslib/mscolab/blueprints/` in the same commit.
+- REST payloads to MSColab are mostly still implicit dicts: when changing a
+  call in `mscolab.py`, update the matching blueprint in
+  `mslib/mscolab/blueprints/` in the same commit. A handful of routes (see
+  `mslib/mscolab/api/endpoints.py`) are migrated to typed dataclasses in
+  `mslib/mscolab/api/schemas.py` instead — build/parse via those, don't
+  hand-roll a dict for a route that already has a schema.
 - Config access via `mslib.utils.config.config_loader`; per-widget Qt state
   via `save_settings_qsettings`/`load_settings_qsettings`.
 - Message boxes in tests are mocked; an unhandled QMessageBox fails the test.

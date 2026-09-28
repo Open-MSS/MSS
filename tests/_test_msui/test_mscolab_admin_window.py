@@ -24,6 +24,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import json
+
 import mock
 import pytest
 
@@ -168,6 +170,18 @@ class Test_MscolabAdminWindow:
         self._check_users_present(self.admin_window.addUsersTable, users)
         assert len_unadded_users + 2 == self.admin_window.addUsersTable.rowCount()
         assert len_added_users - 2 == self.admin_window.modifyUsersTable.rowCount()
+
+    @pytest.mark.parametrize("button", ["modifyUsersBtn", "deleteUsersBtn"])
+    def test_permission_change_failure_shows_server_message(self, button):
+        users = ["name1", "name2"]
+        self._select_users(self.admin_window.addUsersTable, users)
+        QtTest.QTest.mouseClick(self.admin_window.addUsersBtn, QtCore.Qt.LeftButton)
+        self._select_users(self.admin_window.modifyUsersTable, users)
+        failure = mock.Mock(text=json.dumps({"success": False, "message": "Some error occurred."}))
+        with mock.patch("mslib.msui.mscolab_admin_window.requests.post", return_value=failure), \
+                mock.patch("mslib.msui.mscolab_admin_window.show_popup") as popup:
+            QtTest.QTest.mouseClick(getattr(self.admin_window, button), QtCore.Qt.LeftButton)
+        popup.assert_called_once_with(self.admin_window, "Error", "Some error occurred.")
 
     def test_import_permissions(self):
         index = self.admin_window.importPermissionsCB.findText("paris", QtCore.Qt.MatchFixedString)

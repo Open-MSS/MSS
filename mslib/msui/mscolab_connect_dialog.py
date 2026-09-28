@@ -24,7 +24,6 @@
     limitations under the License.
 """
 
-import json
 import logging
 import requests
 import webbrowser
@@ -36,6 +35,15 @@ from mslib.msui.qt5 import ui_mscolab_connect_dialog as ui_conn
 from mslib.utils.config import config_loader, modify_config_file
 from mslib.utils.auth import get_password_from_keyring, save_password_to_keyring
 from keyring.errors import NoKeyringError, PasswordSetError, InitError
+from mslib.mscolab.api import endpoints
+from mslib.mscolab.api.schemas import (
+    IdpLoginAuthRequest,
+    IdpLoginAuthResponse,
+    LoginRequest,
+    RegisterRequest,
+    RegisterResponse,
+    StatusResponse,
+)
 
 
 class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
@@ -142,7 +150,7 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
             session.auth = auth
             session.headers.update({'x-test': 'true'})
             response = session.get(
-                urljoin(url, 'status'), timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                urljoin(url, endpoints.STATUS), timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if response.status_code == 401:
                 self.set_status("Error", 'Server authentication data were incorrect.')
             elif response.status_code == 200:
@@ -157,15 +165,9 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
                 self.loginEmailLe.setEnabled(True)
                 self.loginPasswordLe.setEnabled(True)
 
-                try:
-                    idp_enabled = json.loads(response.text)["use_saml2"]
-                except (json.decoder.JSONDecodeError, KeyError):
-                    idp_enabled = False
-
-                try:
-                    direct_login = json.loads(response.text)["direct_login"]
-                except (json.decoder.JSONDecodeError, KeyError):
-                    direct_login = True
+                status = StatusResponse.from_text(response.text)
+                idp_enabled = status.use_saml2
+                direct_login = status.direct_login
 
                 if not direct_login:
                     # Hide user creation when this is disabled on the server
@@ -243,17 +245,15 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
 
     def login_handler(self):
         self.loginBtn.setEnabled(False)
-        data = {
-            "email": self.loginEmailLe.text(),
-            "password": self.loginPasswordLe.text()
-        }
+        req = LoginRequest(email=self.loginEmailLe.text(), password=self.loginPasswordLe.text())
         session = requests.Session()
         session.auth = self.auth
         session.headers.update({'x-test': 'true'})
-        url = urljoin(self.mscolab_server_url, "token")
+        url = urljoin(self.mscolab_server_url, endpoints.TOKEN)
         url_recover_password = urljoin(self.mscolab_server_url, "reset_request")
         try:
-            response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            response = session.post(
+                url, data=req.to_form_data(), timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             response.raise_for_status()
         except requests.exceptions.RequestException as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
@@ -269,8 +269,8 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
                                 f'<a href="{url_recover_password}">recover your password</a>.')
                 self.loginBtn.setEnabled(True)
             else:
-                self.save_user_credentials_to_config_file(data["email"], data["password"])
-                self.mscolab.after_login(data["email"], self.mscolab_server_url, response)
+                self.save_user_credentials_to_config_file(req.email, req.password)
+                self.mscolab.after_login(req.email, self.mscolab_server_url, response)
 
     def idp_login_handler(self):
         """Handle IDP login Button"""
@@ -280,39 +280,35 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
 
     def idp_auth_token_submit_handler(self):
         """Handle IDP authentication token submission"""
-        url_idp_login_auth = urljoin(self.mscolab_server_url, "idp_login_auth")
+        url_idp_login_auth = urljoin(self.mscolab_server_url, endpoints.IDP_LOGIN_AUTH)
         user_token = self.idpAuthPasswordLe.text()
 
         try:
-            data = {'token': user_token}
-            response = requests.post(url_idp_login_auth, json=data,
+            idp_req = IdpLoginAuthRequest(token=user_token)
+            response = requests.post(url_idp_login_auth, json=idp_req.to_json_data(),
                                      timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if response.status_code == 401:
                 self.set_status("Error", 'Invalid token or token expired. Please try again')
                 self.stackedWidget.setCurrentWidget(self.loginPage)
 
             elif response.status_code == 200:
-                _json = response.json()
-                token = _json["token"]
-                user = _json["user"]
+                idp_response = IdpLoginAuthResponse.from_text(response.text)
 
-                data = {
-                    "email": user["emailid"],
-                    "password": token,
-                }
+                req = LoginRequest(email=idp_response.user.emailid, password=idp_response.token)
 
                 session = requests.Session()
                 session.auth = self.auth
                 session.headers.update({'x-test': 'true'})
-                url = urljoin(self.mscolab_server_url, "token")
+                url = urljoin(self.mscolab_server_url, endpoints.TOKEN)
 
-                response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                response = session.post(
+                    url, data=req.to_form_data(), timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
                 response.raise_for_status()
                 if response.text == "False":
                     # show status indicating about wrong credentials
                     self.set_status("Error", 'Invalid token. Please enter correct token')
                 else:
-                    self.mscolab.after_login(data["email"], self.mscolab_server_url, response)
+                    self.mscolab.after_login(req.email, self.mscolab_server_url, response)
                     self.set_status("Success", 'Succesfully logged into mscolab server')
 
         except requests.exceptions.RequestException as error:
@@ -345,18 +341,14 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.set_status("Error", 'Your passwords don\'t match.')
             return
 
-        data = {
-            "email": emailid,
-            "password": password,
-            "username": username,
-            "fullname": fullname
-        }
+        req = RegisterRequest(email=emailid, password=password, username=username, fullname=fullname)
         session = requests.Session()
         session.auth = self.auth
         session.headers.update({'x-test': 'true'})
-        url = urljoin(self.mscolab_server_url, "register")
+        url = urljoin(self.mscolab_server_url, endpoints.REGISTER)
         try:
-            response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            response = session.post(
+                url, data=req.to_form_data(), timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         except requests.exceptions.RequestException as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
             self.set_status(
@@ -380,7 +372,9 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.login_handler()
         else:
             try:
-                error_msg = response.json()["message"]
+                error_msg = RegisterResponse.from_text(response.text).message
+                if error_msg is None:
+                    raise ValueError("no message in response")
             except Exception as e:
                 logging.debug("Unexpected error occurred %s", e)
                 error_msg = "Unexpected error occurred. Please try again."

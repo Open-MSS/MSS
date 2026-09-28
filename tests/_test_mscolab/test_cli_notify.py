@@ -32,7 +32,7 @@ import pytest
 import requests
 import socketio
 
-from mslib.mscolab.events import SocketEvents
+from mslib.mscolab.api.events import SocketEvents
 from mslib.mscolab.seed import (add_operation, add_user, add_user_to_operation, archive_operation,
                                 delete_operation, delete_user, get_operation, get_user)
 

@@ -28,8 +28,9 @@ import logging
 import requests
 from PyQt5.QtWidgets import QDialog
 from mslib.msui.qt5 import ui_operation_archive as ui_opar
-from mslib.utils.config import config_loader
 from mslib.utils.qt import show_popup
+from mslib.mscolab.api import endpoints
+from mslib.mscolab.api.schemas import UpdateOperationRequest, UpdateOperationResponse
 
 
 class MSColab_OperationArchiveBrowser(QDialog, ui_opar.Ui_OperationArchiveBrowser):
@@ -55,18 +56,15 @@ class MSColab_OperationArchiveBrowser(QDialog, ui_opar.Ui_OperationArchiveBrowse
 
     def unarchive_operation(self):
         logging.debug('unarchive_operation')
+        req = UpdateOperationRequest(op_id=self.archived_op_id, attribute="active", value="True")
         try:
-            res = self.mscolab.conn.request_post(
-                "update_operation",
-                {"op_id": self.archived_op_id,
-                 "attribute": "active",
-                 "value": "True"}, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            res = self.mscolab.conn.request_post(endpoints.UPDATE_OPERATION, req.to_form_data())
         except requests.exceptions.RequestException as e:
             logging.debug(e)
             show_popup(self.parent, "Error", "Some error occurred! Could not unarchive operation.")
             self.mscolab.logout()
         else:
-            if res.text == "True":
+            if UpdateOperationResponse.from_text(res.text).success:
                 self.mscolab.reload_operations()
             else:
                 show_popup(self.parent, "Error", "Session expired, new login required")

@@ -35,11 +35,22 @@ from markdown import Markdown
 from markdown.extensions import Extension
 from urllib.parse import urljoin
 
-from mslib.mscolab.message_type import MessageType
+from mslib.mscolab.api.message_type import MessageType
 from PyQt5 import QtCore, QtGui, QtWidgets
 from mslib.utils.qt import get_open_filename, get_save_filename, show_popup
 from mslib.msui.qt5 import ui_mscolab_operation_window as ui
 from mslib.utils.config import config_loader
+from mslib.mscolab.api import endpoints
+from mslib.mscolab.api.schemas import (
+    FetchProfileImageRequest,
+    GetActiveUsersRequest,
+    GetActiveUsersResponse,
+    GetAuthorizedUsersRequest,
+    GetAuthorizedUsersResponse,
+    GetMessagesRequest,
+    GetMessagesResponse,
+    MessageAttachmentRequest,
+)
 
 
 # We need to override the KeyPressEvent in QTextEdit to disable the default behaviour of enter key.
@@ -302,14 +313,12 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             self.conn.send_message(message_text, self.op_id, reply_id)
         else:
             files = {"file": open(self.attachment, 'rb')}
-            data = {
-                "token": self.token,
-                "op_id": self.op_id,
-                "message_type": int(self.attachment_type)
-            }
-            url = urljoin(self.mscolab_server_url, 'message_attachment')
+            req = MessageAttachmentRequest(op_id=self.op_id, message_type=int(self.attachment_type))
+            url = urljoin(self.mscolab_server_url, endpoints.MESSAGE_ATTACHMENT)
             try:
-                requests.post(url, data=data, files=files, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                requests.post(
+                    url, data={**req.to_form_data(), "token": self.token}, files=files,
+                    timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             except requests.exceptions.ConnectionError:
                 show_popup(self, "Error", "File size too large")
         self.send_message_state()
@@ -366,39 +375,41 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
     def load_users(self):
         # load users to side-tab here
         # make requests to get all users and active users of the operation
-        data = {
-            "token": self.token,
-            "op_id": self.op_id
-        }
-        users_url = urljoin(self.mscolab_server_url, 'authorized_users')
-        active_users_url = urljoin(self.mscolab_server_url, 'active_users')
+        users_req = GetAuthorizedUsersRequest(op_id=self.op_id)
+        active_req = GetActiveUsersRequest(op_id=self.op_id)
+        users_url = urljoin(self.mscolab_server_url, endpoints.AUTHORIZED_USERS)
+        active_users_url = urljoin(self.mscolab_server_url, endpoints.ACTIVE_USERS)
 
         # Fetch both authorized and active users
-        users_response = requests.get(users_url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-        active_response = requests.get(active_users_url, data=data,
-                                       timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        users_response = requests.get(
+            users_url, data={**users_req.to_form_data(), "token": self.token},
+            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        active_response = requests.get(
+            active_users_url, data={**active_req.to_form_data(), "token": self.token},
+            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
 
-        if users_response != "False":
+        users_parsed = GetAuthorizedUsersResponse.from_text(users_response.text)
+        active_parsed = GetActiveUsersResponse.from_text(active_response.text)
+        if users_parsed is not None and active_parsed is not None:
             self.collaboratorsList.clear()
-            users = users_response.json()["users"]
-            active_users = set(active_response.json()["active_users"])
+            users = users_parsed.users
+            active_users = set(active_parsed.active_users)
             for user in users:
-                display_text = f'{user["username"]} - {user["access_level"]}'
+                display_text = f'{user.username} - {user.access_level}'
                 item = QtWidgets.QListWidgetItem(display_text, parent=self.collaboratorsList)
 
                 # Pixmap for icon i.e. profile image
-                url = urljoin(self.mscolab_server_url, 'fetch_profile_image')
-                data = {
-                    "user_id": str(user["id"]),
-                    "token": self.token
-                }
-                response = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                image_req = FetchProfileImageRequest(user_id=str(user.id))
+                url = urljoin(self.mscolab_server_url, endpoints.FETCH_PROFILE_IMAGE)
+                response = requests.get(
+                    url, data={**image_req.to_form_data(), "token": self.token},
+                    timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
                 pixmap = QtGui.QPixmap()
                 if response.status_code == 200:
                     # pixmap = QtGui.QPixmap()
                     pixmap.loadFromData(response.content)
                 else:
-                    first_alphabet = user["username"][0].lower() if user["username"] else "default"
+                    first_alphabet = user.username[0].lower() if user.username else "default"
                     default_avatar_path = f":/gravatars/default-gravatars/{first_alphabet}.png"
                     pixmap.load(default_avatar_path)
 
@@ -407,7 +418,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
                 pixmap = pixmap.scaled(icon_size, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
 
                 # Load avatar and overlay green dot on profile image pixmap if user is active
-                if user["id"] in active_users:
+                if user.id in active_users:
                     painter = QtGui.QPainter(pixmap)
                     painter.setBrush(QtGui.QColor(0, 230, 0, 230))        # RGBA
                     # Set a thin pen for the border around green dot
@@ -429,22 +440,22 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
 
     def load_all_messages(self):
         # empty messages and reload from server
-        data = {
-            "token": self.token,
-            "op_id": self.op_id,
-            "timestamp": datetime.datetime(1970, 1, 1,
-                                           tzinfo=datetime.timezone.utc).isoformat()
-        }
+        req = GetMessagesRequest(
+            op_id=self.op_id,
+            timestamp=datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc).isoformat())
         # returns an array of messages
-        url = urljoin(self.mscolab_server_url, "messages")
+        url = urljoin(self.mscolab_server_url, endpoints.MESSAGES)
 
-        res = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-        if res.text != "False":
-            res = res.json()
-            messages = res["messages"]
-            # clear message box
-            for message in messages:
-                self.render_new_message(message, scroll=False)
+        res = requests.get(
+            url, data={**req.to_form_data(), "token": self.token},
+            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        parsed = GetMessagesResponse.from_text(res.text)
+        if parsed is not None:
+            # render_new_message()/MessageItem also consume socket.io chat events
+            # (a separate, not-yet-typed contract), so they still expect plain
+            # dicts here rather than ChatMessageInfo objects.
+            for message in parsed.messages:
+                self.render_new_message(message.to_dict(), scroll=False)
             self.messageList.scrollToBottom()
             self.serviceMessageList.scrollToBottom()
         else:

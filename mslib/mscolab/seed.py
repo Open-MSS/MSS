@@ -35,7 +35,7 @@ from sqlalchemy.exc import IntegrityError
 from flask import current_app
 
 from mslib.mscolab.cli_notify import notify_socket_event
-from mslib.mscolab.events import SocketEvents
+from mslib.mscolab.api.events import SocketEvents
 from mslib.mscolab.models import User, db, Permission, Operation
 
 

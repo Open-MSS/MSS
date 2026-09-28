@@ -32,7 +32,7 @@ import requests
 from urllib.parse import urljoin
 
 from PyQt5 import QtCore
-from mslib.mscolab.events import SocketEvents
+from mslib.mscolab.api.events import SocketEvents
 from mslib.msui.mscolab_exceptions import MSColabConnectionError
 from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.config import config_loader

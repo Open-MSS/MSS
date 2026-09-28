@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    mslib.mscolab.events
-    ~~~~~~~~~~~~~~~~~~~~
+    mslib.mscolab.api.events
+    ~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module defines all socket event names used in the mscolab module.
 

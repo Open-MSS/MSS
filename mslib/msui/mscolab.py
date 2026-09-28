@@ -31,7 +31,6 @@
 """
 import os
 import io
-import json
 import hashlib
 import logging
 import types
@@ -51,6 +50,27 @@ from mslib.msui import socket_control as sc
 from mslib.msui.mscolab_exceptions import MSColabConnectionError
 from mslib.msui.mscolab_archive_browser import MSColab_OperationArchiveBrowser
 from mslib.msui.mscolab_connect_dialog import MSColab_ConnectDialog
+from mslib.mscolab.api import endpoints
+from mslib.mscolab.api.schemas import (
+    CreateOperationRequest,
+    CreateOperationResponse,
+    DeleteOperationRequest,
+    GetOperationByIdRequest,
+    GetOperationByIdResponse,
+    DeleteBulkPermissionsRequest,
+    DeleteBulkPermissionsResponse,
+    DeleteOwnAccountResponse,
+    FetchProfileImageRequest,
+    GetCreatorOfOperationRequest,
+    GetCreatorOfOperationResponse,
+    GetOperationsRequest,
+    GetOperationsResponse,
+    GetUserResponse,
+    LoginResponse,
+    UpdateOperationRequest,
+    UpdateOperationResponse,
+    UploadProfileImageRequest,
+)
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox
@@ -202,14 +222,13 @@ class MSUIMscolab(QtCore.QObject):
         self.active_op_id = None
 
     def view_description(self, _=None):
+        req = GetCreatorOfOperationRequest(op_id=self.active_op_id)
         try:
-            response = self.conn.request_get(
-                "creator_of_operation", {"op_id": self.active_op_id})
+            response = self.conn.request_get(endpoints.GET_CREATOR_OF_OPERATION, req.to_form_data())
         except MSColabConnectionError:
             creator_name = "unknown"
         else:
-            _json = response.json()
-            creator_name = _json["username"]
+            creator_name = GetCreatorOfOperationResponse.from_text(response.text).username
         QMessageBox.information(
             self.ui, "Operation Description",
             f"<html>Creator: <b>{creator_name}</b><p>"
@@ -250,9 +269,11 @@ class MSUIMscolab(QtCore.QObject):
         self.connect_window = None
         # fill value of mscolab url if found in QSettings storage
 
-        _json = response.json()
-        self.token = _json["token"]
-        self.user = _json["user"]
+        # after_login is only ever called once the caller has already checked
+        # response.text != "False" (login succeeded), so parsed is never None.
+        parsed = LoginResponse.from_text(response.text)
+        self.token = parsed.token
+        self.user = parsed.user.to_dict()
         self.mscolab_server_url = url
 
         if config_loader(dataset="MSCOLAB_skip_archived_operations"):
@@ -322,9 +343,9 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.userOptionsTb.setIcon(icon)
 
     def fetch_profile_image(self, refresh=False):
+        req = FetchProfileImageRequest(user_id=str(self.user["id"]))
         try:
-            response = self.conn.request_get(
-                "fetch_profile_image", {"user_id": str(self.user["id"])})
+            response = self.conn.request_get(endpoints.FETCH_PROFILE_IMAGE, req.to_form_data())
         except MSColabConnectionError:
             self.fetch_gravatar(refresh)
         else:
@@ -455,9 +476,10 @@ class MSUIMscolab(QtCore.QObject):
                 # Prepare the file data for upload
                 try:
                     img_byte_arr.seek(0)  # Reset buffer position
+                    req = UploadProfileImageRequest(user_id=str(self.user["id"]))
                     response = self.conn.request_post(
-                        "upload_profile_image",
-                        {"user_id": str(self.user["id"])},
+                        endpoints.UPLOAD_PROFILE_IMAGE,
+                        req.to_form_data(),
                         {'image': (os.path.basename(file_name), img_byte_arr, mime_type)})
 
                     # Check response status
@@ -490,11 +512,14 @@ class MSUIMscolab(QtCore.QObject):
             auth_name = config_loader(dataset="MSCOLAB_auth_user_name")
             del_password_from_keyring(self.mscolab_server_url, self.email)
             del_password_from_keyring(f"MSCOLAB_AUTH_{self.mscolab_server_url}", auth_name)
-            response = self.conn.request_post("delete_own_account")
+            response = self.conn.request_post(endpoints.DELETE_OWN_ACCOUNT)
         except requests.exceptions.RequestException as ex:
             raise MSColabConnectionError(f"Some error occurred ({ex})! Please reconnect.")
         else:
-            if response.status_code == 200 and response.json()["success"] is True:
+            if response.status_code != 200:
+                return
+            parsed = DeleteOwnAccountResponse.from_text(response.text)
+            if parsed is not None and parsed.success is True:
                 self.logout()
 
     def add_operation_handler(self, _=None):
@@ -591,20 +616,17 @@ class MSUIMscolab(QtCore.QObject):
             for loc in waypoints
         ])
         default_content = waypoints_model.get_xml_content()
-        data = {"path": path,
-                "description": description,
-                "category": category
-                }
-        data["content"] = default_content
+        content = default_content
         if self.add_proj_dialog.f_content is not None:
-            data["content"] = self.add_proj_dialog.f_content
+            content = self.add_proj_dialog.f_content
         if f_content is not None:
-            data["content"] = f_content
+            content = f_content
+        req = CreateOperationRequest(path=path, description=description, category=category, content=content)
         try:
-            response = self.conn.request_post("create_operation", data)
+            response = self.conn.request_post(endpoints.CREATE_OPERATION, req.to_form_data())
         except requests.exceptions.RequestException as ex:
             raise MSColabConnectionError(f"Some error occurred ({ex})! Please reconnect.")
-        if response.text == "True":
+        if CreateOperationResponse.from_text(response.text).success:
             QMessageBox.information(
                 self.ui, "Creation successful",
                 "Your operation was created successfully.",
@@ -623,14 +645,14 @@ class MSUIMscolab(QtCore.QObject):
         """
         logging.debug('get_recent_op_id')
         skip_archived = config_loader(dataset="MSCOLAB_skip_archived_operations")
-        response = self.conn.request_get("operations", {"skip_archived": skip_archived})
-        if response.text == "False":
+        req = GetOperationsRequest(skip_archived=skip_archived)
+        response = self.conn.request_get(endpoints.OPERATIONS, req.to_form_data())
+        parsed = GetOperationsResponse.from_text(response.text)
+        if parsed is None:
             raise MSColabConnectionError("Session expired, new login required")
-        _json = response.json()
-        operations = _json["operations"]
         op_id = None
-        if operations:
-            op_id = operations[-1]["op_id"]
+        if parsed.operations:
+            op_id = parsed.operations[-1].op_id
         logging.debug("recent op_id %s", op_id)
         return op_id
 
@@ -756,9 +778,9 @@ class MSUIMscolab(QtCore.QObject):
         )
         if ok:
             if entered_operation_name == self.active_operation_name:
+                req = DeleteOperationRequest(op_id=self.active_op_id)
                 try:
-                    response = self.conn.request_post(
-                        "delete_operation", {"op_id": self.active_op_id})
+                    response = self.conn.request_post(endpoints.DELETE_OPERATION, req.to_form_data())
                 except requests.exceptions.RequestException as ex:
                     raise MSColabConnectionError(f"Some error occurred ({ex})! Please reconnect.")
                 else:
@@ -775,16 +797,15 @@ class MSUIMscolab(QtCore.QObject):
             self.tr("Do you want to leave this operation?"),
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply == QMessageBox.Yes:
+            req = DeleteBulkPermissionsRequest(op_id=self.active_op_id, user_ids=[self.user["id"]])
             try:
-                response = self.conn.request_post(
-                    "delete_bulk_permissions",
-                    {"op_id": self.active_op_id, "selected_userids": json.dumps([self.user["id"]])})
+                response = self.conn.request_post(endpoints.DELETE_BULK_PERMISSIONS, req.to_form_data())
             except requests.exceptions.RequestException as ex:
                 raise MSColabConnectionError(f"Some error occurred ({ex})! Please reconnect.")
-            if response.text == "False":
+            parsed = DeleteBulkPermissionsResponse.from_text(response.text)
+            if parsed is None:
                 raise MSColabConnectionError("Your Connection is expired. New Login required!")
-            response = response.json()
-            if response["success"]:
+            if parsed.success:
                 for window in self.ui.get_active_views():
                     window.handle_force_close()
                 self.reload_operations()
@@ -815,15 +836,13 @@ class MSUIMscolab(QtCore.QObject):
             text=self.active_operation_category
         )
         if ok:
+            req = UpdateOperationRequest(
+                op_id=self.active_op_id, attribute='category', value=entered_operation_category)
             try:
-                response = self.conn.request_post(
-                    "update_operation",
-                    {"op_id": self.active_op_id,
-                     "attribute": 'category',
-                     "value": entered_operation_category})
+                response = self.conn.request_post(endpoints.UPDATE_OPERATION, req.to_form_data())
             except requests.exceptions.RequestException as ex:
                 raise MSColabConnectionError(f"Some error occurred ({ex})! Please reconnect.")
-            if response.text == "False":
+            if not UpdateOperationResponse.from_text(response.text).success:
                 raise MSColabConnectionError("Your Connection is expired. New Login required!")
             self.active_operation_category = entered_operation_category
             self.reload_operation_list()
@@ -846,15 +865,13 @@ class MSUIMscolab(QtCore.QObject):
             text=self.active_operation_description
         )
         if ok:
+            req = UpdateOperationRequest(
+                op_id=self.active_op_id, attribute='description', value=entered_operation_desc)
             try:
-                response = self.conn.request_post(
-                    "update_operation",
-                    {"op_id": self.active_op_id,
-                     "attribute": 'description',
-                     "value": entered_operation_desc})
+                response = self.conn.request_post(endpoints.UPDATE_OPERATION, req.to_form_data())
             except requests.exceptions.RequestException as ex:
                 raise MSColabConnectionError(f"Some error occurred ({ex})! Please reconnect.")
-            if response.text == "False":
+            if not UpdateOperationResponse.from_text(response.text).success:
                 raise MSColabConnectionError("Your Connection is expired. New Login required!")
             # Update active operation description label
             self.set_operation_desc_label(entered_operation_desc)
@@ -879,15 +896,12 @@ class MSUIMscolab(QtCore.QObject):
             text=f"{self.active_operation_name}",
         )
         if ok:
+            req = UpdateOperationRequest(op_id=self.active_op_id, attribute='path', value=entered_operation_name)
             try:
-                response = self.conn.request_post(
-                    "update_operation",
-                    {"op_id": self.active_op_id,
-                     "attribute": 'path',
-                     "value": entered_operation_name})
+                response = self.conn.request_post(endpoints.UPDATE_OPERATION, req.to_form_data())
             except requests.exceptions.RequestException as ex:
                 raise MSColabConnectionError(f"Some error occurred ({ex})! Please reconnect.")
-            if response.text == "False":
+            if not UpdateOperationResponse.from_text(response.text).success:
                 raise MSColabConnectionError("Your Connection is expired. New Login required!")
             # Update active operation name
             self.active_operation_name = entered_operation_name
@@ -1026,14 +1040,13 @@ class MSUIMscolab(QtCore.QObject):
         get most recent operation
         """
         logging.debug('get_recent_operation')
-        response = self.conn.request_get("operations")
-        if response.text == "False":
+        response = self.conn.request_get(endpoints.OPERATIONS)
+        parsed = GetOperationsResponse.from_text(response.text)
+        if parsed is None:
             raise MSColabConnectionError("Session expired, new login required")
-        response = response.json()
-        operations = response["operations"]
         recent_operation = None
-        if operations:
-            recent_operation = operations[-1]
+        if parsed.operations:
+            recent_operation = parsed.operations[-1]
         return recent_operation
 
     @QtCore.pyqtSlot()
@@ -1060,20 +1073,20 @@ class MSUIMscolab(QtCore.QObject):
         to render new permission if added
         """
         logging.debug('render_new_permission')
-        response = self.conn.request_get("user")
-        if response.text != "False":
-            response = response.json()
-            if response['user']['id'] == u_id:
+        response = self.conn.request_get(endpoints.USER)
+        parsed = GetUserResponse.from_text(response.text)
+        if parsed is not None:
+            if parsed.user.id == u_id:
                 operation = self.get_recent_operation()
-                operation_desc = f'{operation["path"]} - {operation["access_level"]}'
+                operation_desc = f'{operation.path} - {operation.access_level}'
                 widgetItem = QtWidgets.QListWidgetItem(operation_desc, parent=self.ui.listOperationsMSC)
-                widgetItem.op_id = operation["op_id"]
-                widgetItem.operation_category = operation["category"]
-                widgetItem.operation_path = operation["path"]
-                widgetItem.access_level = operation["access_level"]
-                widgetItem.active_operation_description = operation["description"]
+                widgetItem.op_id = operation.op_id
+                widgetItem.operation_category = operation.category
+                widgetItem.operation_path = operation.path
+                widgetItem.access_level = operation.access_level
+                widgetItem.active_operation_description = operation.description
                 self.ui.listOperationsMSC.addItem(widgetItem)
-                self.signal_render_new_permission.emit(operation["op_id"], operation["path"])
+                self.signal_render_new_permission.emit(operation.op_id, operation.path)
             if self.chat_window is not None:
                 self.chat_window.load_users()
         else:
@@ -1190,24 +1203,24 @@ class MSUIMscolab(QtCore.QObject):
     def show_categories_to_ui(self, ops=None):
         """
         adds the list of operation categories to the UI
+
+        :param ops: an already-parsed GetOperationsResponse (e.g. from
+            add_operations_to_ui()), to avoid fetching "operations" twice.
         """
         logging.debug('show_categories_to_ui')
-        response = None
-        if ops is not None:
-            response = ops
-        else:
+        parsed = ops
+        if parsed is None:
             try:
-                response = self.conn.request_get("operations")
+                response = self.conn.request_get(endpoints.OPERATIONS)
             except requests.exceptions.MissingSchema:
                 raise MSColabConnectionError("Session expired, new login required")
-        if response is not None and response.text != "False":
-            response = response.json()
-            operations = response["operations"]
+            parsed = GetOperationsResponse.from_text(response.text)
+        if parsed is not None:
             self.ui.filterCategoryCb.currentIndexChanged.disconnect(self.operation_category_handler)
             self.ui.filterCategoryCb.clear()
             categories = {"*ANY*"}
-            for operation in operations:
-                categories.add(operation["category"])
+            for operation in parsed.operations:
+                categories.add(operation.category)
             categories.remove("*ANY*")
             categories = ["*ANY*"] + sorted(categories)
             category = config_loader(dataset="MSCOLAB_category")
@@ -1221,12 +1234,16 @@ class MSUIMscolab(QtCore.QObject):
     def add_operations_to_ui(self):
         logging.debug('add_operations_to_ui')
         skip_archived = config_loader(dataset="MSCOLAB_skip_archived_operations")
-        response = self.conn.request_get("operations", {"skip_archived": skip_archived})
-        if response.text == "False":
+        req = GetOperationsRequest(skip_archived=skip_archived)
+        response = self.conn.request_get(endpoints.OPERATIONS, req.to_form_data())
+        parsed = GetOperationsResponse.from_text(response.text)
+        if parsed is None:
             raise MSColabConnectionError("Session expired, new login required")
 
-        _json = response.json()
-        self.operations = _json["operations"]
+        # self.operations is consumed elsewhere (e.g. open_admin_window ->
+        # MSColabAdminWindow) as plain dicts -- keep that contract, the typed
+        # GetOperationsResponse stays local to this method and its caller.
+        self.operations = [op.to_dict() for op in parsed.operations]
         operations = sorted(self.operations, key=lambda k: k["path"].lower())
         self.ui.listOperationsMSC.clear()
         self.operation_archive_browser.listArchivedOperations.clear()
@@ -1268,7 +1285,7 @@ class MSUIMscolab(QtCore.QObject):
 
         self.ui.listOperationsMSC.itemActivated.connect(self.set_active_op_id)
         self.new_op_id = None
-        return response
+        return parsed
 
     def show_operation_options_in_inactivated_state(self, access_level):
         logging.debug('show_operation_options_in_inactivated_state')
@@ -1283,12 +1300,9 @@ class MSUIMscolab(QtCore.QObject):
             self.tr(f"Do you want to archive this operation '{self.active_operation_name}'?"),
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if ret == QMessageBox.Yes:
+            req = UpdateOperationRequest(op_id=self.active_op_id, attribute="active", value="False")
             try:
-                response = self.conn.request_post(
-                    "update_operation",
-                    {"op_id": self.active_op_id,
-                     "attribute": "active",
-                     "value": "False"})
+                response = self.conn.request_post(endpoints.UPDATE_OPERATION, req.to_form_data())
             except requests.exceptions.RequestException as ex:
                 raise MSColabConnectionError(f"Some error occurred ({ex})! Could not archive operation.")
             response.raise_for_status()
@@ -1435,11 +1449,11 @@ class MSUIMscolab(QtCore.QObject):
     def request_wps_from_server(self, op_id=None):
         if op_id is None:
             op_id = self.active_op_id
-        response = self.conn.request_get(
-            "get_operation_by_id", {"op_id": op_id})
-        if response.text != "False":
-            xml_content = response.json()["content"]
-            return xml_content
+        req = GetOperationByIdRequest(op_id=op_id)
+        response = self.conn.request_get(endpoints.GET_OPERATION_BY_ID, req.to_form_data())
+        parsed = GetOperationByIdResponse.from_text(response.text)
+        if parsed is not None:
+            return parsed.content
         else:
             raise MSColabConnectionError("Session expired, new login required")
 

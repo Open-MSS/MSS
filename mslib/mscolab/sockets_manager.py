@@ -30,7 +30,7 @@ from flask import request
 from flask_socketio import SocketIO, join_room
 
 from mslib.mscolab.chat_manager import ChatManager
-from mslib.mscolab.events import SocketEvents
+from mslib.mscolab.api.events import SocketEvents
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.models import MessageType, Permission, User
 from mslib.mscolab.utils import get_message_dict
