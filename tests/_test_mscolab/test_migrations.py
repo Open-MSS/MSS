@@ -131,3 +131,35 @@ def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
             assert mslib.mscolab.seed.add_user('test123@test456', 'test123', 'test456', 'User test789')
     finally:
         mscolab_app.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'] = None
+
+
+def test_upgrade_removes_duplicate_permissions(mscolab_app):
+    """Duplicate permissions of older versions are reduced to the one with the highest access level."""
+    migrations_path = mslib.mscolab.migrations.__path__[0]
+    with mscolab_app.app_context():
+        mslib.mscolab.mscolab.handle_db_seed()
+        flask_migrate.downgrade(directory=migrations_path, revision="922e4d9c94e2")
+        creator = db.session.execute(sqlalchemy.text(
+            "SELECT u_id, op_id FROM permissions WHERE access_level = 'creator' ORDER BY id")).first()
+        other_user = db.session.execute(sqlalchemy.text(
+            "SELECT id FROM users WHERE id != :u_id ORDER BY id"), {"u_id": creator.u_id}).first()
+        db.session.execute(sqlalchemy.text(
+            "DELETE FROM permissions WHERE u_id = :u_id AND op_id = :op_id"),
+            {"u_id": other_user.id, "op_id": creator.op_id})
+        insert = sqlalchemy.text("INSERT INTO permissions (op_id, u_id, access_level) VALUES (:op_id, :u_id, :level)")
+        # the older fan-out added the creator a second time, the newer duplicate must not win
+        db.session.execute(insert, {"op_id": creator.op_id, "u_id": creator.u_id, "level": "viewer"})
+        for level in ("viewer", "admin", "collaborator", "admin"):
+            db.session.execute(insert, {"op_id": creator.op_id, "u_id": other_user.id, "level": level})
+        db.session.commit()
+
+        flask_migrate.upgrade(directory=migrations_path)
+        levels = {row.u_id: row.access_level for row in db.session.execute(sqlalchemy.text(
+            "SELECT id, u_id, access_level FROM permissions WHERE op_id = :op_id ORDER BY id"),
+            {"op_id": creator.op_id})}
+        assert levels[creator.u_id] == "creator"
+        assert levels[other_user.id] == "admin"
+        counts = db.session.execute(sqlalchemy.text(
+            "SELECT COUNT(*) FROM permissions WHERE op_id = :op_id AND u_id IN (:creator, :other)"),
+            {"op_id": creator.op_id, "creator": creator.u_id, "other": other_user.id}).scalar()
+        assert counts == 2

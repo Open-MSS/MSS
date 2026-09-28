@@ -107,7 +107,8 @@ class FileManager:
             # here we can import the permissions from Group file
             if not path.endswith(current_app.config['GROUP_POSTFIX']):
                 import_op = Operation.query.filter_by(path=f"{category}{current_app.config['GROUP_POSTFIX']}").first()
-                if import_op is not None:
+                # only when the user manages the Group operation, membership alone is no consent to share
+                if import_op is not None and self.auth_type(user.id, import_op.id) in ("admin", "creator"):
                     self.import_permissions(import_op.id, operation_id, user.id)
             operation_dir.mkdir(parents=True, exist_ok=True)
 
@@ -399,21 +400,16 @@ class FileManager:
                 old_path.rename(new_path)
             except OSError:
                 shutil.move(str(old_path), str(new_path))
-
-            if value.endswith(current_app.config['GROUP_POSTFIX']):
-                # getting the category
-                category = value.split(current_app.config['GROUP_POSTFIX'])[0]
-                # all operation with that category
-                ops_category = Operation.query.filter_by(category=category)
-                for ops in ops_category:
-                    # the user changing the {category}{mscolab_settings.GROUP_POSTFIX} needs to have rights in the op
-                    # then members of this op gets added to all others of same category
-                    self.import_permissions(op_id, ops.id, user.id)
         elif attribute == "active":
             if isinstance(value, str):
                 value = value.upper() == "TRUE"
         setattr(operation, attribute, value)
         db.session.commit()
+        if attribute == "path":
+            # renamed to a Group operation, its members get added to the operations of that category
+            # the user manages
+            for ops in self._group_member_operations(operation, user):
+                self.import_permissions(op_id, ops.id, user.id)
         return True
 
     def delete_operation(self, op_id, user):
@@ -649,13 +645,14 @@ class FileManager:
         current_operation_creator = Permission.query.filter_by(op_id=op_id, access_level="creator").first()
         return current_operation_creator.user.username
 
-    def _group_member_operations(self, operation, user):
+    def _group_member_operations(self, operation, user, managed_only=True):
         """
         For a {category}{GROUP_POSTFIX} operation, returns the other operations of that category on which user
         is allowed to manage permissions (admin or creator). Returns an empty list for any other operation.
 
         Changes to the members of the Group operation fan out only to these operations, so managing a Group
         operation never grants rights beyond those the user already has on the operations of that category.
+        With managed_only=False all other operations of that category are returned, e.g. for a user leaving.
         """
         postfix = current_app.config['GROUP_POSTFIX']
         if not postfix or operation is None or not operation.path.endswith(postfix):
@@ -663,7 +660,7 @@ class FileManager:
         category = operation.path[:-len(postfix)]
         return [ops for ops in Operation.query.filter(Operation.category == category, Operation.id != operation.id)
                 if not ops.path.endswith(postfix) and
-                (self.is_admin(user.id, ops.id) or self.is_creator(user.id, ops.id))]
+                (not managed_only or self.auth_type(user.id, ops.id) in ("admin", "creator"))]
 
     def add_bulk_permission(self, op_id, user, new_u_ids, access_level):
         if access_level not in ASSIGNABLE_ACCESS_LEVELS:
@@ -671,6 +668,8 @@ class FileManager:
         if not self.is_admin(user.id, op_id) and not self.is_creator(user.id, op_id):
             return False
 
+        # a repeated user id would violate the unique (u_id, op_id) constraint
+        new_u_ids = list(dict.fromkeys(new_u_ids))
         operation = Operation.query.filter_by(id=op_id).first()
         # the members of a Group operation get added to all others of the same category
         target_op_ids = [op_id] + [ops.id for ops in self._group_member_operations(operation, user)]
@@ -691,6 +690,9 @@ class FileManager:
         if new_access_level not in ASSIGNABLE_ACCESS_LEVELS:
             return False
         if not self.is_admin(user.id, op_id) and not self.is_creator(user.id, op_id):
+            return False
+        # the creator keeps the creator role
+        if any(self.is_creator(u_id, op_id) for u_id in u_ids):
             return False
 
         # TODO: Check whether we need synchronize_session False Or Fetch
@@ -728,14 +730,16 @@ class FileManager:
             for u_id in u_ids:
                 if not self.is_member(u_id, op_id):
                     return False
-            if self.is_creator(user.id, op_id):
-                # if the user is creator and is trying to leave the operation, return false
-                if user.id in u_ids:
-                    return False
+            # the creator can't leave the operation or be removed from it
+            if any(self.is_creator(u_id, op_id) for u_id in u_ids):
+                return False
 
         # collect them before the user possibly removes themselves from the Group operation
         operation = Operation.query.filter_by(id=op_id).first()
-        group_op_ids = [ops.id for ops in self._group_member_operations(operation, user)]
+        # a user leaving the Group operation leaves all operations of that category,
+        # removing others is limited to the operations the user manages
+        leaving = list(u_ids) == [user.id]
+        group_op_ids = [ops.id for ops in self._group_member_operations(operation, user, managed_only=not leaving)]
 
         Permission.query \
             .filter(Permission.op_id == op_id) \
