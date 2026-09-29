@@ -443,7 +443,8 @@ class Test_FileManager:
             # user (creator of operation1) has no right leave operation1
             assert self.fm.delete_bulk_permission(operation1.id, self.user, [self.user.id]) is False
             # user (creator of operation1) has the right to remove anotheruser from the operation1
-            assert self.fm.delete_bulk_permission(operation1.id, self.user, [self.anotheruser.id]) is True
+            assert self.fm.delete_bulk_permission(operation1.id, self.user, [self.anotheruser.id]) == {
+                operation1.id: [self.anotheruser.id]}
             # op2user (creator of operation2) has no right to remove collaboratoruser of operation1 from operation1
             assert self.fm.delete_bulk_permission(operation1.id, self.op2user, [self.collaboratoruser.id]) is False
             # op2user (creator of operation2) has no right to remove anotheruser of operation1 from operation2
@@ -469,7 +470,8 @@ class Test_FileManager:
             # The below assertion fails in stable 6.1
             # The change is so that vieweruser (any user other than creator) can leave the operation
             # vieweruser of operation1 has the right to leave operation1
-            assert self.fm.delete_bulk_permission(operation1.id, self.vieweruser, [self.vieweruser.id]) is True
+            assert self.fm.delete_bulk_permission(operation1.id, self.vieweruser, [self.vieweruser.id]) == {
+                operation1.id: [self.vieweruser.id]}
             # collaboratoruser of operation1 has no right to remove op2vieweruser of operation2 from operation2
             assert self.fm.delete_bulk_permission(
                 operation2.id, self.collaboratoruser, [self.op2vieweruser.id]
@@ -502,7 +504,8 @@ class Test_FileManager:
             self.fm.add_bulk_permission(operation.id, self.user, [self.adminuser.id], "admin")
             assert self.fm.is_admin(self.adminuser.id, operation.id) is True
             assert self.fm.delete_bulk_permission(operation.id, self.user, [self.user.id]) is False
-            assert self.fm.delete_bulk_permission(operation.id, self.adminuser, [self.adminuser.id]) is True
+            assert self.fm.delete_bulk_permission(operation.id, self.adminuser, [self.adminuser.id]) == {
+                operation.id: [self.adminuser.id]}
 
     def test_group_permissions(self):
         with self.app.test_client():
@@ -657,6 +660,26 @@ class Test_FileManager:
             for operation in (operation_group, operation_no_1):
                 assert Permission.query.filter_by(u_id=self.vieweruser.id, op_id=operation.id).count() == 1
                 assert self.fm.is_viewer(self.adminuser.id, operation.id)
+
+    def test_bulk_permission_returns_changed_users_per_operation(self):
+        with self.app.test_client():
+            _, operation_no_1 = self._create_operation(flight_path="flightno1", category="bergen")
+            _, operation_other = self._create_operation(flight_path="otherop", user=self.op2user, category="bergen")
+            _, operation_group = self._create_operation(flight_path="bergenGroup", category="bergen")
+            self.fm.add_bulk_permission(operation_no_1.id, self.user, [self.vieweruser.id], "viewer")
+            u_ids = [self.vieweruser.id, self.adminuser.id]
+            # the operation not managed by self.user and the existing permission are not reported
+            assert self.fm.add_bulk_permission(operation_group.id, self.user, u_ids, "viewer") == {
+                operation_group.id: u_ids, operation_no_1.id: [self.adminuser.id]}
+            assert self.fm.add_bulk_permission(operation_group.id, self.user, u_ids, "viewer") == {
+                operation_group.id: []}
+            modified = self.fm.modify_bulk_permission(operation_group.id, self.user, u_ids, "collaborator")
+            assert {op_id: sorted(ids) for op_id, ids in modified.items()} == {
+                operation_group.id: sorted(u_ids), operation_no_1.id: sorted(u_ids)}
+            deleted = self.fm.delete_bulk_permission(operation_group.id, self.user, u_ids)
+            assert {op_id: sorted(ids) for op_id, ids in deleted.items()} == {
+                operation_group.id: sorted(u_ids), operation_no_1.id: sorted(u_ids)}
+            assert self.fm.is_member(self.adminuser.id, operation_other.id) is False
 
     def test_existing_operation_renaming_to_a_group(self):
         with self.app.test_client():

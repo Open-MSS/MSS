@@ -37,6 +37,7 @@ import mimetypes
 from pathlib import Path, PurePosixPath
 from flask import current_app
 from werkzeug.utils import secure_filename
+from sqlalchemy import insert
 from sqlalchemy.exc import IntegrityError
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
@@ -658,11 +659,16 @@ class FileManager:
         if not postfix or operation is None or not operation.path.endswith(postfix):
             return []
         category = operation.path[:-len(postfix)]
-        return [ops for ops in Operation.query.filter(Operation.category == category, Operation.id != operation.id)
-                if not ops.path.endswith(postfix) and
-                (not managed_only or self.auth_type(user.id, ops.id) in ("admin", "creator"))]
+        query = Operation.query.filter(Operation.category == category, Operation.id != operation.id)
+        if managed_only:
+            query = query.join(Permission, Permission.op_id == Operation.id) \
+                .filter(Permission.u_id == user.id, Permission.access_level.in_(("admin", "creator")))
+        return [ops for ops in query if not ops.path.endswith(postfix)]
 
     def add_bulk_permission(self, op_id, user, new_u_ids, access_level):
+        """
+        Returns {op_id: [u_id, ...]} with the users added per operation, or False
+        """
         if access_level not in ASSIGNABLE_ACCESS_LEVELS:
             return False
         if not self.is_admin(user.id, op_id) and not self.is_creator(user.id, op_id):
@@ -673,51 +679,63 @@ class FileManager:
         operation = Operation.query.filter_by(id=op_id).first()
         # the members of a Group operation get added to all others of the same category
         target_op_ids = [op_id] + [ops.id for ops in self._group_member_operations(operation, user)]
+        existing = set(Permission.query
+                       .with_entities(Permission.u_id, Permission.op_id)
+                       .filter(Permission.op_id.in_(target_op_ids), Permission.u_id.in_(new_u_ids)))
+        added = {op_id: []}
         new_permissions = []
         for target_op_id in target_op_ids:
             for u_id in new_u_ids:
-                if Permission.query.filter_by(u_id=u_id, op_id=target_op_id).first() is None:
-                    new_permissions.append(Permission(u_id, target_op_id, access_level))
-        db.session.add_all(new_permissions)
+                if (u_id, target_op_id) not in existing:
+                    new_permissions.append({"u_id": u_id, "op_id": target_op_id, "access_level": access_level})
+                    added.setdefault(target_op_id, []).append(u_id)
         try:
+            if new_permissions:
+                db.session.execute(insert(Permission), new_permissions)
             db.session.commit()
-            return True
+            return added
         except IntegrityError:
             db.session.rollback()
             return False
 
+    def _changeable_permissions(self, op_ids, u_ids):
+        # the creator of an operation keeps the creator role
+        return Permission.query \
+            .filter(Permission.op_id.in_(op_ids)) \
+            .filter(Permission.u_id.in_(u_ids)) \
+            .filter(Permission.access_level != "creator") \
+            .all()
+
     def modify_bulk_permission(self, op_id, user, u_ids, new_access_level):
+        """
+        Returns {op_id: [u_id, ...]} with the users modified per operation, or False
+        """
         if new_access_level not in ASSIGNABLE_ACCESS_LEVELS:
             return False
         if not self.is_admin(user.id, op_id) and not self.is_creator(user.id, op_id):
             return False
         # the creator keeps the creator role
-        if any(self.is_creator(u_id, op_id) for u_id in u_ids):
+        creator = Permission.query.filter_by(op_id=op_id, access_level="creator").first()
+        if creator is not None and creator.u_id in u_ids:
             return False
 
-        # TODO: Check whether we need synchronize_session False Or Fetch
-        Permission.query\
-            .filter(Permission.op_id == op_id)\
-            .filter(Permission.u_id.in_(u_ids))\
-            .update({Permission.access_level: new_access_level}, synchronize_session='fetch')
-
         operation = Operation.query.filter_by(id=op_id).first()
-        group_op_ids = [ops.id for ops in self._group_member_operations(operation, user)]
-        if group_op_ids:
-            # the creator of an operation keeps the creator role
-            Permission.query \
-                .filter(Permission.op_id.in_(group_op_ids)) \
-                .filter(Permission.u_id.in_(u_ids)) \
-                .filter(Permission.access_level != "creator") \
-                .update({Permission.access_level: new_access_level}, synchronize_session='fetch')
+        target_op_ids = [op_id] + [ops.id for ops in self._group_member_operations(operation, user)]
+        modified = {op_id: []}
+        for perm in self._changeable_permissions(target_op_ids, u_ids):
+            perm.access_level = new_access_level
+            modified.setdefault(perm.op_id, []).append(perm.u_id)
         try:
             db.session.commit()
-            return True
+            return modified
         except IntegrityError:
             db.session.rollback()
             return False
 
     def delete_bulk_permission(self, op_id, user, u_ids):
+        """
+        Returns {op_id: [u_id, ...]} with the users removed per operation, or False
+        """
         # if the user is not a member of the operation, return false
         if not self.is_member(user.id, op_id):
             return False
@@ -726,36 +744,27 @@ class FileManager:
             if len(u_ids) != 1 or user.id not in u_ids:
                 return False
         else:
+            members = {perm.u_id: perm.access_level for perm in Permission.query.filter(
+                Permission.op_id == op_id, Permission.u_id.in_(u_ids))}
             # if the user is admin or creator and is trying to remove a user not in this operation
-            for u_id in u_ids:
-                if not self.is_member(u_id, op_id):
-                    return False
+            if any(u_id not in members for u_id in u_ids):
+                return False
             # the creator can't leave the operation or be removed from it
-            if any(self.is_creator(u_id, op_id) for u_id in u_ids):
+            if "creator" in members.values():
                 return False
 
-        # collect them before the user possibly removes themselves from the Group operation
         operation = Operation.query.filter_by(id=op_id).first()
         # a user leaving the Group operation leaves all operations of that category,
         # removing others is limited to the operations the user manages
         leaving = list(u_ids) == [user.id]
-        group_op_ids = [ops.id for ops in self._group_member_operations(operation, user, managed_only=not leaving)]
-
-        Permission.query \
-            .filter(Permission.op_id == op_id) \
-            .filter(Permission.u_id.in_(u_ids)) \
-            .delete(synchronize_session='fetch')
-
-        if group_op_ids:
-            # the creator of an operation can't be removed from it
-            Permission.query \
-                .filter(Permission.op_id.in_(group_op_ids)) \
-                .filter(Permission.u_id.in_(u_ids)) \
-                .filter(Permission.access_level != "creator") \
-                .delete(synchronize_session='fetch')
-
+        target_op_ids = [op_id] + [ops.id for ops in
+                                   self._group_member_operations(operation, user, managed_only=not leaving)]
+        deleted = {op_id: []}
+        for perm in self._changeable_permissions(target_op_ids, u_ids):
+            db.session.delete(perm)
+            deleted.setdefault(perm.op_id, []).append(perm.u_id)
         db.session.commit()
-        return True
+        return deleted
 
     def import_permissions(self, import_op_id, current_op_id, u_id):
         if not self.is_creator(u_id, current_op_id) and not self.is_admin(u_id, current_op_id):
