@@ -108,8 +108,8 @@ class FileManager:
             # here we can import the permissions from Group file
             if not path.endswith(current_app.config['GROUP_POSTFIX']):
                 import_op = Operation.query.filter_by(path=f"{category}{current_app.config['GROUP_POSTFIX']}").first()
-                # only when the user manages the Group operation, membership alone is no consent to share
-                if import_op is not None and self.auth_type(user.id, import_op.id) in ("admin", "creator"):
+                # only for the creator of the Group operation, admin can be granted by others without consent
+                if import_op is not None and self.is_creator(user.id, import_op.id):
                     self.import_permissions(import_op.id, operation_id, user.id)
             operation_dir.mkdir(parents=True, exist_ok=True)
 

@@ -600,23 +600,29 @@ class Test_FileManager:
                 db.session.commit()
             db.session.rollback()
 
-    def test_group_permissions_not_imported_for_plain_members(self):
+    def test_group_permissions_only_imported_for_group_creator(self):
         with self.app.test_client():
-            # self.user creates a Group operation and adds the victim anotheruser as a plain member
-            _, operation_group = self._create_operation(flight_path="bergenGroup", category="bergen")
+            # self.user is the attacker, creates defaultGroup and adds the victims as viewer and as admin
+            _, operation_group = self._create_operation(flight_path="defaultGroup")
             assert self.fm.add_bulk_permission(operation_group.id, self.user, [self.anotheruser.id], "viewer")
-            _, operation_victim = self._create_operation(flight_path="victimop", user=self.anotheruser,
-                                                         category="bergen")
-            assert self.fm.is_creator(self.anotheruser.id, operation_victim.id)
-            assert self.fm.is_member(self.user.id, operation_victim.id) is False
-
-            # an admin of the Group operation gets its permissions on a new operation
             assert self.fm.add_bulk_permission(operation_group.id, self.user, [self.adminuser.id], "admin")
-            _, operation_admin = self._create_operation(flight_path="adminop", user=self.adminuser,
-                                                        category="bergen")
-            assert self.fm.is_creator(self.adminuser.id, operation_admin.id)
+            for victim in (self.anotheruser, self.adminuser):
+                _, operation_victim = self._create_operation(flight_path=f"victimop{victim.id}", user=victim)
+                assert self.fm.is_creator(victim.id, operation_victim.id)
+                assert self.fm.is_member(self.user.id, operation_victim.id) is False
+                assert self.fm.is_member(self.vieweruser.id, operation_victim.id) is False
+
+            # the creator of the Group operation gets its members on a new operation
+            _, operation_own = self._create_operation(flight_path="ownop")
+            assert self.fm.is_viewer(self.anotheruser.id, operation_own.id)
+            assert self.fm.is_admin(self.adminuser.id, operation_own.id)
+
+            # a member can still import the Group operation explicitly
+            _, operation_admin = self._create_operation(flight_path="adminop", user=self.adminuser)
+            success, _, _ = self.fm.import_permissions(operation_group.id, operation_admin.id, self.adminuser.id)
+            assert success
             assert self.fm.is_admin(self.user.id, operation_admin.id)
-            assert self.fm.is_viewer(self.anotheruser.id, operation_admin.id)
+            assert self.fm.is_creator(self.adminuser.id, operation_admin.id)
 
     def test_creator_permission_can_not_be_changed_by_admin(self):
         with self.app.test_client():
