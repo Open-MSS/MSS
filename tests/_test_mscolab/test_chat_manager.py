@@ -59,7 +59,7 @@ class Test_Chat_Manager:
                                           self.operation.id, message_type=MessageType.TEXT,
                                           reply_id=None)
             new_message_text = "Wonderland"
-            self.cm.edit_message(message.id, new_message_text)
+            self.cm.edit_message(message, new_message_text)
             message = Message.query.filter_by(id=message.id).first()
             assert message.text == new_message_text
 
@@ -69,6 +69,29 @@ class Test_Chat_Manager:
                                           self.operation.id, message_type=MessageType.TEXT,
                                           reply_id=None)
             assert 'some test example message' in message.text
-            self.cm.delete_message(message.id)
+            self.cm.delete_message(message)
             message = Message.query.filter(Message.id == message.id).first()
             assert message is None
+
+    def test_get_message_of_operation(self):
+        with self.app.test_client():
+            message = self.cm.add_message(self.user, 'some message', self.operation.id)
+            assert self.cm.get_message(message.id, self.operation.id).id == message.id
+            assert self.cm.get_message(message.id, self.operation.id + 1) is None
+            assert self.cm.get_message(987654, self.operation.id) is None
+
+    def test_delete_message_deletes_replies(self):
+        with self.app.test_client():
+            message = self.cm.add_message(self.user, 'parent', self.operation.id)
+            reply = self.cm.add_message(self.user, 'reply', self.operation.id, reply_id=message.id)
+            reply_id = reply.id
+            self.cm.delete_message(message)
+            assert Message.query.filter_by(id=reply_id).first() is None
+
+    def test_delete_attachment_without_file(self):
+        with self.app.test_client():
+            message = self.cm.add_message(self.user, 'uploads/1/missing.png', self.operation.id,
+                                          message_type=MessageType.IMAGE)
+            message_id = message.id
+            self.cm.delete_message(message)
+            assert Message.query.filter_by(id=message_id).first() is None

@@ -25,11 +25,13 @@
     limitations under the License.
 """
 import os
+import json
 import pytest
 import datetime
 
 from mslib.msui.icons import icons
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation, get_operation
+from mslib.mscolab.chat_manager import MAX_MESSAGE_TEXT_LENGTH
 from mslib.mscolab.models import Permission, User, Message, MessageType
 
 
@@ -285,3 +287,261 @@ class Test_Socket_Manager:
         file = os.listdir(upload_dir)[0]
         assert 'mss-logo' in file
         assert 'png' in file
+
+    def _add_message(self, user, operation, text, message_type=MessageType.TEXT, reply_id=None):
+        with self.app.app_context():
+            message = self.cm.add_message(user, text, operation.id, message_type=message_type, reply_id=reply_id)
+            return message.id
+
+    def _message_text(self, message_id):
+        with self.app.app_context():
+            message = Message.query.filter_by(id=message_id).first()
+            return None if message is None else message.text
+
+    def _add_user_to_operation(self, userdata, operation_name, access_level):
+        with self.app.app_context():
+            assert add_user_to_operation(path=operation_name, emailid=userdata[0], access_level=access_level)
+            return get_user(userdata[0]).generate_auth_token()
+
+    def _emitted(self, sio, event):
+        return [msg for msg in sio.get_received() if msg["name"] == event]
+
+    def test_edit_and_delete_message_of_other_operation_rejected(self):
+        # the attacker is creator of an operation of their own and names it in the request
+        attacker_operation_id = self._new_operation("attacker", "attacker operation").id
+        attacker_token = self._add_user_to_operation(self.anotheruserdata, "attacker", "creator")
+        message_id = self._add_message(self.user, self.operation, "victim message")
+        sio = self._connect()
+        sio.emit('edit-message', {
+            "message_id": message_id,
+            "new_message_text": "rewritten",
+            "op_id": attacker_operation_id,
+            "token": attacker_token
+        })
+        sio.emit('delete-message', {
+            "message_id": message_id,
+            "op_id": attacker_operation_id,
+            "token": attacker_token
+        })
+        assert self._message_text(message_id) == "victim message"
+        assert self._emitted(sio, 'edit-message-client') == []
+        assert self._emitted(sio, 'delete-message-client') == []
+
+    def test_edit_message_only_by_author(self):
+        # another admin of the same operation can not edit the message
+        another_token = self._add_user_to_operation(self.anotheruserdata, self.operation_name, "admin")
+        message_id = self._add_message(self.user, self.operation, "author message")
+        sio = self._connect()
+        sio.emit('edit-message', {
+            "message_id": message_id,
+            "new_message_text": "rewritten",
+            "op_id": self.operation.id,
+            "token": another_token
+        })
+        assert self._message_text(message_id) == "author message"
+        assert self._emitted(sio, 'edit-message-client') == []
+
+    @pytest.mark.parametrize("message_type", [MessageType.IMAGE, MessageType.DOCUMENT, MessageType.SYSTEM_MESSAGE])
+    def test_edit_message_only_text(self, message_type):
+        message_id = self._add_message(self.user, self.operation, "uploads/1/file.png", message_type=message_type)
+        sio = self._connect()
+        sio.emit('edit-message', {
+            "message_id": message_id,
+            "new_message_text": "https://attacker.example/x",
+            "op_id": self.operation.id,
+            "token": self.token
+        })
+        assert self._message_text(message_id) == "uploads/1/file.png"
+        assert self._emitted(sio, 'edit-message-client') == []
+
+    def test_viewer_can_not_edit_or_delete_own_message(self):
+        message_id = self._add_message(self.anotheruser, self.operation, "written before downgrade")
+        viewer_token = self._add_user_to_operation(self.anotheruserdata, self.operation_name, "viewer")
+        sio = self._connect()
+        sio.emit('edit-message', {
+            "message_id": message_id,
+            "new_message_text": "rewritten",
+            "op_id": self.operation.id,
+            "token": viewer_token
+        })
+        sio.emit('delete-message', {
+            "message_id": message_id,
+            "op_id": self.operation.id,
+            "token": viewer_token
+        })
+        assert self._message_text(message_id) == "written before downgrade"
+        assert self._emitted(sio, 'edit-message-client') == []
+        assert self._emitted(sio, 'delete-message-client') == []
+
+    def test_collaborator_deletes_only_own_messages(self):
+        collaborator_token = self._add_user_to_operation(self.anotheruserdata, self.operation_name, "collaborator")
+        own_id = self._add_message(self.anotheruser, self.operation, "own message")
+        other_id = self._add_message(self.user, self.operation, "other message")
+        system_id = self._add_message(self.anotheruser, self.operation, "[service message] saved",
+                                      message_type=MessageType.SYSTEM_MESSAGE)
+        sio = self._connect()
+        for message_id in (own_id, other_id, system_id):
+            sio.emit('delete-message', {
+                "message_id": message_id,
+                "op_id": self.operation.id,
+                "token": collaborator_token
+            })
+        assert self._message_text(own_id) is None
+        assert self._message_text(other_id) == "other message"
+        assert self._message_text(system_id) == "[service message] saved"
+        assert [json.loads(msg["args"][0])["message_id"] for msg in self._emitted(sio, 'delete-message-client')] \
+            == [own_id]
+
+    @pytest.mark.parametrize("access_level", ["admin", "creator"])
+    def test_admin_and_creator_delete_any_message_of_operation(self, access_level):
+        token = self._add_user_to_operation(self.anotheruserdata, self.operation_name, access_level)
+        text_id = self._add_message(self.user, self.operation, "other message")
+        system_id = self._add_message(self.user, self.operation, "[service message] saved",
+                                      message_type=MessageType.SYSTEM_MESSAGE)
+        sio = self._connect()
+        for message_id in (text_id, system_id):
+            sio.emit('delete-message', {
+                "message_id": message_id,
+                "op_id": self.operation.id,
+                "token": token
+            })
+        assert self._message_text(text_id) is None
+        assert self._message_text(system_id) is None
+        assert len(self._emitted(sio, 'delete-message-client')) == 2
+
+    @pytest.mark.parametrize("message_id", [987654, "no-id", None, 1.5, True, "missing"])
+    def test_edit_and_delete_unknown_message(self, message_id):
+        # a float or bool id must not be mapped onto another message
+        self._add_message(self.user, self.operation, "first message")
+        sio = self._connect()
+        edit = {"new_message_text": "rewritten", "op_id": self.operation.id, "token": self.token}
+        delete = {"op_id": self.operation.id, "token": self.token}
+        if message_id != "missing":
+            edit["message_id"] = delete["message_id"] = message_id
+        sio.emit('edit-message', edit)
+        sio.emit('delete-message', delete)
+        assert self._emitted(sio, 'edit-message-client') == []
+        assert self._emitted(sio, 'delete-message-client') == []
+        with self.app.app_context():
+            assert Message.query.filter_by(text="first message").count() == 1
+
+    @pytest.mark.parametrize("payload", [{}, {"token": "dummy"}, {"message_id": 1}, {"op_id": 1}])
+    def test_edit_and_delete_missing_keys(self, payload):
+        sio = self._connect()
+        sio.emit('edit-message', payload)
+        sio.emit('delete-message', payload)
+        sio.emit('chat-message', payload)
+        assert sio.get_received() == []
+
+    @pytest.mark.parametrize("new_message_text", [None, {}, 42, "", "x" * (MAX_MESSAGE_TEXT_LENGTH + 1)])
+    def test_edit_message_invalid_text(self, new_message_text):
+        message_id = self._add_message(self.user, self.operation, "author message")
+        sio = self._connect()
+        sio.emit('edit-message', {
+            "message_id": message_id,
+            "new_message_text": new_message_text,
+            "op_id": self.operation.id,
+            "token": self.token
+        })
+        assert self._message_text(message_id) == "author message"
+        assert self._emitted(sio, 'edit-message-client') == []
+
+    def test_edit_message_emits_stored_text(self):
+        message_id = self._add_message(self.user, self.operation, "author message")
+        sio = self._connect()
+        sio.emit('edit-message', {
+            "message_id": str(message_id),
+            "new_message_text": "x" * MAX_MESSAGE_TEXT_LENGTH,
+            "op_id": str(self.operation.id),
+            "token": self.token
+        })
+        assert self._message_text(message_id) == "x" * MAX_MESSAGE_TEXT_LENGTH
+        events = self._emitted(sio, 'edit-message-client')
+        assert [json.loads(msg["args"][0]) for msg in events] == [
+            {"message_id": message_id, "new_message_text": "x" * MAX_MESSAGE_TEXT_LENGTH}]
+
+    @pytest.mark.parametrize("payload", [
+        {"reply_id": None}, {"reply_id": "abc"}, {"reply_id": 1.5}, {"reply_id": "missing"},
+        {"message_text": None}, {"message_text": {}}, {"message_text": ""},
+        {"message_text": "x" * (MAX_MESSAGE_TEXT_LENGTH + 1)}, {"op_id": None}, {"op_id": "missing"},
+    ])
+    def test_send_invalid_message(self, payload):
+        message = {"op_id": self.operation.id, "token": self.token, "message_text": "invalid message",
+                   "reply_id": -1}
+        message.update(payload)
+        message = {key: value for key, value in message.items() if value != "missing"}
+        sio = self._connect()
+        sio.emit("chat-message", message)
+        assert sio.get_received() == []
+        with self.app.app_context():
+            assert Message.query.filter_by(op_id=self.operation.id).count() == 0
+
+    def test_collaborator_can_not_delete_message_with_replies_of_others(self):
+        # deleting a message deletes its replies, a collaborator may only delete their own
+        collaborator_token = self._add_user_to_operation(self.anotheruserdata, self.operation_name, "collaborator")
+        own_thread = self._add_message(self.anotheruser, self.operation, "own thread")
+        own_reply = self._add_message(self.anotheruser, self.operation, "own reply", reply_id=own_thread)
+        shared_thread = self._add_message(self.anotheruser, self.operation, "shared thread")
+        other_reply = self._add_message(self.user, self.operation, "other reply", reply_id=shared_thread)
+        sio = self._connect()
+        for message_id in (own_thread, shared_thread):
+            sio.emit('delete-message', {
+                "message_id": message_id,
+                "op_id": self.operation.id,
+                "token": collaborator_token
+            })
+        assert self._message_text(own_thread) is None
+        assert self._message_text(own_reply) is None
+        assert self._message_text(shared_thread) == "shared thread"
+        assert self._message_text(other_reply) == "other reply"
+        assert [json.loads(msg["args"][0])["message_id"] for msg in self._emitted(sio, 'delete-message-client')] \
+            == [own_thread]
+
+    def test_admin_deletes_message_with_replies_of_others(self):
+        thread = self._add_message(self.anotheruser, self.operation, "thread")
+        reply = self._add_message(self.anotheruser, self.operation, "reply", reply_id=thread)
+        sio = self._connect()
+        sio.emit('delete-message', {
+            "message_id": thread,
+            "op_id": self.operation.id,
+            "token": self.token
+        })
+        assert self._message_text(thread) is None
+        assert self._message_text(reply) is None
+
+    @pytest.mark.parametrize("message_type", [MessageType.TEXT, MessageType.SYSTEM_MESSAGE, 99, None])
+    def test_upload_file_rejects_non_attachment_message_type(self, message_type):
+        data = {
+            "token": self.token,
+            "op_id": self.operation.id,
+            "file": open(icons('16x16'), 'rb'),
+        }
+        if message_type is not None:
+            data["message_type"] = int(message_type)
+        with self.app.test_client() as c:
+            res = c.post("message_attachment", data=data, content_type="multipart/form-data")
+        data["file"].close()
+        assert res.json["success"] is False
+        assert not os.path.exists(os.path.join(self.app.config['UPLOAD_FOLDER'], str(self.operation.id)))
+        with self.app.app_context():
+            assert Message.query.filter_by(op_id=self.operation.id).count() == 0
+
+    def test_reply_only_to_top_level_message_of_same_operation(self):
+        other_operation = self._new_operation("other", "other operation")
+        self._add_user_to_operation(self.anotheruserdata, "other", "creator")
+        foreign_id = self._add_message(self.anotheruser, other_operation, "foreign message")
+        parent_id = self._add_message(self.user, self.operation, "parent message")
+        reply_id = self._add_message(self.user, self.operation, "a reply", reply_id=parent_id)
+        sio = self._connect()
+        for target_id, text in ((foreign_id, "injected"), (reply_id, "nested"), (987654, "unknown"),
+                                (parent_id, "valid reply")):
+            sio.emit("chat-message", {
+                "op_id": self.operation.id,
+                "token": self.token,
+                "message_text": text,
+                "reply_id": target_id
+            })
+        with self.app.app_context():
+            assert Message.query.filter(Message.text.in_(["injected", "nested", "unknown"])).count() == 0
+            assert Message.query.filter_by(text="valid reply", reply_id=parent_id).count() == 1
+            assert Message.query.filter_by(op_id=other_operation.id).count() == 1
