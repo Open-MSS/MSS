@@ -35,7 +35,7 @@ from sqlalchemy.exc import IntegrityError
 
 from mslib.mscolab.models import db, Operation, Permission, User
 from mslib.mscolab.seed import add_user, get_user, add_operation
-from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX
+from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX, get_operation_dir
 from mslib.mscolab.seed import XML_CONTENT_INIT
 
 from flask import current_app
@@ -703,6 +703,40 @@ class Test_FileManager:
             # the current user has no role (admin or collobarator role) in the operation_b2 to change users
             assert self.fm.is_member(self.collaboratoruser.id, operation_b2.id) is False
             assert self.fm.is_collaborator(self.collaboratoruser.id, operation_b2.id) is False
+
+    def test_renaming_to_a_group_fans_out_like_bulk_permissions(self):
+        with self.app.test_client():
+            # the category is the path with the postfix stripped from the end, "aGroupbGroup" -> "aGroupb"
+            _, operation_a = self._create_operation(flight_path="flighta", category="a")
+            _, operation_ab = self._create_operation(flight_path="flightab", category="aGroupb")
+            # another Group operation of the same category is not a member operation
+            _, operation_other_group = self._create_operation(flight_path="otherGroup", category="aGroupb")
+            _, operation_not_managed = self._create_operation(flight_path="flightop2", user=self.op2user,
+                                                              category="aGroupb")
+            _, operation = self._create_operation(flight_path="flightgroup", category="aGroupb")
+            assert self.fm.add_bulk_permission(operation.id, self.user, [self.vieweruser.id], "viewer")
+
+            assert self.fm.update_operation(operation.id, 'path', 'aGroupbGroup', self.user)
+            assert self.fm.is_viewer(self.vieweruser.id, operation_ab.id)
+            assert self.fm.is_member(self.vieweruser.id, operation_a.id) is False
+            assert self.fm.is_member(self.vieweruser.id, operation_other_group.id) is False
+            assert self.fm.is_member(self.vieweruser.id, operation_not_managed.id) is False
+
+    def test_renaming_to_a_group_keeps_path_when_import_fails(self):
+        with self.app.test_client():
+            _, operation_b1 = self._create_operation(flight_path="flightb1", category="morning")
+            _, operation = self._create_operation(flight_path="flightb2", category="morning")
+
+            def failing_import(*args):
+                db.session.rollback()
+                return False, None, "Some error occurred! Could not import permissions. Please try again."
+
+            with mock.patch.object(self.fm, "import_permissions", side_effect=failing_import) as import_permissions:
+                assert self.fm.update_operation(operation.id, 'path', 'morningGroup', self.user)
+            import_permissions.assert_called_once_with(operation.id, operation_b1.id, self.user.id)
+            db.session.expire_all()
+            assert db.session.get(Operation, operation.id).path == "morningGroup"
+            assert get_operation_dir(self.fm.data_dir, "morningGroup").exists()
 
     def test_import_permission(self):
         with self.app.test_client():
