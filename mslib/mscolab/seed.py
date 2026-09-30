@@ -104,10 +104,16 @@ def add_all_users_default_operation(path='TEMPLATE', description="Operation to k
     db.session.add_all(new_permissions)
     try:
         db.session.commit()
-        return True
     except IntegrityError as err:
         db.session.rollback()
         logging.debug("Error writing to db: %s", err)
+        return None
+    # the sockets of the new members join the room of the operation with this event,
+    # stop at the first failure, e.g. when no server is running
+    for permission in new_permissions:
+        if not notify_socket_event(SocketEvents.NEW_PERMISSION, u_id=permission.u_id, op_id=op_id):
+            break
+    return True
 
 
 def delete_user(email):

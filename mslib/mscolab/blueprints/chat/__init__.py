@@ -25,15 +25,13 @@
     limitations under the License.
 """
 
-import json
 
 import werkzeug
 from flask import Blueprint, request, g, jsonify, abort, send_from_directory, current_app
 
-from mslib.mscolab.auth import verify_user
-from mslib.mscolab.api.events import SocketEvents
+from mslib.mscolab.auth import verify_user, verify_user_http
 from mslib.mscolab.api.message_type import MessageType
-from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX, get_message_dict
+from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.schemas import (
     GetMessagesRequest,
@@ -80,8 +78,7 @@ def message_attachment():
                 cm = current_app.extensions['cm']
                 sockio = current_app.extensions['sockio']
                 new_message = cm.add_message(user, static_file_path, req.op_id, message_type)
-                new_message_dict = get_message_dict(new_message)
-                sockio.emit(SocketEvents.CHAT_MESSAGE_CLIENT, json.dumps(new_message_dict))
+                sockio.sm.emit_chat_message(new_message)
                 return jsonify(MessageAttachmentResponse(success=True, path=static_file_path).to_dict())
             else:
                 return "False"
@@ -92,10 +89,15 @@ def message_attachment():
 
 
 @CHAT_BP.route(f'/{ATTACHMENTS_URL_PREFIX}/<name>/<path:filename>', methods=["GET"])
+@verify_user_http
 def uploads(name=None, filename=None):
     base_path = current_app.config['UPLOAD_FOLDER']
     if name is None:
         abort(404)
     if filename is None:
+        abort(404)
+    # name is the id of the operation the attachment was sent to, only its members may fetch it,
+    # isdigit alone accepts digits like "²" which int() refuses
+    if not (name.isascii() and name.isdigit()) or not current_app.extensions['fm'].is_member(g.user.id, int(name)):
         abort(404)
     return send_from_directory(base_path, werkzeug.security.safe_join("", name, filename))

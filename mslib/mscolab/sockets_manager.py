@@ -28,6 +28,7 @@ import json
 import logging
 import re
 from flask import request
+import flask_socketio
 from flask_socketio import SocketIO, join_room
 
 from mslib.mscolab.chat_manager import ChatManager, MAX_MESSAGE_TEXT_LENGTH
@@ -72,8 +73,66 @@ class SocketsManager:
         self.fm = file_manager
         self.socketio = socketio
 
-    def handle_connect(self):
+    def handle_connect(self, auth=None):
+        """
+        auth: {"token": authentication token}, sent by msui on connect
+
+        A connection with an invalid token is refused. One without a token is accepted for older clients,
+        it joins no operation room until it sends a valid start event.
+        """
         logging.debug(request.sid)
+        token = auth.get("token") if isinstance(auth, dict) else None
+        if token is None:
+            logging.debug("Connection without token, waiting for start event")
+            return
+        user = User.verify_auth_token(token)
+        if user is None:
+            raise flask_socketio.ConnectionRefusedError("authentication failed")
+        self._join_operation_rooms(user)
+
+    def _bind_socket(self, user):
+        """
+        Registers the socket of the current request for user, a socket belongs to exactly one user.
+
+        Returns False if the socket is already registered for another user. Otherwise it could join
+        rooms with the token of a second user and would not leave them when that user is revoked,
+        because emit_revoke_permission only finds the sockets registered for the revoked user.
+        """
+        u_id = get_user_id(self.sockets, request.sid)
+        if u_id is None:
+            self.sockets.append({'s_id': request.sid, 'u_id': user.id})
+            return True
+        if u_id != user.id:
+            logging.warning("socket %s of user %s sent a token of user %s, ignored", request.sid, u_id, user.id)
+            return False
+        return True
+
+    def _join_operation_rooms(self, user):
+        """
+        Joins the socket of the current request to the rooms of all operations of user and registers it
+        """
+        if not self._bind_socket(user):
+            return
+        # a client is always registered as a room with name equal to its session id,
+        # so the rooms can safely be named as stringified versions of the operation id
+        for permission in Permission.query.filter_by(u_id=user.id).all():
+            join_room(self._room(permission.op_id))
+
+    def _user_sids(self, u_id):
+        return [d['s_id'] for d in self.sockets if d['u_id'] == u_id]
+
+    @staticmethod
+    def _room(op_id):
+        """
+        Name of the room of operation op_id, normalized so that e.g. "05" and 5 give the same room
+        """
+        return str(int(op_id))
+
+    def _emit_to_operation(self, event, op_id, *args):
+        """
+        Emits event only to the sockets in the room of operation op_id, i.e. to its members
+        """
+        self.socketio.emit(event, *args, to=self._room(op_id))
 
     def clear_state(self):
         """Drop all in-memory socket bookkeeping.
@@ -87,9 +146,12 @@ class SocketsManager:
     def handle_operation_selected(self, json_config):
         logging.debug("Operation selected: {}".format(json_config))
         token = json_config['token']
-        op_id = json_config['op_id']
+        try:
+            op_id = int(json_config['op_id'])
+        except (TypeError, ValueError):
+            return
         user = User.verify_auth_token(token)
-        if user is None:
+        if user is None or not self.fm.is_member(user.id, op_id):
             return
 
         # Remove the active user_id from any other operations first
@@ -102,7 +164,7 @@ class SocketsManager:
 
         # Emit the updated count to all users
         active_count = len(self.active_users_per_operation[op_id])
-        self.socketio.emit(SocketEvents.ACTIVE_USER_UPDATE, {'op_id': op_id, 'count': active_count})
+        self._emit_to_operation(SocketEvents.ACTIVE_USER_UPDATE, op_id, {'op_id': op_id, 'count': active_count})
 
     def update_operation_list(self, json_config):
         """
@@ -126,7 +188,9 @@ class SocketsManager:
         if user is None:
             return
         op_id = json_config['op_id']
-        join_room(str(op_id))
+        if not self.fm.is_member(user.id, op_id) or not self._bind_socket(user):
+            return
+        join_room(self._room(op_id))
 
     def handle_start_event(self, json_config):
         """
@@ -138,30 +202,11 @@ class SocketsManager:
         user = User.verify_auth_token(token)
         if user is None:
             return
-
-        # fetch operations
-        permissions = Permission.query.filter_by(u_id=user.id).all()
-
-        # for all the op_id in permissions, there'd be chatrooms in self.rooms
-        # search and add user to respective rooms
-        for permission in permissions:
-            # for each operation with op_id, search rooms
-            # socketio.join_room(room, sid=None, namespace=None)
-            """
-            - a client is always registered as a room with name equal to
-            the session id of the client.
-            - so the rooms can safely be named as stringified versions of
-            the operation id.
-            - thus, an abstraction is unnecessary. if it will be, it'll be
-            considered during later developments.
-            - so joining the actual socketio room would be enough
-            """
-            join_room(str(permission.op_id))
-        socket_storage = {
-            's_id': request.sid,
-            'u_id': user.id
-        }
-        self.sockets.append(socket_storage)
+        if get_user_id(self.sockets, request.sid) == user.id:
+            # msui authenticates on connect already and sends start only for older servers,
+            # the rooms are kept up to date by the permission events since then
+            return
+        self._join_operation_rooms(user)
 
     def handle_disconnect(self):
         logging.debug("Handling disconnect.")
@@ -186,11 +231,12 @@ class SocketsManager:
                 logging.debug(f"Updated {op_id}: {active_count} active users")
                 if user_ids:
                     # Emit update if there are still active users
-                    self.socketio.emit(SocketEvents.ACTIVE_USER_UPDATE, {'op_id': op_id, 'count': active_count})
+                    self._emit_to_operation(SocketEvents.ACTIVE_USER_UPDATE, op_id,
+                                            {'op_id': op_id, 'count': active_count})
                 else:
                     # If no users left, delete the operation key
                     del self.active_users_per_operation[op_id]
-                    self.socketio.emit(SocketEvents.ACTIVE_USER_UPDATE, {'op_id': op_id, 'count': 0})
+                    self._emit_to_operation(SocketEvents.ACTIVE_USER_UPDATE, op_id, {'op_id': op_id, 'count': 0})
 
     def remove_active_user_id_from_specific_operation(self, user_id, op_id):
         """
@@ -204,11 +250,12 @@ class SocketsManager:
 
                 if self.active_users_per_operation[op_id]:
                     # Emit update if there are still active users
-                    self.socketio.emit(SocketEvents.ACTIVE_USER_UPDATE, {'op_id': op_id, 'count': active_count})
+                    self._emit_to_operation(SocketEvents.ACTIVE_USER_UPDATE, op_id,
+                                            {'op_id': op_id, 'count': active_count})
                 else:
                     # If no users left, delete the operation key
                     del self.active_users_per_operation[op_id]
-                    self.socketio.emit(SocketEvents.ACTIVE_USER_UPDATE, {'op_id': op_id, 'count': 0})
+                    self._emit_to_operation(SocketEvents.ACTIVE_USER_UPDATE, op_id, {'op_id': op_id, 'count': 0})
 
     def handle_message(self, _json):
         """
@@ -231,11 +278,7 @@ class SocketsManager:
                         logging.debug("Reply to unknown message %s in operation %s rejected", reply_id, op_id)
                         return
                 new_message = self.cm.add_message(user, message_text, str(op_id), reply_id=reply_id)
-                new_message_dict = get_message_dict(new_message)
-                if reply_id == -1:
-                    self.socketio.emit(SocketEvents.CHAT_MESSAGE_CLIENT, json.dumps(new_message_dict))
-                else:
-                    self.socketio.emit(SocketEvents.CHAT_MESSAGE_REPLY_CLIENT, json.dumps(new_message_dict))
+                self.emit_chat_message(new_message, reply=reply_id != -1)
 
     def _message_access_level(self, user, message_id, op_id):
         """
@@ -266,9 +309,10 @@ class SocketsManager:
             if (message is not None and _valid_message_text(new_message_text) and access_level != "viewer" and
                     message.u_id == user.id and message.message_type == MessageType.TEXT):
                 self.cm.edit_message(message, new_message_text)
-                self.socketio.emit(SocketEvents.EDIT_MESSAGE_CLIENT, json.dumps({
+                self._emit_to_operation(SocketEvents.EDIT_MESSAGE_CLIENT, message.op_id, json.dumps({
                     "message_id": message.id,
-                    "new_message_text": message.text
+                    "new_message_text": message.text,
+                    "op_id": message.op_id
                 }))
             else:
                 logging.debug("Edit of message %r in operation %r by %s rejected", message_id, op_id, user.id)
@@ -293,9 +337,10 @@ class SocketsManager:
                            message.message_type != MessageType.SYSTEM_MESSAGE and
                            all(reply.u_id == user.id for reply in message.replies))
             if allowed:
-                message_id = message.id
+                message_id, message_op_id = message.id, message.op_id
                 self.cm.delete_message(message)
-                self.socketio.emit(SocketEvents.DELETE_MESSAGE_CLIENT, json.dumps({"message_id": message_id}))
+                self._emit_to_operation(SocketEvents.DELETE_MESSAGE_CLIENT, message_op_id,
+                                        json.dumps({"message_id": message_id, "op_id": message_op_id}))
             else:
                 logging.debug("Deletion of message %r in operation %r by %s rejected", message_id, op_id, user.id)
 
@@ -345,22 +390,34 @@ class SocketsManager:
                 # send service message
                 message_ = f"[service message] **{user.username}** saved changes. {messageText}"
                 new_message = self.cm.add_message(user, message_, str(op_id), message_type=MessageType.SYSTEM_MESSAGE)
-                new_message_dict = get_message_dict(new_message)
-                self.socketio.emit(SocketEvents.CHAT_MESSAGE_CLIENT, json.dumps(new_message_dict))
+                self.emit_chat_message(new_message)
                 # emit file-changed event to trigger reload of flight track
-                self.socketio.emit(SocketEvents.FILE_CHANGED, json.dumps({"op_id": op_id, "u_id": user.id}))
+                self._emit_to_operation(SocketEvents.FILE_CHANGED, op_id, json.dumps({"op_id": op_id, "u_id": user.id}))
         else:
             logging.debug("Auth Token expired!")
 
+    def emit_chat_message(self, message, reply=False):
+        """
+        Sends the new chat message to the members of its operation
+
+        The payload names the operation, so msui can drop messages of another operation than the open one.
+        """
+        event = SocketEvents.CHAT_MESSAGE_REPLY_CLIENT if reply else SocketEvents.CHAT_MESSAGE_CLIENT
+        self._emit_to_operation(event, message.op_id, json.dumps(get_message_dict(message) | {"op_id": message.op_id}))
+
     def emit_file_change(self, op_id):
-        self.socketio.emit(SocketEvents.FILE_CHANGED, json.dumps({"op_id": op_id}))
+        self._emit_to_operation(SocketEvents.FILE_CHANGED, op_id, json.dumps({"op_id": op_id}))
 
     def emit_new_permission(self, u_id, op_id):
         """
         to refresh operation list of u_id
         and to refresh collaborators' list
+
+        The sockets of u_id join the room of the operation first, so they get this and all later events of it.
         """
-        self.socketio.emit(SocketEvents.NEW_PERMISSION, json.dumps({"op_id": op_id, "u_id": u_id}))
+        for sid in self._user_sids(u_id):
+            self.socketio.server.enter_room(sid, self._room(op_id), namespace="/")
+        self._emit_to_operation(SocketEvents.NEW_PERMISSION, op_id, json.dumps({"op_id": op_id, "u_id": u_id}))
 
     def emit_update_permission(self, u_id, op_id, access_level=None):
         """
@@ -371,17 +428,43 @@ class SocketsManager:
             access_level = perm.access_level
             logging.debug("access_level by database query")
 
-        self.socketio.emit(SocketEvents.UPDATE_PERMISSION, json.dumps({"op_id": op_id, "u_id": u_id,
-                                                                       "access_level": access_level}))
+        self._emit_to_operation(SocketEvents.UPDATE_PERMISSION, op_id,
+                                json.dumps({"op_id": op_id, "u_id": u_id, "access_level": access_level}))
 
     def emit_revoke_permission(self, u_id, op_id):
-        self.socketio.emit(SocketEvents.REVOKE_PERMISSION, json.dumps({"op_id": op_id, "u_id": u_id}))
+        """
+        The sockets of u_id still get this event, then they leave the room of the operation
+        """
+        self._emit_to_operation(SocketEvents.REVOKE_PERMISSION, op_id, json.dumps({"op_id": op_id, "u_id": u_id}))
+        for sid in self._user_sids(u_id):
+            self.socketio.server.leave_room(sid, self._room(op_id), namespace="/")
+
+    def sync_rooms(self):
+        """
+        Makes the rooms of every registered socket match the operations its user is a member of
+
+        For changes of many permissions at once, e.g. the import of the permissions of a group
+        operation, where the added and removed users are not known to the caller.
+        """
+        members = {}
+        for permission in Permission.query.all():
+            members.setdefault(permission.u_id, set()).add(self._room(permission.op_id))
+        for d in self.sockets:
+            wanted = members.get(d['u_id'], set())
+            # the room named by its own sid is not an operation room
+            joined = {room for room in self.socketio.server.rooms(d['s_id'], namespace="/") if room.isdigit()}
+            for room in wanted - joined:
+                self.socketio.server.enter_room(d['s_id'], room, namespace="/")
+            for room in joined - wanted:
+                self.socketio.server.leave_room(d['s_id'], room, namespace="/")
 
     def emit_operation_permissions_updated(self, u_id, op_id):
-        self.socketio.emit(SocketEvents.OPERATION_PERMISSIONS_UPDATED, json.dumps({"op_id": op_id, "u_id": u_id}))
+        self._emit_to_operation(SocketEvents.OPERATION_PERMISSIONS_UPDATED, op_id,
+                                json.dumps({"op_id": op_id, "u_id": u_id}))
 
     def emit_operation_delete(self, op_id):
-        self.socketio.emit(SocketEvents.OPERATION_DELETED, json.dumps({"op_id": op_id}))
+        self._emit_to_operation(SocketEvents.OPERATION_DELETED, op_id, json.dumps({"op_id": op_id}))
+        self.socketio.server.close_room(self._room(op_id), namespace="/")
 
     def emit_operation_list_update(self):
         """

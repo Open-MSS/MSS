@@ -30,9 +30,11 @@ import pytest
 import datetime
 
 from mslib.msui.icons import icons
-from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation, get_operation
+from mslib.mscolab.api.events import SocketEvents
 from mslib.mscolab.chat_manager import MAX_MESSAGE_TEXT_LENGTH
-from mslib.mscolab.models import Permission, User, Message, MessageType
+from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation, get_operation, \
+    XML_CONTENT_INIT
+from mslib.mscolab.models import db, Permission, User, Message, MessageType
 
 
 class Test_Socket_Manager:
@@ -59,11 +61,27 @@ class Test_Socket_Manager:
         for sock in self.sockets:
             sock.disconnect()
 
-    def _connect(self):
-        sio = self.sockio.test_client(self.app)
+    def _connect(self, token=None):
+        """
+        token: sent on connect like msui does, the socket joins the rooms of the operations of its user.
+        Without one it connects like an older client, which joins rooms only with the start event.
+        """
+        sio = self.sockio.test_client(self.app, auth={"token": token} if token is not None else None)
         self.sockets.append(sio)
         sio.emit('connect')
         return sio
+
+    def _another_token(self):
+        with self.app.app_context():
+            return self.anotheruser.generate_auth_token()
+
+    def _send(self, sio, text, op_id=None):
+        sio.emit("chat-message", {"op_id": op_id or self.operation.id, "token": self.token,
+                                  "message_text": text, "reply_id": -1})
+
+    @staticmethod
+    def _events(sio, name=None):
+        return [r for r in sio.get_received() if name is None or r["name"] == name]
 
     def _new_operation(self, operation_name, description):
         with self.app.app_context():
@@ -94,7 +112,7 @@ class Test_Socket_Manager:
         Test that selecting an operation tracks the active user count appropriately
         and verifies that the correct events are emitted.
         """
-        sio = self._connect()
+        sio = self._connect(self.token)
 
         # Initial state: no active users for the operation
         assert self.operation.id not in self.sm.active_users_per_operation
@@ -118,7 +136,7 @@ class Test_Socket_Manager:
         with self.app.app_context():
             add_user_to_operation(path=self.operation_name, emailid=self.anotheruserdata[0])
             another_token = self.anotheruser.generate_auth_token()
-        another_sio = self._connect()
+        another_sio = self._connect(another_token)
         another_sio.emit("operation-selected",
                          {"token": another_token, "op_id": self.operation.id})
 
@@ -132,6 +150,204 @@ class Test_Socket_Manager:
         updated_message_args = updated_messages[0]["args"][0]
         assert updated_message_args["op_id"] == self.operation.id
         assert updated_message_args["count"] == 2
+
+    def test_connect_with_invalid_token_is_refused(self):
+        sio = self.sockio.test_client(self.app, auth={"token": "invalid"})
+        assert not sio.is_connected()
+
+    def test_chat_events_only_reach_members(self):
+        # H1: the events of an operation go to the room of the operation, not to every socket
+        member = self._connect(self.token)
+        outsider = self._connect(self._another_token())
+        anonymous = self._connect()
+        self._send(member, "only for members")
+        with self.app.app_context():
+            message = Message.query.filter_by(text="only for members").first()
+        member.emit("edit-message", {"message_id": message.id, "new_message_text": "edited",
+                                     "op_id": self.operation.id, "token": self.token})
+        member.emit("delete-message", {"message_id": message.id, "op_id": self.operation.id,
+                                       "token": self.token})
+
+        received = {r["name"]: json.loads(r["args"][0]) for r in self._events(member)}
+        # the payloads name the operation, so msui can drop events of another operation than the open one
+        assert received[SocketEvents.CHAT_MESSAGE_CLIENT]["op_id"] == self.operation.id
+        assert received[SocketEvents.CHAT_MESSAGE_CLIENT]["text"] == "only for members"
+        assert received[SocketEvents.EDIT_MESSAGE_CLIENT] == {
+            "message_id": message.id, "new_message_text": "edited", "op_id": self.operation.id}
+        assert received[SocketEvents.DELETE_MESSAGE_CLIENT] == {
+            "message_id": message.id, "op_id": self.operation.id}
+        assert self._events(outsider) == []
+        assert self._events(anonymous) == []
+
+    def test_start_event_joins_rooms(self):
+        # an older client connects without a token and authenticates with the start event
+        sio = self._connect()
+        sio.emit('start', {'token': self.token})
+        self._send(sio, "after start")
+        assert len(self._events(sio, SocketEvents.CHAT_MESSAGE_CLIENT)) == 1
+
+    def test_start_event_after_authenticated_connect_joins_no_room_again(self, monkeypatch):
+        # msui authenticates on connect and sends start as well, the rooms are joined only once
+        joins = []
+        join_operation_rooms = self.sm._join_operation_rooms
+        monkeypatch.setattr(self.sm, "_join_operation_rooms", lambda user: joins.append(user.id) or
+                            join_operation_rooms(user))
+        sio = self._connect(self.token)
+        sio.emit('start', {'token': self.token})
+        assert joins == [self.user.id]
+        self._send(sio, "joined once")
+        assert len(self._events(sio, SocketEvents.CHAT_MESSAGE_CLIENT)) == 1
+
+    def test_start_event_with_invalid_token_joins_no_room(self):
+        sio = self._connect()
+        sio.emit('start', {'token': "invalid"})
+        member = self._connect(self.token)
+        self._send(member, "not for invalid tokens")
+        assert self._events(sio) == []
+
+    def test_join_operation_room_requires_membership(self):
+        # M8: add-user-to-operation and operation-selected only work for members of the operation
+        another_token = self._another_token()
+        outsider = self._connect(another_token)
+        outsider.emit("add-user-to-operation", {"token": another_token, "op_id": self.operation.id})
+        outsider.emit("operation-selected", {"token": another_token, "op_id": self.operation.id})
+        assert self.operation.id not in self.sm.active_users_per_operation
+        member = self._connect(self.token)
+        self._send(member, "not for outsiders")
+        assert self._events(outsider) == []
+
+    def test_new_permission_joins_and_revoke_leaves_room(self):
+        outsider = self._connect(self._another_token())
+        member = self._connect(self.token)
+        with self.app.app_context():
+            assert add_user_to_operation(path=self.operation_name, emailid=self.anotheruserdata[0])
+        self.sm.emit_new_permission(self.anotheruser.id, self.operation.id)
+        assert len(self._events(outsider, SocketEvents.NEW_PERMISSION)) == 1
+        self._send(member, "for the new member")
+        assert len(self._events(outsider, SocketEvents.CHAT_MESSAGE_CLIENT)) == 1
+
+        with self.app.app_context():
+            Permission.query.filter_by(u_id=self.anotheruser.id, op_id=self.operation.id).delete()
+            db.session.commit()
+        self.sm.emit_revoke_permission(self.anotheruser.id, self.operation.id)
+        # the removed user is still told, then leaves the room
+        assert len(self._events(outsider, SocketEvents.REVOKE_PERMISSION)) == 1
+        self._send(member, "no longer for the removed member")
+        assert self._events(outsider) == []
+
+    def test_operation_delete_closes_room(self):
+        member = self._connect(self.token)
+        self.sm.emit_operation_delete(self.operation.id)
+        assert len(self._events(member, SocketEvents.OPERATION_DELETED)) == 1
+        self.sm.emit_file_change(self.operation.id)
+        assert self._events(member) == []
+
+    def test_socket_ignores_token_of_another_user(self):
+        # a socket belongs to the user it authenticated with first, with the token of a second user
+        # it would join rooms from which it is not removed when that second user is revoked
+        outsider = self._connect(self._another_token())
+        outsider.emit('start', {'token': self.token})
+        outsider.emit("add-user-to-operation", {"token": self.token, "op_id": self.operation.id})
+        member = self._connect(self.token)
+        self._send(member, "not for another socket")
+        assert self._events(outsider) == []
+
+    def test_sync_rooms_follows_permissions(self):
+        outsider = self._connect(self._another_token())
+        member = self._connect(self.token)
+        with self.app.app_context():
+            db.session.add(Permission(self.anotheruser.id, self.operation.id, "collaborator"))
+            db.session.commit()
+            self.sm.sync_rooms()
+        self._send(member, "after the permission was added")
+        assert len(self._events(outsider, SocketEvents.CHAT_MESSAGE_CLIENT)) == 1
+        with self.app.app_context():
+            Permission.query.filter_by(u_id=self.anotheruser.id, op_id=self.operation.id).delete()
+            db.session.commit()
+            self.sm.sync_rooms()
+        self._send(member, "after the permission was removed")
+        assert self._events(outsider) == []
+
+    def _group_operation(self, category, member):
+        """
+        Creates the group operation of category, the permissions of its members are imported into
+        the other operations of the category
+        """
+        path = f"{category}{self.app.config['GROUP_POSTFIX']}"
+        with self.app.app_context():
+            assert add_operation(path, "group")
+            assert add_user_to_operation(path=path, access_level="creator", emailid=self.userdata[0])
+            if member is not None:
+                assert add_user_to_operation(path=path, access_level="collaborator", emailid=member)
+            return get_operation(path)
+
+    def test_create_operation_in_group_category_joins_rooms(self):
+        self._group_operation("syncgroup", self.anotheruserdata[0])
+        outsider = self._connect(self._another_token())
+        response = self.app.test_client().post("/create_operation", data={
+            "token": self.token, "path": "syncgroupop", "description": "in a group", "category": "syncgroup",
+            "content": XML_CONTENT_INIT})
+        assert response.data.decode() == "True"
+        with self.app.app_context():
+            op_id = get_operation("syncgroupop").id
+        outsider.get_received()
+        self.sm.emit_file_change(op_id)
+        assert len(self._events(outsider, SocketEvents.FILE_CHANGED)) == 1
+
+    def test_bulk_permission_on_group_operation_joins_rooms(self):
+        group = self._group_operation("bulkgroup", None)
+        with self.app.app_context():
+            assert self.fm.create_operation("bulkgroupop", "in a group", self.user, category="bulkgroup",
+                                            content=XML_CONTENT_INIT)
+            op_id = get_operation("bulkgroupop").id
+            assert add_user('UV30@uv30', 'UV30', 'uv30', 'User UV3')
+            thirduser = get_user('UV30@uv30')
+            third_token = thirduser.generate_auth_token()
+        outsiders = [self._connect(self._another_token()), self._connect(third_token)]
+        response = self.app.test_client().post("/add_bulk_permissions", data={
+            "token": self.token, "op_id": group.id, "selected_access_level": "collaborator",
+            "selected_userids": json.dumps([self.anotheruser.id, thirduser.id])})
+        assert response.json["success"] is True
+        for outsider in outsiders:
+            outsider.get_received()
+        self.sm.emit_file_change(op_id)
+        # all users are added to the operations of the category, not only the last one
+        for outsider in outsiders:
+            assert len(self._events(outsider, SocketEvents.FILE_CHANGED)) == 1
+
+    def test_rename_to_group_operation_joins_rooms(self):
+        with self.app.app_context():
+            assert self.fm.create_operation("renamegroupop", "in a group", self.user, category="renamegroup",
+                                            content=XML_CONTENT_INIT)
+            op_id = get_operation("renamegroupop").id
+            assert add_user_to_operation(path=self.operation_name, access_level="collaborator",
+                                         emailid=self.anotheruserdata[0])
+        outsider = self._connect(self._another_token())
+        response = self.app.test_client().post("/update_operation", data={
+            "token": self.token, "op_id": self.operation.id, "attribute": "path",
+            "value": f"renamegroup{self.app.config['GROUP_POSTFIX']}"})
+        assert response.data.decode() == "True"
+        outsider.get_received()
+        self.sm.emit_file_change(op_id)
+        assert len(self._events(outsider, SocketEvents.FILE_CHANGED)) == 1
+
+    def test_delete_own_account_leaves_rooms(self):
+        with self.app.app_context():
+            assert add_user_to_operation(path=self.operation_name, emailid=self.anotheruserdata[0])
+        removed = self._connect(self._another_token())
+        member = self._connect(self.token)
+        response = self.app.test_client().post("/delete_own_account", data={"token": self._another_token()})
+        assert response.json["success"] is True
+        assert len(self._events(removed, SocketEvents.REVOKE_PERMISSION)) == 1
+        self._send(member, "not for deleted users")
+        assert self._events(removed) == []
+
+    def test_room_name_is_normalized(self):
+        member = self._connect(self.token)
+        self._send(member, "normalized", op_id=f"0{self.operation.id}")
+        received = self._events(member, SocketEvents.CHAT_MESSAGE_CLIENT)
+        assert len(received) == 1
+        assert json.loads(received[0]["args"][0])["op_id"] == self.operation.id
 
     @pytest.mark.skip(reason="unknown how to verify")
     def test_handle_start_event(self):
@@ -287,6 +503,12 @@ class Test_Socket_Manager:
         file = os.listdir(upload_dir)[0]
         assert 'mss-logo' in file
         assert 'png' in file
+        # the members of the operation get the attachment as chat message
+        received = self._events(sio, SocketEvents.CHAT_MESSAGE_CLIENT)
+        assert len(received) == 1
+        message = json.loads(received[0]["args"][0])
+        assert message["op_id"] == self.operation.id
+        assert message["message_type"] == int(MessageType.IMAGE)
 
     def _add_message(self, user, operation, text, message_type=MessageType.TEXT, reply_id=None):
         with self.app.app_context():
@@ -303,15 +525,12 @@ class Test_Socket_Manager:
             assert add_user_to_operation(path=operation_name, emailid=userdata[0], access_level=access_level)
             return get_user(userdata[0]).generate_auth_token()
 
-    def _emitted(self, sio, event):
-        return [msg for msg in sio.get_received() if msg["name"] == event]
-
     def test_edit_and_delete_message_of_other_operation_rejected(self):
         # the attacker is creator of an operation of their own and names it in the request
         attacker_operation_id = self._new_operation("attacker", "attacker operation").id
         attacker_token = self._add_user_to_operation(self.anotheruserdata, "attacker", "creator")
         message_id = self._add_message(self.user, self.operation, "victim message")
-        sio = self._connect()
+        sio = self._connect(self.token)
         sio.emit('edit-message', {
             "message_id": message_id,
             "new_message_text": "rewritten",
@@ -324,14 +543,14 @@ class Test_Socket_Manager:
             "token": attacker_token
         })
         assert self._message_text(message_id) == "victim message"
-        assert self._emitted(sio, 'edit-message-client') == []
-        assert self._emitted(sio, 'delete-message-client') == []
+        assert self._events(sio, 'edit-message-client') == []
+        assert self._events(sio, 'delete-message-client') == []
 
     def test_edit_message_only_by_author(self):
         # another admin of the same operation can not edit the message
         another_token = self._add_user_to_operation(self.anotheruserdata, self.operation_name, "admin")
         message_id = self._add_message(self.user, self.operation, "author message")
-        sio = self._connect()
+        sio = self._connect(self.token)
         sio.emit('edit-message', {
             "message_id": message_id,
             "new_message_text": "rewritten",
@@ -339,12 +558,12 @@ class Test_Socket_Manager:
             "token": another_token
         })
         assert self._message_text(message_id) == "author message"
-        assert self._emitted(sio, 'edit-message-client') == []
+        assert self._events(sio, 'edit-message-client') == []
 
     @pytest.mark.parametrize("message_type", [MessageType.IMAGE, MessageType.DOCUMENT, MessageType.SYSTEM_MESSAGE])
     def test_edit_message_only_text(self, message_type):
         message_id = self._add_message(self.user, self.operation, "uploads/1/file.png", message_type=message_type)
-        sio = self._connect()
+        sio = self._connect(self.token)
         sio.emit('edit-message', {
             "message_id": message_id,
             "new_message_text": "https://attacker.example/x",
@@ -352,12 +571,12 @@ class Test_Socket_Manager:
             "token": self.token
         })
         assert self._message_text(message_id) == "uploads/1/file.png"
-        assert self._emitted(sio, 'edit-message-client') == []
+        assert self._events(sio, 'edit-message-client') == []
 
     def test_viewer_can_not_edit_or_delete_own_message(self):
         message_id = self._add_message(self.anotheruser, self.operation, "written before downgrade")
         viewer_token = self._add_user_to_operation(self.anotheruserdata, self.operation_name, "viewer")
-        sio = self._connect()
+        sio = self._connect(self.token)
         sio.emit('edit-message', {
             "message_id": message_id,
             "new_message_text": "rewritten",
@@ -370,8 +589,8 @@ class Test_Socket_Manager:
             "token": viewer_token
         })
         assert self._message_text(message_id) == "written before downgrade"
-        assert self._emitted(sio, 'edit-message-client') == []
-        assert self._emitted(sio, 'delete-message-client') == []
+        assert self._events(sio, 'edit-message-client') == []
+        assert self._events(sio, 'delete-message-client') == []
 
     def test_collaborator_deletes_only_own_messages(self):
         collaborator_token = self._add_user_to_operation(self.anotheruserdata, self.operation_name, "collaborator")
@@ -379,7 +598,7 @@ class Test_Socket_Manager:
         other_id = self._add_message(self.user, self.operation, "other message")
         system_id = self._add_message(self.anotheruser, self.operation, "[service message] saved",
                                       message_type=MessageType.SYSTEM_MESSAGE)
-        sio = self._connect()
+        sio = self._connect(self.token)
         for message_id in (own_id, other_id, system_id):
             sio.emit('delete-message', {
                 "message_id": message_id,
@@ -389,7 +608,7 @@ class Test_Socket_Manager:
         assert self._message_text(own_id) is None
         assert self._message_text(other_id) == "other message"
         assert self._message_text(system_id) == "[service message] saved"
-        assert [json.loads(msg["args"][0])["message_id"] for msg in self._emitted(sio, 'delete-message-client')] \
+        assert [json.loads(msg["args"][0])["message_id"] for msg in self._events(sio, 'delete-message-client')] \
             == [own_id]
 
     @pytest.mark.parametrize("access_level", ["admin", "creator"])
@@ -398,7 +617,7 @@ class Test_Socket_Manager:
         text_id = self._add_message(self.user, self.operation, "other message")
         system_id = self._add_message(self.user, self.operation, "[service message] saved",
                                       message_type=MessageType.SYSTEM_MESSAGE)
-        sio = self._connect()
+        sio = self._connect(self.token)
         for message_id in (text_id, system_id):
             sio.emit('delete-message', {
                 "message_id": message_id,
@@ -407,27 +626,27 @@ class Test_Socket_Manager:
             })
         assert self._message_text(text_id) is None
         assert self._message_text(system_id) is None
-        assert len(self._emitted(sio, 'delete-message-client')) == 2
+        assert len(self._events(sio, 'delete-message-client')) == 2
 
     @pytest.mark.parametrize("message_id", [987654, "no-id", None, 1.5, True, "missing"])
     def test_edit_and_delete_unknown_message(self, message_id):
         # a float or bool id must not be mapped onto another message
         self._add_message(self.user, self.operation, "first message")
-        sio = self._connect()
+        sio = self._connect(self.token)
         edit = {"new_message_text": "rewritten", "op_id": self.operation.id, "token": self.token}
         delete = {"op_id": self.operation.id, "token": self.token}
         if message_id != "missing":
             edit["message_id"] = delete["message_id"] = message_id
         sio.emit('edit-message', edit)
         sio.emit('delete-message', delete)
-        assert self._emitted(sio, 'edit-message-client') == []
-        assert self._emitted(sio, 'delete-message-client') == []
+        assert self._events(sio, 'edit-message-client') == []
+        assert self._events(sio, 'delete-message-client') == []
         with self.app.app_context():
             assert Message.query.filter_by(text="first message").count() == 1
 
     @pytest.mark.parametrize("payload", [{}, {"token": "dummy"}, {"message_id": 1}, {"op_id": 1}])
     def test_edit_and_delete_missing_keys(self, payload):
-        sio = self._connect()
+        sio = self._connect(self.token)
         sio.emit('edit-message', payload)
         sio.emit('delete-message', payload)
         sio.emit('chat-message', payload)
@@ -436,7 +655,7 @@ class Test_Socket_Manager:
     @pytest.mark.parametrize("new_message_text", [None, {}, 42, "", "x" * (MAX_MESSAGE_TEXT_LENGTH + 1)])
     def test_edit_message_invalid_text(self, new_message_text):
         message_id = self._add_message(self.user, self.operation, "author message")
-        sio = self._connect()
+        sio = self._connect(self.token)
         sio.emit('edit-message', {
             "message_id": message_id,
             "new_message_text": new_message_text,
@@ -444,11 +663,11 @@ class Test_Socket_Manager:
             "token": self.token
         })
         assert self._message_text(message_id) == "author message"
-        assert self._emitted(sio, 'edit-message-client') == []
+        assert self._events(sio, 'edit-message-client') == []
 
     def test_edit_message_emits_stored_text(self):
         message_id = self._add_message(self.user, self.operation, "author message")
-        sio = self._connect()
+        sio = self._connect(self.token)
         sio.emit('edit-message', {
             "message_id": str(message_id),
             "new_message_text": "x" * MAX_MESSAGE_TEXT_LENGTH,
@@ -456,9 +675,10 @@ class Test_Socket_Manager:
             "token": self.token
         })
         assert self._message_text(message_id) == "x" * MAX_MESSAGE_TEXT_LENGTH
-        events = self._emitted(sio, 'edit-message-client')
+        events = self._events(sio, 'edit-message-client')
         assert [json.loads(msg["args"][0]) for msg in events] == [
-            {"message_id": message_id, "new_message_text": "x" * MAX_MESSAGE_TEXT_LENGTH}]
+            {"message_id": message_id, "new_message_text": "x" * MAX_MESSAGE_TEXT_LENGTH,
+             "op_id": self.operation.id}]
 
     @pytest.mark.parametrize("payload", [
         {"reply_id": None}, {"reply_id": "abc"}, {"reply_id": 1.5}, {"reply_id": "missing"},
@@ -470,7 +690,7 @@ class Test_Socket_Manager:
                    "reply_id": -1}
         message.update(payload)
         message = {key: value for key, value in message.items() if value != "missing"}
-        sio = self._connect()
+        sio = self._connect(self.token)
         sio.emit("chat-message", message)
         assert sio.get_received() == []
         with self.app.app_context():
@@ -483,7 +703,7 @@ class Test_Socket_Manager:
         own_reply = self._add_message(self.anotheruser, self.operation, "own reply", reply_id=own_thread)
         shared_thread = self._add_message(self.anotheruser, self.operation, "shared thread")
         other_reply = self._add_message(self.user, self.operation, "other reply", reply_id=shared_thread)
-        sio = self._connect()
+        sio = self._connect(self.token)
         for message_id in (own_thread, shared_thread):
             sio.emit('delete-message', {
                 "message_id": message_id,
@@ -494,13 +714,13 @@ class Test_Socket_Manager:
         assert self._message_text(own_reply) is None
         assert self._message_text(shared_thread) == "shared thread"
         assert self._message_text(other_reply) == "other reply"
-        assert [json.loads(msg["args"][0])["message_id"] for msg in self._emitted(sio, 'delete-message-client')] \
+        assert [json.loads(msg["args"][0])["message_id"] for msg in self._events(sio, 'delete-message-client')] \
             == [own_thread]
 
     def test_admin_deletes_message_with_replies_of_others(self):
         thread = self._add_message(self.anotheruser, self.operation, "thread")
         reply = self._add_message(self.anotheruser, self.operation, "reply", reply_id=thread)
-        sio = self._connect()
+        sio = self._connect(self.token)
         sio.emit('delete-message', {
             "message_id": thread,
             "op_id": self.operation.id,
@@ -532,7 +752,7 @@ class Test_Socket_Manager:
         foreign_id = self._add_message(self.anotheruser, other_operation, "foreign message")
         parent_id = self._add_message(self.user, self.operation, "parent message")
         reply_id = self._add_message(self.user, self.operation, "a reply", reply_id=parent_id)
-        sio = self._connect()
+        sio = self._connect(self.token)
         for target_id, text in ((foreign_id, "injected"), (reply_id, "nested"), (987654, "unknown"),
                                 (parent_id, "valid reply")):
             sio.emit("chat-message", {

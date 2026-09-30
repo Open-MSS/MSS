@@ -62,7 +62,8 @@ class ConnectionManager(QtCore.QObject):
         if token is not None:
             logging.getLogger("engineio.client").addFilter(filter=lambda record: token not in record.getMessage())
         self.sio = socketio.Client(reconnection_attempts=5)
-        self.sio.connect(self.mscolab_server_url)
+        # the server refuses a connection with an invalid token
+        self.sio.connect(self.mscolab_server_url, auth={"token": token} if token is not None else None)
         logging.debug("Transport Layer: %s", self.sio.transport())
 
         self.sio.on(SocketEvents.FILE_CHANGED, handler=self.handle_file_change)

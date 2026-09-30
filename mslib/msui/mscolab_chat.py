@@ -26,6 +26,7 @@
 """
 import datetime
 import json
+import logging
 import os
 import tempfile
 
@@ -477,6 +478,10 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             self.serviceMessageList.scrollToBottom()
 
     # SOCKET HANDLERS
+    def _of_other_operation(self, message):
+        # the connection receives the events of all operations of the user, older servers don't send op_id
+        return int(message.get("op_id", self.op_id)) != int(self.op_id)
+
     @QtCore.pyqtSlot(int)
     def handle_permissions_updated(self, _):
         self.load_users()
@@ -484,11 +489,15 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
     @QtCore.pyqtSlot(str)
     def handle_incoming_message(self, message):
         message = json.loads(message)
+        if self._of_other_operation(message):
+            return
         self.render_new_message(message)
 
     @QtCore.pyqtSlot(str)
     def handle_incoming_message_reply(self, reply):
         reply = json.loads(reply)
+        if self._of_other_operation(reply):
+            return
         for i in range(self.messageList.count() - 1, -1, -1):
             item = self.messageList.item(i)
             message_widget = self.messageList.itemWidget(item)
@@ -515,6 +524,8 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
     @QtCore.pyqtSlot(str)
     def handle_message_edited(self, message):
         message = json.loads(message)
+        if self._of_other_operation(message):
+            return
         message_id = message["message_id"]
         new_message_text = message["new_message_text"]
         # Loop backwards because it's more likely the message is new than old
@@ -529,6 +540,8 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
     @QtCore.pyqtSlot(str)
     def handle_deleted_message(self, message):
         message = json.loads(message)
+        if self._of_other_operation(message):
+            return
         message_id = message["message_id"]
         # Loop backwards because it's more likely the message is new than old
         for i in range(self.messageList.count() - 1, -1, -1):
@@ -580,9 +593,14 @@ class MessageItem(QtWidgets.QWidget):
                               self.attachment_path.replace('\\', '/').split('colabdata')[1])
         else:
             img_url = urljoin(self.chat_window.mscolab_server_url, self.attachment_path)
-        data = requests.get(img_url, timeout=tuple(config_loader(dataset="MSCOLAB_timeout"))).content
+        response = requests.get(img_url, data={"token": self.chat_window.token},
+                                timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         image = QtGui.QImage()
-        image.loadFromData(data)
+        # older servers answer a refused request with 200 and the body "False", which loads no image either
+        if response.status_code == 200:
+            image.loadFromData(response.content)
+        else:
+            logging.warning("could not load attachment %s: HTTP %s", img_url, response.status_code)
         self.message_image = image
         width, height = image.size().width(), image.size().height()
         if width > height and width > MAX_WIDTH:
@@ -759,6 +777,7 @@ class MessageItem(QtWidgets.QWidget):
             file_path = get_save_filename(self, "Save Document", default_filename, f"Document (*{file_ext})")
             if file_path is not None:
                 file_content = requests.get(urljoin(self.chat_window.mscolab_server_url, self.attachment_path),
+                                            data={"token": self.chat_window.token},
                                             timeout=tuple(config_loader(dataset="MSCOLAB_timeout"))).content
                 with open(file_path, "wb") as f:
                     f.write(file_content)
@@ -794,6 +813,10 @@ class MessageItem(QtWidgets.QWidget):
             self.set_message_style()
 
     def on_link_click(self, url):
+        if self.message_type == MessageType.DOCUMENT:
+            # the only link is the attachment, it needs the token, a browser can't fetch it
+            self.handle_download_action()
+            return
         if url.scheme() == "":
             url.setScheme("http")
         QtGui.QDesktopServices.openUrl(url)
