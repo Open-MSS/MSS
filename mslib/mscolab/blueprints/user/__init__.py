@@ -95,5 +95,14 @@ def delete_own_account():
     """
     fm = current_app.extensions['fm']
     user = g.user
+    u_id = user.id
+    op_ids = [permission.op_id for permission in user.permissions]
     result = fm.modify_user(user, action="delete")
+    if result:
+        # like the CLI delete_user, the sockets of the user leave the rooms of its operations
+        sm = current_app.extensions['sockio'].sm
+        for op_id in op_ids:
+            sm.emit_revoke_permission(u_id, op_id)
+            sm.emit_operation_permissions_updated(u_id, op_id)
+        sm.forget_user(u_id)
     return jsonify(DeleteOwnAccountResponse(success=result).to_dict()), 200

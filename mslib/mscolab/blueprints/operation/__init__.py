@@ -83,6 +83,8 @@ def create_operation():
     response = CreateOperationResponse(success=success)
     if response.success:
         sockio = current_app.extensions['sockio']
+        # the members of the group operation of the category got permissions too
+        sockio.sm.sync_rooms()
         token = request.args.get('token', request.form.get('token', False))
         json_config = {"token": token}
         sockio.sm.update_operation_list(json_config)
@@ -189,6 +191,9 @@ def update_operation():
     success = fm.update_operation(req.op_id, req.attribute, req.value, user)
     if success is True:
         sockio = current_app.extensions['sockio']
+        if req.attribute == "path" and req.value.endswith(current_app.config['GROUP_POSTFIX']):
+            # the permissions of the group operation were imported into all operations of its category
+            sockio.sm.sync_rooms()
         token = request.args.get('token', request.form.get('token', False))
         json_config = {"token": token}
         sockio.sm.update_operation_list(json_config)

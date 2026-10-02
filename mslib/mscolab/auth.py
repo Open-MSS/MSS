@@ -90,27 +90,44 @@ def register_user(email, password, username, fullname):
     return {"success": result}
 
 
+def _request_user():
+    """
+    Returns the user authenticated by the token of the request, None if there is none or it is not confirmed
+    """
+    try:
+        user = User.verify_auth_token(request.args.get('token', request.form.get('token', False)))
+    except TypeError:
+        logging.debug("no token in request form")
+        abort(404)
+    if not user or (current_app.config['MAIL_ENABLED'] and not user.confirmed):
+        return None
+    return user
+
+
 def verify_user(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        try:
-            user = User.verify_auth_token(request.args.get('token', request.form.get('token', False)))
-        except TypeError:
-            logging.debug("no token in request form")
-            abort(404)
-        if not user:
+        user = _request_user()
+        if user is None:
             return "False"
-        else:
-            # saving user details in flask.g
-            if current_app.config['MAIL_ENABLED']:
-                if user.confirmed:
-                    g.user = user
-                    return func(*args, **kwargs)
-                else:
-                    return "False"
-            else:
-                g.user = user
-                return func(*args, **kwargs)
+        # saving user details in flask.g
+        g.user = user
+        return func(*args, **kwargs)
+    return wrapper
+
+
+def verify_user_http(func):
+    """
+    Like verify_user, but refuses with HTTP 401 instead of the body "False",
+    for endpoints whose response is not read as text, e.g. file downloads
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        user = _request_user()
+        if user is None:
+            abort(401)
+        g.user = user
+        return func(*args, **kwargs)
     return wrapper
 
 

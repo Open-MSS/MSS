@@ -41,7 +41,7 @@ from mslib.mscolab.models import User, Operation
 from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX
 
 from mslib.mscolab.file_manager import FileManager
-from mslib.mscolab.seed import add_user, get_user
+from mslib.mscolab.seed import add_user, get_user, add_user_to_operation
 from tests.utils import XML_CONTENT1, XML_CONTENT2
 from mslib.mscolab.seed import XML_CONTENT_INIT
 
@@ -231,9 +231,41 @@ class Test_Server:
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
             pfn = data["path"]
-            response = test_client.get(f'{pfn}')
+            response = test_client.get(f'/{pfn}', data={"token": token})
             assert response.status_code == 200
             assert response.data == text
+
+    def test_uploads_require_membership(self):
+        # attachments are served only to members of the operation they were sent to
+        other_userdata = 'UV20@uv20.de', 'UV20', 'uv20.de', 'User UV20'
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        assert add_user(*other_userdata)
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            response = test_client.post('/message_attachment', data={"token": token,
+                                                                     "op_id": operation.id,
+                                                                     "file": (io.BytesIO(b"secret"), 'test.txt'),
+                                                                     "message_type": "3"})
+            pfn = json.loads(response.data.decode('utf-8'))["path"]
+            other_token = get_user(other_userdata[0]).generate_auth_token()
+            # without a token or with an invalid one
+            assert test_client.get(f'/{pfn}').status_code == 401
+            assert test_client.get(f'/{pfn}', data={"token": "invalid"}).status_code == 401
+            # a registered user who is not a member of the operation
+            response = test_client.get(f'/{pfn}', data={"token": other_token})
+            assert response.status_code == 404
+            # the folder has to be an operation id, e.g. not the profile images
+            response = test_client.get(f'/{ATTACHMENTS_URL_PREFIX}/profile/x.png', data={"token": token})
+            assert response.status_code == 404
+            # digits int() refuses give 404 too, not a server error
+            for name in ("²", "٣"):
+                response = test_client.get(f'/{ATTACHMENTS_URL_PREFIX}/{name}/x.png', data={"token": token})
+                assert response.status_code == 404
+            # once a member, the attachment is served
+            assert add_user_to_operation(path=operation.path, emailid=other_userdata[0])
+            response = test_client.get(f'/{pfn}', data={"token": other_token})
+            assert response.status_code == 200
+            assert response.data == b"secret"
 
     @pytest.mark.parametrize("upload_folder_name", ["uploadshaha", r"C:\Temp", ], )
     def test_uploads_with_custom_upload_folder(self, tmp_path, upload_folder_name):
@@ -255,7 +287,7 @@ class Test_Server:
                 # the file is stored in the configured UPLOAD_FOLDER
                 assert (upload_folder / str(operation.id) / os.path.basename(pfn)).is_file()
                 # and the client can fetch it by the path it got
-                response = test_client.get(f'/{pfn}')
+                response = test_client.get(f'/{pfn}', data={"token": token})
                 assert response.status_code == 200
                 assert response.data == text
 

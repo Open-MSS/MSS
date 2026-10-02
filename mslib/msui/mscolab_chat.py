@@ -26,6 +26,7 @@
 """
 import datetime
 import json
+import logging
 import os
 import tempfile
 
@@ -33,7 +34,7 @@ from pathlib import Path
 import requests
 from markdown import Markdown
 from markdown.extensions import Extension
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 
 from mslib.mscolab.api.message_type import MessageType
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -477,6 +478,10 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             self.serviceMessageList.scrollToBottom()
 
     # SOCKET HANDLERS
+    def _of_other_operation(self, message):
+        # the connection receives the events of all operations of the user, older servers don't send op_id
+        return int(message.get("op_id", self.op_id)) != int(self.op_id)
+
     @QtCore.pyqtSlot(int)
     def handle_permissions_updated(self, _):
         self.load_users()
@@ -484,11 +489,15 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
     @QtCore.pyqtSlot(str)
     def handle_incoming_message(self, message):
         message = json.loads(message)
+        if self._of_other_operation(message):
+            return
         self.render_new_message(message)
 
     @QtCore.pyqtSlot(str)
     def handle_incoming_message_reply(self, reply):
         reply = json.loads(reply)
+        if self._of_other_operation(reply):
+            return
         for i in range(self.messageList.count() - 1, -1, -1):
             item = self.messageList.item(i)
             message_widget = self.messageList.itemWidget(item)
@@ -515,6 +524,8 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
     @QtCore.pyqtSlot(str)
     def handle_message_edited(self, message):
         message = json.loads(message)
+        if self._of_other_operation(message):
+            return
         message_id = message["message_id"]
         new_message_text = message["new_message_text"]
         # Loop backwards because it's more likely the message is new than old
@@ -529,6 +540,8 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
     @QtCore.pyqtSlot(str)
     def handle_deleted_message(self, message):
         message = json.loads(message)
+        if self._of_other_operation(message):
+            return
         message_id = message["message_id"]
         # Loop backwards because it's more likely the message is new than old
         for i in range(self.messageList.count() - 1, -1, -1):
@@ -544,6 +557,20 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
 
     def closeEvent(self, event):
         self.viewCloses.emit()
+
+
+def _same_origin(url, base_url):
+    """
+    True if url has the scheme, host and port of base_url
+    """
+    default_ports = {"http": 80, "https": 443}
+    try:
+        a, b = urlsplit(url), urlsplit(base_url)
+        return (a.scheme.lower() == b.scheme.lower() and a.hostname == b.hostname and
+                (a.port or default_ports.get(a.scheme.lower())) == (b.port or default_ports.get(b.scheme.lower())))
+    except ValueError:
+        # e.g. an invalid port
+        return False
 
 
 class MessageItem(QtWidgets.QWidget):
@@ -572,17 +599,49 @@ class MessageItem(QtWidgets.QWidget):
         self.setup_message_box_layout()
         self.setup_context_menu()
 
+    def attachment_url(self):
+        """
+        URL of the attachment on the MSColab server, None if it points to another server
+
+        The attachment is fetched with the token of the user, which must not be sent anywhere else.
+        Older servers allowed to edit attachment messages, their text can be any URL.
+        """
+        path = self.attachment_path
+        if '\\' in path:
+            path = path.replace('\\', '/').split('colabdata')[-1]
+        server_url = self.chat_window.mscolab_server_url
+        url = urljoin(server_url, path)
+        if not _same_origin(url, server_url):
+            logging.warning("attachment %r is not on the MSColab server %s, ignored", path, server_url)
+            return None
+        return url
+
+    def fetch_attachment(self):
+        """
+        Returns the content of the attachment or None if the MSColab server did not send it
+        """
+        url = self.attachment_url()
+        if url is None:
+            return None
+        try:
+            response = requests.get(url, data={"token": self.chat_window.token},
+                                    timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        except requests.exceptions.RequestException as ex:
+            logging.warning("could not load attachment %s: %s", url, ex)
+            return None
+        if response.status_code != 200:
+            logging.warning("could not load attachment %s: HTTP %s", url, response.status_code)
+            return None
+        return response.content
+
     def setup_image_message_box(self):
         MAX_WIDTH = MAX_HEIGHT = 300
         self.messageBox = QtWidgets.QLabel()
-        if '\\' in self.attachment_path:
-            img_url = urljoin(self.chat_window.mscolab_server_url,
-                              self.attachment_path.replace('\\', '/').split('colabdata')[1])
-        else:
-            img_url = urljoin(self.chat_window.mscolab_server_url, self.attachment_path)
-        data = requests.get(img_url, timeout=tuple(config_loader(dataset="MSCOLAB_timeout"))).content
         image = QtGui.QImage()
-        image.loadFromData(data)
+        content = self.fetch_attachment()
+        if content is not None:
+            # older servers answer a refused request with 200 and the body "False", which loads no image either
+            image.loadFromData(content)
         self.message_image = image
         width, height = image.size().width(), image.size().height()
         if width > height and width > MAX_WIDTH:
@@ -611,9 +670,12 @@ class MessageItem(QtWidgets.QWidget):
 
     def setup_text_message_box(self):
         if self.message_type == MessageType.DOCUMENT:
-            doc_url = urljoin(self.chat_window.mscolab_server_url, self.attachment_path)
+            doc_url = self.attachment_url()
             file_name = Path(self.attachment_path).name
-            self.message_text = f"Document: [{file_name}]({doc_url})"
+            if doc_url is None:
+                self.message_text = f"Document: {file_name} (not on the MSColab server)"
+            else:
+                self.message_text = f"Document: [{file_name}]({doc_url})"
         self.messageBox = self.get_text_browser(self.message_text)
 
     def setup_message_box(self):
@@ -758,8 +820,10 @@ class MessageItem(QtWidgets.QWidget):
         if self.message_type == MessageType.DOCUMENT:
             file_path = get_save_filename(self, "Save Document", default_filename, f"Document (*{file_ext})")
             if file_path is not None:
-                file_content = requests.get(urljoin(self.chat_window.mscolab_server_url, self.attachment_path),
-                                            timeout=tuple(config_loader(dataset="MSCOLAB_timeout"))).content
+                file_content = self.fetch_attachment()
+                if file_content is None:
+                    show_popup(self, "Error", "The document could not be downloaded from the MSColab server.")
+                    return
                 with open(file_path, "wb") as f:
                     f.write(file_content)
         else:
@@ -794,6 +858,10 @@ class MessageItem(QtWidgets.QWidget):
             self.set_message_style()
 
     def on_link_click(self, url):
+        if self.message_type == MessageType.DOCUMENT:
+            # the only link is the attachment, it needs the token, a browser can't fetch it
+            self.handle_download_action()
+            return
         if url.scheme() == "":
             url.setScheme("http")
         QtGui.QDesktopServices.openUrl(url)

@@ -35,6 +35,7 @@ import logging
 from flask import Blueprint, current_app, jsonify, request
 
 from mslib.mscolab.api.events import SocketEvents
+from mslib.mscolab.cli_notify import USER_DELETED
 
 ADMIN_BP = Blueprint('admin', __name__)
 
@@ -52,6 +53,7 @@ _NOTIFY_HANDLERS = {
     SocketEvents.NEW_PERMISSION: ("emit_new_permission", ("u_id", "op_id")),
     SocketEvents.OPERATION_DELETED: ("emit_operation_delete", ("op_id",)),
     SocketEvents.UPDATE_OPERATION_LIST: ("emit_operation_list_update", ()),
+    USER_DELETED: ("forget_user", ("u_id",)),
 }
 
 

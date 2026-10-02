@@ -34,7 +34,7 @@ from sqlalchemy.exc import IntegrityError
 
 from flask import current_app
 
-from mslib.mscolab.cli_notify import notify_socket_event
+from mslib.mscolab.cli_notify import USER_DELETED, notify_socket_event
 from mslib.mscolab.api.events import SocketEvents
 from mslib.mscolab.models import User, db, Permission, Operation
 from mslib.mscolab.utils import is_valid_operation_path
@@ -104,10 +104,16 @@ def add_all_users_default_operation(path='TEMPLATE', description="Operation to k
     db.session.add_all(new_permissions)
     try:
         db.session.commit()
-        return True
     except IntegrityError as err:
         db.session.rollback()
         logging.debug("Error writing to db: %s", err)
+        return None
+    # the sockets of the new members join the room of the operation with this event,
+    # stop at the first failure, e.g. when no server is running
+    for permission in new_permissions:
+        if not notify_socket_event(SocketEvents.NEW_PERMISSION, u_id=permission.u_id, op_id=op_id):
+            break
+    return True
 
 
 def delete_user(email):
@@ -121,6 +127,7 @@ def delete_user(email):
         for op_id in op_ids:
             notify_socket_event(SocketEvents.REVOKE_PERMISSION, u_id=u_id, op_id=op_id)
             notify_socket_event(SocketEvents.OPERATION_PERMISSIONS_UPDATED, u_id=u_id, op_id=op_id)
+        notify_socket_event(USER_DELETED, u_id=u_id)
         return True
     return False
 

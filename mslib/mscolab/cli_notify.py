@@ -33,6 +33,9 @@ import logging
 import requests
 from flask import current_app
 
+# not a socket event, tells the server that the sockets of the deleted user u_id are no longer theirs
+USER_DELETED = "user-deleted"
+
 
 def notify_socket_event(event, **payload):
     """
@@ -41,6 +44,8 @@ def notify_socket_event(event, **payload):
     CLI is used for an initial `db --seed` before any server has been started) -
     there are no connected clients to notify in that case anyway. Must be called
     within an application context (see mslib.mscolab.seed).
+
+    Returns True if the server accepted the notification.
     """
     url = current_app.config['SERVER_URL'].rstrip('/') + '/internal_notify'
     data = {"event": event, "token": current_app.config['ADMIN_TOKEN'], **payload}
@@ -48,5 +53,7 @@ def notify_socket_event(event, **payload):
         response = requests.post(url, data=data, timeout=2)
         if not response.ok:
             logging.debug("mscolab server rejected notify for %s: %s", event, response.text)
+        return response.ok
     except requests.exceptions.RequestException as ex:
         logging.debug("Could not notify mscolab server of %s (server may not be running): %s", event, ex)
+        return False

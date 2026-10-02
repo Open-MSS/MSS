@@ -26,10 +26,13 @@
 """
 import pytest
 import datetime
+import json
 
 import mock
+import requests
 
 from tests.constants import ROOT_DIR
+from mslib.msui.icons import icons
 from mslib.mscolab.models import Message, MessageType
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.msui import mscolab
@@ -147,6 +150,88 @@ class Test_MscolabOperation:
         self._activate_context_menu_action(Actions.DELETE)
         with self.app.app_context():
             assert Message.query.filter_by(text='test edit').count() == 0
+
+    def test_events_of_other_operation_ignored(self, qtbot):
+        # the socket gets the events of all operations of the user, the chat shows only its own
+        self._send_message(qtbot, "own message")
+        count = self.chat_window.messageList.count()
+        own_id = self._get_message_id(count - 1)
+        other_op_id = self.chat_window.op_id + 1000
+        foreign = {"id": own_id + 1000, "u_id": self.user.id, "username": self.user.username, "text": "foreign",
+                   "message_type": MessageType.TEXT, "reply_id": -1, "replies": [],
+                   "time": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(), "op_id": other_op_id}
+        self.chat_window.handle_incoming_message(json.dumps(foreign))
+        self.chat_window.handle_incoming_message_reply(json.dumps(foreign | {"reply_id": own_id}))
+        self.chat_window.handle_message_edited(json.dumps(
+            {"message_id": own_id, "new_message_text": "foreign edit", "op_id": other_op_id}))
+        self.chat_window.handle_deleted_message(json.dumps({"message_id": own_id, "op_id": other_op_id}))
+        assert self.chat_window.messageList.count() == count
+        widget = self.chat_window.messageList.itemWidget(self.chat_window.messageList.item(count - 1))
+        assert widget.message_text == "own message"
+        assert widget.replies == []
+
+    def _upload(self, qtbot, file_name, content, message_type):
+        num_messages_before = self.chat_window.messageList.count()
+        response = requests.post(f"{self.url}/message_attachment",
+                                 data={"token": self.window.mscolab.token, "op_id": self.chat_window.op_id,
+                                       "message_type": int(message_type)},
+                                 files={"file": (file_name, content)}, timeout=10)
+        assert response.json()["success"] is True
+
+        def assert_():
+            assert self.chat_window.messageList.count() == num_messages_before + 1
+        qtbot.wait_until(assert_)
+        return self.chat_window.messageList.itemWidget(self.chat_window.messageList.item(num_messages_before))
+
+    def test_image_attachment_fetched_with_token(self, qtbot):
+        with open(icons('16x16'), 'rb') as f:
+            widget = self._upload(qtbot, "image.png", f.read(), MessageType.IMAGE)
+        # /uploads requires the token, without it the server answers "False", which is no image
+        assert not widget.message_image.isNull()
+
+    def test_document_link_downloads_with_token(self, qtbot, tmp_path):
+        widget = self._upload(qtbot, "notes.txt", b"attached notes", MessageType.DOCUMENT)
+        target = tmp_path / "notes.txt"
+        with mock.patch("mslib.msui.mscolab_chat.get_save_filename", return_value=str(target)), \
+                mock.patch("PyQt5.QtGui.QDesktopServices.openUrl") as open_url:
+            widget.on_link_click(QtCore.QUrl(f"{self.url}/{widget.attachment_path}"))
+        # a browser has no token, the client downloads the document itself
+        open_url.assert_not_called()
+        assert target.read_bytes() == b"attached notes"
+
+    @pytest.mark.parametrize("message_type", [MessageType.IMAGE, MessageType.DOCUMENT])
+    @pytest.mark.parametrize("text", ["https://attacker.example/x.png", "//attacker.example/x.png",
+                                      "http://localhost:1/x.png"])
+    def test_foreign_attachment_not_fetched_with_token(self, qtbot, tmp_path, message_type, text):
+        # attachment messages of older servers could be edited to point anywhere, the token stays on the server
+        message = {"id": 987654, "u_id": self.user.id, "username": self.user.username, "text": text,
+                   "message_type": message_type, "reply_id": -1, "replies": [],
+                   "time": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
+                   "op_id": self.chat_window.op_id}
+        target = tmp_path / "x.png"
+        with mock.patch("mslib.msui.mscolab_chat.requests.get") as get, \
+                mock.patch("mslib.msui.mscolab_chat.get_save_filename", return_value=str(target)), \
+                mock.patch("mslib.msui.mscolab_chat.show_popup") as popup:
+            self.chat_window.handle_incoming_message(json.dumps(message))
+            widget = self.chat_window.messageList.itemWidget(
+                self.chat_window.messageList.item(self.chat_window.messageList.count() - 1))
+            assert widget.attachment_url() is None
+            widget.handle_download_action()
+        get.assert_not_called()
+        if message_type == MessageType.DOCUMENT:
+            popup.assert_called_once()
+            assert not target.exists()
+
+    def test_refused_document_download_not_saved(self, qtbot, tmp_path):
+        widget = self._upload(qtbot, "notes.txt", b"attached notes", MessageType.DOCUMENT)
+        target = tmp_path / "notes.txt"
+        self.chat_window.token = "invalid"
+        with mock.patch("mslib.msui.mscolab_chat.get_save_filename", return_value=str(target)), \
+                mock.patch("mslib.msui.mscolab_chat.show_popup") as popup:
+            widget.handle_download_action()
+        # the server refuses the request, its error page must not be saved as the document
+        popup.assert_called_once()
+        assert not target.exists()
 
     def _connect_to_mscolab(self, qtbot):
         self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)
