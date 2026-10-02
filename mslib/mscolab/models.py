@@ -144,6 +144,7 @@ class User(db.Model):
 class Permission(db.Model):
 
     __tablename__ = 'permissions'
+    __table_args__ = (db.UniqueConstraint('u_id', 'op_id'),)
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
     op_id = db.Column(db.Integer, db.ForeignKey('operations.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))

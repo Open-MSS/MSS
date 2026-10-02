@@ -530,6 +530,42 @@ class Test_Server:
             # creator is not listed
             assert data["success"] is True
 
+    def test_bulk_permissions_notify_group_member_operations(self):
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        another_user = 'UV20@uv20', 'UV20', 'uv20', 'User20'
+        assert add_user(another_user[0], another_user[1], another_user[2], another_user[3])
+        another = get_user(another_user[0])
+        with self.app.test_client() as test_client:
+            token = self._get_token(test_client)
+            op_ids = []
+            for path in ("flightno1", "bergenGroup"):
+                response = test_client.post('/create_operation', data={
+                    "token": token, "path": path, "description": path, "content": XML_CONTENT_INIT,
+                    "category": "bergen"})
+                assert response.status_code == 200
+                op_ids.append(Operation.query.filter_by(path=path).first().id)
+            op_id, group_op_id = op_ids
+            sm = self.sockio.sm
+            with mock.patch.object(sm, "emit_new_permission") as new_permission, \
+                    mock.patch.object(sm, "emit_update_permission") as update_permission, \
+                    mock.patch.object(sm, "emit_revoke_permission") as revoke_permission, \
+                    mock.patch.object(sm, "emit_operation_permissions_updated") as permissions_updated:
+                form = {"token": token, "op_id": group_op_id, "selected_userids": json.dumps([another.id])}
+                for endpoint, access_level in (("add_bulk_permissions", "viewer"),
+                                               ("modify_bulk_permissions", "collaborator"),
+                                               ("delete_bulk_permissions", None)):
+                    data = dict(form, selected_access_level=access_level) if access_level else form
+                    response = test_client.post(f'/{endpoint}', data=data)
+                    assert json.loads(response.data.decode('utf-8'))["success"] is True
+            assert new_permission.call_args_list == [mock.call(another.id, group_op_id),
+                                                     mock.call(another.id, op_id)]
+            assert update_permission.call_args_list == [
+                mock.call(another.id, group_op_id, access_level="collaborator"),
+                mock.call(another.id, op_id, access_level="collaborator")]
+            assert sorted(revoke_permission.call_args_list) == sorted([mock.call(another.id, group_op_id),
+                                                                       mock.call(another.id, op_id)])
+            assert permissions_updated.call_count == 6
+
     def _create_operation(self, test_client, userdata=None, path="firstflight", description="simple test",
                           content=XML_CONTENT_INIT, active=True):
         if userdata is None:

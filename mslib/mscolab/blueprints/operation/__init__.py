@@ -287,12 +287,14 @@ def add_bulk_permissions():
     fm = current_app.extensions['fm']
     req = BulkPermissionsRequest.from_form(request.form)
     user = g.user
-    success = fm.add_bulk_permission(req.op_id, user, req.user_ids, req.access_level)
-    if success:
+    added = fm.add_bulk_permission(req.op_id, user, req.user_ids, req.access_level)
+    if added:
         sockio = current_app.extensions['sockio']
-        for u_id in req.user_ids:
-            sockio.sm.emit_new_permission(u_id, req.op_id)
-        sockio.sm.emit_operation_permissions_updated(user.id, req.op_id)
+        # a Group operation also changes the operations of its category
+        for op_id, u_ids in added.items():
+            for u_id in u_ids:
+                sockio.sm.emit_new_permission(u_id, op_id)
+            sockio.sm.emit_operation_permissions_updated(user.id, op_id)
         return jsonify(BulkPermissionsResponse(success=True, message="Users successfully added!").to_dict())
 
     return jsonify(
@@ -305,12 +307,13 @@ def modify_bulk_permissions():
     fm = current_app.extensions['fm']
     req = BulkPermissionsRequest.from_form(request.form)
     user = g.user
-    success = fm.modify_bulk_permission(req.op_id, user, req.user_ids, req.access_level)
-    if success:
+    modified = fm.modify_bulk_permission(req.op_id, user, req.user_ids, req.access_level)
+    if modified:
         sockio = current_app.extensions['sockio']
-        for u_id in req.user_ids:
-            sockio.sm.emit_update_permission(u_id, req.op_id, access_level=req.access_level)
-        sockio.sm.emit_operation_permissions_updated(user.id, req.op_id)
+        for op_id, u_ids in modified.items():
+            for u_id in u_ids:
+                sockio.sm.emit_update_permission(u_id, op_id, access_level=req.access_level)
+            sockio.sm.emit_operation_permissions_updated(user.id, op_id)
         response = BulkPermissionsResponse(success=True, message="User permissions successfully updated!")
         return jsonify(response.to_dict())
 
@@ -324,13 +327,14 @@ def delete_bulk_permissions():
     fm = current_app.extensions['fm']
     req = DeleteBulkPermissionsRequest.from_form(request.form)
     user = g.user
-    success = fm.delete_bulk_permission(req.op_id, user, req.user_ids)
-    if success:
+    deleted = fm.delete_bulk_permission(req.op_id, user, req.user_ids)
+    if deleted:
         sockio = current_app.extensions['sockio']
-        for u_id in req.user_ids:
-            sockio.sm.remove_active_user_id_from_specific_operation(u_id, req.op_id)
-            sockio.sm.emit_revoke_permission(u_id, req.op_id)
-        sockio.sm.emit_operation_permissions_updated(user.id, req.op_id)
+        for op_id, u_ids in deleted.items():
+            for u_id in u_ids:
+                sockio.sm.remove_active_user_id_from_specific_operation(u_id, op_id)
+                sockio.sm.emit_revoke_permission(u_id, op_id)
+            sockio.sm.emit_operation_permissions_updated(user.id, op_id)
         response = DeleteBulkPermissionsResponse(success=True, message="User permissions successfully deleted!")
         return jsonify(response.to_dict())
 

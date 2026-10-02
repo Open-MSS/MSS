@@ -37,10 +37,14 @@ import mimetypes
 from pathlib import Path, PurePosixPath
 from flask import current_app
 from werkzeug.utils import secure_filename
+from sqlalchemy import insert
 from sqlalchemy.exc import IntegrityError
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
 from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX, is_valid_operation_path, get_operation_dir
+
+# "creator" is assigned only by create_operation
+ASSIGNABLE_ACCESS_LEVELS = ("admin", "collaborator", "viewer")
 
 
 class FileManager:
@@ -104,7 +108,8 @@ class FileManager:
             # here we can import the permissions from Group file
             if not path.endswith(current_app.config['GROUP_POSTFIX']):
                 import_op = Operation.query.filter_by(path=f"{category}{current_app.config['GROUP_POSTFIX']}").first()
-                if import_op is not None:
+                # only for the creator of the Group operation, admin can be granted by others without consent
+                if import_op is not None and self.is_creator(user.id, import_op.id):
                     self.import_permissions(import_op.id, operation_id, user.id)
             operation_dir.mkdir(parents=True, exist_ok=True)
 
@@ -396,21 +401,16 @@ class FileManager:
                 old_path.rename(new_path)
             except OSError:
                 shutil.move(str(old_path), str(new_path))
-
-            if value.endswith(current_app.config['GROUP_POSTFIX']):
-                # getting the category
-                category = value.split(current_app.config['GROUP_POSTFIX'])[0]
-                # all operation with that category
-                ops_category = Operation.query.filter_by(category=category)
-                for ops in ops_category:
-                    # the user changing the {category}{mscolab_settings.GROUP_POSTFIX} needs to have rights in the op
-                    # then members of this op gets added to all others of same category
-                    self.import_permissions(op_id, ops.id, user.id)
         elif attribute == "active":
             if isinstance(value, str):
                 value = value.upper() == "TRUE"
         setattr(operation, attribute, value)
         db.session.commit()
+        if attribute == "path":
+            # renamed to a Group operation, its members get added to the operations of that category
+            # the user manages
+            for ops in self._group_member_operations(operation, user):
+                self.import_permissions(op_id, ops.id, user.id)
         return True
 
     def delete_operation(self, op_id, user):
@@ -646,62 +646,96 @@ class FileManager:
         current_operation_creator = Permission.query.filter_by(op_id=op_id, access_level="creator").first()
         return current_operation_creator.user.username
 
+    def _group_member_operations(self, operation, user, managed_only=True):
+        """
+        For a {category}{GROUP_POSTFIX} operation, returns the other operations of that category on which user
+        is allowed to manage permissions (admin or creator). Returns an empty list for any other operation.
+
+        Changes to the members of the Group operation fan out only to these operations, so managing a Group
+        operation never grants rights beyond those the user already has on the operations of that category.
+        With managed_only=False all other operations of that category are returned, e.g. for a user leaving.
+        """
+        postfix = current_app.config['GROUP_POSTFIX']
+        if not postfix or operation is None or not operation.path.endswith(postfix):
+            return []
+        category = operation.path[:-len(postfix)]
+        query = Operation.query.filter(Operation.category == category, Operation.id != operation.id)
+        if managed_only:
+            query = query.join(Permission, Permission.op_id == Operation.id) \
+                .filter(Permission.u_id == user.id, Permission.access_level.in_(("admin", "creator")))
+        return [ops for ops in query if not ops.path.endswith(postfix)]
+
     def add_bulk_permission(self, op_id, user, new_u_ids, access_level):
+        """
+        Returns {op_id: [u_id, ...]} with the users added per operation, or False
+        """
+        if access_level not in ASSIGNABLE_ACCESS_LEVELS:
+            return False
         if not self.is_admin(user.id, op_id) and not self.is_creator(user.id, op_id):
             return False
 
-        new_permissions = []
-        for u_id in new_u_ids:
-            if Permission.query.filter_by(u_id=u_id, op_id=op_id).first() is None:
-                new_permissions.append(Permission(u_id, op_id, access_level))
-        db.session.add_all(new_permissions)
+        # a repeated user id would violate the unique (u_id, op_id) constraint
+        new_u_ids = list(dict.fromkeys(new_u_ids))
         operation = Operation.query.filter_by(id=op_id).first()
-        if operation.path.endswith(current_app.config['GROUP_POSTFIX']):
-            # the members of this gets added to all others of same category
-            category = operation.path.split(current_app.config['GROUP_POSTFIX'])[0]
-            # all operation with that category
-            ops_category = Operation.query.filter_by(category=category)
-            new_permissions = []
-            for ops in ops_category:
-                if not ops.path.endswith(current_app.config['GROUP_POSTFIX']):
-                    new_permissions.append(Permission(u_id, ops.id, access_level))
-                db.session.add_all(new_permissions)
+        # the members of a Group operation get added to all others of the same category
+        target_op_ids = [op_id] + [ops.id for ops in self._group_member_operations(operation, user)]
+        existing = set(Permission.query
+                       .with_entities(Permission.u_id, Permission.op_id)
+                       .filter(Permission.op_id.in_(target_op_ids), Permission.u_id.in_(new_u_ids)))
+        added = {op_id: []}
+        new_permissions = []
+        for target_op_id in target_op_ids:
+            for u_id in new_u_ids:
+                if (u_id, target_op_id) not in existing:
+                    new_permissions.append({"u_id": u_id, "op_id": target_op_id, "access_level": access_level})
+                    added.setdefault(target_op_id, []).append(u_id)
         try:
+            if new_permissions:
+                db.session.execute(insert(Permission), new_permissions)
             db.session.commit()
-            return True
+            return added
         except IntegrityError:
             db.session.rollback()
             return False
 
+    def _changeable_permissions(self, op_ids, u_ids):
+        # the creator of an operation keeps the creator role
+        return Permission.query \
+            .filter(Permission.op_id.in_(op_ids)) \
+            .filter(Permission.u_id.in_(u_ids)) \
+            .filter(Permission.access_level != "creator") \
+            .all()
+
     def modify_bulk_permission(self, op_id, user, u_ids, new_access_level):
+        """
+        Returns {op_id: [u_id, ...]} with the users modified per operation, or False
+        """
+        if new_access_level not in ASSIGNABLE_ACCESS_LEVELS:
+            return False
         if not self.is_admin(user.id, op_id) and not self.is_creator(user.id, op_id):
             return False
-
-        # TODO: Check whether we need synchronize_session False Or Fetch
-        Permission.query\
-            .filter(Permission.op_id == op_id)\
-            .filter(Permission.u_id.in_(u_ids))\
-            .update({Permission.access_level: new_access_level}, synchronize_session='fetch')
+        # the creator keeps the creator role
+        creator = Permission.query.filter_by(op_id=op_id, access_level="creator").first()
+        if creator is not None and creator.u_id in u_ids:
+            return False
 
         operation = Operation.query.filter_by(id=op_id).first()
-        if operation.path.endswith(current_app.config['GROUP_POSTFIX']):
-            # the members of this gets added to all others of same category
-            category = operation.path.split(current_app.config['GROUP_POSTFIX'])[0]
-            # all operation with that category
-            ops_category = Operation.query.filter_by(category=category)
-            for ops in ops_category:
-                Permission.query \
-                    .filter(Permission.op_id == ops.id) \
-                    .filter(Permission.u_id.in_(u_ids)) \
-                    .update({Permission.access_level: new_access_level}, synchronize_session='fetch')
+        target_op_ids = [op_id] + [ops.id for ops in self._group_member_operations(operation, user)]
+        modified = {op_id: []}
+        for perm in self._changeable_permissions(target_op_ids, u_ids):
+            perm.access_level = new_access_level
+            modified.setdefault(perm.op_id, []).append(perm.u_id)
         try:
             db.session.commit()
-            return True
+            return modified
         except IntegrityError:
             db.session.rollback()
             return False
 
     def delete_bulk_permission(self, op_id, user, u_ids):
+        """
+        Returns {op_id: [u_id, ...]} with the users removed per operation, or False
+        """
         # if the user is not a member of the operation, return false
         if not self.is_member(user.id, op_id):
             return False
@@ -710,34 +744,27 @@ class FileManager:
             if len(u_ids) != 1 or user.id not in u_ids:
                 return False
         else:
+            members = {perm.u_id: perm.access_level for perm in Permission.query.filter(
+                Permission.op_id == op_id, Permission.u_id.in_(u_ids))}
             # if the user is admin or creator and is trying to remove a user not in this operation
-            for u_id in u_ids:
-                if not self.is_member(u_id, op_id):
-                    return False
-            if self.is_creator(user.id, op_id):
-                # if the user is creator and is trying to leave the operation, return false
-                if user.id in u_ids:
-                    return False
-
-        Permission.query \
-            .filter(Permission.op_id == op_id) \
-            .filter(Permission.u_id.in_(u_ids)) \
-            .delete(synchronize_session='fetch')
+            if any(u_id not in members for u_id in u_ids):
+                return False
+            # the creator can't leave the operation or be removed from it
+            if "creator" in members.values():
+                return False
 
         operation = Operation.query.filter_by(id=op_id).first()
-        if operation.path.endswith(current_app.config['GROUP_POSTFIX']):
-            # the members of this gets added to all others of same category
-            category = operation.path.split(current_app.config['GROUP_POSTFIX'])[0]
-            # all operation with that category
-            ops_category = Operation.query.filter_by(category=category)
-            for ops in ops_category:
-                Permission.query \
-                    .filter(Permission.op_id == ops.id) \
-                    .filter(Permission.u_id.in_(u_ids)) \
-                    .delete(synchronize_session='fetch')
-
+        # a user leaving the Group operation leaves all operations of that category,
+        # removing others is limited to the operations the user manages
+        leaving = list(u_ids) == [user.id]
+        target_op_ids = [op_id] + [ops.id for ops in
+                                   self._group_member_operations(operation, user, managed_only=not leaving)]
+        deleted = {op_id: []}
+        for perm in self._changeable_permissions(target_op_ids, u_ids):
+            db.session.delete(perm)
+            deleted.setdefault(perm.op_id, []).append(perm.u_id)
         db.session.commit()
-        return True
+        return deleted
 
     def import_permissions(self, import_op_id, current_op_id, u_id):
         if not self.is_creator(u_id, current_op_id) and not self.is_admin(u_id, current_op_id):

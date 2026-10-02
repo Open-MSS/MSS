@@ -31,9 +31,11 @@ import mock
 
 from werkzeug.datastructures import FileStorage
 
-from mslib.mscolab.models import db, Operation, User
+from sqlalchemy.exc import IntegrityError
+
+from mslib.mscolab.models import db, Operation, Permission, User
 from mslib.mscolab.seed import add_user, get_user, add_operation
-from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX
+from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX, get_operation_dir
 from mslib.mscolab.seed import XML_CONTENT_INIT
 
 from flask import current_app
@@ -441,7 +443,8 @@ class Test_FileManager:
             # user (creator of operation1) has no right leave operation1
             assert self.fm.delete_bulk_permission(operation1.id, self.user, [self.user.id]) is False
             # user (creator of operation1) has the right to remove anotheruser from the operation1
-            assert self.fm.delete_bulk_permission(operation1.id, self.user, [self.anotheruser.id]) is True
+            assert self.fm.delete_bulk_permission(operation1.id, self.user, [self.anotheruser.id]) == {
+                operation1.id: [self.anotheruser.id]}
             # op2user (creator of operation2) has no right to remove collaboratoruser of operation1 from operation1
             assert self.fm.delete_bulk_permission(operation1.id, self.op2user, [self.collaboratoruser.id]) is False
             # op2user (creator of operation2) has no right to remove anotheruser of operation1 from operation2
@@ -467,7 +470,8 @@ class Test_FileManager:
             # The below assertion fails in stable 6.1
             # The change is so that vieweruser (any user other than creator) can leave the operation
             # vieweruser of operation1 has the right to leave operation1
-            assert self.fm.delete_bulk_permission(operation1.id, self.vieweruser, [self.vieweruser.id]) is True
+            assert self.fm.delete_bulk_permission(operation1.id, self.vieweruser, [self.vieweruser.id]) == {
+                operation1.id: [self.vieweruser.id]}
             # collaboratoruser of operation1 has no right to remove op2vieweruser of operation2 from operation2
             assert self.fm.delete_bulk_permission(
                 operation2.id, self.collaboratoruser, [self.op2vieweruser.id]
@@ -500,7 +504,8 @@ class Test_FileManager:
             self.fm.add_bulk_permission(operation.id, self.user, [self.adminuser.id], "admin")
             assert self.fm.is_admin(self.adminuser.id, operation.id) is True
             assert self.fm.delete_bulk_permission(operation.id, self.user, [self.user.id]) is False
-            assert self.fm.delete_bulk_permission(operation.id, self.adminuser, [self.adminuser.id]) is True
+            assert self.fm.delete_bulk_permission(operation.id, self.adminuser, [self.adminuser.id]) == {
+                operation.id: [self.adminuser.id]}
 
     def test_group_permissions(self):
         with self.app.test_client():
@@ -527,6 +532,161 @@ class Test_FileManager:
             self.fm.delete_bulk_permission(operation_group.id, self.user, [self.collaboratoruser.id])
             assert self.fm.is_member(self.collaboratoruser.id, operation_group.id) is False
 
+    def test_group_permissions_only_fan_out_to_administered_operations(self):
+        with self.app.test_client():
+            # anotheruser is the victim, self.user the attacker who creates a Group operation for that category
+            _, operation_victim = self._create_operation(flight_path="victimop", user=self.anotheruser,
+                                                         category="bergen")
+            _, operation_own = self._create_operation(flight_path="ownop", category="bergen")
+            _, operation_admin = self._create_operation(flight_path="adminop", user=self.op2user, category="bergen")
+            self.fm.add_bulk_permission(operation_admin.id, self.op2user, [self.user.id], "admin")
+            _, operation_group = self._create_operation(flight_path="bergenGroup", category="bergen")
+
+            assert self.fm.add_bulk_permission(operation_group.id, self.user, [self.vieweruser.id], "viewer")
+            assert self.fm.is_viewer(self.vieweruser.id, operation_own.id)
+            assert self.fm.is_viewer(self.vieweruser.id, operation_admin.id)
+            assert self.fm.is_member(self.vieweruser.id, operation_victim.id) is False
+            # the attacker can't add themselves to an operation of the category through the Group operation
+            assert self.fm.add_bulk_permission(operation_group.id, self.user, [self.user.id], "admin")
+            assert self.fm.is_member(self.user.id, operation_victim.id) is False
+
+            # the victim joins the Group operation, the attacker must not strip or downgrade the victim elsewhere
+            assert self.fm.add_bulk_permission(operation_group.id, self.user, [self.anotheruser.id], "collaborator")
+            assert self.fm.modify_bulk_permission(operation_group.id, self.user, [self.anotheruser.id], "viewer")
+            assert self.fm.is_creator(self.anotheruser.id, operation_victim.id)
+            assert self.fm.delete_bulk_permission(operation_group.id, self.user, [self.anotheruser.id])
+            assert self.fm.is_creator(self.anotheruser.id, operation_victim.id)
+
+            # the creator of an administered operation keeps the creator role
+            self.fm.add_bulk_permission(operation_group.id, self.user, [self.op2user.id], "collaborator")
+            assert self.fm.modify_bulk_permission(operation_group.id, self.user, [self.op2user.id], "viewer")
+            assert self.fm.is_creator(self.op2user.id, operation_admin.id)
+            assert self.fm.delete_bulk_permission(operation_group.id, self.user, [self.op2user.id])
+            assert self.fm.is_creator(self.op2user.id, operation_admin.id)
+
+    def test_group_permissions_fan_out_all_users(self):
+        with self.app.test_client():
+            _, operation_no_1 = self._create_operation(flight_path="flightno1", category="bergen")
+            self.fm.add_bulk_permission(operation_no_1.id, self.user, [self.vieweruser.id], "viewer")
+            _, operation_group = self._create_operation(flight_path="bergenGroup", category="bergen")
+            u_ids = [self.vieweruser.id, self.collaboratoruser.id, self.adminuser.id]
+            assert self.fm.add_bulk_permission(operation_group.id, self.user, u_ids, "collaborator")
+            # every user gets added, not only the last one of the list
+            assert self.fm.is_collaborator(self.collaboratoruser.id, operation_no_1.id)
+            assert self.fm.is_collaborator(self.adminuser.id, operation_no_1.id)
+            # an existing permission is kept and not duplicated
+            assert self.fm.is_viewer(self.vieweruser.id, operation_no_1.id)
+            assert Permission.query.filter_by(u_id=self.vieweruser.id, op_id=operation_no_1.id).count() == 1
+
+    @pytest.mark.parametrize("access_level", ["creator", "owner", "", None])
+    def test_bulk_permission_rejects_invalid_access_level(self, access_level):
+        with self.app.test_client():
+            _, operation_no_1 = self._create_operation(flight_path="flightno1", category="bergen")
+            _, operation_group = self._create_operation(flight_path="bergenGroup", category="bergen")
+            assert self.fm.add_bulk_permission(operation_group.id, self.user, [self.vieweruser.id],
+                                               access_level) is False
+            assert self.fm.is_member(self.vieweruser.id, operation_no_1.id) is False
+            assert self.fm.add_bulk_permission(operation_group.id, self.user, [self.vieweruser.id], "viewer")
+            assert self.fm.modify_bulk_permission(operation_group.id, self.user, [self.vieweruser.id],
+                                                  access_level) is False
+            assert self.fm.is_viewer(self.vieweruser.id, operation_no_1.id)
+            assert self.fm.is_viewer(self.vieweruser.id, operation_group.id)
+
+    def test_permission_is_unique_per_user_and_operation(self):
+        with self.app.test_client():
+            _, operation = self._create_operation(flight_path="flightno1")
+            db.session.add(Permission(self.user.id, operation.id, "viewer"))
+            with pytest.raises(IntegrityError):
+                db.session.commit()
+            db.session.rollback()
+
+    def test_group_permissions_only_imported_for_group_creator(self):
+        with self.app.test_client():
+            # self.user is the attacker, creates defaultGroup and adds the victims as viewer and as admin
+            _, operation_group = self._create_operation(flight_path="defaultGroup")
+            assert self.fm.add_bulk_permission(operation_group.id, self.user, [self.anotheruser.id], "viewer")
+            assert self.fm.add_bulk_permission(operation_group.id, self.user, [self.adminuser.id], "admin")
+            for victim in (self.anotheruser, self.adminuser):
+                _, operation_victim = self._create_operation(flight_path=f"victimop{victim.id}", user=victim)
+                assert self.fm.is_creator(victim.id, operation_victim.id)
+                assert self.fm.is_member(self.user.id, operation_victim.id) is False
+                assert self.fm.is_member(self.vieweruser.id, operation_victim.id) is False
+
+            # the creator of the Group operation gets its members on a new operation
+            _, operation_own = self._create_operation(flight_path="ownop")
+            assert self.fm.is_viewer(self.anotheruser.id, operation_own.id)
+            assert self.fm.is_admin(self.adminuser.id, operation_own.id)
+
+            # a member can still import the Group operation explicitly
+            _, operation_admin = self._create_operation(flight_path="adminop", user=self.adminuser)
+            success, _, _ = self.fm.import_permissions(operation_group.id, operation_admin.id, self.adminuser.id)
+            assert success
+            assert self.fm.is_admin(self.user.id, operation_admin.id)
+            assert self.fm.is_creator(self.adminuser.id, operation_admin.id)
+
+    def test_creator_permission_can_not_be_changed_by_admin(self):
+        with self.app.test_client():
+            for flight_path in ("flightno1", "bergenGroup"):
+                _, operation = self._create_operation(flight_path=flight_path, category="bergen")
+                assert self.fm.add_bulk_permission(operation.id, self.user, [self.adminuser.id], "admin")
+                assert self.fm.modify_bulk_permission(operation.id, self.adminuser, [self.user.id],
+                                                      "viewer") is False
+                assert self.fm.modify_bulk_permission(operation.id, self.user, [self.user.id], "admin") is False
+                assert self.fm.delete_bulk_permission(operation.id, self.adminuser,
+                                                      [self.user.id, self.vieweruser.id]) is False
+                assert self.fm.delete_bulk_permission(operation.id, self.adminuser, [self.user.id]) is False
+                assert self.fm.is_creator(self.user.id, operation.id)
+                assert self.fm.fetch_operation_creator(operation.id, self.user.id) == self.user.username
+
+    def test_leaving_group_leaves_all_operations_of_category(self):
+        with self.app.test_client():
+            _, operation_managed = self._create_operation(flight_path="managedop", user=self.op2user,
+                                                          category="bergen")
+            _, operation_viewed = self._create_operation(flight_path="viewedop", user=self.op2user,
+                                                         category="bergen")
+            _, operation_own = self._create_operation(flight_path="ownop", user=self.vieweruser, category="bergen")
+            assert self.fm.add_bulk_permission(operation_managed.id, self.op2user, [self.vieweruser.id], "admin")
+            assert self.fm.add_bulk_permission(operation_viewed.id, self.op2user, [self.vieweruser.id], "viewer")
+            _, operation_group = self._create_operation(flight_path="bergenGroup", category="bergen")
+            assert self.fm.add_bulk_permission(operation_group.id, self.user, [self.vieweruser.id], "viewer")
+
+            assert self.fm.delete_bulk_permission(operation_group.id, self.vieweruser, [self.vieweruser.id])
+            assert self.fm.is_member(self.vieweruser.id, operation_group.id) is False
+            assert self.fm.is_member(self.vieweruser.id, operation_managed.id) is False
+            assert self.fm.is_member(self.vieweruser.id, operation_viewed.id) is False
+            # the creator role is kept
+            assert self.fm.is_creator(self.vieweruser.id, operation_own.id)
+
+    def test_add_bulk_permission_with_repeated_user_ids(self):
+        with self.app.test_client():
+            _, operation_no_1 = self._create_operation(flight_path="flightno1", category="bergen")
+            _, operation_group = self._create_operation(flight_path="bergenGroup", category="bergen")
+            assert self.fm.add_bulk_permission(operation_group.id, self.user,
+                                               [self.vieweruser.id, self.adminuser.id, self.vieweruser.id], "viewer")
+            for operation in (operation_group, operation_no_1):
+                assert Permission.query.filter_by(u_id=self.vieweruser.id, op_id=operation.id).count() == 1
+                assert self.fm.is_viewer(self.adminuser.id, operation.id)
+
+    def test_bulk_permission_returns_changed_users_per_operation(self):
+        with self.app.test_client():
+            _, operation_no_1 = self._create_operation(flight_path="flightno1", category="bergen")
+            _, operation_other = self._create_operation(flight_path="otherop", user=self.op2user, category="bergen")
+            _, operation_group = self._create_operation(flight_path="bergenGroup", category="bergen")
+            self.fm.add_bulk_permission(operation_no_1.id, self.user, [self.vieweruser.id], "viewer")
+            u_ids = [self.vieweruser.id, self.adminuser.id]
+            # the operation not managed by self.user and the existing permission are not reported
+            assert self.fm.add_bulk_permission(operation_group.id, self.user, u_ids, "viewer") == {
+                operation_group.id: u_ids, operation_no_1.id: [self.adminuser.id]}
+            assert self.fm.add_bulk_permission(operation_group.id, self.user, u_ids, "viewer") == {
+                operation_group.id: []}
+            modified = self.fm.modify_bulk_permission(operation_group.id, self.user, u_ids, "collaborator")
+            assert {op_id: sorted(ids) for op_id, ids in modified.items()} == {
+                operation_group.id: sorted(u_ids), operation_no_1.id: sorted(u_ids)}
+            deleted = self.fm.delete_bulk_permission(operation_group.id, self.user, u_ids)
+            assert {op_id: sorted(ids) for op_id, ids in deleted.items()} == {
+                operation_group.id: sorted(u_ids), operation_no_1.id: sorted(u_ids)}
+            assert self.fm.is_member(self.adminuser.id, operation_other.id) is False
+
     def test_existing_operation_renaming_to_a_group(self):
         with self.app.test_client():
             _, operation_b1 = self._create_operation(flight_path="flightb1", category="morning")
@@ -549,6 +709,40 @@ class Test_FileManager:
             # the current user has no role (admin or collobarator role) in the operation_b2 to change users
             assert self.fm.is_member(self.collaboratoruser.id, operation_b2.id) is False
             assert self.fm.is_collaborator(self.collaboratoruser.id, operation_b2.id) is False
+
+    def test_renaming_to_a_group_fans_out_like_bulk_permissions(self):
+        with self.app.test_client():
+            # the category is the path with the postfix stripped from the end, "aGroupbGroup" -> "aGroupb"
+            _, operation_a = self._create_operation(flight_path="flighta", category="a")
+            _, operation_ab = self._create_operation(flight_path="flightab", category="aGroupb")
+            # another Group operation of the same category is not a member operation
+            _, operation_other_group = self._create_operation(flight_path="otherGroup", category="aGroupb")
+            _, operation_not_managed = self._create_operation(flight_path="flightop2", user=self.op2user,
+                                                              category="aGroupb")
+            _, operation = self._create_operation(flight_path="flightgroup", category="aGroupb")
+            assert self.fm.add_bulk_permission(operation.id, self.user, [self.vieweruser.id], "viewer")
+
+            assert self.fm.update_operation(operation.id, 'path', 'aGroupbGroup', self.user)
+            assert self.fm.is_viewer(self.vieweruser.id, operation_ab.id)
+            assert self.fm.is_member(self.vieweruser.id, operation_a.id) is False
+            assert self.fm.is_member(self.vieweruser.id, operation_other_group.id) is False
+            assert self.fm.is_member(self.vieweruser.id, operation_not_managed.id) is False
+
+    def test_renaming_to_a_group_keeps_path_when_import_fails(self):
+        with self.app.test_client():
+            _, operation_b1 = self._create_operation(flight_path="flightb1", category="morning")
+            _, operation = self._create_operation(flight_path="flightb2", category="morning")
+
+            def failing_import(*args):
+                db.session.rollback()
+                return False, None, "Some error occurred! Could not import permissions. Please try again."
+
+            with mock.patch.object(self.fm, "import_permissions", side_effect=failing_import) as import_permissions:
+                assert self.fm.update_operation(operation.id, 'path', 'morningGroup', self.user)
+            import_permissions.assert_called_once_with(operation.id, operation_b1.id, self.user.id)
+            db.session.expire_all()
+            assert db.session.get(Operation, operation.id).path == "morningGroup"
+            assert get_operation_dir(self.fm.data_dir, "morningGroup").exists()
 
     def test_import_permission(self):
         with self.app.test_client():
