@@ -66,7 +66,12 @@ def message_attachment():
     req = MessageAttachmentRequest.from_form(request.form)
     fm = current_app.extensions['fm']
     if fm.is_member(user.id, req.op_id) and not fm.is_viewer(user.id, req.op_id):
-        file = request.files['file']
+        # an attachment is an image or a document, a TEXT one could be edited to point elsewhere and
+        # a SYSTEM_MESSAGE one could not be deleted by its author
+        if req.message_type not in (MessageType.IMAGE, MessageType.DOCUMENT):
+            response = MessageAttachmentResponse(success=False, message="Invalid message type for an attachment.")
+            return jsonify(response.to_dict())
+        file = request.files.get('file')
         message_type = MessageType(req.message_type)
         user = g.user
         if file is not None:

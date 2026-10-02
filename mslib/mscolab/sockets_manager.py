@@ -26,15 +26,34 @@
 """
 import json
 import logging
+import re
 from flask import request
 from flask_socketio import SocketIO, join_room
 
-from mslib.mscolab.chat_manager import ChatManager
+from mslib.mscolab.chat_manager import ChatManager, MAX_MESSAGE_TEXT_LENGTH
 from mslib.mscolab.api.events import SocketEvents
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.models import MessageType, Permission, User
 from mslib.mscolab.utils import get_message_dict
 from mslib.mscolab.utils import get_user_id
+
+
+def _as_id(value):
+    """
+    Returns a client-supplied id as int, or None when it is not an int or a string of digits.
+    Floats and bools are rejected rather than silently mapped onto another id.
+    """
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str) and re.fullmatch(r"-?[0-9]+", value.strip()):
+        return int(value)
+    return None
+
+
+def _valid_message_text(text):
+    return isinstance(text, str) and 0 < len(text) <= MAX_MESSAGE_TEXT_LENGTH
 
 
 class SocketsManager:
@@ -195,42 +214,90 @@ class SocketsManager:
         """
         json is a dictionary version of data sent to back-end
         """
-        op_id = _json['op_id']
-        reply_id = int(_json["reply_id"])
-        user = User.verify_auth_token(_json['token'])
+        op_id = _as_id(_json.get('op_id'))
+        reply_id = _as_id(_json.get("reply_id"))
+        message_text = _json.get('message_text')
+        if op_id is None or reply_id is None or not _valid_message_text(message_text):
+            logging.debug("Invalid chat message rejected")
+            return
+        user = User.verify_auth_token(_json.get('token'))
         if user is not None:
-            perm = self.permission_check_emit(user.id, int(op_id))
+            perm = self.permission_check_emit(user.id, op_id)
             if perm:
-                new_message = self.cm.add_message(user, _json['message_text'], str(op_id), reply_id=reply_id)
+                if reply_id != -1:
+                    # a reply belongs to a top-level message of the same operation
+                    parent = self.cm.get_message(reply_id, op_id)
+                    if parent is None or parent.reply_id is not None:
+                        logging.debug("Reply to unknown message %s in operation %s rejected", reply_id, op_id)
+                        return
+                new_message = self.cm.add_message(user, message_text, str(op_id), reply_id=reply_id)
                 new_message_dict = get_message_dict(new_message)
                 if reply_id == -1:
                     self.socketio.emit(SocketEvents.CHAT_MESSAGE_CLIENT, json.dumps(new_message_dict))
                 else:
                     self.socketio.emit(SocketEvents.CHAT_MESSAGE_REPLY_CLIENT, json.dumps(new_message_dict))
 
+    def _message_access_level(self, user, message_id, op_id):
+        """
+        Returns the message `message_id` of operation `op_id` and the access level of `user` on that operation,
+        or (None, None) when there is no such message or the user has no permission on the operation.
+        """
+        message_id, op_id = _as_id(message_id), _as_id(op_id)
+        if message_id is None or op_id is None:
+            return None, None
+        message = self.cm.get_message(message_id, op_id)
+        if message is None:
+            return None, None
+        access_level = self.fm.auth_type(user.id, op_id)
+        if access_level is False:
+            return None, None
+        return message, access_level
+
     def handle_message_edit(self, socket_message):
-        message_id = socket_message["message_id"]
-        op_id = socket_message["op_id"]
-        new_message_text = socket_message["new_message_text"]
-        user = User.verify_auth_token(socket_message["token"])
+        """
+        Only the author may edit their own text messages, and only while they may still write to the operation.
+        """
+        message_id = socket_message.get("message_id")
+        op_id = socket_message.get("op_id")
+        new_message_text = socket_message.get("new_message_text")
+        user = User.verify_auth_token(socket_message.get("token"))
         if user is not None:
-            perm = self.permission_check_emit(user.id, int(op_id))
-            if perm:
-                self.cm.edit_message(message_id, new_message_text)
+            message, access_level = self._message_access_level(user, message_id, op_id)
+            if (message is not None and _valid_message_text(new_message_text) and access_level != "viewer" and
+                    message.u_id == user.id and message.message_type == MessageType.TEXT):
+                self.cm.edit_message(message, new_message_text)
                 self.socketio.emit(SocketEvents.EDIT_MESSAGE_CLIENT, json.dumps({
-                    "message_id": message_id,
-                    "new_message_text": new_message_text
+                    "message_id": message.id,
+                    "new_message_text": message.text
                 }))
+            else:
+                logging.debug("Edit of message %r in operation %r by %s rejected", message_id, op_id, user.id)
 
     def handle_message_delete(self, socket_message):
-        message_id = socket_message["message_id"]
-        op_id = socket_message["op_id"]
-        user = User.verify_auth_token(socket_message['token'])
+        """
+        The author may delete their own messages, except service messages, while they may still write to the
+        operation. Deleting a message also deletes its replies, so a message with replies of other users can
+        only be deleted by admins and the creator of the operation, who may delete any message of it.
+        """
+        message_id = socket_message.get("message_id")
+        op_id = socket_message.get("op_id")
+        user = User.verify_auth_token(socket_message.get('token'))
         if user is not None:
-            perm = self.permission_check_emit(user.id, int(op_id))
-            if perm:
-                self.cm.delete_message(message_id)
+            message, access_level = self._message_access_level(user, message_id, op_id)
+            if message is None:
+                allowed = False
+            elif access_level in ("creator", "admin"):
+                allowed = True
+            else:
+                allowed = (access_level != "viewer" and message.u_id == user.id and
+                           message.message_type != MessageType.SYSTEM_MESSAGE and
+                           all(reply.u_id == user.id for reply in message.replies))
+            if allowed:
+                message_id = message.id
+                self.cm.delete_message(message)
                 self.socketio.emit(SocketEvents.DELETE_MESSAGE_CLIENT, json.dumps({"message_id": message_id}))
+            else:
+                logging.debug("Deletion of message %r in operation %r by %s rejected", message_id, op_id, user.id)
 
     def permission_check_emit(self, u_id, op_id):
         """

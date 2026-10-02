@@ -33,6 +33,10 @@ from mslib.mscolab.models import db, Message, MessageType
 from mslib.mscolab.utils import get_message_dict
 
 
+# upper limit for the text of a chat message, a client can't flood the database and all other clients
+MAX_MESSAGE_TEXT_LENGTH = 10000
+
+
 class ChatManager:
     """Class with handler functions for chat related functionalities"""
 
@@ -80,16 +84,29 @@ class ChatManager:
 
         return message_list
 
-    def edit_message(self, message_id, new_message_text):
-        message = Message.query.filter_by(id=message_id).first()
+    def get_message(self, message_id, op_id):
+        """
+        message_id: message id
+        op_id: operation id the message has to belong to
+        returns the message or None
+        """
+        return Message.query.filter_by(id=message_id, op_id=op_id).first()
+
+    def edit_message(self, message, new_message_text):
+        """
+        message: Message object, loaded with get_message for the operation the request is authorized for
+        """
         message.text = new_message_text
         db.session.commit()
 
-    def delete_message(self, message_id):
-        message = Message.query.filter(Message.id == message_id).first()
+    def delete_message(self, message):
+        """
+        message: Message object, loaded with get_message for the operation the request is authorized for;
+        its replies are deleted with it
+        """
         if message.message_type == MessageType.IMAGE or message.message_type == MessageType.DOCUMENT:
             file_name = Path(message.text).name
             upload_path = Path(current_app.config['UPLOAD_FOLDER']) / str(message.op_id) / file_name
-            upload_path.unlink()
+            upload_path.unlink(missing_ok=True)
         db.session.delete(message)
         db.session.commit()
