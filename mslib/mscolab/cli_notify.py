@@ -33,6 +33,9 @@ import logging
 import requests
 from flask import current_app
 
+# not a socket event, tells the server that the sockets of the deleted user u_id are no longer theirs
+USER_DELETED = "user-deleted"
+
 
 def notify_socket_event(event, **payload):
     """

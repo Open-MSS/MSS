@@ -439,6 +439,21 @@ class SocketsManager:
         for sid in self._user_sids(u_id):
             self.socketio.server.leave_room(sid, self._room(op_id), namespace="/")
 
+    def forget_user(self, u_id):
+        """
+        For a deleted account: its sockets leave all operation rooms and are no longer registered for u_id
+
+        Otherwise a later user who gets the same id, e.g. on SQLite, would put these sockets into their rooms.
+        The sockets stay connected like a socket without a token.
+        """
+        self.update_active_users(u_id)
+        for sid in self._user_sids(u_id):
+            for room in list(self.socketio.server.rooms(sid, namespace="/")):
+                # the room named by its own sid is not an operation room
+                if room.isdigit():
+                    self.socketio.server.leave_room(sid, room, namespace="/")
+        self.sockets[:] = [d for d in self.sockets if d['u_id'] != u_id]
+
     def sync_rooms(self):
         """
         Makes the rooms of every registered socket match the operations its user is a member of

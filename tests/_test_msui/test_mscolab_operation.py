@@ -199,6 +199,40 @@ class Test_MscolabOperation:
         open_url.assert_not_called()
         assert target.read_bytes() == b"attached notes"
 
+    @pytest.mark.parametrize("message_type", [MessageType.IMAGE, MessageType.DOCUMENT])
+    @pytest.mark.parametrize("text", ["https://attacker.example/x.png", "//attacker.example/x.png",
+                                      "http://localhost:1/x.png"])
+    def test_foreign_attachment_not_fetched_with_token(self, qtbot, tmp_path, message_type, text):
+        # attachment messages of older servers could be edited to point anywhere, the token stays on the server
+        message = {"id": 987654, "u_id": self.user.id, "username": self.user.username, "text": text,
+                   "message_type": message_type, "reply_id": -1, "replies": [],
+                   "time": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
+                   "op_id": self.chat_window.op_id}
+        target = tmp_path / "x.png"
+        with mock.patch("mslib.msui.mscolab_chat.requests.get") as get, \
+                mock.patch("mslib.msui.mscolab_chat.get_save_filename", return_value=str(target)), \
+                mock.patch("mslib.msui.mscolab_chat.show_popup") as popup:
+            self.chat_window.handle_incoming_message(json.dumps(message))
+            widget = self.chat_window.messageList.itemWidget(
+                self.chat_window.messageList.item(self.chat_window.messageList.count() - 1))
+            assert widget.attachment_url() is None
+            widget.handle_download_action()
+        get.assert_not_called()
+        if message_type == MessageType.DOCUMENT:
+            popup.assert_called_once()
+            assert not target.exists()
+
+    def test_refused_document_download_not_saved(self, qtbot, tmp_path):
+        widget = self._upload(qtbot, "notes.txt", b"attached notes", MessageType.DOCUMENT)
+        target = tmp_path / "notes.txt"
+        self.chat_window.token = "invalid"
+        with mock.patch("mslib.msui.mscolab_chat.get_save_filename", return_value=str(target)), \
+                mock.patch("mslib.msui.mscolab_chat.show_popup") as popup:
+            widget.handle_download_action()
+        # the server refuses the request, its error page must not be saved as the document
+        popup.assert_called_once()
+        assert not target.exists()
+
     def _connect_to_mscolab(self, qtbot):
         self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)
         self.window.mscolab.connect_window = self.connect_window

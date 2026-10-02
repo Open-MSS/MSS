@@ -104,4 +104,5 @@ def delete_own_account():
         for op_id in op_ids:
             sm.emit_revoke_permission(u_id, op_id)
             sm.emit_operation_permissions_updated(u_id, op_id)
+        sm.forget_user(u_id)
     return jsonify(DeleteOwnAccountResponse(success=result).to_dict()), 200

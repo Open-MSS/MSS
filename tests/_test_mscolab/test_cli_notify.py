@@ -33,6 +33,7 @@ import requests
 import socketio
 
 from mslib.mscolab.api.events import SocketEvents
+from mslib.mscolab.cli_notify import notify_socket_event
 from mslib.mscolab.seed import (add_all_users_default_operation, add_operation, add_user, add_user_to_operation,
                                 archive_operation, delete_operation, delete_user, get_operation, get_user)
 
@@ -92,6 +93,13 @@ class Test_CliNotify:
             assert updated and updated[0] == {"op_id": op_id, "u_id": u_id}
             # the removed user is told too, before leaving the room of the operation
             assert user_revoked and user_revoked[0] == {"op_id": op_id, "u_id": u_id}
+            # a new account can get the same id on SQLite, its permissions must not reach the old socket
+            user_new = []
+            user_sio.on(SocketEvents.NEW_PERMISSION, handler=lambda data: user_new.append(json.loads(data)))
+            with self.app.app_context():
+                assert notify_socket_event(SocketEvents.NEW_PERMISSION, u_id=u_id, op_id=op_id)
+            time.sleep(0.5)
+            assert user_new == []
         finally:
             sio.disconnect()
             user_sio.disconnect()

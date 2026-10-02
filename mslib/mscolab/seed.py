@@ -34,7 +34,7 @@ from sqlalchemy.exc import IntegrityError
 
 from flask import current_app
 
-from mslib.mscolab.cli_notify import notify_socket_event
+from mslib.mscolab.cli_notify import USER_DELETED, notify_socket_event
 from mslib.mscolab.api.events import SocketEvents
 from mslib.mscolab.models import User, db, Permission, Operation
 from mslib.mscolab.utils import is_valid_operation_path
@@ -127,6 +127,7 @@ def delete_user(email):
         for op_id in op_ids:
             notify_socket_event(SocketEvents.REVOKE_PERMISSION, u_id=u_id, op_id=op_id)
             notify_socket_event(SocketEvents.OPERATION_PERMISSIONS_UPDATED, u_id=u_id, op_id=op_id)
+        notify_socket_event(USER_DELETED, u_id=u_id)
         return True
     return False
 

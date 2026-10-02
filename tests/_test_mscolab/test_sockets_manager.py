@@ -342,6 +342,24 @@ class Test_Socket_Manager:
         self._send(member, "not for deleted users")
         assert self._events(removed) == []
 
+    def test_delete_own_account_unregisters_sockets(self):
+        with self.app.app_context():
+            assert add_user_to_operation(path=self.operation_name, emailid=self.anotheruserdata[0])
+            u_id = self.anotheruser.id
+        removed = self._connect(self._another_token())
+        removed.emit("operation-selected", {"token": self._another_token(), "op_id": self.operation.id})
+        member = self._connect(self.token)
+        assert u_id in self.sm.active_users_per_operation[self.operation.id]
+        response = self.app.test_client().post("/delete_own_account", data={"token": self._another_token()})
+        assert response.json["success"] is True
+        assert u_id not in self.sm.active_users_per_operation.get(self.operation.id, set())
+        assert [d for d in self.sm.sockets if d["u_id"] == u_id] == []
+        removed.get_received()
+        # a new account can get the same id on SQLite, its permissions must not reach the old sockets
+        self.sm.emit_new_permission(u_id, self.operation.id)
+        self._send(member, "not for the old sockets")
+        assert self._events(removed) == []
+
     def test_room_name_is_normalized(self):
         member = self._connect(self.token)
         self._send(member, "normalized", op_id=f"0{self.operation.id}")
