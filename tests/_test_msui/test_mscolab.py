@@ -997,6 +997,35 @@ class Test_Mscolab:
             assert self.window.mscolab.help_dialog is None
         qtbot.wait_until(assert_)
 
+    def test_user_chosen_text_is_not_markup(self, qtbot):
+        markup = '<b>bold</b><img src="file://attacker.example/s/x.png">'
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: "markup@something.org"}})
+        self._create_user(qtbot, markup, "markup@something.org", "something", markup)
+        assert self.window.usernameLabel.textFormat() == QtCore.Qt.PlainText
+
+        self.window.mscolab.profile_action.trigger()
+        dialog = self.window.mscolab.profile_dialog
+        assert dialog.usernameLabel_2.text() == markup
+        assert dialog.fullNameLabel_2.text() == markup
+        for label in (dialog.usernameLabel_2, dialog.fullNameLabel_2, dialog.emailLabel_2):
+            assert label.textFormat() == QtCore.Qt.PlainText
+
+        self._create_operation(qtbot, "flight1234", "flight1234")
+        self._activate_operation_at_index(0)
+        # as received from the server, the description editor of msui would turn the markup into formatting
+        self.window.mscolab.set_operation_desc_label(markup)
+        assert self.window.activeOperationDesc.textFormat() == QtCore.Qt.PlainText
+        assert markup in self.window.activeOperationDesc.text()
+        # msui allows no markup in categories, but the server does not check them
+        self.window.mscolab.active_operation_category = markup
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
+            self.window.mscolab.view_description()
+        text = m.call_args.args[2]
+        assert "<b>bold</b>" not in text
+        assert "<img" not in text
+        assert text.count("&lt;b&gt;bold&lt;/b&gt;") == 3
+
     def test_profile_dialog(self, qtbot):
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
