@@ -84,8 +84,9 @@ class DefaultSettings:
     UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
     MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MiB
 
-    # used to generate and parse tokens
-    SECRET_KEY = secrets.token_urlsafe(16)
+    # used to generate and parse tokens. There is no default, the server doesn't start without it. Set it in the
+    # environment variable MSCOLAB_SECRET_KEY, which wins over this setting, or in your mscolab_settings.
+    SECRET_KEY = None
 
     # used to generate the password token
     SECURITY_PASSWORD_SALT = secrets.token_urlsafe(16)
