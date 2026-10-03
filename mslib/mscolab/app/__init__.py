@@ -57,6 +57,16 @@ DOCS_DOCS_DIR = os.path.join(DOCS_STATIC_DIR, 'docs')
 # This can be used to set a location by SCRIPT_NAME for testing. e.g. export SCRIPT_NAME=/demo/
 SCRIPT_NAME = os.environ.get('SCRIPT_NAME', '/')
 
+# SECRET_KEY values published in earlier versions of the sample mscolab_settings.py
+PUBLISHED_SECRET_KEYS = ('MySecretKey',)
+# RFC 7518 3.2: an HS256 key must be at least as long as the hash, 256 bits
+MIN_SECRET_KEY_LENGTH = 32
+# ADMIN_TOKEN is compared, not used as a key, its default secrets.token_urlsafe(16) has 22 characters
+MIN_ADMIN_TOKEN_LENGTH = 16
+# a secret needs at least this many different characters, e.g. 'a' * 32 has one, a random one of 32 about 25
+MIN_SECRET_DISTINCT_CHARACTERS = 10
+SECRET_HINT = f'Create one with: python -c "import secrets; print(secrets.token_urlsafe({MIN_SECRET_KEY_LENGTH}))"'
+
 
 message, update = release_info.check_for_new_release()
 if update:
@@ -212,6 +222,53 @@ ORDER BY sequence_namespace.nspname, class_sequence.relname;
     logging.info("Database initialised successfully!")
 
 
+class InsecureSecretError(RuntimeError):
+    """A secret of the MSColab settings, SECRET_KEY or ADMIN_TOKEN, is missing or can be guessed"""
+
+
+def check_secret(name, secret, min_length, where):
+    """
+    Raises InsecureSecretError if secret can't keep its tokens from being forged
+
+    SECRET_KEY signs the login tokens, the email confirmation and password reset tokens and the Flask
+    sessions, anyone who knows it can log in as any user. ADMIN_TOKEN lets local processes trigger
+    socket.io events. where says where the secret is set, for the message.
+    """
+    if secret is None or secret == "" or secret == b"":
+        raise InsecureSecretError(f"{name} is not set. Set it in {where}. {SECRET_HINT}")
+    if not isinstance(secret, (str, bytes)):
+        raise InsecureSecretError(f"{name} must be a string. Set it in {where}. {SECRET_HINT}")
+    if secret in PUBLISHED_SECRET_KEYS:
+        raise InsecureSecretError(
+            f"{name} is the published sample value {secret!r}, with it anyone can log in as any user. "
+            f"Set a secret of your own in {where}. {SECRET_HINT}")
+    if len(secret) < min_length:
+        raise InsecureSecretError(
+            f"{name} must have at least {min_length} characters. Set it in {where}. {SECRET_HINT}")
+    if secret != secret.strip():
+        raise InsecureSecretError(f"{name} must not start or end with whitespace. Set it in {where}.")
+    if len(set(secret)) < MIN_SECRET_DISTINCT_CHARACTERS:
+        raise InsecureSecretError(
+            f"{name} must have at least {MIN_SECRET_DISTINCT_CHARACTERS} different characters, it can be "
+            f"guessed. Set it in {where}. {SECRET_HINT}")
+
+
+def check_secrets(app):
+    """
+    Takes SECRET_KEY from the environment variable MSCOLAB_SECRET_KEY if it is set and checks the secrets
+
+    The environment variable wins over mscolab_settings, e.g. over an old settings file with the published
+    sample key. There is no random default: every process of the server has to sign tokens with the same key,
+    a random key per process would log users out at random with several workers and on every restart.
+    """
+    secret_key = os.environ.get("MSCOLAB_SECRET_KEY", "").strip()
+    if secret_key:
+        app.config["SECRET_KEY"] = secret_key
+    check_secret("SECRET_KEY", app.config.get("SECRET_KEY"), MIN_SECRET_KEY_LENGTH,
+                 "the environment variable MSCOLAB_SECRET_KEY or in your mscolab_settings")
+    check_secret("ADMIN_TOKEN", app.config.get("ADMIN_TOKEN"), MIN_ADMIN_TOKEN_LENGTH, "your mscolab_settings")
+
+
 def create_app(config_object=mscolab_settings):
     """Create and configure an MSColab Flask application.
 
@@ -221,9 +278,13 @@ def create_app(config_object=mscolab_settings):
 
     The returned app is not connected to a database schema yet, call
     :func:`initialise_db` within an application context of it to do so.
+
+    :raises InsecureSecretError: if SECRET_KEY or ADMIN_TOKEN is missing or can be guessed,
+        see :func:`check_secrets`.
     """
     app = Flask(__name__, template_folder=DOCS_TEMPLATES_DIR)
     app.config.from_object(config_object)
+    check_secrets(app)
     # Expose docs path for callers/tests and make it part of Flask config for consistency.
     app.config['DOCS_SERVER_PATH'] = DOCS_SERVER_PATH
     app.route = prefix_route(app.route, SCRIPT_NAME)
