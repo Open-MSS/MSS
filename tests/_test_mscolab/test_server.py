@@ -24,20 +24,28 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import copy
 import datetime
 
 import pytest
 import json
 import io
 import os
+import runpy
+import secrets
+import sys
 
 import mock
 
 from PIL import Image
 from flask import current_app
 
+import mslib.mscolab.mscolab
+import mslib.mscolab.server
+from mslib.mscolab.app import InsecureSecretError, create_app
 from mslib.mscolab.auth import register_user, check_login
 from mslib.mscolab.api.message_type import MessageType
+from mslib.mscolab.conf import DefaultSettings, mscolab_settings
 from mslib.mscolab.models import db, User, Operation
 from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX
 
@@ -1022,3 +1030,89 @@ class Test_Server:
         }
         response = test_client.post('/upload_profile_image', data=data)
         return response
+
+
+SAMPLE_SETTINGS = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
+                               "docs", "samples", "config", "mscolab", "mscolab_settings.py.sample")
+
+
+@pytest.fixture
+def no_secret_key_in_environment(monkeypatch):
+    monkeypatch.delenv("MSCOLAB_SECRET_KEY", raising=False)
+
+
+VALID_SECRET_KEY = "0123456789abcdefghijklmnopqrstuv"
+
+
+@pytest.mark.parametrize("secret_key, message", [
+    (None, "SECRET_KEY is not set"),
+    ("", "SECRET_KEY is not set"),
+    (10 ** 40, "SECRET_KEY must be a string"),
+    ("MySecretKey", "SECRET_KEY is the published sample value 'MySecretKey'"),
+    ("a" * 31, "SECRET_KEY must have at least 32 characters"),
+    (b"a" * 31, "SECRET_KEY must have at least 32 characters"),
+    ("secretkEyu", "SECRET_KEY must have at least 32 characters"),
+    ("a" * 32, "SECRET_KEY must have at least 10 different characters"),
+    (" " * 32, "SECRET_KEY must not start or end with whitespace"),
+    ("MySecretKey" * 3, "SECRET_KEY must have at least 10 different characters"),
+    (VALID_SECRET_KEY + "\n", "SECRET_KEY must not start or end with whitespace"),
+])
+def test_create_app_refuses_insecure_secret_key(no_secret_key_in_environment, secret_key, message):
+    settings = copy.copy(mscolab_settings)
+    settings.SECRET_KEY = secret_key
+    with pytest.raises(InsecureSecretError, match=message):
+        create_app(settings)
+
+
+@pytest.mark.parametrize("admin_token, message", [
+    ("", "ADMIN_TOKEN is not set"),
+    ("0123456789abcde", "ADMIN_TOKEN must have at least 16 characters"),
+    ("a" * 22, "ADMIN_TOKEN must have at least 10 different characters"),
+])
+def test_create_app_refuses_insecure_admin_token(no_secret_key_in_environment, admin_token, message):
+    settings = copy.copy(mscolab_settings)
+    settings.ADMIN_TOKEN = admin_token
+    with pytest.raises(InsecureSecretError, match=message):
+        create_app(settings)
+
+
+@pytest.mark.parametrize("secret_key", [VALID_SECRET_KEY, secrets.token_urlsafe(24), secrets.token_urlsafe(32)])
+def test_create_app_accepts_secret_key(no_secret_key_in_environment, secret_key):
+    settings = copy.copy(mscolab_settings)
+    settings.SECRET_KEY = secret_key
+    assert create_app(settings).config["SECRET_KEY"] == secret_key
+
+
+def test_environment_secret_key_wins_over_settings(monkeypatch):
+    # e.g. an old settings file with the published sample key
+    monkeypatch.setenv("MSCOLAB_SECRET_KEY", VALID_SECRET_KEY + "\n")
+    settings = copy.copy(mscolab_settings)
+    settings.SECRET_KEY = "MySecretKey"
+    assert create_app(settings).config["SECRET_KEY"] == VALID_SECRET_KEY
+
+
+def test_no_default_secret_key(no_secret_key_in_environment):
+    # a random key per process would log users out at random with several workers and on every restart
+    assert DefaultSettings.SECRET_KEY is None
+    with pytest.raises(InsecureSecretError, match="SECRET_KEY is not set"):
+        create_app(DefaultSettings())
+
+
+def test_sample_settings_have_no_secret_key(no_secret_key_in_environment):
+    # the operator sets it in MSCOLAB_SECRET_KEY or in the file, a copied sample doesn't start
+    assert "SECRET_KEY" not in runpy.run_path(SAMPLE_SETTINGS)
+
+
+@pytest.mark.parametrize("module, argv", [
+    (mslib.mscolab.mscolab, ["mscolab", "db", "--seed", "-y"]),
+    (mslib.mscolab.server, ["server"]),
+])
+def test_cli_reports_insecure_secret_without_traceback(monkeypatch, capsys, module, argv):
+    monkeypatch.setattr(sys, "argv", argv)
+    error = InsecureSecretError("SECRET_KEY is not set")
+    with mock.patch.object(module, "create_app", side_effect=error), \
+            mock.patch.object(module, "create_server_app", side_effect=error, create=True):
+        with pytest.raises(SystemExit) as exit_info:
+            module.main()
+    assert exit_info.value.code == 1
+    assert capsys.readouterr().err == "mscolab: SECRET_KEY is not set\n"
