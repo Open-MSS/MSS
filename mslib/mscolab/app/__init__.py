@@ -34,7 +34,7 @@ import sqlalchemy
 from flask_mail import Mail
 
 from flask_migrate import Migrate
-from flask import Flask, current_app, url_for
+from flask import Flask, Request, current_app, jsonify, request, url_for
 
 import mslib
 
@@ -212,6 +212,27 @@ ORDER BY sequence_namespace.nspname, class_sequence.relname;
     logging.info("Database initialised successfully!")
 
 
+class MSColabRequest(Request):
+    """
+    Limits the size of an upload to MAX_UPLOAD_SIZE and of any other request to MAX_CONTENT_LENGTH
+
+    Flask refuses a larger request with 413 before reading it.
+    """
+    UPLOAD_ENDPOINTS = ("chat.message_attachment", "user.upload_profile_image")
+
+    @property
+    def max_content_length(self):
+        if current_app and self.endpoint in self.UPLOAD_ENDPOINTS:
+            return current_app.config["MAX_UPLOAD_SIZE"]
+        return super().max_content_length
+
+
+# 413: Payload Too Large
+def error413(error):
+    limit = request.max_content_length / 1024 / 1024
+    return jsonify({"success": False, "message": f"Request too large. The limit is {limit:.1f} MiB."}), 413
+
+
 def create_app(config_object=mscolab_settings):
     """Create and configure an MSColab Flask application.
 
@@ -224,6 +245,9 @@ def create_app(config_object=mscolab_settings):
     """
     app = Flask(__name__, template_folder=DOCS_TEMPLATES_DIR)
     app.config.from_object(config_object)
+    # uploads are limited to MAX_UPLOAD_SIZE, other requests to MAX_CONTENT_LENGTH
+    app.request_class = MSColabRequest
+    app.register_error_handler(413, error413)
     # Expose docs path for callers/tests and make it part of Flask config for consistency.
     app.config['DOCS_SERVER_PATH'] = DOCS_SERVER_PATH
     app.route = prefix_route(app.route, SCRIPT_NAME)

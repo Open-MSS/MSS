@@ -254,7 +254,16 @@ e.g. www.example.org, is opened with https. Other links, e.g. ftp: or mailto:, a
 
 You can use the `Preview` button to see how your text is formatted before sending it.
 
-There is also support for image/document upload. You can set the upload size limit in the mscolab_settings.py file. The default limit is 2 MBs.
+There is also support for image/document upload. You can set the upload size limit with ``MAX_UPLOAD_SIZE`` in the
+mscolab_settings.py file. The default limit is 2 MiB. Any other request, e.g. creating an operation from a large
+flight track, is limited by ``MAX_CONTENT_LENGTH``, by default 16 MiB.
+
+Only files with an extension of ``MSCOLAB_ATTACHMENT_EXTENSIONS`` can be sent as chat attachments. By default these are
+flight tracks (ftml, csv, txt, kml, gpx), science data (nc, nc4, h5, json), documents (pdf, md, docx, xlsx, pptx, odt,
+ods, odp), images (png, jpg, jpeg, gif, bmp, webp) and videos (mp4, mov). Files a browser or Windows can run, e.g. html,
+svg or exe, office files with macros and archives are not accepted by default. Attachments are always served as
+downloads. msui gets the accepted extensions and the upload limit from the server when it connects, offers these file
+types when you attach a file and tells you before uploading when the server would refuse a file.
 
 Right-clicking on a message would open a context-menu giving you options to copy, edit, delete or reply to a message.
 

@@ -37,7 +37,8 @@ from PIL import Image
 from flask import current_app
 
 from mslib.mscolab.auth import register_user, check_login
-from mslib.mscolab.models import User, Operation
+from mslib.mscolab.api.message_type import MessageType
+from mslib.mscolab.models import db, User, Operation
 from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX
 
 from mslib.mscolab.file_manager import FileManager
@@ -75,6 +76,13 @@ class Test_Server:
             data = json.loads(response.text)
             assert "Mscolab server" in data['message']
             assert True or False in data['use_saml2 ']
+
+    def test_status_sends_attachment_settings(self):
+        with mock.patch.dict(current_app.config, {'MSCOLAB_ATTACHMENT_EXTENSIONS': [".ZIP", "csv"]}):
+            with self.app.test_client() as test_client:
+                data = json.loads(test_client.get('/status').text)
+        assert data["attachment_extensions"] == ["csv", "zip"]
+        assert data["max_upload_size"] == current_app.config['MAX_UPLOAD_SIZE']
 
     def test_register_user(self):
         with self.app.test_client():
@@ -172,8 +180,222 @@ class Test_Server:
             assert response.get_json()["success"] is True
             assert not os.path.exists(full_image_path)
 
-    # ToDo: Add a test for an oversized image/file ( > MAX_UPLOAD_SIZE) for chat attachments and profile image.
-    # Currently, flask is unable to raise exception for an oversized file.
+    def test_upload_endpoints_exist(self):
+        # the upload limit applies to these endpoints by name, a renamed view would get the larger limit
+        from mslib.mscolab.app import MSColabRequest
+        assert set(MSColabRequest.UPLOAD_ENDPOINTS) <= set(self.app.view_functions)
+        assert current_app.config['MAX_CONTENT_LENGTH'] > current_app.config['MAX_UPLOAD_SIZE']
+
+    def test_operation_larger_than_upload_limit(self):
+        # an operation created from a large flight track is limited by MAX_CONTENT_LENGTH, not MAX_UPLOAD_SIZE
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        padding = "x" * (current_app.config['MAX_UPLOAD_SIZE'] + 1)
+        large = XML_CONTENT_INIT.replace("<ListOfWaypoints>", f"<!-- {padding} --><ListOfWaypoints>", 1)
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata, content=large)
+            assert operation is not None
+            too_large = "x" * (current_app.config['MAX_CONTENT_LENGTH'] + 1)
+            response = test_client.post('/create_operation', data={"token": token, "path": "toolarge",
+                                                                   "description": "d", "content": too_large})
+            assert response.status_code == 413
+            limit = current_app.config['MAX_CONTENT_LENGTH'] / 1024 / 1024
+            assert response.get_json() == {"success": False,
+                                           "message": f"Request too large. The limit is {limit:.1f} MiB."}
+
+    def test_oversized_uploads_refused(self):
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        oversized = b"x" * (current_app.config['MAX_UPLOAD_SIZE'] + 1)
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            response = test_client.post('/message_attachment', data={"token": token,
+                                                                     "op_id": operation.id,
+                                                                     "file": (io.BytesIO(oversized), 'big.txt'),
+                                                                     "message_type": "3"})
+            assert response.status_code == 413
+            assert response.get_json() == {"success": False, "message": "Request too large. The limit is 2.0 MiB."}
+            attachment_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], str(operation.id))
+            assert not os.path.isdir(attachment_dir) or not os.listdir(attachment_dir)
+
+            user = get_user(self.userdata[0])
+            response = test_client.post('/upload_profile_image', data={
+                "user_id": str(user.id), "token": token, "image": (io.BytesIO(oversized), 'big.jpeg', 'image/jpeg')})
+            assert response.status_code == 413
+            assert get_user(self.userdata[0]).profile_image_path is None
+
+    def _attach(self, test_client, token, operation, filename, content, message_type="3"):
+        return test_client.post('/message_attachment', data={"token": token,
+                                                             "op_id": operation.id,
+                                                             "file": (io.BytesIO(content), filename),
+                                                             "message_type": message_type})
+
+    @pytest.mark.parametrize("filename, content", [
+        ("page.txt", b"<html><script>alert(document.domain)</script></html>"),
+        ("track.ftml", b'<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"/>'),
+    ])
+    def test_uploads_served_as_download(self, filename, content):
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            response = self._attach(test_client, token, operation, filename, content)
+            assert response.status_code == 200
+            pfn = response.get_json()["path"]
+            response = test_client.get(pfn, data={"token": token})
+            assert response.status_code == 200
+            assert response.data == content
+            assert response.headers["Content-Disposition"] == f'attachment; filename={os.path.basename(pfn)}'
+            assert response.headers["X-Content-Type-Options"] == "nosniff"
+            assert response.headers["Content-Security-Policy"] == "sandbox"
+
+    def test_stored_html_attachment_served_as_download(self):
+        # stored before the allow-list existed
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            attachment_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], str(operation.id))
+            os.makedirs(attachment_dir, exist_ok=True)
+            with open(os.path.join(attachment_dir, "page.html"), "wb") as f:
+                f.write(b"<html><script>alert(document.domain)</script></html>")
+            response = test_client.get(f'/{ATTACHMENTS_URL_PREFIX}/{operation.id}/page.html', data={"token": token})
+            assert response.status_code == 200
+            assert response.headers["Content-Disposition"] == "attachment; filename=page.html"
+            assert response.headers["X-Content-Type-Options"] == "nosniff"
+            assert response.headers["Content-Security-Policy"] == "sandbox"
+
+    @pytest.mark.parametrize("filename", [
+        "track.ftml", "track.CSV", "route.gpx", "route.kml", "data.nc", "data.nc4", "data.h5", "minutes.pdf",
+        "plan.xlsx", "slides.pptx", "notes.md", "clip.mp4", "clip.mov",
+    ])
+    def test_attachment_extension_allowed(self, filename):
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            response = self._attach(test_client, token, operation, filename, b"content")
+            assert response.get_json()["success"] is True
+            # stored with its own extension, also those mimetypes doesn't know, e.g. .ftml or .gpx
+            assert response.get_json()["path"].endswith("." + filename.rsplit(".", 1)[1].lower())
+
+    @pytest.mark.parametrize("filename, message", [
+        ("page.html", "Files of type .html can not be sent."),
+        ("image.svg", "Files of type .svg can not be sent."),
+        ("setup.exe", "Files of type .exe can not be sent."),
+        ("open.hta", "Files of type .hta can not be sent."),
+        ("macro.docm", "Files of type .docm can not be sent."),
+        ("archive.zip", "Files of type .zip can not be sent."),
+        ("noextension", "Files without an extension can not be sent."),
+    ])
+    def test_attachment_extension_refused(self, filename, message):
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            response = self._attach(test_client, token, operation, filename, b"<script>alert(1)</script>")
+            assert response.get_json() == {"success": False, "message": message}
+            attachment_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], str(operation.id))
+            assert not os.path.isdir(attachment_dir) or not os.listdir(attachment_dir)
+
+    def test_attachment_extensions_configurable(self):
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        with mock.patch.dict(current_app.config, {'MSCOLAB_ATTACHMENT_EXTENSIONS': [".ZIP", "csv"]}):
+            with self.app.test_client() as test_client:
+                operation, token = self._create_operation(test_client, self.userdata)
+                response = self._attach(test_client, token, operation, "archive.zip", b"content")
+                assert response.get_json()["success"] is True
+                assert response.get_json()["path"].endswith(".zip")
+                response = self._attach(test_client, token, operation, "minutes.pdf", b"content")
+                assert response.get_json() == {"success": False, "message": "Files of type .pdf can not be sent."}
+
+    def test_image_attachment_must_be_image(self):
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        png = io.BytesIO()
+        Image.new('RGB', (4, 4), color='yellow').save(png, format='PNG')
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            response = self._attach(test_client, token, operation, "image.png", png.getvalue(),
+                                    message_type=str(int(MessageType.IMAGE)))
+            assert response.get_json()["success"] is True
+            response = self._attach(test_client, token, operation, "image.png", b"<html></html>",
+                                    message_type=str(int(MessageType.IMAGE)))
+            assert response.get_json() == {"success": False, "message": "The image is no valid image."}
+
+    def test_uploads_non_latin1_path(self):
+        # the download name is encoded by werkzeug, a path that is no latin-1 does not break the answer
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            response = test_client.get(f'/{ATTACHMENTS_URL_PREFIX}/{operation.id}/%E2%82%AC')
+            assert response.status_code == 401
+            response = test_client.get(f'/{ATTACHMENTS_URL_PREFIX}/{operation.id}/%E2%82%AC', data={"token": token})
+            assert response.status_code == 404
+            attachment_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], str(operation.id))
+            os.makedirs(attachment_dir, exist_ok=True)
+            with open(os.path.join(attachment_dir, "€.txt"), "wb") as f:
+                f.write(b"euro")
+            response = test_client.get(f'/{ATTACHMENTS_URL_PREFIX}/{operation.id}/%E2%82%AC.txt', data={"token": token})
+            assert response.status_code == 200
+            assert response.data == b"euro"
+            assert "filename*=UTF-8''%E2%82%AC.txt" in response.headers["Content-Disposition"]
+            assert response.headers["X-Content-Type-Options"] == "nosniff"
+            assert response.headers["Content-Security-Policy"] == "sandbox"
+
+    def test_profile_image_not_rendered_as_page(self):
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        with self.app.test_client() as test_client:
+            token = self._get_token(test_client, self.userdata)
+            assert self._upload_profile_image(test_client, token, self.userdata[0]).status_code == 200
+            user = get_user(self.userdata[0])
+            response = test_client.get('/fetch_profile_image', data={"token": token, "user_id": str(user.id)})
+            assert response.status_code == 200
+            assert response.headers["X-Content-Type-Options"] == "nosniff"
+            assert response.headers["Content-Security-Policy"] == "sandbox"
+
+    def test_profile_image_stored_with_extension_of_its_content(self):
+        # a valid image that is also valid HTML, uploaded as .html, must not be served as text/html
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        img_byte_arr = io.BytesIO()
+        Image.new('RGB', (4, 4), color='yellow').save(img_byte_arr, format='PNG')
+        content = img_byte_arr.getvalue() + b"<html><body>fake login</body></html>"
+        with self.app.test_client() as test_client:
+            token = self._get_token(test_client, self.userdata)
+            user = get_user(self.userdata[0])
+            response = test_client.post('/upload_profile_image', data={
+                "user_id": str(user.id), "token": token, "image": (io.BytesIO(content), "x.html", "text/html")})
+            assert response.status_code == 200
+            assert get_user(self.userdata[0]).profile_image_path.endswith(".png")
+            response = test_client.get('/fetch_profile_image', data={"token": token, "user_id": str(user.id)})
+            assert response.status_code == 200
+            assert response.mimetype == "image/png"
+            assert response.headers["Content-Disposition"].startswith("inline;")
+            assert response.headers["X-Content-Type-Options"] == "nosniff"
+
+    def test_profile_image_with_other_format_refused(self):
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        img_byte_arr = io.BytesIO()
+        Image.new('RGB', (4, 4), color='yellow').save(img_byte_arr, format='TIFF')
+        with self.app.test_client() as test_client:
+            token = self._get_token(test_client, self.userdata)
+            user = get_user(self.userdata[0])
+            response = test_client.post('/upload_profile_image', data={
+                "user_id": str(user.id), "token": token,
+                "image": (io.BytesIO(img_byte_arr.getvalue()), "x.tiff", "image/tiff")})
+            assert response.status_code == 400
+            assert get_user(self.userdata[0]).profile_image_path is None
+
+    def test_stored_profile_image_with_other_extension_served_as_download(self):
+        # stored before the extension was taken from the content
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        profile_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], "profile")
+        os.makedirs(profile_dir, exist_ok=True)
+        with open(os.path.join(profile_dir, "legacy.html"), "wb") as f:
+            f.write(b"<html><body>fake login</body></html>")
+        user = get_user(self.userdata[0])
+        user.profile_image_path = "profile/legacy.html"
+        db.session.commit()
+        with self.app.test_client() as test_client:
+            token = self._get_token(test_client, self.userdata)
+            response = test_client.get('/fetch_profile_image', data={"token": token, "user_id": str(user.id)})
+            assert response.status_code == 200
+            assert response.headers["Content-Disposition"] == "attachment; filename=legacy.html"
+            assert response.headers["X-Content-Type-Options"] == "nosniff"
+            assert response.headers["Content-Security-Policy"] == "sandbox"
 
     def test_unauthorized_profile_image_upload(self):
         other_user_data = 'other@ex.com', 'other', 'other', 'Other'

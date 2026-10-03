@@ -35,6 +35,8 @@ from saml2.client import Saml2Client
 from saml2.config import SPConfig
 from urllib.parse import urlparse
 
+from mslib.mscolab.api.attachments import DEFAULT_ATTACHMENT_EXTENSIONS
+
 
 class DefaultSettings:
     # expire token in seconds
@@ -83,6 +85,10 @@ class DefaultSettings:
     # mscolab file upload settings
     UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
     MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MiB
+    # size limit of any other request, e.g. of an operation created from a large flight track
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MiB
+    # extensions of files that can be sent as chat attachments, e.g. ("pdf", "csv")
+    MSCOLAB_ATTACHMENT_EXTENSIONS = DEFAULT_ATTACHMENT_EXTENSIONS
 
     # used to generate and parse tokens
     SECRET_KEY = secrets.token_urlsafe(16)

@@ -166,6 +166,8 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
                 self.loginPasswordLe.setEnabled(True)
 
                 status = StatusResponse.from_text(response.text)
+                # e.g. which chat attachments the server accepts
+                self.mscolab.server_status = status
                 idp_enabled = status.use_saml2
                 direct_login = status.direct_login
 
