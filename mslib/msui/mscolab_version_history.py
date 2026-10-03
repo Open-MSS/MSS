@@ -97,6 +97,9 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
         self.load_all_changes()
 
     def set_label_text(self):
+        # chosen by users, must not be interpreted as markup
+        for label in (self.usernameLabel, self.operationNameLabel):
+            label.setTextFormat(QtCore.Qt.PlainText)
         self.usernameLabel.setText(f"Logged in: {self.user['username']}")
         self.operationNameLabel.setText(f"Operation: {self.operation_name}")
 

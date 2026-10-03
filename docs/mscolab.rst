@@ -249,6 +249,9 @@ The currently supported markdown syntax is:
 - \*text\* : Italicise Text
 - [text](link) : Add hyper-link to text
 
+Only http and https links can be opened from the chat, after you have confirmed their target. A link without scheme,
+e.g. www.example.org, is opened with https. Other links, e.g. ftp: or mailto:, are shown as text.
+
 You can use the `Preview` button to see how your text is formatted before sending it.
 
 There is also support for image/document upload. You can set the upload size limit in the mscolab_settings.py file. The default limit is 2 MBs.

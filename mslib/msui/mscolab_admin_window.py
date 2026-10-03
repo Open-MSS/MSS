@@ -188,6 +188,9 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         r = requests.get(
             url, data={**req.to_form_data(), "token": self.token},
             timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        # chosen by users, must not be interpreted as markup
+        for label in (self.operationNameLabel, self.creatorNameLabel, self.usernameLabel):
+            label.setTextFormat(QtCore.Qt.PlainText)
         if r.text != "False":
             creator_name = GetCreatorOfOperationResponse.from_text(r.text).username
             self.operationNameLabel.setText(f"Operation: {self.operation_name}")

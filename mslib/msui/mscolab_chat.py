@@ -28,12 +28,14 @@ import datetime
 import json
 import logging
 import os
+import re
 import tempfile
 
 from pathlib import Path
 import requests
 from markdown import Markdown
 from markdown.extensions import Extension
+from markdown.treeprocessors import Treeprocessor
 from urllib.parse import urljoin, urlsplit
 
 from mslib.mscolab.api.message_type import MessageType
@@ -53,9 +55,36 @@ from mslib.mscolab.api.schemas import (
     MessageAttachmentRequest,
 )
 
+# Links of chat messages are chosen by their author. Anything else, e.g. file:, smb:, ms-msdt: or search-ms:,
+# lets the author of a message open files or start programs on the machine of the reader
+CHAT_LINK_SCHEMES = ("http", "https")
+# A link without scheme, e.g. www.example.org/agenda, has to start with a host name
+_HOST_NAME = re.compile(r"[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+")
+
+
+class NoResourcesMixin:
+    """
+    Loads no resources, e.g. images, into the document of a QTextEdit or QTextBrowser
+
+    The chat shows no images in messages. A resource in a message, e.g. <img src="file://attacker.example/s/x.png">,
+    could only come from its author and would be fetched without any click, on Windows also from SMB shares.
+    """
+    def loadResource(self, resource_type, url):
+        logging.debug("resource %s of a chat message not loaded", url.toString())
+        # with an invalid or null result Qt loads the resource itself
+        if resource_type == QtGui.QTextDocument.ImageResource:
+            image = QtGui.QImage(1, 1, QtGui.QImage.Format_ARGB32)
+            image.fill(QtCore.Qt.transparent)
+            return image
+        return QtCore.QByteArray(b" ")
+
+
+class ChatTextBrowser(NoResourcesMixin, QtWidgets.QTextBrowser):
+    pass
+
 
 # We need to override the KeyPressEvent in QTextEdit to disable the default behaviour of enter key.
-class MessageTextEdit(QtWidgets.QTextEdit):
+class MessageTextEdit(NoResourcesMixin, QtWidgets.QTextEdit):
     def keyPressEvent(self, event):
         # Shift + Enter for new line
         if event.key() in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter) and event.modifiers() & QtCore.Qt.ShiftModifier:
@@ -174,6 +203,9 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
         self.messageTextContainer.setLayout(vbox_layout)
 
     def set_label_text(self):
+        # chosen by users, must not be interpreted as markup
+        for label in (self.user_info, self.proj_info):
+            label.setTextFormat(QtCore.Qt.PlainText)
         self.user_info.setText(f"Logged in: {self.user['username']}")
         self.proj_info.setText(f"Operation: {self.operation_name}")
 
@@ -652,8 +684,8 @@ class MessageItem(QtWidgets.QWidget):
         self.messageBox.setContentsMargins(0, 5, 0, 5)
         self.messageBox.show()
 
-    def get_text_browser(self, text):
-        text_browser = QtWidgets.QTextBrowser()
+    def get_text_browser(self, text, on_link_click):
+        text_browser = ChatTextBrowser()
         html = self.chat_window.markdown.convert(text)
         text_browser.setHtml(html)
         text_browser.setOpenLinks(False)
@@ -661,7 +693,7 @@ class MessageItem(QtWidgets.QWidget):
         text_browser.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         text_browser.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         text_browser.setAttribute(103)
-        text_browser.anchorClicked.connect(self.on_link_click)
+        text_browser.anchorClicked.connect(on_link_click)
         text_browser.show()
         text_browser.setFixedHeight(
             int(text_browser.document().size().height() + text_browser.contentsMargins().top() * 2)
@@ -676,7 +708,7 @@ class MessageItem(QtWidgets.QWidget):
                 self.message_text = f"Document: {file_name} (not on the MSColab server)"
             else:
                 self.message_text = f"Document: [{file_name}]({doc_url})"
-        self.messageBox = self.get_text_browser(self.message_text)
+        self.messageBox = self.get_text_browser(self.message_text, self.on_link_click)
 
     def setup_message_box(self):
         if self.message_type == MessageType.IMAGE:
@@ -708,6 +740,7 @@ class MessageItem(QtWidgets.QWidget):
             container_layout.addWidget(self.textArea)
         else:
             username_label = QtWidgets.QLabel(f"{self.username}")
+            username_label.setTextFormat(QtCore.Qt.PlainText)
             username_label.setContentsMargins(5, 5, 5, 0)
             time_label = self.set_time_label()
             label_font = QtGui.QFont()
@@ -773,10 +806,12 @@ class MessageItem(QtWidgets.QWidget):
         if self.replyArea is None:
             self.insert_reply_area()
         reply_username_label = QtWidgets.QLabel(f'{reply["username"]}:')
+        reply_username_label.setTextFormat(QtCore.Qt.PlainText)
         label_font = QtGui.QFont()
         label_font.setBold(True)
         reply_username_label.setFont(label_font)
-        reply_message_box = self.get_text_browser(reply["text"])
+        # replies are text, also those to a document
+        reply_message_box = self.get_text_browser(reply["text"], self.on_reply_link_click)
         self.replyArea.layout().addRow(reply_username_label, reply_message_box)
 
     def setup_context_menu(self):
@@ -862,9 +897,64 @@ class MessageItem(QtWidgets.QWidget):
             # the only link is the attachment, it needs the token, a browser can't fetch it
             self.handle_download_action()
             return
-        if url.scheme() == "":
-            url.setScheme("http")
-        QtGui.QDesktopServices.openUrl(url)
+        open_chat_link(self, url)
+
+    def on_reply_link_click(self, url):
+        open_chat_link(self, url)
+
+
+def chat_link_target(link):
+    """
+    The URL a link of a chat message may be opened with, None if it must not be opened
+
+    Only http and https links to a host are opened. They must not have user info, it can make another host look
+    like a trusted one, e.g. https://open-mss.github.io@evil.example. A link without scheme gets https.
+    """
+    url = QtCore.QUrl(link)
+    if url.scheme() == "":
+        if url.host() != "":
+            # e.g. //example.org/agenda
+            url.setScheme("https")
+        elif _HOST_NAME.fullmatch(url.path().split("/", 1)[0]):
+            # e.g. www.example.org/agenda
+            url = QtCore.QUrl("https://" + url.toString(QtCore.QUrl.FullyEncoded))
+        else:
+            # relative or garbage, e.g. foo or %66ile:///x
+            return None
+    if (not url.isValid() or url.scheme().lower() not in CHAT_LINK_SCHEMES or
+            url.host() == "" or url.userInfo() != ""):
+        return None
+    return url
+
+
+def _plain_text_box(icon, title, text, buttons, parent):
+    # the text contains the URL chosen by the author of the message, it must not be interpreted as markup
+    box = QtWidgets.QMessageBox(icon, title, text, buttons, parent)
+    box.setTextFormat(QtCore.Qt.PlainText)
+    return box
+
+
+def open_chat_link(parent, url):
+    """Open a link of a chat message after the user has seen and confirmed its real target.
+
+    The label of a link is chosen by its author, so the full URL is shown, as plain text.
+    """
+    target = chat_link_target(url)
+    if target is None:
+        _plain_text_box(
+            QtWidgets.QMessageBox.Warning, "Link not opened",
+            "Only http and https links to a host can be opened from the chat. This link was not opened:\n\n"
+            f"{url.toString(QtCore.QUrl.FullyEncoded)}",
+            QtWidgets.QMessageBox.Ok, parent).exec_()
+        return
+    box = _plain_text_box(
+        QtWidgets.QMessageBox.Question, "Open link?",
+        f"Do you want to open this link in your browser?\n\nHost: {target.host(QtCore.QUrl.FullyEncoded)}\n\n"
+        f"{target.toString(QtCore.QUrl.FullyEncoded)}",
+        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, parent)
+    box.setDefaultButton(QtWidgets.QMessageBox.No)
+    if box.exec_() == QtWidgets.QMessageBox.Yes:
+        QtGui.QDesktopServices.openUrl(target)
 
 
 # Deregister all the syntax that we don't want to allow
@@ -884,6 +974,10 @@ class DeregisterSyntax(Extension):
     """
 
     def extendMarkdown(self, md):
+        # Raw HTML blocks would pass through unchanged, e.g. with links or images pointing to file: URLs,
+        # without them they are escaped and shown as text
+        md.preprocessors.deregister('html_block')
+
         # Deregister block syntax
         md.parser.blockprocessors.deregister('setextheader')
         md.parser.blockprocessors.deregister('hr')
@@ -898,3 +992,20 @@ class DeregisterSyntax(Extension):
         md.inlinePatterns.deregister('linebreak')
         md.inlinePatterns.deregister('html')
         md.inlinePatterns.deregister('entity')
+
+        # after the links are created by 'inline'
+        md.treeprocessors.register(ChatLinks(md), 'chat_links', 15)
+
+
+class ChatLinks(Treeprocessor):
+    """
+    Renders only links that can be opened from the chat as links, others, e.g. ftp: or mailto:, as their text
+    """
+    def run(self, root):
+        for element in root.iter("a"):
+            target = chat_link_target(element.get("href", ""))
+            if target is None:
+                element.tag = "span"
+                element.attrib.clear()
+            else:
+                element.set("href", target.toString(QtCore.QUrl.FullyEncoded))

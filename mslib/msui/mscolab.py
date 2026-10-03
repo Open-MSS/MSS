@@ -29,6 +29,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import html
 import os
 import io
 import hashlib
@@ -231,10 +232,11 @@ class MSUIMscolab(QtCore.QObject):
             creator_name = GetCreatorOfOperationResponse.from_text(response.text).username
         QMessageBox.information(
             self.ui, "Operation Description",
-            f"<html>Creator: <b>{creator_name}</b><p>"
-            f"Category: <b>{self.active_operation_category}</b><p>"
+            # chosen by users, must not be interpreted as markup
+            f"<html>Creator: <b>{html.escape(str(creator_name))}</b><p>"
+            f"Category: <b>{html.escape(str(self.active_operation_category))}</b><p>"
             "<p>"
-            f"{self.active_operation_description}</html>")
+            f"{html.escape(str(self.active_operation_description))}</html>")
 
     def open_operation_archive(self):
         self.operation_archive_browser.show()
@@ -306,6 +308,8 @@ class MSUIMscolab(QtCore.QObject):
             self.ui.mscStatusLabel.setText(self.ui.tr(
                 f"Status: connected to '{self.mscolab_server_url}' by transport layer '{transport_layer}'"))
             # display username beside useroptions toolbutton
+            # chosen by the user, must not be interpreted as markup
+            self.ui.usernameLabel.setTextFormat(QtCore.Qt.PlainText)
             self.ui.usernameLabel.setText(f"{self.user['username']}")
             self.ui.usernameLabel.show()
             self.ui.userOptionsTb.show()
@@ -440,6 +444,10 @@ class MSUIMscolab(QtCore.QObject):
         self.profile_dialog = ui_profile.Ui_ProfileWindow()
         self.profile_dialog.setupUi(self.prof_diag)
         self.profile_dialog.buttonBox.accepted.connect(lambda: self.prof_diag.close())
+        # chosen by users, must not be interpreted as markup
+        for label in (self.profile_dialog.usernameLabel_2, self.profile_dialog.fullNameLabel_2,
+                      self.profile_dialog.mscolabURLLabel_2, self.profile_dialog.emailLabel_2):
+            label.setTextFormat(QtCore.Qt.PlainText)
         self.profile_dialog.usernameLabel_2.setText(self.user['username'])
         self.profile_dialog.fullNameLabel_2.setText(self.user['fullname'])
         self.profile_dialog.mscolabURLLabel_2.setText(self.mscolab_server_url)
@@ -815,6 +823,8 @@ class MSUIMscolab(QtCore.QObject):
     def set_operation_desc_label(self, op_desc):
         self.active_operation_description = op_desc
         desc_count = len(str(self.active_operation_description))
+        # chosen by the creator of the operation, must not be interpreted as markup
+        self.ui.activeOperationDesc.setTextFormat(QtCore.Qt.PlainText)
         if desc_count < 95:
             self.ui.activeOperationDesc.setText(
                 self.ui.tr(f"{self.active_operation_name}: {self.active_operation_description}"))
