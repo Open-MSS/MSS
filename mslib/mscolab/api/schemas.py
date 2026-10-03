@@ -496,13 +496,12 @@ class FetchProfileImageRequest:
 @dataclass
 class ProfileImageMessageResponse:
     """The {"message": str} JSON body used by upload_profile_image (every
-    status code) and fetch_profile_image's HTTP 404 failure path. Neither
-    client call site parses this today -- upload checks response.status_code
-    and shows response.text raw on failure; fetch only ever reads
-    response.content (raw image bytes) on success and otherwise relies on
-    request_get() raising MSColabConnectionError for any non-200 status. This
-    documents the shape the server actually sends, for whoever eventually
-    wires up proper error display.
+    status code) and fetch_profile_image's HTTP 404 failure path. The upload
+    call site shows its message on failure (an image above MAX_UPLOAD_SIZE is
+    answered with HTTP 413 by the app's 413 handler, which also has a
+    "message"); fetch only ever reads response.content (raw image bytes) on
+    success and otherwise relies on request_get() raising
+    MSColabConnectionError for any non-200 status.
     """
 
     message: str
@@ -958,14 +957,25 @@ class StatusResponse:
     True respectively on failure -- preserved here as the same two
     independent per-field defaults, applied whether the text fails to parse
     at all or parses but is missing a key.
+
+    attachment_extensions and max_upload_size tell msui which chat attachments
+    the server accepts (MSCOLAB_ATTACHMENT_EXTENSIONS, MAX_UPLOAD_SIZE). They
+    are None from servers that don't send them; those accept any file type.
     """
 
     message: str
     use_saml2: bool
     direct_login: bool
+    attachment_extensions: Optional[List[str]] = None
+    max_upload_size: Optional[int] = None
 
     def to_dict(self):
-        return {"message": self.message, "use_saml2": self.use_saml2, "direct_login": self.direct_login}
+        data = {"message": self.message, "use_saml2": self.use_saml2, "direct_login": self.direct_login}
+        if self.attachment_extensions is not None:
+            data["attachment_extensions"] = self.attachment_extensions
+        if self.max_upload_size is not None:
+            data["max_upload_size"] = self.max_upload_size
+        return data
 
     @classmethod
     def from_text(cls, text):
@@ -977,6 +987,8 @@ class StatusResponse:
             message=data.get("message", ""),
             use_saml2=data.get("use_saml2", False),
             direct_login=data.get("direct_login", True),
+            attachment_extensions=data.get("attachment_extensions"),
+            max_upload_size=data.get("max_upload_size"),
         )
 
 
@@ -1232,9 +1244,10 @@ class MessageAttachmentResponse:
     check could ever see None -- not fixed here, just not asserted as dead
     with full confidence either.
 
-    mscolab_chat.py's send_message() never actually parses any of this
-    (it only catches requests.exceptions.ConnectionError, for "file too
-    large"); modeled for whoever eventually wires up proper feedback.
+    mscolab_chat.py's send_message() parses it and shows the message of a
+    refused attachment; an attachment above MAX_UPLOAD_SIZE is answered
+    with HTTP 413 and {"success": False, "message": ...} by the app's
+    413 handler.
     """
 
     success: bool

@@ -359,6 +359,15 @@ class Test_FileManager:
                 uploaded_file_content = uploaded_file.read()
                 assert uploaded_file_content == file_content
 
+    def test_upload_file_without_extension(self, tmp_path):
+        (tmp_path / "README").write_bytes(b"content")
+        with open(tmp_path / "README", "rb") as fp:
+            file = FileStorage(fp, filename="README", content_type="text/plain")
+            relative_path = self.fm.upload_file(file, subfolder="no_extension")
+        assert os.path.basename(relative_path).startswith("README-")
+        assert relative_path.endswith(".unknown")
+        assert os.path.isfile(os.path.join(current_app.config['UPLOAD_FOLDER'], relative_path))
+
     def test_get_file(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation7")

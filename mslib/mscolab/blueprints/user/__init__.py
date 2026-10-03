@@ -33,6 +33,7 @@ from flask import Blueprint, g, request, jsonify, send_from_directory, current_a
 
 from mslib.mscolab.auth import verify_user
 from mslib.mscolab.api import endpoints
+from mslib.mscolab.api.attachments import IMAGE_EXTENSIONS, IMAGE_FORMATS
 from mslib.mscolab.api.schemas import (
     DeleteOwnAccountResponse,
     FetchProfileImageRequest,
@@ -66,6 +67,11 @@ def upload_profile_image():
         img.verify()
     except Exception:
         return jsonify(ProfileImageMessageResponse(message='Invalid file type').to_dict()), 400
+    if img.format not in IMAGE_FORMATS:
+        return jsonify(ProfileImageMessageResponse(message='Invalid file type').to_dict()), 400
+    # the extension it is stored and served with is the one of its content, not the one of the
+    # client's file name, e.g. x.html for a file that is a valid image and valid HTML
+    file.filename = f"profile.{IMAGE_FORMATS[img.format]}"
     file.seek(0)
     fm = current_app.extensions['fm']
     success, message = fm.save_user_profile_image(user_id, file)
@@ -81,7 +87,14 @@ def fetch_profile_image():
     success, filename = fm.get_user_profile_image(req.user_id, req.op_id, g.user.id)
     if success:
         base_path = current_app.config['UPLOAD_FOLDER']
-        return send_from_directory(Path(base_path), filename)
+        # images stored before their extension was taken from their content may be e.g. .html,
+        # those are only served as download
+        # .jpe was stored for JPEG by older Python versions
+        inline = Path(filename).suffix.lower().lstrip(".") in (*IMAGE_EXTENSIONS, "jpe")
+        response = send_from_directory(Path(base_path), filename, as_attachment=not inline)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Content-Security-Policy"] = "sandbox"
+        return response
     else:
         response = ProfileImageMessageResponse(message='User or profile image not found')
         return jsonify(response.to_dict()), 404

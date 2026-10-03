@@ -34,7 +34,8 @@ import requests
 from tests.constants import ROOT_DIR
 from mslib.msui.icons import icons
 from mslib.mscolab.models import Message, MessageType
-from PyQt5 import QtCore, QtTest, QtWidgets
+from PyQt5 import QtCore, QtGui, QtTest, QtWidgets
+from mslib.mscolab.api.attachments import normalized_extensions
 from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
@@ -150,6 +151,108 @@ class Test_MscolabOperation:
         self._activate_context_menu_action(Actions.DELETE)
         with self.app.app_context():
             assert Message.query.filter_by(text='test edit').count() == 0
+
+    @pytest.mark.parametrize("size_over_limit, message", [
+        (1, "Request too large. The limit is 2.0 MiB."),
+        (0, None),
+    ])
+    def test_attachment_answer_shown(self, qtbot, tmp_path, size_over_limit, message):
+        # the server refuses an attachment above MAX_UPLOAD_SIZE with 413, msui says so instead of dropping it
+        with self.app.app_context():
+            limit = self.app.config["MAX_UPLOAD_SIZE"]
+        attachment = tmp_path / "notes.txt"
+        attachment.write_bytes(b"x" * (limit + size_over_limit if size_over_limit else 10))
+        count = self.chat_window.messageList.count()
+        self.chat_window.attachment = str(attachment)
+        self.chat_window.attachment_type = MessageType.DOCUMENT
+        with mock.patch("mslib.msui.mscolab_chat.show_popup") as popup:
+            self.chat_window.send_message()
+        if message is None:
+            popup.assert_not_called()
+
+            def assert_():
+                assert self.chat_window.messageList.count() == count + 1
+            qtbot.wait_until(assert_)
+        else:
+            popup.assert_called_once()
+            # a server may also close the connection instead of answering
+            assert popup.call_args.args[2] in (message, "File size too large")
+            assert self.chat_window.messageList.count() == count
+
+    @pytest.mark.parametrize("file_name, message_type", [
+        ("track.ftml", MessageType.DOCUMENT),
+        ("clip.MP4", MessageType.DOCUMENT),
+        ("image.PNG", MessageType.IMAGE),
+    ])
+    def test_upload_dialog_offers_allowed_types(self, tmp_path, file_name, message_type):
+        file_path = tmp_path / file_name
+        file_path.write_bytes(b"content")
+        with mock.patch("mslib.msui.mscolab_chat.get_open_filename", return_value=str(file_path)) as dialog, \
+                mock.patch.object(self.chat_window, "display_uploaded_img"):
+            self.chat_window.handle_upload()
+        file_filter = dialog.call_args.args[3]
+        assert "*.ftml" in file_filter and "*.mp4" in file_filter and "*.png" in file_filter
+        assert "*.html" not in file_filter and "*.svg" not in file_filter
+        assert self.chat_window.attachment == str(file_path)
+        assert self.chat_window.attachment_type == message_type
+        self.chat_window.send_message_state()
+
+    def test_attachment_settings_from_server(self):
+        # msui on another machine gets them from the status of the server it connects to
+        with self.app.app_context():
+            extensions = sorted(normalized_extensions(self.app.config["MSCOLAB_ATTACHMENT_EXTENSIONS"]))
+            max_upload_size = self.app.config["MAX_UPLOAD_SIZE"]
+        assert self.chat_window.attachment_extensions == extensions
+        assert self.chat_window.max_upload_size == max_upload_size
+
+    def test_upload_dialog_uses_server_extensions(self, tmp_path):
+        # e.g. a server that accepts zip but no office files
+        self.chat_window.attachment_extensions = ["csv", "png", "zip"]
+        file_path = tmp_path / "data.zip"
+        file_path.write_bytes(b"content")
+        with mock.patch("mslib.msui.mscolab_chat.get_open_filename", return_value=str(file_path)) as dialog:
+            self.chat_window.handle_upload()
+        assert dialog.call_args.args[3] == "Image (*.png);;Document (*.csv *.zip);;All files (*)"
+        assert self.chat_window.attachment == str(file_path)
+        self.chat_window.send_message_state()
+
+    @pytest.mark.parametrize("file_name, size, message", [
+        ("minutes.docx", 10, "Files of type .docx can not be sent to this MSColab server."),
+        ("noextension", 10, "Files without an extension can not be sent to this MSColab server."),
+        ("data.csv", 2 * 1024 * 1024 + 1, "The file is too large. The upload limit of this MSColab server is 2.0 MiB."),
+    ])
+    def test_attachment_refused_before_upload(self, tmp_path, file_name, size, message):
+        self.chat_window.attachment_extensions = ["csv", "png"]
+        self.chat_window.max_upload_size = 2 * 1024 * 1024
+        file_path = tmp_path / file_name
+        file_path.write_bytes(b"x" * size)
+        with mock.patch("mslib.msui.mscolab_chat.get_open_filename", return_value=str(file_path)), \
+                mock.patch("mslib.msui.mscolab_chat.show_popup") as popup:
+            self.chat_window.handle_upload()
+        popup.assert_called_once_with(self.chat_window, "Error", message)
+        assert self.chat_window.attachment is None
+
+    def test_pasted_image_refused_before_upload(self):
+        self.chat_window.max_upload_size = 10
+        image = QtGui.QImage(64, 64, QtGui.QImage.Format_RGB32)
+        image.fill(QtCore.Qt.yellow)
+        with mock.patch("mslib.msui.mscolab_chat.show_popup") as popup:
+            self.chat_window.handle_pasted_image(image)
+        popup.assert_called_once()
+        assert self.chat_window.attachment is None
+        assert self.chat_window._pasted_attachment_path is None
+
+    def test_older_server_accepts_any_attachment(self, tmp_path):
+        # a server that doesn't send its attachment settings accepts any file, msui doesn't check
+        self.chat_window.attachment_extensions = None
+        self.chat_window.max_upload_size = None
+        file_path = tmp_path / "data.zip"
+        file_path.write_bytes(b"content")
+        with mock.patch("mslib.msui.mscolab_chat.get_open_filename", return_value=str(file_path)) as dialog:
+            self.chat_window.handle_upload()
+        assert "*.ftml" in dialog.call_args.args[3]
+        assert self.chat_window.attachment == str(file_path)
+        self.chat_window.send_message_state()
 
     def test_events_of_other_operation_ignored(self, qtbot):
         # the socket gets the events of all operations of the user, the chat shows only its own

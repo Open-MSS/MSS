@@ -26,13 +26,17 @@
 """
 
 
+import io
+
 import werkzeug
+from PIL import Image
 from flask import Blueprint, request, g, jsonify, abort, send_from_directory, current_app
 
 from mslib.mscolab.auth import verify_user, verify_user_http
 from mslib.mscolab.api.message_type import MessageType
 from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX
 from mslib.mscolab.api import endpoints
+from mslib.mscolab.api.attachments import IMAGE_FORMATS, file_extension, normalized_extensions
 from mslib.mscolab.api.schemas import (
     GetMessagesRequest,
     GetMessagesResponse,
@@ -73,6 +77,9 @@ def message_attachment():
         message_type = MessageType(req.message_type)
         user = g.user
         if file is not None:
+            refused = _refused_attachment(file, message_type)
+            if refused is not None:
+                return jsonify(MessageAttachmentResponse(success=False, message=refused).to_dict())
             static_file_path = fm.upload_file(file, subfolder=str(req.op_id), include_prefix=True)
             if static_file_path is not None:
                 cm = current_app.extensions['cm']
@@ -88,6 +95,30 @@ def message_attachment():
     return "False"
 
 
+def _refused_attachment(file, message_type):
+    """
+    Why an attachment is refused, None if it is accepted
+
+    Only the extensions of the setting MSCOLAB_ATTACHMENT_EXTENSIONS are accepted, an image has to be one.
+    """
+    extension = file_extension(file.filename)
+    if extension == "":
+        return "Files without an extension can not be sent."
+    if extension not in normalized_extensions(current_app.config['MSCOLAB_ATTACHMENT_EXTENSIONS']):
+        return f"Files of type .{extension} can not be sent."
+    if message_type == MessageType.IMAGE:
+        try:
+            image = Image.open(io.BytesIO(file.read()))
+            image.verify()
+        except Exception:
+            return "The image is no valid image."
+        finally:
+            file.seek(0)
+        if image.format not in IMAGE_FORMATS:
+            return f"Images of format {image.format} can not be sent."
+    return None
+
+
 @CHAT_BP.route(f'/{ATTACHMENTS_URL_PREFIX}/<name>/<path:filename>', methods=["GET"])
 @verify_user_http
 def uploads(name=None, filename=None):
@@ -100,4 +131,9 @@ def uploads(name=None, filename=None):
     # isdigit alone accepts digits like "²" which int() refuses
     if not (name.isascii() and name.isdigit()) or not current_app.extensions['fm'].is_member(g.user.id, int(name)):
         abort(404)
-    return send_from_directory(base_path, werkzeug.security.safe_join("", name, filename))
+    # attachments are uploaded by any member, e.g. HTML or SVG files, a browser must not render them
+    # as a page of the MSColab server
+    response = send_from_directory(base_path, werkzeug.security.safe_join("", name, filename), as_attachment=True)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Content-Security-Policy"] = "sandbox"
+    return response

@@ -27,7 +27,7 @@
 import logging
 import hashlib
 
-from flask import current_app, jsonify, request
+from flask import request
 from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth
 
@@ -78,12 +78,6 @@ def _initialize_managers(app):
     return app, sockio, cm, fm
 
 
-# 413: Payload Too Large
-def error413(error):
-    upload_limit = current_app.config['MAX_CONTENT_LENGTH'] / 1024 / 1024
-    return jsonify({"success": False, "message": f"File size too large. Upload limit is {upload_limit}MB"}), 413
-
-
 def create_server_app(config_object=mscolab_settings):
     """Create the MSColab application ready to be served.
 
@@ -107,7 +101,6 @@ def create_server_app(config_object=mscolab_settings):
     if app.config.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
         logging.debug("Enabling basic HTTP authentication. Username and "
                       "password required to access the service.")
-    app.register_error_handler(413, error413)
 
     _initialize_managers(app)
     return app

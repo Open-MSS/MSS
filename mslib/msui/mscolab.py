@@ -192,6 +192,8 @@ class MSUIMscolab(QtCore.QObject):
         self.prof_diag = None
         # Mscolab Server URL
         self.mscolab_server_url = None
+        # StatusResponse of the server, set by the connect dialog
+        self.server_status = None
         # User email
         self.email = None
         # Display all categories by default
@@ -495,7 +497,8 @@ class MSUIMscolab(QtCore.QObject):
                         QMessageBox.information(self.prof_diag, "Success", "Image uploaded successfully")
                         self.fetch_profile_image(refresh=True)
                     else:
-                        QMessageBox.critical(self.prof_diag, "Error", f"Failed to upload image: {response.text}")
+                        QMessageBox.critical(self.prof_diag, "Error", "Failed to upload image: "
+                                             f"{sc.response_message(response, response.text)}")
 
                 except requests.exceptions.RequestException as e:
                     QMessageBox.critical(self.prof_diag, "Error", f"Error occurred: {e}")
@@ -634,6 +637,12 @@ class MSUIMscolab(QtCore.QObject):
             response = self.conn.request_post(endpoints.CREATE_OPERATION, req.to_form_data())
         except requests.exceptions.RequestException as ex:
             raise MSColabConnectionError(f"Some error occurred ({ex})! Please reconnect.")
+        if response.status_code == 413:
+            self.error_dialog = QtWidgets.QErrorMessage()
+            self.error_dialog.showMessage(
+                "The flight track is too large for the MSColab server. "
+                + sc.response_message(response, ""))
+            return
         if CreateOperationResponse.from_text(response.text).success:
             QMessageBox.information(
                 self.ui, "Creation successful",
@@ -692,6 +701,9 @@ class MSUIMscolab(QtCore.QObject):
             self.access_level,
             self.conn,
             mscolab_server_url=self.mscolab_server_url,
+            # the chat attachments the server accepts
+            attachment_extensions=getattr(self.server_status, "attachment_extensions", None),
+            max_upload_size=getattr(self.server_status, "max_upload_size", None),
         )
         self.chat_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.chat_window.viewCloses.connect(self.close_chat_window)
@@ -1612,6 +1624,7 @@ class MSUIMscolab(QtCore.QObject):
         self.operation_archive_browser.listArchivedOperations.clear()
         # clear mscolab url
         self.mscolab_server_url = None
+        self.server_status = None
         # clear operations list here
         self.ui.mscStatusLabel.setText(self.ui.tr("status: disconnected"))
         self.ui.usernameLabel.hide()
