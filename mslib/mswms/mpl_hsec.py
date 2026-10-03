@@ -200,8 +200,8 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         spacingValues = [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 30, 40]
         deltaLon = mapLonStop - mapLonStart
         deltaLat = mapLatStop - mapLatStart
-        spacingLon = [i for i in spacingValues if i > (deltaLon / 10.)][0]
-        spacingLat = [i for i in spacingValues if i > (deltaLat / 10.)][0]
+        spacingLon = next((i for i in spacingValues if i > (deltaLon / 10.)), spacingValues[-1])
+        spacingLat = next((i for i in spacingValues if i > (deltaLat / 10.)), spacingValues[-1])
 
         #   c) parallels and meridians start at the first value in the
         #      spacingLon/Lat grid that's smaller than the lon/lat of the
@@ -302,7 +302,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         # access.
         key = repr((proj_params, bbox, bbox_units))
         basemap_use_cache = getattr(mswms_settings, "basemap_use_cache", False)
-        basemap_request_size = getattr(mswms_settings, "basemap_request_size ", 200)
+        basemap_request_size = getattr(mswms_settings, "basemap_request_size", 200)
         basemap_cache_size = getattr(mswms_settings, "basemap_cache_size", 20)
         bm_params = {"area_thresh": 1000., "ax": ax, "fix_aspect": (not noframe)}
         bm_params.update(proj_params)

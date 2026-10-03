@@ -39,6 +39,22 @@ from tests.utils import callback_ok_image, callback_ok_xml, callback_ok_html, ca
 from tests.constants import MSWMS_DATA_DIR
 
 
+HSEC_QUERY = (
+    'layers=ecmwf_EUR_LL015.PLDiv01&styles=&elevation=200&srs=EPSG%3A4326&format=image%2Fpng&'
+    'request=GetMap&height=376&dim_init_time=2012-10-17T12%3A00%3A00Z&width=479&'
+    'version=1.1.1&bbox=-50.0%2C20.0%2C20.0%2C75.0&time=2012-10-17T12%3A00%3A00Z&transparent=FALSE')
+VSEC_QUERY = (
+    'layers=ecmwf_EUR_LL015.VS_HV01&styles=&srs=VERT%3ALOGP&format=image%2Fpng&'
+    'request=GetMap&height=245&dim_init_time=2012-10-17T12%3A00%3A00Z&width=842&'
+    'version=1.1.1&bbox=201%2C500.0%2C10%2C100.0&time=2012-10-17T12%3A00%3A00Z&'
+    'path=52.78%2C-8.93%2C48.08%2C11.28&transparent=FALSE')
+LSEC_QUERY = (
+    'layers=ecmwf_EUR_LL015.LS_HV01&styles=&srs=LINE%3A1&format=text%2Fxml&'
+    'request=GetMap&dim_init_time=2012-10-17T12%3A00%3A00Z&'
+    'version=1.1.1&bbox=201&time=2012-10-17T12%3A00%3A00Z&'
+    'path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000')
+
+
 class Test_WMS:
     @pytest.fixture(autouse=True)
     def setup(self, mswms_app):
@@ -376,6 +392,111 @@ class Test_WMS:
         self.client = self.app.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_ok_xml(result.status, result.headers)
+
+    @pytest.mark.parametrize("query, orig, fake, message", [
+        (HSEC_QUERY, "width=479", "width=65000", b"WIDTH must be between 1 and 4096"),
+        (HSEC_QUERY, "height=376", "height=65000", b"HEIGHT must be between 1 and 4096"),
+        (VSEC_QUERY, "width=842", "width=4097", b"WIDTH must be between 1 and 4096"),
+        (HSEC_QUERY, "width=479", "width=0", b"WIDTH must be between"),
+        (HSEC_QUERY, "width=479", "width=-479", b"WIDTH must be between"),
+        (HSEC_QUERY, "width=479", "width=nan", b"WIDTH must be a finite number"),
+        (HSEC_QUERY, "height=376", "height=inf", b"HEIGHT must be a finite number"),
+        (HSEC_QUERY, "width=479", "width=abc", b"Invalid WIDTH"),
+        (HSEC_QUERY, "layers=ecmwf_EUR_LL015.PLDiv01", "layers=" + ",".join(["ecmwf_EUR_LL015.PLDiv01"] * 11),
+         b"At most 10 LAYERS"),
+        (HSEC_QUERY, "layers=ecmwf_EUR_LL015.PLDiv01", "layers=ecmwf_EUR_LL015.PLDiv01,ecmwf_EUR_LL015.PLDiv01",
+         b"LAYERS must not contain the same layer with the same style more than once"),
+        (HSEC_QUERY, "bbox=-50.0%2C20.0%2C20.0%2C75.0", "bbox=-1000%2C-90%2C1000%2C90",
+         b"BBOX must span at most 360 degrees of longitude"),
+        (HSEC_QUERY, "bbox=-50.0%2C20.0%2C20.0%2C75.0", "bbox=0%2C0%2C0%2C0",
+         b"BBOX must have minimum values smaller than its maximum values"),
+        (HSEC_QUERY, "bbox=-50.0%2C20.0%2C20.0%2C75.0", "bbox=20.0%2C20.0%2C-50.0%2C75.0",
+         b"BBOX must have minimum values smaller than its maximum values"),
+        (HSEC_QUERY, "bbox=-50.0%2C20.0%2C20.0%2C75.0", "bbox=-50.0%2C20.0%2C20.0%2C95.0",
+         b"BBOX latitudes must be between -90 and 90"),
+        (HSEC_QUERY, "layers=ecmwf_EUR_LL015.PLDiv01", "layers=", b"LAYERS not specified"),
+        (HSEC_QUERY, "bbox=-50.0", "bbox=nan", b"BBOX must be a finite number"),
+        (HSEC_QUERY, "bbox=-50.0%2C", "bbox=", b"BBOX needs 4 values, got 3"),
+        (HSEC_QUERY, "elevation=200", "elevation=abc", b"Invalid ELEVATION"),
+        (HSEC_QUERY, "elevation=200", "elevation=-inf", b"ELEVATION must be a finite number"),
+        (VSEC_QUERY, "bbox=201", "bbox=1e8", b"BBOX number of points must be between 2 and 2000"),
+        (VSEC_QUERY, "bbox=201", "bbox=1", b"BBOX number of points must be between 2 and 2000"),
+        (VSEC_QUERY, "bbox=201", "bbox=201.5", b"BBOX number of points must be an integer"),
+        (VSEC_QUERY, "bbox=201", "bbox=nan", b"BBOX must be a finite number"),
+        (VSEC_QUERY, "%2C10%2C", "%2C0%2C", b"BBOX number of labels must be between 1 and 2000"),
+        (VSEC_QUERY, "%2C10%2C", "%2C1e9%2C", b"BBOX number of labels must be between 1 and 2000"),
+        (VSEC_QUERY, "500.0", "inf", b"BBOX must be a finite number"),
+        (VSEC_QUERY, "%2C100.0", "", b"BBOX needs 4 values, got 3"),
+        (VSEC_QUERY, "path=52.78%2C-8.93%2C48.08%2C11.28", "path=" + "%2C".join(["52.78%2C-8.93"] * 1001),
+         b"PATH has more than 2000 values"),
+        (VSEC_QUERY, "path=52.78", "path=inf", b"PATH must be a finite number"),
+        (VSEC_QUERY, "path=52.78%2C-8.93%2C48.08%2C11.28", "path=5", b"PATH needs at least 4 values, got 1"),
+        (VSEC_QUERY, "path=52.78%2C-8.93%2C48.08%2C11.28", "path=52.78%2C-8.93%2C48.08",
+         b"PATH needs at least 4 values, got 3"),
+        (VSEC_QUERY, "path=52.78%2C-8.93%2C48.08%2C11.28", "path=52.78%2C-8.93%2C48.08%2C11.28%2C50",
+         b"PATH needs a multiple of 2 values, got 5"),
+        (LSEC_QUERY, "bbox=201", "bbox=5e6", b"BBOX number of points must be between 2 and 2000"),
+        (LSEC_QUERY, "bbox=201", "bbox=nan", b"BBOX number of points must be a finite number"),
+        (LSEC_QUERY, "path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000",
+         "path=" + "%2C".join(["52.78%2C-8.93%2C25000"] * 1001), b"PATH has more than 3000 values"),
+        (LSEC_QUERY, "path=52.78", "path=nan", b"PATH must be a finite number"),
+        (LSEC_QUERY, "path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000", "path=52.78%2C-8.93%2C25000",
+         b"PATH needs at least 6 values, got 3"),
+        (LSEC_QUERY, "path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000",
+         "path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000%2C1", b"PATH needs a multiple of 3 values, got 7"),
+    ])
+    def test_produce_plot_rejects_values_beyond_limits(self, query, orig, fake, message):
+        assert orig in query
+        result = self.app.test_client().get('/?{}'.format(query.replace(orig, fake, 1)))
+        callback_ok_xml(result.status, result.headers)
+        assert b"ServiceExceptionReport" in result.data, result.data
+        assert message in result.data, result.data
+        # InvalidParameterValue is no exception code of WMS 1.1.1 or 1.3.0
+        assert b"InvalidParameterValue" not in result.data, result.data
+
+    @pytest.mark.parametrize("query, setting, value", [
+        (HSEC_QUERY, "max_image_width", 479),
+        (HSEC_QUERY, "max_image_height", 376),
+        (HSEC_QUERY, "max_layers", 1),
+        (VSEC_QUERY, "max_section_points", 201),
+        (VSEC_QUERY, "max_path_waypoints", 2),
+        (LSEC_QUERY, "max_section_points", 201),
+        (LSEC_QUERY, "max_path_waypoints", 2),
+    ])
+    def test_produce_plot_limits_are_configurable(self, query, setting, value):
+        client = self.app.test_client()
+        # the query uses exactly the limit
+        with mock.patch.object(mslib.mswms.wms.mswms_settings, setting, value):
+            result = client.get('/?{}'.format(query))
+        assert b"ServiceExceptionReport" not in result.data, result.data
+        with mock.patch.object(mslib.mswms.wms.mswms_settings, setting, value - 1):
+            result = client.get('/?{}'.format(query))
+        callback_ok_xml(result.status, result.headers)
+        assert b"ServiceExceptionReport" in result.data, result.data
+
+    def test_produce_plot_accepts_limits(self):
+        # msui sends integers, but other clients may send WIDTH/HEIGHT as float
+        result = self.app.test_client().get('/?{}'.format(
+            HSEC_QUERY.replace("width=479", "width=479.0").replace("height=376", "height=")))
+        callback_ok_image(result.status, result.headers)
+        result = self.app.test_client().get('/?{}'.format(VSEC_QUERY.replace("bbox=201", "bbox=2")))
+        callback_ok_image(result.status, result.headers)
+        result = self.app.test_client().get('/?{}'.format(
+            HSEC_QUERY.replace("width=479", "width=4096").replace("height=376", "height=4096")))
+        callback_ok_image(result.status, result.headers)
+
+    def test_produce_plot_linear_section_ignores_image_size(self):
+        # a linear section returns XML, it draws no image
+        result = self.app.test_client().get('/?{}&width=65000&height=nan'.format(LSEC_QUERY))
+        callback_ok_xml(result.status, result.headers)
+        assert b"ServiceExceptionReport" not in result.data, result.data
+
+    def test_get_capabilities_advertises_limits(self):
+        result = self.app.test_client().get('/?request=GetCapabilities&service=WMS&version=1.3.0')
+        callback_ok_xml(result.status, result.headers)
+        assert b"<LayerLimit>10</LayerLimit>" in result.data
+        assert b"<MaxWidth>4096</MaxWidth>" in result.data
+        assert b"<MaxHeight>4096</MaxHeight>" in result.data
 
     @pytest.mark.skip(reason="disabled because of reload")
     def test_import_error(self):

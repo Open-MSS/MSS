@@ -109,6 +109,23 @@ basemap_request_size = 200
 basemap_cache_size = 20
 
 #
+# Request limits                                    ###
+#
+
+# A GetMap request beyond these limits gets a ServiceException instead of a plot,
+# so that a single request cannot use up the memory of the server.
+# 'max_image_width' and 'max_image_height' limit the image size in pixels (msui
+# requests the size of the plot on screen), 'max_layers' the number of LAYERS in
+# one request, each layer can be requested once per style. 'max_section_points' limits the number of interpolation points and
+# labels of vertical and linear sections (msui option 'num_interpolation_points'),
+# 'max_path_waypoints' the number of waypoints in PATH.
+max_image_width = 4096
+max_image_height = 4096
+max_layers = 10
+max_section_points = 2000
+max_path_waypoints = 1000
+
+#
 # Registration of horizontal layers.                     ###
 #
 
