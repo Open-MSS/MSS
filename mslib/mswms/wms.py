@@ -46,6 +46,7 @@ import os
 import io
 import inspect
 import logging
+import math
 import shutil
 import tempfile
 import traceback
@@ -141,6 +142,78 @@ def squash_multiple_xml(xml_strings):
         tree = ElementTree.fromstring(xml)
         base.extend(tree)
     return ElementTree.tostring(base)
+
+
+class InvalidRequestValue(ValueError):
+    """
+    A GetMap parameter is invalid, e.g. not a finite number or outside the limits set in mswms_settings
+
+    produce_plot answers it with a ServiceException. code is the WMS exception code, None for none.
+    """
+    def __init__(self, text, code=None):
+        super().__init__(text)
+        self.code = code
+
+
+def check_range(number, name, lowest=-math.inf, highest=math.inf, integer=False):
+    """
+    Returns number, an int if integer is True, if it is in the range lowest..highest.
+    Raises InvalidRequestValue otherwise.
+    """
+    if integer and not float(number).is_integer():
+        raise InvalidRequestValue(f"{name} must be an integer, got '{number}'")
+    if not lowest <= number <= highest:
+        raise InvalidRequestValue(f"{name} must be between {lowest} and {highest}, got '{number}'")
+    return int(number) if integer else number
+
+
+def parse_number(value, name, lowest=-math.inf, highest=math.inf, integer=False):
+    """
+    Converts a query value to a finite float (to an int if integer is True)
+    in the range lowest..highest. Raises InvalidRequestValue otherwise.
+    """
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        raise InvalidRequestValue(f"Invalid {name}: '{value}'")
+    if not math.isfinite(number):
+        raise InvalidRequestValue(f"{name} must be a finite number, got '{value}'")
+    return check_range(number, name, lowest, highest, integer)
+
+
+def parse_numbers(values, name, count=None, min_count=None, max_count=None, multiple_of=1):
+    """
+    Converts a comma separated query value to a list of finite floats. count
+    is the required number of values, min_count and max_count the minimum and
+    maximum number, multiple_of what the number has to be a multiple of, e.g.
+    2 for lat/lon pairs. The number is checked before the string is split.
+    """
+    number = values.count(",") + 1
+    if count is not None and number != count:
+        raise InvalidRequestValue(f"{name} needs {count} values, got {number}")
+    if max_count is not None and number > max_count:
+        raise InvalidRequestValue(f"{name} has more than {max_count} values")
+    if min_count is not None and number < min_count:
+        raise InvalidRequestValue(f"{name} needs at least {min_count} values, got {number}")
+    if number % multiple_of != 0:
+        raise InvalidRequestValue(f"{name} needs a multiple of {multiple_of} values, got {number}")
+    return [parse_number(value, name) for value in values.split(",")]
+
+
+def check_bbox(bbox, bbox_units):
+    """
+    Checks the BBOX (x_min, y_min, x_max, y_max) of a horizontal section, already in x/y order
+
+    The box must not be empty. In degrees the latitudes are in -90..90 and the box spans at most 360 degrees of
+    longitude, beyond these the map and its grid lines can't be drawn.
+    """
+    if not (bbox[0] < bbox[2] and bbox[1] < bbox[3]):
+        raise InvalidRequestValue(f"BBOX must have minimum values smaller than its maximum values, got {bbox}")
+    if bbox_units == "degree":
+        if not (-90 <= bbox[1] and bbox[3] <= 90):
+            raise InvalidRequestValue(f"BBOX latitudes must be between -90 and 90, got {bbox}")
+        if bbox[2] - bbox[0] > 360:
+            raise InvalidRequestValue(f"BBOX must span at most 360 degrees of longitude, got {bbox}")
 
 
 class WMSServer:
@@ -618,7 +691,10 @@ class WMSServer:
                                service_post_code=mswms_settings.service_post_code,
                                service_country=mswms_settings.service_country,
                                service_fees=mswms_settings.service_fees,
-                               service_access_constraints=mswms_settings.service_access_constraints)
+                               service_access_constraints=mswms_settings.service_access_constraints,
+                               max_layers=mswms_settings.max_layers,
+                               max_image_width=mswms_settings.max_image_width,
+                               max_image_height=mswms_settings.max_image_height)
         return return_data.encode("utf-8"), "text/xml"
 
     def produce_plot(self, query, mode):
@@ -627,6 +703,12 @@ class WMSServer:
         the parameters specified in the URL.
 
         """
+        try:
+            return self._produce_plot(query, mode)
+        except InvalidRequestValue as ex:
+            return self.create_service_exception(code=ex.code, text=str(ex), version=query.get("VERSION", "1.1.1"))
+
+    def _produce_plot(self, query, mode):
         logging.debug("GetMap/GetVSec request. Interpreting parameters..")
 
         # Evaluate query parameters:
@@ -634,14 +716,28 @@ class WMSServer:
 
         version = query.get("VERSION", "1.1.1")
 
-        # Image size.
-        width = query.get('WIDTH', 900)
-        height = query.get('HEIGHT', 600)
-        figsize = float(width if width != "" else 900), float(height if height != "" else 600)
-        logging.debug("  requested image size = %sx%s", figsize[0], figsize[1])
+        def requested_figsize():
+            # Image size, only of the modes that draw an image
+            width = query.get('WIDTH') or 900
+            height = query.get('HEIGHT') or 600
+            figsize = (parse_number(width, "WIDTH", 1, mswms_settings.max_image_width),
+                       parse_number(height, "HEIGHT", 1, mswms_settings.max_image_height))
+            logging.debug("  requested image size = %sx%s", figsize[0], figsize[1])
+            return figsize
 
         # Requested layers.
         layers = [layer for layer in query.get('LAYERS', '').strip().split(',') if layer]
+        if not layers:
+            return self.create_service_exception(code="LayerNotDefined", text="LAYERS not specified",
+                                                 version=version)
+        if len(layers) > mswms_settings.max_layers:
+            raise InvalidRequestValue(f"At most {mswms_settings.max_layers} LAYERS can be requested at once")
+        # Requested style(s).
+        styles = [style for style in query.get('STYLES', 'default').strip().split(',') if style]
+        # each layer is drawn once per style, repeating it would multiply the cost of the request
+        layer_styles = [(layer, styles[index] if len(styles) > index else None) for index, layer in enumerate(layers)]
+        if len(set(layer_styles)) != len(layer_styles):
+            raise InvalidRequestValue("LAYERS must not contain the same layer with the same style more than once")
         images = []
         for index, layer in enumerate(layers):
             if layer.find(".") > 0:
@@ -650,9 +746,7 @@ class WMSServer:
                 dataset = None
             logging.debug("  requested dataset = '%s', layer = '%s'", dataset, layer)
 
-            # Requested style(s).
-            styles = [style for style in query.get('STYLES', 'default').strip().split(',') if style]
-            style = styles[index] if len(styles) > index else None
+            style = layer_styles[index][1]
             logging.debug("  requested style = '%s'", style)
 
             # Forecast initialisation time.
@@ -691,7 +785,7 @@ class WMSServer:
                 mode = "getlsec"
             else:
                 try:
-                    get_projection_params(crs)
+                    bbox_units = get_projection_params(crs)["bbox"]
                 except ValueError:
                     return self.create_service_exception(
                         code="InvalidSRS", text=f"The requested CRS '{crs}' is not supported.", version=version)
@@ -748,19 +842,20 @@ class WMSServer:
                         version=version)
 
                 # Bounding box.
-                try:
-                    if is_yx:
-                        bbox = [float(v) for v in query.get('BBOX', '-90,-180,90,180').split(',')]
-                        bbox = (bbox[1], bbox[0], bbox[3], bbox[2])
-                    else:
-                        bbox = [float(v) for v in query.get('BBOX', '-180,-90,180,90').split(',')]
-
-                except ValueError:
-                    return self.create_service_exception(text=f"Invalid BBOX: {query.get('BBOX')}", version=version)
+                if is_yx:
+                    bbox = parse_numbers(query.get('BBOX', '-90,-180,90,180'), "BBOX", count=4)
+                    bbox = (bbox[1], bbox[0], bbox[3], bbox[2])
+                else:
+                    bbox = parse_numbers(query.get('BBOX', '-180,-90,180,90'), "BBOX", count=4)
+                check_bbox(bbox, bbox_units)
+                figsize = requested_figsize()
 
                 # Vertical level, if applicable.
                 level = query.get('ELEVATION')
-                level = float(level) if level is not None else None
+                try:
+                    level = parse_number(level, "ELEVATION") if level is not None else None
+                except InvalidRequestValue as ex:
+                    raise InvalidRequestValue(str(ex), code="InvalidDimensionValue")
                 layer_datatypes = self.hsec_layer_registry[dataset][layer].required_datatypes()
                 from mslib.utils.netCDF4tools import VERTICAL_AXIS
                 if level is None and any(_x in layer_datatypes for _x in VERTICAL_AXIS):
@@ -793,11 +888,10 @@ class WMSServer:
                 path = query.get("PATH")
                 if path is None:
                     return self.create_service_exception(text="PATH not specified", version=version)
-                try:
-                    path = [float(v) for v in path.split(',')]
-                    path = [[lat, lon] for lat, lon in zip(path[0::2], path[1::2])]
-                except ValueError:
-                    return self.create_service_exception(text=f"Invalid PATH: {path}", version=version)
+                # at least two waypoints of lat, lon
+                path = parse_numbers(path, "PATH", min_count=4, max_count=2 * mswms_settings.max_path_waypoints,
+                                     multiple_of=2)
+                path = [[lat, lon] for lat, lon in zip(path[0::2], path[1::2])]
                 logging.debug("VSEC PATH: %s", path)
 
                 # Check requested layers.
@@ -820,10 +914,12 @@ class WMSServer:
                                                              version=version)
 
                 # Bounding box (num interp. points, p_bot, num labels, p_top).
-                try:
-                    bbox = [float(v) for v in query.get("BBOX", "101,1050,10,180").split(",")]
-                except ValueError:
-                    return self.create_service_exception(text=f"Invalid BBOX: {query.get('BBOX')}", version=version)
+                bbox = parse_numbers(query.get("BBOX", "101,1050,10,180"), "BBOX", count=4)
+                numpoints = check_range(bbox[0], "BBOX number of points",
+                                        2, mswms_settings.max_section_points, integer=True)
+                numlabels = check_range(bbox[2], "BBOX number of labels",
+                                        1, mswms_settings.max_section_points, integer=True)
+                figsize = requested_figsize()
 
                 draw_verticals = query.get("DRAWVERTICALS", "false").lower() == "true"
 
@@ -831,9 +927,9 @@ class WMSServer:
                 try:
                     plot_driver.set_plot_parameters(plot_object=self.vsec_layer_registry[dataset][layer],
                                                     vsec_path=path,
-                                                    vsec_numpoints=bbox[0],
+                                                    vsec_numpoints=numpoints,
                                                     vsec_path_connection="greatcircle",
-                                                    vsec_numlabels=bbox[2],
+                                                    vsec_numlabels=numlabels,
                                                     init_time=init_time,
                                                     valid_time=valid_time,
                                                     style=style,
@@ -863,11 +959,10 @@ class WMSServer:
                 path = query.get("PATH")
                 if path is None:
                     return self.create_service_exception(text="PATH not specified", version=version)
-                try:
-                    path = [float(v) for v in path.split(',')]
-                    path = [[lat, lon, alt] for lat, lon, alt in zip(path[0::3], path[1::3], path[2::3])]
-                except ValueError:
-                    return self.create_service_exception(text=f"Invalid PATH: {path}", version=version)
+                # at least two waypoints of lat, lon, alt
+                path = parse_numbers(path, "PATH", min_count=6, max_count=3 * mswms_settings.max_path_waypoints,
+                                     multiple_of=3)
+                path = [[lat, lon, alt] for lat, lon, alt in zip(path[0::3], path[1::3], path[2::3])]
                 logging.debug("LSEC PATH: %s", path)
 
                 # Check requested layers.
@@ -890,10 +985,8 @@ class WMSServer:
                                                              version=version)
 
                 # Bounding box (num interp. points).
-                try:
-                    bbox = float(query.get("BBOX", "101"))
-                except ValueError:
-                    return self.create_service_exception(text=f"Invalid BBOX: {query.get('BBOX')}", version=version)
+                bbox = parse_number(query.get("BBOX", "101"), "BBOX number of points",
+                                    2, mswms_settings.max_section_points, integer=True)
 
                 plot_driver = self.lsec_drivers[dataset]
                 try:

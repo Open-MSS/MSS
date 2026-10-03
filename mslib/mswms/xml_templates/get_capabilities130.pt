@@ -28,6 +28,9 @@
         </ContactInformation>
         <Fees>${ service_fees }</Fees>
         <AccessConstraints>${ service_access_constraints }</AccessConstraints>
+        <LayerLimit>${ max_layers }</LayerLimit>
+        <MaxWidth>${ max_image_width }</MaxWidth>
+        <MaxHeight>${ max_image_height }</MaxHeight>
     </Service>
     <Capability>
         <Request>
