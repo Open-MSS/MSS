@@ -702,7 +702,9 @@ def test_create_app_refuses_insecure_admin_token(no_secret_key_in_environment, a
         create_app(settings)
 
 
-@pytest.mark.parametrize("secret_key", [VALID_SECRET_KEY, secrets.token_urlsafe(24), secrets.token_urlsafe(32)])
+# fixed ids: pytest-xdist needs the same test ids in every worker, the random keys would differ
+@pytest.mark.parametrize("secret_key", [VALID_SECRET_KEY, secrets.token_urlsafe(24), secrets.token_urlsafe(32)],
+                         ids=["fixed", "random-32-characters", "random-43-characters"])
 def test_create_app_accepts_secret_key(no_secret_key_in_environment, secret_key):
     settings = copy.copy(mscolab_settings)
     settings.SECRET_KEY = secret_key
