@@ -53,6 +53,7 @@ from mslib.msui.mscolab_archive_browser import MSColab_OperationArchiveBrowser
 from mslib.msui.mscolab_connect_dialog import MSColab_ConnectDialog
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.schemas import (
+    MAX_VERSION_NAME_LENGTH,
     CreateOperationRequest,
     CreateOperationResponse,
     DeleteOperationRequest,
@@ -295,6 +296,7 @@ class MSUIMscolab(QtCore.QObject):
         else:
             self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
             self.conn.signal_reload.connect(self.reload_window)
+            self.conn.signal_file_save_refused.connect(self.handle_file_save_refused)
             self.conn.signal_new_permission.connect(self.render_new_permission)
             self.conn.signal_update_permission.connect(self.handle_update_permission)
             self.conn.signal_revoke_permission.connect(self.handle_revoke_permission)
@@ -1070,6 +1072,16 @@ class MSUIMscolab(QtCore.QObject):
             return
         self.reload_wps_from_server()
 
+    @QtCore.pyqtSlot(int, str)
+    def handle_file_save_refused(self, op_id, message):
+        """
+        The server didn't save the changes of this client, shows why and the flight track of the server
+        """
+        if op_id != self.active_op_id:
+            return
+        show_popup(self.ui, "Changes not saved", f"Your changes to the operation were not saved. {message}")
+        self.reload_window(op_id)
+
     @QtCore.pyqtSlot()
     def reload_windows_slot(self):
         self.reload_window(self.active_op_id)
@@ -1548,7 +1560,8 @@ class MSUIMscolab(QtCore.QObject):
         self.waypoints_model.dataChanged.disconnect(self.handle_waypoints_changed)
         self.waypoints_model = model
         self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
-        self.handle_waypoints_changed(version_name=file_name)
+        # the server refuses longer version names
+        self.handle_waypoints_changed(version_name=file_name[:MAX_VERSION_NAME_LENGTH])
         self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         self.reload_view_windows()
         show_popup(self.ui, "Import Success", f"The file - {file_name}, was imported successfully!", 1)

@@ -141,7 +141,7 @@ class Test_Files:
             changes = Change.query.filter_by(op_id=operation.id).all()
             assert changes is not None
             assert changes[0].id == 1
-            assert self.fm.undo_changes(changes[0].id, self.user) is True
+            assert self.fm.undo_changes(changes[0].id, self.user)[0] is True
             assert len(self.fm.get_all_changes(operation.id, self.user)) == 3
             assert XML_CONTENT2 == self.fm.get_file(operation.id, self.user)
 

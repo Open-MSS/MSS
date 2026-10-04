@@ -13,7 +13,9 @@ Global map: ../../ARCHITECTURE.md
 - `blueprints/{operation,auth,chat,user,docs,admin}/` — all ~50 REST routes; keep
   handlers thin, business logic belongs in the managers. `admin` is
   token-authenticated (`ADMIN_TOKEN`) and localhost-only, not per-user — it's the
-  CLI's only way to trigger a socket.io event on the live server (see `cli_notify.py`)
+  CLI's only way to trigger a socket.io event on the live server (see `cli_notify.py`).
+  Behind a same-host proxy the localhost check passes for everyone, so the token is
+  the real protection
 - `file_manager.py` — operations/permissions/versioning (git-backed) — core
 - `chat_manager.py`, `sockets_manager.py` — chat + socket.io event handlers;
   `_setup_managers(app)` builds a SocketIO instance per app, never a shared one

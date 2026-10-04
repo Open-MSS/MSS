@@ -42,6 +42,10 @@ ADMIN_BP = Blueprint('admin', __name__)
 # Only mscolab's own CLI, running on the same host as the server, may call this
 # endpoint - it is not meant to be reachable over the network like the rest of
 # the REST API, even though it shares the same Flask app/port.
+# Behind a reverse proxy on the same host every request comes from 127.0.0.1, so
+# this check passes for anyone and only ADMIN_TOKEN protects the endpoint. Proxied
+# requests can't be refused here, because the CLI posts to SERVER_URL, which may
+# be the proxy too. docs/mscolab.rst describes how to keep the endpoint local.
 _ALLOWED_REMOTE_ADDRS = {"127.0.0.1", "::1"}
 
 # Maps a SocketEvents constant to the SocketsManager method that emits it and

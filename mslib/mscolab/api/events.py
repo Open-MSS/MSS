@@ -45,6 +45,8 @@ class SocketEvents:
     # File events
     FILE_SAVE = 'file-save'
     FILE_CHANGED = 'file-changed'
+    # sent only to the client whose FILE_SAVE was refused
+    FILE_SAVE_REFUSED = 'file-save-refused'
 
     # Permission events
     ADD_USER_TO_OPERATION = 'add-user-to-operation'

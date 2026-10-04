@@ -31,7 +31,6 @@ import json
 from flask import Blueprint, request, g, jsonify, current_app
 
 from mslib.mscolab.auth import verify_user
-from mslib.mscolab.models import Change
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.schemas import (
     BulkPermissionsRequest,
@@ -123,7 +122,8 @@ def get_change_content():
     user = g.user
     result = fm.get_change_content(req.ch_id, user)
     if result is False:
-        return "False"
+        # no such change, or not one of an operation the user is a member of
+        return "False", 404
     return jsonify(GetChangeContentResponse(content=result).to_dict())
 
 
@@ -144,17 +144,31 @@ def set_version_name():
 @verify_user
 def authorized_users():
     fm = current_app.extensions['fm']
-    req = GetAuthorizedUsersRequest.from_args_and_form(request.args, request.form)
+    try:
+        req = GetAuthorizedUsersRequest.from_args_and_form(request.args, request.form)
+    except (TypeError, ValueError):
+        # a missing or non-numeric op_id
+        return "False", 400
+    if not fm.is_member(g.user.id, req.op_id):
+        return "False", 403
     return GetAuthorizedUsersResponse(users=fm.get_authorized_users(req.op_id)).to_text()
 
 
 @OPERATION_BP.route(f"/{endpoints.ACTIVE_USERS}", methods=["GET"])
 @verify_user
 def active_users():
+    fm = current_app.extensions['fm']
     sockio = current_app.extensions['sockio']
-    req = GetActiveUsersRequest.from_args_and_form(request.args, request.form)
-    response = GetActiveUsersResponse(active_users=list(sockio.sm.active_users_per_operation[req.op_id]))
-    return jsonify(response.to_dict())
+    try:
+        req = GetActiveUsersRequest.from_args_and_form(request.args, request.form)
+    except (TypeError, ValueError):
+        # a missing or non-numeric op_id
+        return "False", 400
+    if not fm.is_member(g.user.id, req.op_id):
+        return "False", 403
+    # an operation nobody has selected yet has no entry
+    users = sockio.sm.active_users_per_operation.get(req.op_id, set())
+    return jsonify(GetActiveUsersResponse(active_users=list(users)).to_dict())
 
 
 @OPERATION_BP.route(f"/{endpoints.OPERATIONS}", methods=['GET'])
@@ -235,12 +249,13 @@ def undo_changes():
     fm = current_app.extensions['fm']
     req = UndoChangesRequest.from_form(request.form)
     user = g.user
-    result = fm.undo_changes(req.ch_id, user)
-    # get op_id from change
-    ch = Change.query.filter_by(id=req.ch_id).first()
+    result, op_id = fm.undo_changes(req.ch_id, user)
+    if op_id is None:
+        # no such change, or not one of an operation the user is a member of
+        return UndoChangesResponse(success=False).to_text(), 404
     if result is True:
         sockio = current_app.extensions['sockio']
-        sockio.sm.emit_file_change(ch.op_id)
+        sockio.sm.emit_file_change(op_id)
     return UndoChangesResponse(success=result).to_text()
 
 

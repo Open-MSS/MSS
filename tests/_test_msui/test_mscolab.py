@@ -24,6 +24,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import json
 import os
 import io
 import sys
@@ -996,6 +997,25 @@ class Test_Mscolab:
         def assert_():
             assert self.window.mscolab.help_dialog is None
         qtbot.wait_until(assert_)
+
+    def test_file_save_refused_shows_why_and_reloads(self, qtbot):
+        # e.g. the operation was archived while the user was editing it
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
+        self._create_user(qtbot, "something", "something@something.org", "something", "Test User")
+        self._create_operation(qtbot, "flight1234", "Description flight1234")
+        self._activate_operation_at_index(0)
+        op_id = self.window.mscolab.active_op_id
+        with mock.patch("mslib.msui.mscolab.show_popup") as popup, \
+                mock.patch.object(self.window.mscolab, "reload_wps_from_server") as reload:
+            self.window.mscolab.conn.handle_file_save_refused(
+                json.dumps({"op_id": op_id, "message": "The operation was archived."}))
+            popup.assert_called_once()
+            assert "The operation was archived." in popup.call_args.args[2]
+            reload.assert_called_once()
+            # a refusal for another operation than the active one is ignored
+            self.window.mscolab.conn.handle_file_save_refused(json.dumps({"op_id": op_id + 1000, "message": "x"}))
+            popup.assert_called_once()
 
     def test_user_chosen_text_is_not_markup(self, qtbot):
         markup = '<b>bold</b><img src="file://attacker.example/s/x.png">'

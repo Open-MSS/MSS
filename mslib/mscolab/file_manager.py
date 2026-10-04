@@ -45,6 +45,8 @@ from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX, is_valid_operation_path,
 
 # "creator" is assigned only by create_operation
 ASSIGNABLE_ACCESS_LEVELS = ("admin", "collaborator", "viewer")
+# may change the flight track and its versions
+WRITE_ACCESS_LEVELS = ("creator", "admin", "collaborator")
 
 
 class FileManager:
@@ -231,6 +233,27 @@ class FileManager:
             return False
         return perm.access_level
 
+    def is_archived(self, op_id):
+        """
+        op_id: operation id
+
+        An archived operation is read-only: its flight track, its versions and its chat can't be changed
+        until an admin or the creator unarchives it. An operation that doesn't exist counts as archived,
+        so nothing can be written to it either.
+        """
+        operation = Operation.query.filter_by(id=op_id).first()
+        return operation is None or not operation.active
+
+    def may_write(self, u_id, op_id):
+        """
+        u_id: user id
+        op_id: operation id
+
+        Whether the user may change the flight track, the versions and the chat of the operation: the creator,
+        admins and collaborators may, while the operation is not archived. Every write path checks this.
+        """
+        return self.auth_type(u_id, op_id) in WRITE_ACCESS_LEVELS and not self.is_archived(op_id)
+
     def modify_user(self, user, attribute=None, value=None, action=None):
         if action == "create":
             user_query = User.query.filter_by(emailid=str(user.emailid)).first()
@@ -351,18 +374,20 @@ class FileManager:
         else:
             return False, "User not found"
 
-    def get_user_profile_image(self, user_id, op_id, requesting_user_id=None):
+    def get_user_profile_image(self, user_id, op_id, requesting_user_id):
         """
         Fetches and verifies the profile image of a user based on specific conditions.
 
-        This method determines if a user's profile image can be accessed based on their
-        membership in an operation (OP), the identity of the requesting user, and
-        whether the user has an associated profile image.
+        Users may see their own profile image, and the profile images of the other members of
+        an operation op_id they are a member of.
         """
-        if op_id is not None and not self.is_member(user_id, op_id):
-            # any participant of the OP is allowed to see profile images
+        try:
+            user_id, requesting_user_id = int(user_id), int(requesting_user_id)
+            op_id = None if op_id is None else int(op_id)
+        except (TypeError, ValueError):
             return False, "Profile image not shown"
-        if op_id is None and (requesting_user_id is None or int(requesting_user_id) != int(user_id)):
+        if user_id != requesting_user_id and (
+                op_id is None or not self.is_member(requesting_user_id, op_id) or not self.is_member(user_id, op_id)):
             return False, "Profile image not shown"
         user = db.session.get(User, user_id)
         if user:
@@ -454,9 +479,12 @@ class FileManager:
         """
         if not verify_waypoint_data(content):
             return False
+        # checked before anything is written, a too long name would make the Change fail after the commit
+        if version_name is not None and len(str(version_name)) > Change.version_name.type.length:
+            return False
         # ToDo use comment
         operation = Operation.query.filter_by(id=op_id).first()
-        if not operation:
+        if not operation or not operation.active:
             return False
 
         op_lock = self._get_operation_lock(operation.id)
@@ -546,6 +574,18 @@ class FileManager:
             'created_at': change.created_at.isoformat()
         }, changes))
 
+    def get_change(self, ch_id, user):
+        """
+        ch_id: change id
+        user: user of this request
+
+        Returns the change ch_id, or None when there is no such change or user is not a member of its operation
+        """
+        change = Change.query.filter_by(id=ch_id).first()
+        if change is None or not self.is_member(user.id, change.op_id):
+            return None
+        return change
+
     def get_change_content(self, ch_id, user):
         """
         ch_id: change id
@@ -553,13 +593,8 @@ class FileManager:
 
         Get change related to id
         """
-        ch = Change.query.filter_by(id=ch_id).first()
-        perm = Permission.query.filter_by(u_id=user.id, op_id=ch.op_id).first()
-        if perm is None:
-            return False
-
-        change = Change.query.filter_by(id=ch_id).first()
-        if not change:
+        change = self.get_change(ch_id, user)
+        if change is None:
             return False
         operation = Operation.query.filter_by(id=change.op_id).first()
         operation_path = Path(self.data_dir) / operation.path
@@ -568,32 +603,35 @@ class FileManager:
         return change_content
 
     def set_version_name(self, ch_id, op_id, u_id, version_name):
-        if (not self.is_admin(u_id, op_id) and not self.is_creator(u_id, op_id) and not
-                self.is_collaborator(u_id, op_id)):
+        """
+        Names the change ch_id of operation op_id, a version_name of None removes the name
+        """
+        if not self.may_write(u_id, op_id):
             return False
-        Change.query\
-            .filter(Change.id == ch_id)\
+        if version_name is not None and len(version_name) > Change.version_name.type.length:
+            return False
+        # the change has to belong to op_id, the operation the permission was checked on
+        updated = Change.query\
+            .filter(Change.id == ch_id, Change.op_id == op_id)\
             .update({Change.version_name: version_name}, synchronize_session=False)
         db.session.commit()
-        return True
+        return updated == 1
 
     def undo_changes(self, ch_id, user):
         """
         ch_id: change-id
         user: user of this request
 
-        Undo a change
+        Undo a change. Returns (success, op_id), op_id is None when there is no such change or the user is
+        not a member of its operation.
         # ToDo add a revert option, which removes only that commit's change
         """
-        ch = Change.query.filter_by(id=ch_id).first()
-        if (not self.is_admin(user.id, ch.op_id) and not self.is_creator(user.id, ch.op_id) and not
-                self.is_collaborator(user.id, ch.op_id)):
-            return False
+        ch = self.get_change(ch_id, user)
         if ch is None:
-            return False
+            return False, None
+        if not self.may_write(user.id, ch.op_id):
+            return False, ch.op_id
         operation = Operation.query.filter_by(id=ch.op_id).first()
-        if not ch or not operation:
-            return False
 
         op_lock = self._get_operation_lock(operation.id)
         with op_lock:
@@ -609,10 +647,10 @@ class FileManager:
                     change = Change(ch.op_id, user.id, cm.hexsha)
                     db.session.add(change)
                     db.session.commit()
-                    return True
+                    return True, ch.op_id
                 except Exception as ex:
                     logging.debug(ex)
-                    return False
+                    return False, ch.op_id
 
     def fetch_users_without_permission(self, op_id, u_id):
         if not self.is_admin(u_id, op_id) and not self.is_creator(u_id, op_id):
