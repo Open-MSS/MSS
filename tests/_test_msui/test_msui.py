@@ -33,8 +33,9 @@ import argparse
 import pytest
 from pathlib import Path
 from urllib.request import urlopen
-from PyQt5 import QtWidgets, QtTest
+from PyQt5 import QtCore, QtWidgets, QtTest
 from mslib import __version__
+from tests.utils import shown_text
 from tests.constants import ROOT_DIR, MSUI_CONFIG_PATH, MSUI_CONFIG_FILE_PATH
 from mslib.msui import msui
 from mslib.msui import msui_mainwindow as msui_mw
@@ -183,6 +184,39 @@ class Test_MSS_ShortcutDialog:
                 self.shortcuts.fill_list()
                 break
         assert self.shortcuts.treeWidget.topLevelItemCount() == 2
+
+    def test_tooltips_show_widget_texts_as_text(self):
+        # texts of labels can come from a server, e.g. the title of a WMS layer, and are shown as plain text there
+        markup = '<img src="file://attacker.example/share/x.png">'
+        label = QtWidgets.QLabel(self.main_window)
+        label.setObjectName("markupLabel")
+        label.setTextFormat(QtCore.Qt.PlainText)
+        label.setText(f"Title {markup}")
+        label.setToolTip(f"<b>bold</b> {markup}")
+        self.shortcuts.cbNoShortcut.setCheckState(True)
+        self.shortcuts.fill_list()
+        items = [header.child(i) for header in (self.shortcuts.treeWidget.topLevelItem(j)
+                                                for j in range(self.shortcuts.treeWidget.topLevelItemCount()))
+                 for i in range(header.childCount())]
+        item = next(item for item in items if item.source_object is label)
+        lines = [" ".join(line.split()) for line in shown_text(item.toolTip(0)).splitlines()]
+        # the tooltip of the label is rich text, its markup is not shown; the label shows its text as plain text
+        assert lines[:2] == ["ToolTip: bold", f"Text: Title {markup}"]
+
+    @pytest.mark.parametrize("text", ["T<300K> mean", "R&amp;D", "Press <Ctrl> to plot"])
+    def test_tooltips_keep_plain_texts(self, text):
+        # texts Qt shows as plain text are shown as they are, also in a widget with automatic text format
+        label = QtWidgets.QLabel(self.main_window)
+        label.setObjectName("plainLabel")
+        label.setText(text)
+        label.setToolTip(text)
+        self.shortcuts.cbNoShortcut.setCheckState(True)
+        self.shortcuts.fill_list()
+        items = [header.child(i) for header in (self.shortcuts.treeWidget.topLevelItem(j)
+                                                for j in range(self.shortcuts.treeWidget.topLevelItemCount()))
+                 for i in range(header.childCount())]
+        item = next(item for item in items if item.source_object is label)
+        assert shown_text(item.toolTip(0)).splitlines()[:2] == [f"ToolTip: {text}", f"Text: {text}"]
 
     # ToDo we need a test for reset_highlight when e.g. Transparent was selected and afterwards topview was destroyed
 

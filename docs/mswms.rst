@@ -476,6 +476,10 @@ This runs the wms server on port 5000. If you use a certificate and proxy by e.g
 
     PYTHONPATH=~/INSTANCE/wsgi/ waitress-serve --host 127.0.0.1 --port 5000 --url-scheme=http wsgi_setup:app
 
+The capabilities name the address of the server for the maps, built from the scheme and host of the request.
+Behind an https proxy without --url-scheme=https, this address starts with http. msui then warns, and it
+doesn't send the login of a protected server with the map requests, so they fail.
+
 Further documentations:
 
 - `Waitress <https://docs.pylonsproject.org/projects/waitress/en/stable/index.html>`_

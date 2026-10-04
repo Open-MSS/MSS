@@ -31,6 +31,7 @@
 """
 
 import logging
+from urllib.parse import urlsplit
 
 import keyring
 from flask import current_app
@@ -114,6 +115,24 @@ def get_auth_from_url_and_name(server_url, http_auth, overwrite_login_cache=True
         name = None
     auth = constants.AUTH_LOGIN_CACHE.get(server_url, (name, None))
     return auth
+
+
+def same_origin(url, base_url):
+    """
+    True if url has the scheme, host and port of base_url
+
+    A password or token given for base_url may only be sent to url when this is True.
+    """
+    default_ports = {"http": 80, "https": 443}
+    if not (isinstance(url, str) and isinstance(base_url, str)):
+        return False
+    try:
+        a, b = urlsplit(url), urlsplit(base_url)
+        return (a.hostname is not None and a.scheme.lower() == b.scheme.lower() and a.hostname == b.hostname and
+                (a.port or default_ports.get(a.scheme.lower())) == (b.port or default_ports.get(b.scheme.lower())))
+    except ValueError:
+        # e.g. an invalid port
+        return False
 
 
 def send_email(to, subject, template):

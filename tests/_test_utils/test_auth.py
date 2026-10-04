@@ -25,6 +25,8 @@
     limitations under the License.
 """
 
+import pytest
+
 from tests.utils import create_msui_settings_file
 from mslib.utils import auth
 from mslib.utils.config import read_config_file, config_loader
@@ -89,3 +91,24 @@ def test_get_auth_from_url_and_name():
     # check storage of MSCOLAB password
     auth.save_password_to_keyring('MSCOLAB', auth_username, "password")
     assert auth.get_password_from_keyring("MSCOLAB", auth_username) == 'password'
+
+
+@pytest.mark.parametrize("url, base_url, expected", [
+    ("https://wms.example/maps?", "https://wms.example/wms", True),
+    ("https://WMS.example:443/", "HTTPS://wms.example/wms", True),
+    ("http://wms.example:80/", "http://wms.example", True),
+    ("http://wms.example/", "https://wms.example/", False),
+    ("https://wms.example/", "http://wms.example/", False),
+    ("https://other.example/", "https://wms.example/", False),
+    ("https://wms.example.attacker.example/", "https://wms.example/", False),
+    ("https://wms.example:8443/", "https://wms.example/", False),
+    ("https://wms.example@attacker.example/", "https://wms.example/", False),
+    ("https://wms.example:99999/", "https://wms.example/", False),
+    ("/relative/path", "https://wms.example/", False),
+    ("", "", False),
+    (None, "https://wms.example/", False),
+    ("https://wms.example/", None, False),
+    (None, None, False),
+])
+def test_same_origin(url, base_url, expected):
+    assert auth.same_origin(url, base_url) is expected

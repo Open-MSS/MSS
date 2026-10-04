@@ -34,6 +34,7 @@ from abc import abstractmethod
 from PyQt5 import QtCore, QtWidgets
 from mslib.utils import constants
 from mslib.utils.config import load_settings_qsettings, save_settings_qsettings
+from mslib.utils.qt import plain_text_as_html
 
 
 class MSUIViewWindow(QtWidgets.QMainWindow):
@@ -82,7 +83,7 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
             ret = QtWidgets.QMessageBox.Yes
         else:
             ret = QtWidgets.QMessageBox.warning(self, self.tr("Mission Support System"),
-                                                self.tr(f"Do you want to close this {self.name}?"),
+                                                plain_text_as_html(self.tr(f"Do you want to close this {self.name}?")),
                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                                                 QtWidgets.QMessageBox.No)
 

@@ -35,7 +35,7 @@ from lxml import etree as et, objectify
 from pathlib import Path
 from matplotlib import patheffects
 
-from mslib.utils.qt import get_open_filenames, get_save_filename
+from mslib.utils.qt import get_open_filenames, get_save_filename, plain_text_as_html
 from mslib.utils.colordialog import CustomColorDialog
 from mslib.msui.qt5 import ui_kmloverlay_dockwidget as ui
 from PyQt5 import QtGui, QtWidgets, QtCore
@@ -582,7 +582,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                     del self.dict_files[self.listWidget.item(index).text()]  # del the checked files from dictionary
                     self.listWidget.takeItem(index)  # remove file item from ListWidget
                     QtWidgets.QMessageBox.critical(
-                        self, self.tr("KML Overlay"), self.tr(f"ERROR:\n{type(ex)}\n{ex}"))
+                        self, self.tr("KML Overlay"), plain_text_as_html(self.tr(f"ERROR:\n{type(ex)}\n{ex}")))
         logging.debug(self.dict_files)
 
     def merge_file(self):
@@ -639,10 +639,10 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 except (OSError, IOError) as ex:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("Problem while merging KML Files:"),
-                        self.tr(f"ERROR: {type(ex)} {ex}"))
+                        plain_text_as_html(self.tr(f"ERROR: {type(ex)} {ex}")))
             else:
                 QtWidgets.QMessageBox.warning(self, "Merge KML Files",
-                                              f"File extension is not '.kml'!\n{filename:}")
+                                              plain_text_as_html(f"File extension is not '.kml'!\n{filename:}"))
 
     def remove_ns(self, root):
         """

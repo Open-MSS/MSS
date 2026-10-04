@@ -42,6 +42,7 @@ from mslib.utils import constants
 from mslib.utils import setup_logging
 from mslib.msui.icons import icons
 from mslib.utils.config import read_config_file
+from mslib.utils.qt import plain_text_as_html
 from PyQt5 import QtGui, QtCore, QtWidgets
 
 # Add config path to PYTHONPATH so plugins located there may be found
@@ -117,7 +118,7 @@ A backup of the old file is stored.
 """
 
             ret = QtWidgets.QMessageBox.question(mainwindow, 'Update of msui_settings.json file',
-                                                 text,
+                                                 plain_text_as_html(text),
                                                  QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                                                  QtWidgets.QMessageBox.No)
             if ret == QtWidgets.QMessageBox.Yes:

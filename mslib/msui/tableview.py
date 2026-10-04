@@ -38,7 +38,7 @@ from mslib.msui import hexagon_dockwidget as hex_dock
 from mslib.msui import performance_settings as perfset
 from PyQt5 import QtCore, QtWidgets, QtGui
 from mslib.msui.qt5 import ui_tableview_window as ui
-from mslib.utils.qt import dropEvent, dragEnterEvent, table_to_csv_clipboard
+from mslib.utils.qt import dropEvent, dragEnterEvent, table_to_csv_clipboard, plain_text_as_html
 from mslib.msui import flighttrack as ft
 from mslib.msui.viewwindows import MSUIViewWindow
 from mslib.msui.icons import icons
@@ -155,8 +155,8 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
             self._updating_show_linear_data = False
         self.cbShowLinearData.setEnabled(available)
         self.cbShowLinearData.setToolTip(
-            self.show_linear_data_tooltip if available else
-            "No linear view provides data values for this flight track")
+            plain_text_as_html(self.show_linear_data_tooltip if available else
+                               "No linear view provides data values for this flight track"))
 
     def on_selection_changed(self, index):
         """
@@ -271,7 +271,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
                     for waypoint in waypoints])
 
             return QtWidgets.QMessageBox.question(
-                self.tableWayPoints, "Remove waypoint", text,
+                self.tableWayPoints, "Remove waypoint", plain_text_as_html(text),
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                 QtWidgets.QMessageBox.Yes) == QtWidgets.QMessageBox.Yes
 

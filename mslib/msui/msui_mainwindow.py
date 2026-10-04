@@ -31,6 +31,7 @@
 
 import copy
 import functools
+import html
 import importlib
 import logging
 import os
@@ -49,7 +50,7 @@ from mslib.utils import constants
 from mslib.msui import editor, mscolab
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
-from mslib.utils.qt import get_open_filenames, get_save_filename, show_popup
+from mslib.utils.qt import get_open_filenames, get_save_filename, show_popup, plain_text_as_html
 from mslib.utils.config import read_config_file, config_loader
 from PyQt5 import QtGui, QtCore, QtWidgets
 from mslib.utils import release_info
@@ -62,6 +63,19 @@ sys.path.append(constants.MSUI_CONFIG_PATH)
 
 def clean_string(string):
     return re.sub(r'\W|^(?=\d)', '_', string)
+
+
+def _without_markup(text, plain=False):
+    """
+    The text Qt shows for text, without letting Qt parse it
+
+    Rich text gets its tags replaced by spaces and its entities resolved. Text that Qt shows as plain text, e.g.
+    "T<300K> mean" or "R&amp;D", or any text of a widget that shows plain text (plain=True) stays as it is.
+    """
+    text = str(text)
+    if plain or not QtCore.Qt.mightBeRichText(text):
+        return text
+    return html.unescape(re.sub(r"<[^>]*>", " ", text))
 
 
 class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
@@ -255,7 +269,12 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                     else text if self.cbDisplayType.currentText() == 'Text' \
                     else (obj.objectName() if hasattr(obj, 'objectName') else text)
                 item.setText(0, f"{itemText}: {shortcut}")
-                item.setToolTip(0, f"ToolTip: {description}\nText: {text}\nObjectName: {objectName}")
+                # tooltips and texts of widgets can be rich text, by design or from a server, e.g. the title of a WMS
+                # layer in a label; only their text is shown, so nothing in them is rendered or loaded
+                shows_plain_text = hasattr(obj, "textFormat") and obj.textFormat() == QtCore.Qt.PlainText
+                item.setToolTip(0, plain_text_as_html(
+                    f"ToolTip: {_without_markup(description)}\n"
+                    f"Text: {_without_markup(text, plain=shows_plain_text)}\nObjectName: {objectName}"))
                 header.addChild(item)
         self.filter_shortcuts(self.leShortcutFilter.text())
 
@@ -728,7 +747,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 logging.error("Error on installing plugin: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
-                    self.tr(f"ERROR: Configuration\n\n{self.import_plugins}\n\nthrows {type(ex)} error:\n{ex}"))
+                    plain_text_as_html(self.tr(
+                        f"ERROR: Configuration\n\n{self.import_plugins}\n\nthrows {type(ex)} error:\n{ex}")))
                 continue
             self.import_plugins[name] = (imported_function, extension)
 
@@ -747,7 +767,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 logging.error("Error on import: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error export plugins"),
-                    self.tr(f"ERROR: Configuration\n\n{plugins}\n\nthrows {type(ex)} error:\n{ex}"))
+                    plain_text_as_html(self.tr(f"ERROR: Configuration\n\n{plugins}\n\nthrows {type(ex)} error:\n{ex}")))
                 continue
             try:
                 self.add_plugin_submenu(name, extension, imported_function, picker_type, plugin_type="Export")
@@ -756,7 +776,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 logging.error("Error on installing plugin: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
-                    self.tr(f"ERROR: Configuration\n\n{self.export_plugins}\n\nthrows {type(ex)} error:\n{ex}"))
+                    plain_text_as_html(self.tr(
+                        f"ERROR: Configuration\n\n{self.export_plugins}\n\nthrows {type(ex)} error:\n{ex}")))
                 continue
             self.export_plugins[name] = (imported_function, extension)
 
@@ -820,7 +841,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                     logging.error("file io plugin error: %s %s", type(ex), ex)
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("file io plugin error"),
-                        self.tr(f"ERROR: {type(ex)} {ex}"))
+                        plain_text_as_html(self.tr(f"ERROR: {type(ex)} {ex}")))
         else:
             self.mscolab.handle_export_msc(extension, function, pickertype)
 
@@ -933,7 +954,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 except (SyntaxError, OSError, IOError) as ex:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("Problem while opening flight track FTML:"),
-                        self.tr(f"ERROR: {type(ex)} {ex}"))
+                        plain_text_as_html(self.tr(f"ERROR: {type(ex)} {ex}")))
             else:
                 try:
                     ft_name, new_waypoints = function(filename)
@@ -943,7 +964,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                     logging.error("file io plugin error: %s %s", type(ex), ex)
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("file io plugin error"),
-                        self.tr(f"ERROR: {type(ex)} {ex}"))
+                        plain_text_as_html(self.tr(f"ERROR: {type(ex)} {ex}")))
             if waypoints_model is not None:
                 for i in range(self.listFlightTracks.count()):
                     fltr = self.listFlightTracks.item(i)
@@ -1049,7 +1070,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 except (OSError, IOError) as ex:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("Problem while saving flight track to FTML:"),
-                        self.tr(f"ERROR: {type(ex)} {ex}"))
+                        plain_text_as_html(self.tr(f"ERROR: {type(ex)} {ex}")))
 
             for idx in range(self.listFlightTracks.count()):
                 if self.listFlightTracks.item(idx).flighttrack_model == self.active_flight_track:

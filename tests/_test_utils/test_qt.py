@@ -25,8 +25,12 @@
     limitations under the License.
 """
 
+import ast
+from pathlib import Path
+
 import pytest
 import mock
+import mslib
 import mslib.utils.qt as mqt
 import PyQt5 as pqt
 from mslib.utils.config import config_loader
@@ -157,3 +161,97 @@ def test_save_filename():
     with mock.patch("mslib.utils.qt.get_save_filename_qt", return_value=""):
         _filename = mqt.get_save_filename(None, "", "", "", pickertype="qt")
         assert _filename is None
+
+
+@pytest.mark.parametrize("text", [
+    '<img src="file://attacker.example/share/x.png">',
+    'Temperature <b>bold</b> &amp; <a href="file:///etc/passwd">link</a>',
+    'first line\n<img src="file:///x.png"> on the second line',
+    "T<300K> mean",
+    "plain text",
+    "",
+])
+def test_plain_text_as_html(qtbot, text):
+    shown = mqt.plain_text_as_html(text)
+    # tooltips and message boxes decide with Qt.mightBeRichText how they show it
+    if pqt.QtCore.Qt.mightBeRichText(shown):
+        # rich text that shows the text itself, markup included
+        document = pqt.QtGui.QTextDocument()
+        document.setHtml(shown)
+        assert document.toPlainText() == text
+        # no image or link is in the rendered document
+        assert "<img" not in document.toHtml() and "<a " not in document.toHtml()
+    else:
+        # shown as plain text anyway, so it stays as it is, e.g. for the messages tests compare
+        assert shown == text
+
+
+def test_show_popup_shows_text_as_it_is(qtbot):
+    message = '<img src="file://attacker.example/share/x.png">Not found'
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critical, \
+            mock.patch("PyQt5.QtWidgets.QMessageBox.information") as information:
+        mqt.show_popup(None, "Error", message)
+        mqt.show_popup(None, "Information", "plain message", icon=1)
+    assert critical.call_args.args[2] == mqt.plain_text_as_html(message) != message
+    information.assert_called_once_with(None, "Information", "plain message")
+
+
+def test_plain_text_message_box(qtbot):
+    box = mqt.plain_text_message_box(pqt.QtWidgets.QMessageBox.Warning, "title", "<b>text</b>",
+                                     pqt.QtWidgets.QMessageBox.Ok, None)
+    assert box.textFormat() == pqt.QtCore.Qt.PlainText
+    assert box.text() == "<b>text</b>"
+
+
+# Texts of message boxes and tooltips that are not constants can come from a server or another user. Every one
+# goes through plain_text_as_html (or show_popup or plain_text_message_box), see mslib/msui/CLAUDE.md.
+# Exceptions build their HTML on purpose and escape every value in it.
+RICH_TEXT_BUILT_ON_PURPOSE = {("mslib/msui/mscolab.py", "view_description")}
+MESSAGE_BOX_FUNCTIONS = ("critical", "warning", "information", "question", "about")
+
+
+def _is_constant_text(node):
+    if isinstance(node, ast.Constant):
+        return True
+    if isinstance(node, ast.Call):
+        function = ast.unparse(node.func)
+        if function.endswith("plain_text_as_html"):
+            return True
+        # self.tr("...") of a constant
+        if function.endswith(".tr") and all(isinstance(arg, ast.Constant) for arg in node.args):
+            return True
+    return False
+
+
+def _texts_not_shown_as_plain_text():
+    root = Path(mslib.__file__).parent.parent
+    found = []
+    for path in sorted((root / "mslib").rglob("*.py")):
+        relative = path.relative_to(root)
+        # the generated Qt UI files and the server packages, which show no Qt widgets
+        if "qt5" in relative.parts or relative.parts[1] in ("mscolab", "mswms", "msidp"):
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        function_of = {}
+        for function in ast.walk(tree):
+            if isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                for node in ast.walk(function):
+                    function_of.setdefault(id(node), function.name)
+        for node in ast.walk(tree):
+            if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)):
+                continue
+            if (node.func.attr in MESSAGE_BOX_FUNCTIONS and "QMessageBox" in ast.unparse(node.func.value)
+                    and len(node.args) >= 3):
+                text = node.args[2]
+            elif node.func.attr == "setToolTip" and node.args:
+                text = node.args[-1]
+            else:
+                continue
+            place = (relative.as_posix(), function_of.get(id(node)))
+            if not _is_constant_text(text) and place not in RICH_TEXT_BUILT_ON_PURPOSE:
+                found.append(f"{relative.as_posix()}:{node.lineno}: {ast.unparse(text)[:80]}")
+    return found
+
+
+def test_message_box_and_tooltip_texts_are_shown_as_plain_text():
+    assert _texts_not_shown_as_plain_text() == []

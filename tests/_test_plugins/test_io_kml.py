@@ -26,6 +26,8 @@
 """
 import os
 
+import defusedxml.ElementTree as etree
+
 import mslib.msui.flighttrack as ft
 from tests.constants import ROOT_DIR
 from mslib.plugins.io import kml
@@ -75,3 +77,31 @@ def test_save_to_kml():
 def _example_waypoints():
     return [ft.Waypoint(lat=61.168, lon=-149.960, flightlevel=350, location="Anchorage", comments="start"),
             ft.Waypoint(lat=51.878, lon=-176.646, flightlevel=350, location="Adak", comments="last")]
+
+
+def test_save_to_kml_escapes_names(tmp_path):
+    # names are chosen by collaborators, they must not add elements, e.g. an HTML balloon, to the KML file
+    track_name = 'track</name><description><![CDATA[<a href="file:///etc/passwd">open</a>]]></description><name>'
+    waypoint_name = 'Anchorage & <b>"Adak"</b>'
+    waypoints = _example_waypoints()
+    waypoints[0].location = waypoint_name
+    filename = tmp_path / "escaped.kml"
+    kml.save_to_kml(str(filename), track_name, waypoints)
+    namespace = {"kml": "http://www.opengis.net/kml/2.2"}
+    tree = etree.parse(str(filename))
+    assert [element.text for element in tree.iterfind(".//kml:name", namespace)] == [
+        track_name, track_name, waypoint_name, "Adak"]
+    assert [element.text for element in tree.iterfind(".//kml:description", namespace)] == [
+        "MSS flight track export"]
+
+
+def test_save_to_kml_drops_characters_xml_does_not_allow(tmp_path):
+    # a collaborator must not be able to make the KML export of the operation unreadable
+    waypoints = _example_waypoints()
+    waypoints[0].location = "A\x0bB\x00C\x1f D\tE"
+    filename = tmp_path / "control.kml"
+    kml.save_to_kml(str(filename), "track\x01name", waypoints)
+    namespace = {"kml": "http://www.opengis.net/kml/2.2"}
+    tree = etree.parse(str(filename))
+    assert [element.text for element in tree.iterfind(".//kml:name", namespace)] == [
+        "trackname", "trackname", "ABC D\tE", "Adak"]

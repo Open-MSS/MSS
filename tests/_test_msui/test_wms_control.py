@@ -27,14 +27,18 @@
 
 import os
 import mock
+import logging
 import pytest
 import hashlib
 import urllib
 import socket
-from PyQt5 import QtCore, QtTest
+from xml.sax.saxutils import quoteattr
+from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.msui import flighttrack as ft
 from mslib.utils.config import config_loader
 import mslib.msui.wms_control as wc
+from tests.utils import shown_text
+from mslib.utils.service_manager import strip_request_params
 
 WMS_REQUEST_TIMEOUT_MS = (config_loader(dataset="WMS_request_timeout") + 5) * 1000
 
@@ -766,3 +770,138 @@ class TestWMSControlWidgetSetupSimple:
         )
         query = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)
         assert query["bbox"][0] == "-180,-90,180,90"
+
+    def _wms(self, url, getmap_url, username=None, password=None):
+        # a WMS whose capabilities, loaded from url, name getmap_url for the maps
+        testxml = self.xml.format("", self.srs_base, self.dimext_time + self.dimext_inittime + self.dimext_elevation)
+        head, tail = testxml.split("<GetMap>")
+        tail = tail.replace('xlink:href="http://localhost/?"', f'xlink:href={quoteattr(getmap_url)}', 1)
+        return wc.MSUIWebMapService(url, version='1.1.1', xml=f"{head}<GetMap>{tail}",
+                                    username=username, password=password)
+
+    @pytest.mark.parametrize("getmap_url, login_sent", [
+        ("https://wms.example/wms?", True),
+        ("https://WMS.example:443/maps?", True),
+        ("http://wms.example/wms?", False),
+        ("https://wms.example:8443/wms?", False),
+        ("https://attacker.example/wms?", False),
+        ("https://wms.example@attacker.example/wms?", False),
+    ])
+    def test_getmap_sends_login_only_to_the_server_of_the_capabilities(self, getmap_url, login_sent):
+        wms = self._wms("https://wms.example/wms", getmap_url, username="user", password="secret")
+        response = mock.Mock()
+        response.info.return_value = {"Content-Type": "image/png"}
+        with mock.patch("mslib.msui.wms_control.ogcwms.openURL", return_value=response) as open_url:
+            assert wms.getmap(layers=["ecmwf_EUR_LL015.PLTemp01"], styles=[""], srs="EPSG:4326",
+                              bbox=(-180, -90, 180, 90), format="image/png", size=(200, 100)) is response
+        open_url.assert_called_once()
+        # the request goes to the GetMap URL of the capabilities, the login only if it is the same server
+        assert urllib.parse.urlsplit(open_url.call_args.args[0]).netloc == urllib.parse.urlsplit(getmap_url).netloc
+        credentials = (open_url.call_args.kwargs["username"], open_url.call_args.kwargs["password"])
+        assert credentials == (("user", "secret") if login_sent else (None, None))
+
+    @pytest.mark.parametrize("url, getmap_url, login, warnings", [
+        ("https://wms.example/wms", "https://wms.example/wms?", True, []),
+        ("http://wms.example/wms", "http://wms.example/wms?", True, []),
+        ("https://wms.example/wms", "https://other.example/wms?", False, []),
+        ("http://wms.example/wms", "https://wms.example/wms?", False, []),
+        ("https://wms.example/wms", "http://wms.example/wms?", False, ["without encryption"]),
+        ("https://wms.example/wms", "http://wms.example/wms?", True, ["without encryption", "not sent"]),
+        ("https://wms.example/wms", "https://other.example/wms?", True, ["not sent"]),
+        ("http://wms.example/wms", "https://wms.example/wms?", True, ["not sent"]),
+        (None, "http://wms.example/wms?", True, []),
+        ("https://wms.example/wms", "http://[invalid/wms?", True, []),
+    ])
+    def test_getmap_url_warning(self, url, getmap_url, login, warnings):
+        wms = self._wms(url, getmap_url, *(("user", "secret") if login else ()))
+        text = wc.getmap_url_warning(wms)
+        if not warnings:
+            assert text is None
+        else:
+            # the URL the maps are really requested from
+            assert f"\n{url}\n" in text and f"\n{wc.getmap_request_url(getmap_url)[0]}\n" in text
+            for warning in ["without encryption", "not sent"]:
+                assert (warning in text) == (warning in warnings)
+
+    def test_getmap_url_warning_is_shown_once_as_text(self, monkeypatch):
+        monkeypatch.setattr(wc, "_getmap_url_warnings_shown", set())
+        getmap_url = 'http://wms.example/<img src="file://attacker.example/s/x.png">?'
+        wms = self._wms("https://wms.example/wms", getmap_url, "user", "secret")
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning") as warning:
+            self.window.warn_about_getmap_url(wms)
+            self.window.warn_about_getmap_url(wms)
+            # the same WMS, no warning needed
+            self.window.warn_about_getmap_url(self._wms("https://wms.example/wms", "https://wms.example/wms?"))
+        warning.assert_called_once()
+        assert wc.getmap_request_url(getmap_url)[0] in shown_text(warning.call_args.args[2])
+
+    def test_wms_strings_are_plain_text(self):
+        # the title of a layer is shown in a label, its abstract as a tooltip
+        markup = '<img src="file://attacker.example/share/x.png">'
+        wms = self._wms("https://wms.example/wms", "https://wms.example/wms?")
+        layerobj = wms.contents["ecmwf_EUR_LL015.PLTemp01"]
+        layerobj.title = f"Title {markup}"
+        layerobj.abstract = f"Abstract {markup}\nsecond line"
+        self.window.activate_wms(wms)
+        layer = self.window.multilayers.listLayers.topLevelItem(0).child(0)
+        assert shown_text(layer.toolTip(0)) == f"Abstract {markup}\nsecond line"
+        assert self.window.lLayerName.textFormat() == QtCore.Qt.PlainText
+        assert self.window.lLayerName.text() == f"https://wms.example/wms: Title {markup} | ecmwf_EUR_LL015.PLTemp01"
+        assert shown_text(self.window.lLayerName.toolTip()) == self.window.lLayerName.text()
+
+    def test_wms_error_messages_are_plain_text(self):
+        error = '<img src="file://attacker.example/share/x.png">Unauthorized'
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critical:
+            self.window.display_exception(Exception(error))
+        critical.assert_called_once()
+        assert shown_text(critical.call_args.args[2]) == f"ERROR:\n{Exception}\n{error}"
+
+    @pytest.mark.parametrize("final_url, answer, loaded", [
+        # the same server, e.g. another path: no question
+        ("https://wms.example/maps/wms?service=WMS&request=GetCapabilities", None, True),
+        # another server, e.g. of a URL shortener or of someone who wants the login: the user decides
+        ("https://other.example/wms?service=WMS&request=GetCapabilities", QtWidgets.QMessageBox.No, False),
+        ("https://other.example/wms?service=WMS&request=GetCapabilities", QtWidgets.QMessageBox.Yes, True),
+        ("http://wms.example/wms?service=WMS&request=GetCapabilities", QtWidgets.QMessageBox.No, False),
+    ])
+    def test_capabilities_redirect_to_another_server_is_confirmed(self, final_url, answer, loaded):
+        self.window.multilayers.cbWMS_URL.setEditText("https://wms.example/wms")
+
+        def create(function, on_success, on_failure):
+            on_success(mock.Mock(url=final_url))
+
+        with mock.patch("mslib.msui.wms_control.Worker.create", side_effect=create), \
+                mock.patch.object(self.window, "initialise_wms") as initialise, \
+                mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=answer) as question:
+            self.window.get_capabilities()
+        assert question.called == (answer is not None)
+        if question.called:
+            assert "https://wms.example/wms" in shown_text(question.call_args.args[2])
+            assert strip_request_params(final_url) in shown_text(question.call_args.args[2])
+        assert initialise.called == loaded
+        if loaded:
+            assert initialise.call_args.args[0] == strip_request_params(final_url)
+
+    def test_password_dialog_names_the_server(self):
+        url = 'https://other.example/wms<img src="file://attacker.example/s/x.png">'
+        dialog = wc.MSS_WMS_AuthenticationDialog(url=url)
+        assert dialog.lblMessage.textFormat() == QtCore.Qt.PlainText
+        assert dialog.lblMessage.text() == f"Web Map Service\n{url}"
+
+    def test_getmap_url_warning_uses_the_url_of_the_requests(self):
+        # the GetMap URL of the capabilities is rewritten for some servers before the maps are requested
+        wms = self._wms("https://ogcie.iblsoft.com/obs", "https://ogcie/obs?", "user", "secret")
+        getmap_url = wc.getmap_request_url(wms.get_redirect_url())[0]
+        assert getmap_url == "https://ogcie.iblsoft.com/obs"
+        assert wms.getmap_credentials(getmap_url) == ("user", "secret")
+        assert wc.getmap_url_warning(wms) is None
+
+    def test_withheld_login_is_logged_once(self, monkeypatch, caplog):
+        monkeypatch.setattr(wc, "_withheld_logins_logged", set())
+        wms = self._wms("https://wms.example/wms", "https://other.example/wms?", "user", "secret")
+        with caplog.at_level(logging.WARNING):
+            for _ in range(3):
+                assert wms.getmap_credentials("https://other.example/wms") == (None, None)
+        assert [record.getMessage() for record in caplog.records].count(
+            "The login for 'https://wms.example/wms' is not sent with GetMap requests to "
+            "'https://other.example/wms', another scheme, host or port") == 1

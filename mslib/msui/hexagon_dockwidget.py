@@ -32,6 +32,7 @@ from mslib.msui.qt5 import ui_hexagon_dockwidget as ui
 from mslib.msui import flighttrack as ft
 from mslib.utils.coordinate import rotate_point
 from mslib.utils.config import config_loader
+from mslib.utils.qt import plain_text_as_html
 
 
 class HexagonException(Exception):
@@ -152,7 +153,7 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
                     else:
                         sel = QtWidgets.QMessageBox.question(
                             table_view, "Remove hexagon",
-                            f"This will remove waypoints {row_min:d}-{row_max:d}. Continue?",
+                            plain_text_as_html(f"This will remove waypoints {row_min:d}-{row_max:d}. Continue?"),
                             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                             QtWidgets.QMessageBox.Yes)
                         if sel == QtWidgets.QMessageBox.Yes:
@@ -161,4 +162,4 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
                 raise HexagonException("Cannot remove hexagon, please select a hexagon "
                                        "waypoint ('Hexagon x' in comments field)")
         except HexagonException as ex:
-            QtWidgets.QMessageBox.warning(self, "Remove hexagon", str(ex))
+            QtWidgets.QMessageBox.warning(self, "Remove hexagon", plain_text_as_html(str(ex)))

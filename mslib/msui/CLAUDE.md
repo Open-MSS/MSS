@@ -39,6 +39,15 @@ consumed over HTTP.
 - Config access via `mslib.utils.config.config_loader`; per-widget Qt state
   via `save_settings_qsettings`/`load_settings_qsettings`.
 - Message boxes in tests are mocked; an unhandled QMessageBox fails the test.
+- Texts from servers or other users (WMS capabilities and errors, MSColab names,
+  exception messages) never reach Qt as rich text: `QLabel.setTextFormat(Qt.PlainText)`,
+  `html.escape` inside own HTML, and for tooltips and message boxes
+  `mslib.utils.qt.plain_text_as_html`, `show_popup` or `plain_text_message_box`.
+  Qt loads `<img src="file://host/share/x">` from rich text (NTLM leak).
+  `tests/_test_utils/test_qt.py` fails for a message box or tooltip whose text is
+  not a constant and doesn't go through `plain_text_as_html`.
+- Passwords and tokens go only to their own server: check with
+  `mslib.utils.auth.same_origin` before sending them to a URL a server named.
 
 ## Verify
 
