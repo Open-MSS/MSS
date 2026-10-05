@@ -166,21 +166,21 @@ def excepthook(type_, value, traceback_):
     if type_ is mslib.utils.FatalUserError:
         QtWidgets.QMessageBox.critical(
             None, "fatal error",
-            f"Fatal user error in MSS {mslib.__version__} on {platform.platform()}\n"
-            f"Python {sys.version}\n"
-            f"\n"
-            f"{value}")
+            plain_text_as_html(f"Fatal user error in MSS {mslib.__version__} on {platform.platform()}\n"
+                               f"Python {sys.version}\n"
+                               f"\n"
+                               f"{value}"))
     else:
         QtWidgets.QMessageBox.critical(
             None, "fatal error",
-            f"Fatal error in MSS {mslib.__version__} on {platform.platform()}\n"
-            f"Python {sys.version}\n"
-            f"\n"
-            f"Please report bugs in MSS to https://github.com/Open-MSS/MSS\n"
-            f"\n"
-            f"Information about the fatal error:\n"
-            f"\n"
-            f"{tb}")
+            plain_text_as_html(f"Fatal error in MSS {mslib.__version__} on {platform.platform()}\n"
+                               f"Python {sys.version}\n"
+                               f"\n"
+                               f"Please report bugs in MSS to https://github.com/Open-MSS/MSS\n"
+                               f"\n"
+                               f"Information about the fatal error:\n"
+                               f"\n"
+                               f"{tb}"))
 
 
 def figure_to_clipboard(figure):
@@ -234,16 +234,45 @@ def table_to_csv_clipboard(view):
     QtWidgets.QApplication.clipboard().setText(buf.getvalue())
 
 
+def plain_text_as_html(text):
+    """
+    text for a tooltip or a static QMessageBox function, so that it is shown as it is, markup included
+
+    Tooltips and message boxes guess with Qt.mightBeRichText whether a text is rich text. A text of a server or of
+    another user, e.g. a WMS title, abstract or error message, or an exception message, that looks like markup is
+    rendered and its resources are loaded, e.g. <img src="file://host/s/x.png">, which Windows fetches from an SMB
+    share without any click. Such text is converted to rich text that shows it literally: line breaks are kept,
+    runs of spaces are shown as one and the text wraps. Text that doesn't look like markup is shown as plain text
+    anyway and is returned as it is.
+
+    Every message box of msui with a text that is not a constant uses this, plain_text_message_box or show_popup;
+    tests/_test_utils/test_qt.py checks that.
+    """
+    text = str(text)
+    if not QtCore.Qt.mightBeRichText(text):
+        return text
+    return QtCore.Qt.convertFromPlainText(text, QtCore.Qt.WhiteSpaceNormal)
+
+
+def plain_text_message_box(icon, title, text, buttons, parent):
+    """
+    A QMessageBox that shows text as plain text, for a message box that has to be built, e.g. for its default button
+    """
+    box = QtWidgets.QMessageBox(icon, title, str(text), buttons, parent)
+    box.setTextFormat(QtCore.Qt.PlainText)
+    return box
+
+
 def show_popup(parent, title, message, icon=0):
     """
         title: Title of message box
-        message: Display Message
+        message: Display Message, shown as plain text, it often comes from a server
         icon: 0 = Error Icon, 1 = Information Icon
     """
     if icon == 0:
-        QtWidgets.QMessageBox.critical(parent, title, message)
+        QtWidgets.QMessageBox.critical(parent, title, plain_text_as_html(message))
     elif icon == 1:
-        QtWidgets.QMessageBox.information(parent, title, message)
+        QtWidgets.QMessageBox.information(parent, title, plain_text_as_html(message))
 
 
 # TableView drag and drop

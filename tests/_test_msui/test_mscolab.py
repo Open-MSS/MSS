@@ -49,6 +49,17 @@ from mslib.msui import mscolab
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 
 
+@pytest.mark.parametrize("name, directory", [
+    ("europe", "europe"), ("normal-name_1", "normal-name_1"), ("Ann Smith", "Ann Smith"),
+    ("team/a", "team_a"), ("a\\b", "a_b"), ("x:y", "x_y"), ('a*b?c"d<e>f|g', "a_b_c_d_e_f_g"), ("a\x00b", "a_b"),
+    ("..", "__"), (".", "_"), ("", "_"), ("...", "___"), (".. ", "___"), ("name.", "name_"), ("name ", "name_"),
+    ("con", "con_"), ("CON.txt", "CON.txt_"), ("lpt1", "lpt1_"), ("console", "console"),
+])
+def test_safe_dir_name(name, directory):
+    # names of the MSColab server as a single directory name on Windows, macOS and Linux
+    assert mscolab._safe_dir_name(name) == directory
+
+
 class Test_Mscolab_connect_window:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot, mscolab_server_app, mscolab_server):
@@ -673,6 +684,48 @@ class Test_Mscolab:
         self.window.workLocallyCheckbox.setChecked(False)
         wpdata_server = self.window.mscolab.waypoints_model.waypoint_data(0)
         assert wpdata_local.lat != wpdata_server.lat
+
+    @pytest.mark.parametrize("operation_name, directory", [
+        ("..", "__"), ("../../outside", ".._.._outside"), ("absolute", None), ("a\\b:c", "a_b_c"), ("con", "con_")])
+    def test_work_locally_stays_in_data_dir(self, qtbot, operation_name, directory):
+        # the operation name comes from the server, a malicious one must not choose where msui writes
+        if operation_name == "absolute":
+            # not in the parameters, pytest-xdist needs the same test ids in every worker
+            operation_name = str(Path(ROOT_DIR) / "outside")
+            directory = operation_name.replace("/", "_").replace("\\", "_").replace(":", "_")
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        local_data_dir = Path(self.window.mscolab.data_dir) / "local_colabdata"
+        files_before = {path for path in Path(ROOT_DIR).rglob("mscolab_operation.ftml")
+                        if not path.is_relative_to(local_data_dir)}
+        self.window.mscolab.active_operation_name = operation_name
+        self.window.workLocallyCheckbox.setChecked(True)
+        # unsafe characters are replaced, the local copy stays in the data directory
+        assert self.window.workLocallyCheckbox.isChecked()
+        assert Path(self.window.mscolab.local_ftml_file) == (
+            local_data_dir / self.userdata[1] / directory / "mscolab_operation.ftml")
+        assert Path(self.window.mscolab.local_ftml_file).is_file()
+        assert {path for path in Path(ROOT_DIR).rglob("mscolab_operation.ftml")
+                if not path.is_relative_to(local_data_dir)} == files_before
+
+    @pytest.mark.skipif(sys.platform.startswith("win"), reason="symbolic links need privileges on Windows")
+    def test_work_locally_refuses_dir_outside_data_dir(self, qtbot, tmp_path):
+        # e.g. a symbolic link in the data directory, the containment check catches it
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        user_dir = Path(self.window.mscolab.data_dir) / "local_colabdata" / self.userdata[1]
+        user_dir.mkdir(parents=True, exist_ok=True)
+        (user_dir / self.window.mscolab.active_operation_name).symlink_to(tmp_path, target_is_directory=True)
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critical:
+            self.window.workLocallyCheckbox.setChecked(True)
+        critical.assert_called_once()
+        assert not self.window.workLocallyCheckbox.isChecked()
+        assert self.window.mscolab.local_ftml_file is None
+        assert list(tmp_path.iterdir()) == []
 
     @mock.patch("mslib.msui.mscolab.get_open_filename", return_value=os.path.join(sample_path, u"example.ftml"))
     def test_browse_add_operation(self, mockopen, qtbot):

@@ -119,6 +119,12 @@ All passwords are stored by using an OS-provided keyring after entering them
 the first time. Also the token required for accessing the MSColab server will
 be stored there. You can also use an OS-provided keyring app to set, change and delete passwords.
 
+The login of a WMS is only sent to the server it was entered for. The capabilities of a WMS name the
+address used for the maps (GetMap). msui sends the login with the map requests only when this address has
+the same scheme, host and port as the address of the capabilities. Otherwise the maps are requested without
+the login, and msui warns once per session. It also warns when the capabilities were loaded with https and
+the maps are to be requested with http.
+
 
 MSUI Flight track import/export plugins
 .......................................

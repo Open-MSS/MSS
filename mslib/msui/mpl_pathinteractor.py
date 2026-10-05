@@ -57,6 +57,7 @@ from mslib.utils.units import units
 from mslib.utils.thermolib import pressure2flightlevel
 from mslib.msui import flighttrack as ft
 from mslib.utils.loggerdef import configure_mpl_logger
+from mslib.utils.qt import plain_text_as_html
 
 
 mpl_logger = configure_mpl_logger()
@@ -935,7 +936,8 @@ class PathInteractor(QtCore.QObject):
             wp = wps[row]
             return QtWidgets.QMessageBox.question(
                 None, "Remove waypoint",
-                f"Remove waypoint no.{row:d} at {wp.lat:.2f}/{wp.lon:.2f}, flightlevel {wp.flightlevel:.2f}?",
+                plain_text_as_html(
+                    f"Remove waypoint no.{row:d} at {wp.lat:.2f}/{wp.lon:.2f}, flightlevel {wp.flightlevel:.2f}?"),
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                 QtWidgets.QMessageBox.Yes) == QtWidgets.QMessageBox.Yes
 

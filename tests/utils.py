@@ -253,3 +253,19 @@ class ExceptionMock:
 
     def raise_exc(self, *args, **kwargs):
         raise self.exc
+
+
+def shown_text(text):
+    """
+    The text a tooltip or a message box shows for text; it must not load any image or link
+
+    Like Qt, text is shown as rich text only if Qt.mightBeRichText says so, which looks for a tag before the
+    first line break.
+    """
+    from PyQt5 import QtCore, QtGui
+    if not QtCore.Qt.mightBeRichText(text):
+        return text
+    document = QtGui.QTextDocument()
+    document.setHtml(text)
+    assert "<img" not in document.toHtml() and "<a " not in document.toHtml(), text
+    return document.toPlainText()

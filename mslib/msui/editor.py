@@ -30,7 +30,7 @@ import logging
 import json
 from pathlib import Path
 
-from mslib.utils.qt import get_open_filename, get_save_filename, show_popup
+from mslib.utils.qt import get_open_filename, get_save_filename, show_popup, plain_text_as_html
 from mslib.msui.qt5 import ui_configuration_editor_window as ui_conf
 from PyQt5 import QtWidgets, QtCore, QtGui
 from mslib.utils.constants import MSUI_SETTINGS
@@ -703,7 +703,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             msg = """Since the current configuration matches the default configuration, \
 only an empty json file would be exported.\nDo you still want to continue?"""
             ret = QtWidgets.QMessageBox.warning(
-                self, self.tr("Mission Support System"), self.tr(msg),
+                self, self.tr("Mission Support System"), plain_text_as_html(self.tr(msg)),
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                 QtWidgets.QMessageBox.No)
             if ret == QtWidgets.QMessageBox.No:
@@ -725,7 +725,7 @@ only an empty json file would be exported.\nDo you still want to continue?"""
                 "Save Changes to default msui_settings.json?\nYou need to restart the gui for changes to take effect.")
         if msg != "":
             ret = QtWidgets.QMessageBox.warning(
-                self, self.tr("Mission Support System"), self.tr(msg),
+                self, self.tr("Mission Support System"), plain_text_as_html(self.tr(msg)),
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                 QtWidgets.QMessageBox.No)
             if ret == QtWidgets.QMessageBox.Yes:

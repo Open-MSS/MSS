@@ -66,3 +66,27 @@ class Test_WMSCapabilities:
         self.start_window()
         QtTest.QTest.mouseClick(self.window.cbFullView, QtCore.Qt.LeftButton)
         QtTest.QTest.mouseClick(self.window.cbFullView, QtCore.Qt.LeftButton)
+
+    def test_wms_strings_are_text(self):
+        # title, abstract and contact come from the WMS server, an <img> in them must not be loaded
+        markup = '<img src="file://attacker.example/share/x.png"><a href="file:///etc/passwd">link</a>'
+        self.capabilities.identification.title = f"Title {markup}"
+        self.capabilities.identification.abstract = f"Abstract {markup}"
+        self.capabilities.identification.type = "OGC:WMS"
+        self.capabilities.identification.version = "1.3.0"
+        self.capabilities.identification.keywords = [markup]
+        self.capabilities.identification.accessconstraints = markup
+        self.capabilities.identification.fees = markup
+        self.capabilities.provider.contact.name = f"Name {markup}"
+        self.capabilities.provider.contact.email = "<b>wms@example.org</b>"
+        self.window = wc.WMSCapabilitiesBrowser(url=f"https://wms.example/{markup}", capabilities=self.capabilities)
+        text = self.window.txtCapabilities.toPlainText()
+        assert f"Title: Title {markup}" in text
+        assert f"Abstract {markup}" in text
+        assert f"Name {markup}" in text
+        assert "<b>wms@example.org</b>" in text
+        assert f"Fees: {markup}" in text
+        html = self.window.txtCapabilities.toHtml()
+        assert "<img" not in html and "<a " not in html
+        assert self.window.lblURL.textFormat() == QtCore.Qt.PlainText
+        assert self.window.lblURL.text() == f"https://wms.example/{markup}"

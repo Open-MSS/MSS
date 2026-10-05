@@ -39,7 +39,7 @@ from PyQt5 import QtCore
 from mslib.autoplot import main as cli_tool
 from mslib.msui.qt5.ui_mss_autoplot import Ui_AutoplotDockWidget
 from mslib.utils import constants as const
-from mslib.utils.qt import get_save_filename
+from mslib.utils.qt import get_save_filename, plain_text_as_html
 
 
 class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
@@ -220,7 +220,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             QMessageBox.information(
                 self,
                 "Error",
-                ex.args[0]
+                plain_text_as_html(ex.args[0])
             )
             ctx.obj = None
             return

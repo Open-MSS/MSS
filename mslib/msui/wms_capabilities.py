@@ -27,8 +27,9 @@
 """
 
 import collections
+import html
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from mslib.msui.qt5 import ui_wms_capabilities as ui
 
 
@@ -47,6 +48,7 @@ class WMSCapabilitiesBrowser(QtWidgets.QDialog, ui.Ui_WMSCapabilitiesBrowser):
 
         if url is None:
             url = ""
+        self.lblURL.setTextFormat(QtCore.Qt.PlainText)
         self.lblURL.setText(url)
 
         self.capabilities = capabilities
@@ -55,6 +57,10 @@ class WMSCapabilitiesBrowser(QtWidgets.QDialog, ui.Ui_WMSCapabilitiesBrowser):
         self.cbFullView.stateChanged.connect(self.update_text)
 
     def update_text(self):
+        def esc(value):
+            # the texts come from the WMS server, markup in them, e.g. <img src="file://host/s/x.png">, is shown as text
+            return html.escape(str(value))
+
         if self.cbFullView.isChecked():
             self.txtCapabilities.setPlainText(self.capabilities.capabilities_document.decode("utf-8"))
         else:
@@ -63,17 +69,17 @@ class WMSCapabilitiesBrowser(QtWidgets.QDialog, ui.Ui_WMSCapabilitiesBrowser):
             if provider.contact is None:
                 contact = collections.defaultdict(lambda: None)
             else:
-                contact = vars(provider.contact)
-            text = (f"<b>Title:</b> {identification.title}<p>"
-                    f"<b>Service type:</b> {identification.type} {identification.version}<br>"
-                    f"<b>Abstract:</b><br>{identification.abstract}<br>"
+                contact = {key: esc(value) for key, value in vars(provider.contact).items()}
+            text = (f"<b>Title:</b> {esc(identification.title)}<p>"
+                    f"<b>Service type:</b> {esc(identification.type)} {esc(identification.version)}<br>"
+                    f"<b>Abstract:</b><br>{esc(identification.abstract)}<br>"
                     f"<b>Contact:</b><br>"
                     f"    {contact['name']}<br>"
                     f"    {contact['organization']}<br>"
                     f"    {contact['email']}<br>"
                     f"    {contact['address']}<br>"
                     f"    {contact['postcode']} {contact['city']}<br>\n"
-                    f"<b>Keywords:</b> {identification.keywords}<br>\n"
-                    f"<b>Access constraints:</b> {identification.accessconstraints}<br>\n"
-                    f"<b>Fees:</b> {identification.fees}")
+                    f"<b>Keywords:</b> {esc(identification.keywords)}<br>\n"
+                    f"<b>Access constraints:</b> {esc(identification.accessconstraints)}<br>\n"
+                    f"<b>Fees:</b> {esc(identification.fees)}")
             self.txtCapabilities.setHtml(text)

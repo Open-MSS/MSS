@@ -32,7 +32,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 import numpy as np
 
-from mslib.utils.qt import get_open_filename
+from mslib.utils.qt import get_open_filename, plain_text_as_html
 from mslib.msui.qt5 import ui_satellite_dockwidget as ui
 from PyQt5 import QtWidgets
 from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
@@ -152,7 +152,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         except (IOError, OSError, ValueError) as ex:
             logging.error("Problem accessing '%s' file", filename)
             QtWidgets.QMessageBox.critical(self, self.tr("Satellite Overpass Tool"),
-                                           self.tr(f"ERROR:\n{type(ex)}\n{ex}"))
+                                           plain_text_as_html(self.tr(f"ERROR:\n{type(ex)}\n{ex}")))
         else:
             logging.debug("read %i segments", len(overpass_segments))
 

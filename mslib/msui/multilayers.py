@@ -31,6 +31,7 @@ from mslib.msui.icons import icons
 from mslib.msui.qt5 import ui_wms_multilayers as ui
 from mslib.utils.colordialog import CustomColorDialog
 from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
+from mslib.utils.qt import plain_text_as_html
 
 
 class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
@@ -344,7 +345,8 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
 
             widget.wms_name = wms.url
             if layerobj.abstract:
-                widget.setToolTip(0, layerobj.abstract)
+                # the abstract comes from the WMS server
+                widget.setToolTip(0, plain_text_as_html(layerobj.abstract))
             if self.cbMultilayering.isChecked():
                 widget.setCheckState(0, QtCore.Qt.Unchecked)
 

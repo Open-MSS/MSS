@@ -31,7 +31,7 @@ from PyQt5 import QtCore, QtWidgets
 
 from mslib.utils import FatalUserError
 from mslib.msui import aircraft, constants
-from mslib.utils.qt import get_open_filename
+from mslib.utils.qt import get_open_filename, plain_text_as_html
 from mslib.msui.qt5 import ui_performance_dockwidget as ui_dw
 
 
@@ -123,7 +123,7 @@ class MSUI_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDock
 
             except KeyError as ex:
                 QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                               self.tr(f"JSON File missing '{ex}' entry"))
+                                               plain_text_as_html(self.tr(f"JSON File missing '{ex}' entry")))
             except (FatalUserError, ValueError) as ex:
                 QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                               self.tr(f"JSON File has Syntax Problems:\n{ex}"))
+                                               plain_text_as_html(self.tr(f"JSON File has Syntax Problems:\n{ex}")))

@@ -37,6 +37,7 @@ import time
 
 import defusedxml.ElementTree as etree
 from mslib.utils.constants import MSUI_CONFIG_PATH
+from mslib.utils.qt import plain_text_as_html
 
 AIPDIR = Path(MSUI_CONFIG_PATH) / "downloads" / "aip"
 AIPDIR.mkdir(parents=True, exist_ok=True)
@@ -89,7 +90,8 @@ def download_progress(file_path, url, progress_callback=lambda f: logging.info("
                     progress_callback(dl / 1024)
     except requests.exceptions.RequestException:
         os.remove(file_path)
-        QtWidgets.QMessageBox.information(None, "Download failed", f"{url} was unreachable, please try again later.")
+        QtWidgets.QMessageBox.information(None, "Download failed",
+                                          plain_text_as_html(f"{url} was unreachable, please try again later."))
 
 
 def get_airports(force_download=False, url=None):
@@ -112,11 +114,11 @@ def get_airports(force_download=False, url=None):
     is_outdated = (file_exists and
                    (time.time() - os.path.getmtime(str(Path(AIPDIR / "airports.csv")))) > time_outdated)
 
+    question = (f"You selected airports to be {'drawn' if not force_download else 'downloaded (~10 MB)'}." +
+                ("" if force_download else "\nThe airports file first needs to be downloaded or updated (~10 MB).") +
+                "\nIs now a good time?")
     if (force_download or is_outdated or not file_exists) \
-            and QtWidgets.QMessageBox.question(None, "Allow download", f"You selected airports to be "
-                                               f"{'drawn' if not force_download else 'downloaded (~10 MB)'}." +
-                                               ("\nThe airports file first needs to be downloaded or updated (~10 MB)."
-                                                if not force_download else "") + "\nIs now a good time?",
+            and QtWidgets.QMessageBox.question(None, "Allow download", plain_text_as_html(question),
                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                                                QtWidgets.QMessageBox.Yes) \
             == QtWidgets.QMessageBox.Yes:
@@ -180,8 +182,8 @@ def update_airspace(force_download=False, countries=None):
         if (force_download or is_outdated or not file_exists) \
                 and QtWidgets.QMessageBox.question(
                     None, "Allow download",
-                    f"The selected {country} airspace needs to be downloaded "
-                    f"({humanfriendly.format_size(int(data[-1]))})\nIs now a good time?",
+                    plain_text_as_html(f"The selected {country} airspace needs to be downloaded "
+                                       f"({humanfriendly.format_size(int(data[-1]))})\nIs now a good time?"),
                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                     QtWidgets.QMessageBox.Yes) \
                 == QtWidgets.QMessageBox.Yes:
@@ -261,6 +263,6 @@ def get_airspaces(countries=None):
                 _airspaces.append(airspace_data)
                 _airspaces_mtime[file] = os.path.getmtime(os.path.join(AIPDIR, file))
         else:
-            QtWidgets.QMessageBox.information(None, "No Airspaces data in file:", f"{file}")
+            QtWidgets.QMessageBox.information(None, "No Airspaces data in file:", plain_text_as_html(f"{file}"))
 
     return _airspaces

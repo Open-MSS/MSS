@@ -50,12 +50,12 @@ from mslib.utils import constants
 from mslib.msui import wms_capabilities
 from mslib.msui.qt5 import ui_wms_dockwidget as ui
 from mslib.msui.qt5 import ui_wms_password_dialog as ui_pw
-from mslib.utils.qt import Worker
+from mslib.utils.qt import Worker, plain_text_as_html
 from mslib.msui.multilayers import Multilayers, Layer
 import mslib.utils.ogcwms as ogcwms
 from mslib.utils.service_manager import WMSServiceManager, strip_request_params
 from mslib.utils.time import parse_iso_datetime, parse_iso_duration
-from mslib.utils.auth import save_password_to_keyring, get_auth_from_url_and_name
+from mslib.utils.auth import save_password_to_keyring, get_auth_from_url_and_name, same_origin
 from mslib.utils.config import modify_config_file
 
 
@@ -187,18 +187,13 @@ class MSUIWebMapService(ogcwms.WebMapService):
         if level is not None:
             request['elevation'] = str(level)
 
-        # normalise base_url so it contains no request and no parameters
-        (scheme, netloc, path, params, query, fragment) = urllib.parse.urlparse(base_url)
-        base_url = urllib.parse.urlunparse((scheme, netloc, path, params, "", fragment))
-        request.update(dict(urllib.parse.parse_qsl(query)))
+        base_url, query_params = getmap_request_url(base_url)
+        request.update(query_params)
         # --(mss)
 
         data = urllib.parse.urlencode(request)
 
         # ++(mss)
-        base_url = base_url.replace("ogctest.iblsoft", "ogcie.iblsoft")  # IBL Bugfix!
-        base_url = base_url.replace("ogcie/obs", "ogcie.iblsoft.com/obs")  # IBL Bugfix!
-        base_url = base_url.replace(", staging1", "")  # geo.beopen.eu bugfix
 
         complete_url = urllib.parse.urlunparse((str(""), str(""), str(base_url), str(""), data, str("")))
         if return_only_url:
@@ -212,8 +207,8 @@ class MSUIWebMapService(ogcwms.WebMapService):
         # not considered. For some reason, the check below doesn't work, though..
         proxies = config_loader(dataset="proxies")
 
-        u = ogcwms.openURL(base_url, data, method,
-                           username=self.auth.username, password=self.auth.password, proxies=proxies)
+        username, password = self.getmap_credentials(base_url)
+        u = ogcwms.openURL(base_url, data, method, username=username, password=password, proxies=proxies)
 
         # check for service exceptions, and return
         # NOTE: There is little bug in owslib.util.openURL -- if the file
@@ -236,19 +231,96 @@ class MSUIWebMapService(ogcwms.WebMapService):
         # return self.getOperationByName("GetMap").methods[method]["url"]
         return self.getOperationByName("GetMap").methods[0]["url"]
 
+    def getmap_credentials(self, getmap_url):
+        """
+        (username, password) to send with GetMap requests to getmap_url, (None, None) if it is another server
+
+        The login was given for the server of the capabilities, self.url. The GetMap URL is taken from the
+        capabilities, so the server can name any host there, also with http instead of https.
+        """
+        if same_origin(getmap_url, self.url):
+            return self.auth.username, self.auth.password
+        if (self.auth.username or self.auth.password) and (self.url, getmap_url) not in _withheld_logins_logged:
+            # once per session, not for every map request
+            _withheld_logins_logged.add((self.url, getmap_url))
+            logging.warning("The login for '%s' is not sent with GetMap requests to '%s', another scheme, host or port",
+                            self.url, getmap_url)
+        return None, None
+
+
+def getmap_request_url(getmap_url):
+    """
+    (URL, query parameters) of the GetMap requests to getmap_url, the GetMap URL of the capabilities
+
+    The URL is getmap_url without its query, with the fixes for some servers. GetMap requests go to it, and the
+    login and the warnings are decided on it.
+    """
+    # normalise the URL so it contains no request and no parameters
+    (scheme, netloc, path, params, query, fragment) = urllib.parse.urlparse(getmap_url)
+    url = urllib.parse.urlunparse((scheme, netloc, path, params, "", fragment))
+    url = url.replace("ogctest.iblsoft", "ogcie.iblsoft")  # IBL Bugfix!
+    url = url.replace("ogcie/obs", "ogcie.iblsoft.com/obs")  # IBL Bugfix!
+    url = url.replace(", staging1", "")  # geo.beopen.eu bugfix
+    return url, dict(urllib.parse.parse_qsl(query))
+
+
+# (WMS URL, GetMap URL) of the warnings already shown, each is shown once per session
+_getmap_url_warnings_shown = set()
+# (WMS URL, GetMap URL) of the logins not sent with GetMap requests that were already logged
+_withheld_logins_logged = set()
+
+
+def getmap_url_warning(wms):
+    """
+    Warning about the GetMap URL of the capabilities of wms, None if there is nothing to warn about
+
+    Warns if the maps are requested with http while the capabilities came with https, and if the login for the
+    capabilities is not sent with the map requests because they go to another scheme, host or port.
+    """
+    try:
+        getmap_url = wms.get_redirect_url()
+    except (KeyError, IndexError):
+        return None
+    if not (isinstance(wms.url, str) and isinstance(getmap_url, str)):
+        return None
+    try:
+        # the URL the map requests really go to, see MSUIWebMapService.getmap
+        getmap_url = getmap_request_url(getmap_url)[0]
+        downgrade = (urllib.parse.urlsplit(wms.url).scheme.lower() == "https" and
+                     urllib.parse.urlsplit(getmap_url).scheme.lower() == "http")
+    except ValueError:
+        # e.g. an invalid IPv6 address, the map requests fail anyway
+        return None
+    login_withheld = bool(wms.auth.username or wms.auth.password) and not same_origin(getmap_url, wms.url)
+    if not (downgrade or login_withheld):
+        return None
+    text = f"The capabilities of the WMS\n\n{wms.url}\n\nname another address for the maps:\n\n{getmap_url}\n\n"
+    if downgrade:
+        text += "The maps are requested without encryption (http instead of https).\n"
+    if login_withheld:
+        text += ("Your login for the WMS is only sent to its own scheme, host and port, so it is not sent with the "
+                 "map requests. If the WMS needs it for the maps, they fail with 'Unauthorized'.\n")
+    text += "\nThe operator of the WMS can correct the address in its capabilities."
+    return text
+
 
 class MSS_WMS_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthenticationDialog):
     """Dialog to ask the user for username/password should this be
        required by a WMS server.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, url=None):
         """
         Arguments:
         parent -- Qt widget that is parent to this widget.
+        url -- URL of the server that asks for the login, it is shown so the user knows where the password goes
         """
         super().__init__(parent)
         self.setupUi(self)
+        if url is not None:
+            # the URL can come from a redirect of the server
+            self.lblMessage.setTextFormat(QtCore.Qt.PlainText)
+            self.lblMessage.setText(f"Web Map Service\n{url}")
 
     def getAuthInfo(self):
         """Return the entered username and password.
@@ -438,6 +510,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         super().__init__(parent)
         self.setupUi(self)
+        # shows the URL and the title of the layer, which come from the WMS server
+        self.lLayerName.setTextFormat(QtCore.Qt.PlainText)
 
         self.wms_cache = wms_cache
         self.service_manager = WMSServiceManager()
@@ -822,6 +896,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 self.activate_wms(wms, level=level)
                 self.service_manager.cache_service(base_url, wms)
                 self.cpdlg.close()
+                self.warn_about_getmap_url(wms)
 
         def on_failure(e):
             try:
@@ -839,7 +914,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     # the string "Error 401"...
                     http_auth = config_loader(dataset="MSS_auth")
                     auth_username, auth_password = get_auth_from_url_and_name(base_url, http_auth)
-                    dlg = MSS_WMS_AuthenticationDialog(parent=self.multilayers)
+                    dlg = MSS_WMS_AuthenticationDialog(parent=self.multilayers, url=base_url)
                     dlg.setModal(True)
                     dlg.leUsername.setText(auth_username)
                     dlg.lePassword.setText(auth_password)
@@ -873,14 +948,16 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                   "no layers can be used in this view.")
                     QtWidgets.QMessageBox.critical(
                         self.multilayers, self.tr("Web Map Service"),
-                        self.tr(f"ERROR: We cannot load the capability document!\n\n{type(ex)}\n{ex}"))
+                        plain_text_as_html(
+                            self.tr(f"ERROR: We cannot load the capability document!\n\n{type(ex)}\n{ex}")))
                     self.cpdlg.close()
             except Exception as ex:
                 logging.error("cannot load capabilities document.. "
                               "no layers can be used in this view.")
                 QtWidgets.QMessageBox.critical(
                     self.multilayers, self.tr("Web Map Service"),
-                    self.tr(f"ERROR: We cannot load the capability document!\n\n{type(ex)}\n{ex}"))
+                    plain_text_as_html(
+                        self.tr(f"ERROR: We cannot load the capability document!\n\n{type(ex)}\n{ex}")))
                 self.cpdlg.close()
 
         try:
@@ -895,6 +972,35 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                                 username=auth_username, password=auth_password),
                       on_success, on_failure)
 
+    def confirm_redirect(self, entered_url, url):
+        """
+        Asks whether the WMS of entered_url may be loaded from url, another server it redirected to
+
+        A URL shortener redirects to another server by design, but so can a server that wants the login of its
+        users: msui asks for a login for the server it loads the capabilities from and stores it for that server.
+        """
+        ret = QtWidgets.QMessageBox.question(
+            self.multilayers, self.tr("Web Map Service"),
+            plain_text_as_html(
+                f"The address\n\n{entered_url}\n\nredirects to another server:\n\n{url}\n\n"
+                "Load the Web Map Service from there? If it asks for a login, the login is sent to that server."),
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+        return ret == QtWidgets.QMessageBox.Yes
+
+    def warn_about_getmap_url(self, wms):
+        """
+        Shows the warning of getmap_url_warning, once per session for each WMS and GetMap URL
+        """
+        text = getmap_url_warning(wms)
+        if text is None:
+            return
+        shown = (wms.url, wms.get_redirect_url())
+        if shown in _getmap_url_warnings_shown:
+            return
+        _getmap_url_warnings_shown.add(shown)
+        logging.warning(text)
+        QtWidgets.QMessageBox.warning(self.multilayers, self.tr("Web Map Service"), plain_text_as_html(text))
+
     def wms_url_changed(self, text):
         wms = self.service_manager.get_service(text)
         if wms is not None:
@@ -905,7 +1011,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.error("ERROR: %s %s", type(ex), ex)
         logging.debug("%s", traceback.format_exc())
         QtWidgets.QMessageBox.critical(
-            self, self.tr("Web Map Service"), self.tr(f"ERROR:\n{type(ex)}\n{ex}"))
+            self, self.tr("Web Map Service"), plain_text_as_html(self.tr(f"ERROR:\n{type(ex)}\n{ex}")))
 
     @QtCore.pyqtSlot()
     def display_progress_dialog(self):
@@ -990,6 +1096,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.cpdlg.setValue(5)
             # url shortener url translated, service specific parameters are kept
             url = strip_request_params(request.url)
+            if not same_origin(url, base_url) and not self.confirm_redirect(base_url, url):
+                self.cpdlg.close()
+                return
             logging.debug("requesting capabilities from %s", url)
             self.initialise_wms(url, None, level=level)
 
@@ -1003,7 +1112,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 try:
                     QtWidgets.QMessageBox.critical(
                         self.multilayers, self.tr("Web Map Service"),
-                        self.tr(f"ERROR: We cannot load the capability document!\n\\n{type(ex)}\n{ex}"))
+                        plain_text_as_html(
+                            self.tr(f"ERROR: We cannot load the capability document!\n\n{type(ex)}\n{ex}")))
                 except RuntimeError:
                     logging.debug("WMS control widget was deleted before on_failure could show dialog")
             finally:
@@ -1174,7 +1284,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         tooltip_text = ""
         for active_layer in active_layers if layer.checkState(0) else [layer]:
             tooltip_text += f"{active_layer}\n"
-        self.lLayerName.setToolTip(tooltip_text.strip())
+        self.lLayerName.setToolTip(plain_text_as_html(tooltip_text.strip()))
 
         if len(active_layers) > 1 and layer.checkState(0):
             self.lLayerName.setText(self.lLayerName.text() + f" (and {len(active_layers) - 1} more)")
@@ -1576,9 +1686,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if self.check_for_allowed_crs and normalize_crs(crs) not in layer.allowed_crs:
             ret = QtWidgets.QMessageBox.warning(
                 self, self.tr("Web Map Service"),
-                self.tr(f"WARNING: Selected CRS '{crs}' not contained in allowed list of supported CRS for this WMS\n"
-                        f"({layer.allowed_crs})\n"
-                        "Continue ?"),
+                plain_text_as_html(self.tr(
+                    f"WARNING: Selected CRS '{crs}' not contained in allowed list of supported CRS for this WMS\n"
+                    f"({layer.allowed_crs})\n"
+                    "Continue ?")),
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Ignore | QtWidgets.QMessageBox.No,
                 QtWidgets.QMessageBox.No)
             if ret == QtWidgets.QMessageBox.Ignore:
@@ -1716,7 +1827,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 except (IOError, OSError) as ex:
                     msg = f"ERROR: Cannot delete file '{f}'. ({type(ex)}: {ex})"
                     logging.error(msg)
-                    QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"), self.tr(msg))
+                    QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"), plain_text_as_html(self.tr(msg)))
                 else:
                     logging.debug("cache has been cleared.")
             else:
@@ -1757,7 +1868,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         except (IOError, OSError) as ex:
             msg = f"ERROR: Cannot delete file '{f}'. ({type(ex)}: {ex})"
             logging.error(msg)
-            QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"), self.tr(msg))
+            QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"), plain_text_as_html(self.tr(msg)))
         logging.debug("cache has been cleaned (%i files removed).", removed_files)
 
     def squash_multiple_images(self, imgs):

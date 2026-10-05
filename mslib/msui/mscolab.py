@@ -80,13 +80,39 @@ from PyQt5.QtGui import QPixmap
 
 from mslib.utils.auth import del_password_from_keyring
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
-from mslib.utils.qt import get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup
+from mslib.utils.qt import (get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup,
+                            plain_text_as_html)
 from mslib.msui.qt5 import ui_mscolab_help_dialog as msc_help_dialog
 from mslib.msui.qt5 import ui_mscolab_add_operation_dialog as msc_add_operation_ui
 from mslib.msui.qt5 import ui_mscolab_merge_waypoints_dialog as merge_wp_ui
 from mslib.msui.qt5 import ui_mscolab_profile_dialog as ui_profile
 from mslib.utils import constants
 from mslib.utils.config import config_loader
+
+
+# characters that can't be in a file or directory name on Windows, macOS or Linux, and control characters
+_UNSAFE_NAME_CHARACTERS = re.compile(r'[\x00-\x1f\x7f<>:"/\\|?*]')
+# names Windows reserves for devices, also with an extension, e.g. "con.txt"
+_WINDOWS_DEVICE_NAMES = re.compile(r"(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?", re.IGNORECASE)
+
+
+def _safe_dir_name(name):
+    """
+    name as the name of a single directory, on Windows, macOS and Linux
+
+    Unsafe characters are replaced by "_", e.g. "team/a" -> "team_a", "a\\b" -> "a_b", "x:y" -> "x_y". So are
+    trailing dots and spaces, which Windows drops, and a name of only dots ("." and ".."). A Windows device name
+    gets a "_" appended. Other names, e.g. every name msui and the MSColab server allow for operations, stay as they
+    are, so existing local copies keep their directory.
+    """
+    name = _UNSAFE_NAME_CHARACTERS.sub("_", str(name))
+    stripped = name.rstrip(". ")
+    name = stripped + "_" * (len(name) - len(stripped))
+    if name == "":
+        return "_"
+    if _WINDOWS_DEVICE_NAMES.fullmatch(name):
+        return name + "_"
+    return name
 
 
 class MSUIMscolab(QtCore.QObject):
@@ -499,18 +525,19 @@ class MSUIMscolab(QtCore.QObject):
                         QMessageBox.information(self.prof_diag, "Success", "Image uploaded successfully")
                         self.fetch_profile_image(refresh=True)
                     else:
-                        QMessageBox.critical(self.prof_diag, "Error", "Failed to upload image: "
-                                             f"{sc.response_message(response, response.text)}")
+                        # the answer comes from the MSColab server
+                        QMessageBox.critical(self.prof_diag, "Error", plain_text_as_html(
+                            f"Failed to upload image: {sc.response_message(response, response.text)}"))
 
                 except requests.exceptions.RequestException as e:
-                    QMessageBox.critical(self.prof_diag, "Error", f"Error occurred: {e}")
+                    QMessageBox.critical(self.prof_diag, "Error", plain_text_as_html(f"Error occurred: {e}"))
 
             except UnidentifiedImageError as e:
-                QMessageBox.critical(self.prof_diag, "Error",
-                                     f'Cannot identify image file. Please check the file format. Error : {e}')
+                QMessageBox.critical(self.prof_diag, "Error", plain_text_as_html(
+                    f'Cannot identify image file. Please check the file format. Error : {e}'))
             except OSError as e:
-                QMessageBox.critical(self.prof_diag, "Error",
-                                     f'Cannot identify image file. Please check the file format. Error: {e}')
+                QMessageBox.critical(self.prof_diag, "Error", plain_text_as_html(
+                    f'Cannot identify image file. Please check the file format. Error: {e}'))
 
     def delete_own_account(self, _=None):
         reply = QMessageBox.question(
@@ -943,18 +970,39 @@ class MSUIMscolab(QtCore.QObject):
                 "Operation is renamed successfully.",
             )
 
+    def local_operation_dir(self):
+        """
+        Directory of the local copy of the active operation, None if it would not be in the data directory
+
+        The username and the operation name come from the MSColab server. A server could otherwise make msui write
+        the local copy anywhere, e.g. with the operation name ".." or an absolute path, so unsafe characters are
+        replaced, see _safe_dir_name. The containment check catches what is left, e.g. a symbolic link.
+        """
+        local_data_dir = Path(self.data_dir) / "local_colabdata"
+        local_dir = local_data_dir / _safe_dir_name(self.user["username"]) / _safe_dir_name(self.active_operation_name)
+        if not local_dir.resolve().is_relative_to(local_data_dir.resolve()):
+            return None
+        return local_dir
+
     def handle_work_locally_toggle(self, _=None):
         if self.ui.workLocallyCheckbox.isChecked():
+            local_dir = self.local_operation_dir()
+            if local_dir is None:
+                logging.error("no local copy for user %r and operation %r, not a directory in %s",
+                              self.user["username"], self.active_operation_name, self.data_dir)
+                QMessageBox.critical(
+                    self.ui, "Work Asynchronously",
+                    plain_text_as_html(
+                        "The operation can't be stored locally, its directory would not be in the data directory:"
+                        f"\n\nOperation: {self.active_operation_name}\nUsername: {self.user['username']}"))
+                self.ui.workLocallyCheckbox.blockSignals(True)
+                self.ui.workLocallyCheckbox.setChecked(False)
+                self.ui.workLocallyCheckbox.blockSignals(False)
+                return
             if self.version_window is not None:
                 self.version_window.close()
-            self.create_local_operation_file()
-            self.local_ftml_file = str(
-                Path(self.data_dir) /
-                "local_colabdata" /
-                self.user["username"] /
-                self.active_operation_name /
-                "mscolab_operation.ftml"
-            )
+            self.create_local_operation_file(local_dir)
+            self.local_ftml_file = str(local_dir / "mscolab_operation.ftml")
             self.ui.workingStatusLabel.setText(
                 self.ui.tr(
                     "Working Asynchronously.\nYour changes are only available to you. "
@@ -975,14 +1023,13 @@ class MSUIMscolab(QtCore.QObject):
         self.show_operation_options()
         self.reload_view_windows()
 
-    def create_local_operation_file(self):
-        local_data_dir = self.data_dir / "local_colabdata" / self.user['username'] / self.active_operation_name
-        ftml_file = local_data_dir / "mscolab_operation.ftml"
+    def create_local_operation_file(self, local_dir):
+        ftml_file = local_dir / "mscolab_operation.ftml"
 
         if ftml_file.exists():
             return
 
-        local_data_dir.mkdir(parents=True, exist_ok=True)
+        local_dir.mkdir(parents=True, exist_ok=True)
         server_data = self.waypoints_model.get_xml_content()
 
         with open(ftml_file, "w") as f:
@@ -1331,7 +1378,7 @@ class MSUIMscolab(QtCore.QObject):
         logging.debug("handle_archive_operation")
         ret = QMessageBox.warning(
             self.ui, self.tr("Mission Support System"),
-            self.tr(f"Do you want to archive this operation '{self.active_operation_name}'?"),
+            plain_text_as_html(self.tr(f"Do you want to archive this operation '{self.active_operation_name}'?")),
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if ret == QMessageBox.Yes:
             req = UpdateOperationRequest(op_id=self.active_op_id, attribute="active", value="False")

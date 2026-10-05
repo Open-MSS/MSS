@@ -26,11 +26,25 @@
 """
 
 import codecs
+import re
+from xml.sax.saxutils import escape
+
+# characters XML 1.0 doesn't allow, e.g. most control characters; a file with them can't be read
+_NOT_XML_CHARACTERS = re.compile("[^\x09\x0a\x0d\x20-\ud7ff\ue000-\ufffd\U00010000-\U0010ffff]")
+
+
+def _xml_text(text):
+    """
+    text as the text of an XML element: without characters XML doesn't allow, markup escaped
+    """
+    return escape(_NOT_XML_CHARACTERS.sub("", str(text)))
 
 
 def save_to_kml(filename, name, waypoints):
     if not filename:
         raise ValueError("filename to save flight track cannot be None")
+    # names of the flight track and its waypoints can be chosen by collaborators, markup in them must stay text
+    name = _xml_text(name)
     header = f"""<?xml version="1.0" encoding="UTF-8" ?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
 <Document>
@@ -73,5 +87,5 @@ def save_to_kml(filename, name, waypoints):
             lon = wp.lon
             lvl = wp.flightlevel
             alt = lvl * 100 * 0.3048
-            out_file.write(waypoint.format(name=str(name), lon=lon, lat=lat, alt=alt))
+            out_file.write(waypoint.format(name=_xml_text(name), lon=lon, lat=lat, alt=alt))
         out_file.write(footer)

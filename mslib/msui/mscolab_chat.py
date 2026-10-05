@@ -36,15 +36,16 @@ import requests
 from markdown import Markdown
 from markdown.extensions import Extension
 from markdown.treeprocessors import Treeprocessor
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import urljoin
 
 from mslib.mscolab.api.attachments import DEFAULT_ATTACHMENT_EXTENSIONS, IMAGE_EXTENSIONS, file_extension
 from mslib.mscolab.api.message_type import MessageType
 from mslib.msui.socket_control import response_message
 from PyQt5 import QtCore, QtGui, QtWidgets
-from mslib.utils.qt import get_open_filename, get_save_filename, show_popup
+from mslib.utils.qt import get_open_filename, get_save_filename, plain_text_message_box, show_popup
 from mslib.msui.qt5 import ui_mscolab_operation_window as ui
 from mslib.utils.config import config_loader
+from mslib.utils.auth import same_origin
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.schemas import (
     FetchProfileImageRequest,
@@ -639,20 +640,6 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
         self.viewCloses.emit()
 
 
-def _same_origin(url, base_url):
-    """
-    True if url has the scheme, host and port of base_url
-    """
-    default_ports = {"http": 80, "https": 443}
-    try:
-        a, b = urlsplit(url), urlsplit(base_url)
-        return (a.scheme.lower() == b.scheme.lower() and a.hostname == b.hostname and
-                (a.port or default_ports.get(a.scheme.lower())) == (b.port or default_ports.get(b.scheme.lower())))
-    except ValueError:
-        # e.g. an invalid port
-        return False
-
-
 class MessageItem(QtWidgets.QWidget):
     def __init__(self, message, chat_window):
         super().__init__()
@@ -691,7 +678,7 @@ class MessageItem(QtWidgets.QWidget):
             path = path.replace('\\', '/').split('colabdata')[-1]
         server_url = self.chat_window.mscolab_server_url
         url = urljoin(server_url, path)
-        if not _same_origin(url, server_url):
+        if not same_origin(url, server_url):
             logging.warning("attachment %r is not on the MSColab server %s, ignored", path, server_url)
             return None
         return url
@@ -975,13 +962,6 @@ def chat_link_target(link):
     return url
 
 
-def _plain_text_box(icon, title, text, buttons, parent):
-    # the text contains the URL chosen by the author of the message, it must not be interpreted as markup
-    box = QtWidgets.QMessageBox(icon, title, text, buttons, parent)
-    box.setTextFormat(QtCore.Qt.PlainText)
-    return box
-
-
 def open_chat_link(parent, url):
     """Open a link of a chat message after the user has seen and confirmed its real target.
 
@@ -989,13 +969,13 @@ def open_chat_link(parent, url):
     """
     target = chat_link_target(url)
     if target is None:
-        _plain_text_box(
+        plain_text_message_box(
             QtWidgets.QMessageBox.Warning, "Link not opened",
             "Only http and https links to a host can be opened from the chat. This link was not opened:\n\n"
             f"{url.toString(QtCore.QUrl.FullyEncoded)}",
             QtWidgets.QMessageBox.Ok, parent).exec_()
         return
-    box = _plain_text_box(
+    box = plain_text_message_box(
         QtWidgets.QMessageBox.Question, "Open link?",
         f"Do you want to open this link in your browser?\n\nHost: {target.host(QtCore.QUrl.FullyEncoded)}\n\n"
         f"{target.toString(QtCore.QUrl.FullyEncoded)}",
