@@ -187,7 +187,9 @@ def test_main_refuses_different_passwords(capsys):
     assert "differ" in captured.err
 
 
-@pytest.mark.parametrize("password_hash", [ARGON2_HASH + "ä", "$argon2id$v=19$m=65536,t=3,p=4$ä$ä"])
+# fixed ids: ARGON2_HASH has a random salt, and pytest-xdist needs the same test ids in every worker
+@pytest.mark.parametrize("password_hash", [ARGON2_HASH + "ä", "$argon2id$v=19$m=65536,t=3,p=4$ä$ä"],
+                         ids=["valid_hash_with_umlaut", "umlaut_in_salt_and_hash"])
 def test_hash_with_non_ascii_characters_is_invalid(caplog, password_hash):
     # e.g. a paste error; it must neither raise (HTTP 500 on every page) nor stay unnoticed
     assert check_credentials([("u", password_hash)], "u", "secret") is False
