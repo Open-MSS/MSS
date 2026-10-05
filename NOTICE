@@ -45,17 +45,6 @@ with "(mss)". We renamed it to "ogcwms.py" (2017-04-28)
 We also did a PEP8 review of the ogcwms.py and adopted it to the recent 0.14 version
 https://pypi.python.org/pypi/OWSLib/0.14.0
 
-
-NETCDF4-PYTHON
---------------------
-
-Copyright: 2008 by Jeffrey Whitaker
-
-mslib/netCDF4tools.py contains substantial parts taken from the
-netcdf4-python library -- Python/numpy interface to netCDF
-
-https://code.google.com/p/netcdf4-python/
-
 ********************************************************************************
 
 
