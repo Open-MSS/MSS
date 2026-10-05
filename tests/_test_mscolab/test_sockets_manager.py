@@ -34,7 +34,8 @@ from mslib.mscolab.api.events import SocketEvents
 from mslib.mscolab.chat_manager import MAX_MESSAGE_TEXT_LENGTH
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation, get_operation, \
     XML_CONTENT_INIT
-from mslib.mscolab.models import db, Permission, User, Message, MessageType
+from mslib.mscolab.models import db, Change, Operation, Permission, User, Message, MessageType
+from tests.utils import XML_CONTENT1
 
 
 class Test_Socket_Manager:
@@ -783,3 +784,110 @@ class Test_Socket_Manager:
             assert Message.query.filter(Message.text.in_(["injected", "nested", "unknown"])).count() == 0
             assert Message.query.filter_by(text="valid reply", reply_id=parent_id).count() == 1
             assert Message.query.filter_by(op_id=other_operation.id).count() == 1
+
+    def _set_active(self, operation, active):
+        with self.app.app_context():
+            db.session.get(Operation, operation.id).active = active
+            db.session.commit()
+
+    def _save(self, sio, token, **extra):
+        sio.emit('file-save', {"op_id": self.operation.id, "token": token, "content": XML_CONTENT1,
+                               "comment": "XML_CONTENT1", **extra})
+
+    def _refusals(self, sio):
+        return [json.loads(event["args"][0]) for event in self._events(sio, SocketEvents.FILE_SAVE_REFUSED)]
+
+    def test_file_save_of_viewer_is_refused_to_its_sender(self):
+        with self.app.app_context():
+            assert add_user_to_operation(path=self.operation_name, access_level="viewer",
+                                         emailid=self.anotheruserdata[0])
+        viewer = self._connect(self._another_token())
+        member = self._connect(self.token)
+        self._save(viewer, self._another_token())
+        refusals = self._refusals(viewer)
+        assert len(refusals) == 1
+        assert refusals[0]["op_id"] == self.operation.id
+        assert "access level is viewer" in refusals[0]["message"]
+        # only its sender is told
+        assert self._refusals(member) == []
+        with self.app.app_context():
+            assert self.fm.get_file(self.operation.id, self.user) == XML_CONTENT_INIT
+
+    def test_file_save_with_too_long_version_name_is_refused(self):
+        sio = self._connect(self.token)
+        self._save(sio, self.token, version_name="x" * 256)
+        refusals = self._refusals(sio)
+        assert len(refusals) == 1
+        assert "version name" in refusals[0]["message"]
+        with self.app.app_context():
+            # nothing was written, no half-done save
+            assert self.fm.get_file(self.operation.id, self.user) == XML_CONTENT_INIT
+            assert Change.query.filter_by(op_id=self.operation.id).count() == 0
+            assert Message.query.filter_by(op_id=self.operation.id).count() == 0
+        self._save(sio, self.token, version_name="x" * 255)
+        assert self._refusals(sio) == []
+        with self.app.app_context():
+            assert Change.query.filter_by(op_id=self.operation.id).one().version_name == "x" * 255
+
+    def test_archived_operation_chat_and_flight_track_are_read_only(self):
+        message_id = self._add_message(self.user, self.operation, "written before archiving")
+        self._set_active(self.operation, False)
+        sio = self._connect(self.token)
+        self._send(sio, "sent to archive")
+        sio.emit('edit-message', {
+            "message_id": message_id,
+            "new_message_text": "rewritten",
+            "op_id": self.operation.id,
+            "token": self.token
+        })
+        sio.emit('delete-message', {
+            "message_id": message_id,
+            "op_id": self.operation.id,
+            "token": self.token
+        })
+        sio.emit('file-save', {
+            "op_id": self.operation.id,
+            "token": self.token,
+            "content": XML_CONTENT1,
+            "comment": "XML_CONTENT1"
+        })
+        assert self._message_text(message_id) == "written before archiving"
+        with self.app.app_context():
+            assert Message.query.filter_by(op_id=self.operation.id).count() == 1
+            assert Change.query.filter_by(op_id=self.operation.id).count() == 0
+            assert self.fm.get_file(self.operation.id, self.user) == XML_CONTENT_INIT
+        # the refused save is reported to its sender, nothing else is sent
+        events = self._events(sio)
+        assert [event["name"] for event in events] == [SocketEvents.FILE_SAVE_REFUSED]
+        assert json.loads(events[0]["args"][0])["op_id"] == self.operation.id
+        # once unarchived, the same requests change the operation
+        self._set_active(self.operation, True)
+        self._send(sio, "sent after unarchiving")
+        sio.emit('file-save', {
+            "op_id": self.operation.id,
+            "token": self.token,
+            "content": XML_CONTENT1,
+            "comment": "XML_CONTENT1"
+        })
+        with self.app.app_context():
+            assert Message.query.filter_by(text="sent after unarchiving").count() == 1
+            assert Change.query.filter_by(op_id=self.operation.id).count() == 1
+        assert len(self._events(sio, SocketEvents.FILE_CHANGED)) == 1
+
+    def test_archived_operation_rejects_attachment(self):
+        self._set_active(self.operation, False)
+        sio = self._connect(self.token)
+        data = {
+            "token": self.token,
+            "op_id": self.operation.id,
+            "message_type": int(MessageType.IMAGE),
+            "file": open(icons('16x16'), 'rb'),
+        }
+        with self.app.test_client() as c:
+            res = c.post("message_attachment", data=data, content_type="multipart/form-data")
+        data["file"].close()
+        assert res.data == b"False"
+        assert not os.path.exists(os.path.join(self.app.config['UPLOAD_FOLDER'], str(self.operation.id)))
+        with self.app.app_context():
+            assert Message.query.filter_by(op_id=self.operation.id).count() == 0
+        assert self._events(sio) == []

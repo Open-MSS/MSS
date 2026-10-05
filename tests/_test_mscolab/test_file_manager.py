@@ -33,7 +33,8 @@ from werkzeug.datastructures import FileStorage
 
 from sqlalchemy.exc import IntegrityError
 
-from mslib.mscolab.models import db, Operation, Permission, User
+from mslib.mscolab.api.schemas import MAX_VERSION_NAME_LENGTH
+from mslib.mscolab.models import db, Change, Operation, Permission, User
 from mslib.mscolab.seed import add_user, get_user, add_operation
 from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX, get_operation_dir
 from mslib.mscolab.seed import XML_CONTENT_INIT
@@ -417,15 +418,149 @@ class Test_FileManager:
             assert self.fm.save_file(operation.id, self.content2, self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
             # crestor
-            assert self.fm.undo_changes(all_changes[1]["id"], self.user)
+            assert self.fm.undo_changes(all_changes[1]["id"], self.user) == (True, operation.id)
             # check collaborator
             self.fm.add_bulk_permission(operation.id, self.user, [self.collaboratoruser.id], "collaborator")
             assert self.fm.is_collaborator(self.collaboratoruser.id, operation.id)
-            assert self.fm.undo_changes(all_changes[1]["id"], self.collaboratoruser)
+            assert self.fm.undo_changes(all_changes[1]["id"], self.collaboratoruser) == (True, operation.id)
             # check viewer
             self.fm.add_bulk_permission(operation.id, self.user, [self.vieweruser.id], "viewer")
             assert self.fm.is_viewer(self.vieweruser.id, operation.id)
-            assert self.fm.undo_changes(all_changes[1]["id"], self.vieweruser) is False
+            assert self.fm.undo_changes(all_changes[1]["id"], self.vieweruser) == (False, operation.id)
+
+    def test_set_version_name_of_other_operation_rejected(self):
+        # the attacker is creator of an operation of their own and names it in the request
+        with self.app.test_client():
+            _, operation = self._create_operation(flight_path="victim")
+            assert self.fm.save_file(operation.id, self.content1, self.user)
+            ch_id = self.fm.get_all_changes(operation.id, self.user)[0]["id"]
+            _, attacker_operation = self._create_operation(flight_path="attacker", user=self.anotheruser)
+            assert self.fm.set_version_name(ch_id, attacker_operation.id, self.anotheruser.id, "renamed") is False
+            assert db.session.get(Change, ch_id).version_name is None
+
+    def test_set_version_name_of_unknown_change(self):
+        with self.app.test_client():
+            _, operation = self._create_operation(flight_path="operation8")
+            assert self.fm.set_version_name(987654, operation.id, self.user.id, "THIS") is False
+
+    def test_set_version_name_length(self):
+        with self.app.test_client():
+            _, operation = self._create_operation(flight_path="operation8")
+            assert self.fm.save_file(operation.id, self.content1, self.user)
+            ch_id = self.fm.get_all_changes(operation.id, self.user)[0]["id"]
+            assert self.fm.set_version_name(ch_id, operation.id, self.user.id, "x" * 256) is False
+            assert db.session.get(Change, ch_id).version_name is None
+            assert self.fm.set_version_name(ch_id, operation.id, self.user.id, "x" * 255)
+            assert db.session.get(Change, ch_id).version_name == "x" * 255
+            # None removes the name
+            assert self.fm.set_version_name(ch_id, operation.id, self.user.id, None)
+            assert db.session.get(Change, ch_id).version_name is None
+
+    def test_get_change(self):
+        with self.app.test_client():
+            _, operation = self._create_operation(flight_path="operation8")
+            assert self.fm.save_file(operation.id, self.content1, self.user)
+            ch_id = self.fm.get_all_changes(operation.id, self.user)[0]["id"]
+            assert self.fm.get_change(ch_id, self.user).op_id == operation.id
+            # a user who is not a member of the operation of the change, and an unknown change
+            assert self.fm.get_change(ch_id, self.anotheruser) is None
+            assert self.fm.get_change(987654, self.user) is None
+
+    def test_unknown_or_foreign_change_is_rejected(self):
+        with self.app.test_client():
+            _, operation = self._create_operation(flight_path="operation8")
+            assert self.fm.save_file(operation.id, self.content1, self.user)
+            assert self.fm.save_file(operation.id, self.content2, self.user)
+            ch_id = self.fm.get_all_changes(operation.id, self.user)[1]["id"]
+            for change_id, user in ((987654, self.user), (ch_id, self.anotheruser)):
+                assert self.fm.get_change_content(change_id, user) is False
+                # op_id None: no such change, or not one of the user's operations
+                assert self.fm.undo_changes(change_id, user) == (False, None)
+            assert self.fm.get_file(operation.id, self.user) == self.content2
+
+    def test_is_archived(self):
+        with self.app.test_client():
+            _, operation = self._create_operation(flight_path="operation8")
+            assert self.fm.is_archived(operation.id) is False
+            assert self.fm.update_operation(operation.id, "active", False, self.user)
+            assert self.fm.is_archived(operation.id) is True
+            # nothing can be written to an operation that doesn't exist
+            assert self.fm.is_archived(987654) is True
+
+    def test_may_write(self):
+        with self.app.test_client():
+            _, operation = self._create_operation_with_users(flight_path="operation9")
+            self.fm.add_bulk_permission(operation.id, self.user, [self.adminuser.id], "admin")
+            for user in (self.user, self.adminuser, self.collaboratoruser):
+                assert self.fm.may_write(user.id, operation.id) is True
+            assert self.fm.may_write(self.vieweruser.id, operation.id) is False
+            assert self.fm.may_write(self.anotheruser.id, operation.id) is False
+            assert self.fm.may_write(self.user.id, 987654) is False
+            assert self.fm.update_operation(operation.id, "active", False, self.user)
+            for user in (self.user, self.adminuser, self.collaboratoruser):
+                assert self.fm.may_write(user.id, operation.id) is False
+
+    def test_save_file_refuses_too_long_version_name(self):
+        # checked before anything is written, the Change would fail after the git commit
+        with self.app.test_client():
+            _, operation = self._create_operation(flight_path="operation10")
+            limit = Change.version_name.type.length
+            assert limit == MAX_VERSION_NAME_LENGTH
+            assert self.fm.save_file(operation.id, self.content1, self.user, version_name="x" * (limit + 1)) is False
+            assert self.fm.get_file(operation.id, self.user) == XML_CONTENT_INIT
+            assert self.fm.get_all_changes(operation.id, self.user) == []
+            assert self.fm.save_file(operation.id, self.content1, self.user, version_name="x" * limit)
+            assert self.fm.get_all_changes(operation.id, self.user)[0]["version_name"] == "x" * limit
+
+    def test_archived_operation_is_read_only(self):
+        with self.app.test_client():
+            _, operation = self._create_operation_with_users(flight_path="operation8")
+            assert self.fm.save_file(operation.id, self.content1, self.user)
+            assert self.fm.save_file(operation.id, self.content2, self.user)
+            ch_id = self.fm.get_all_changes(operation.id, self.user)[1]["id"]
+            assert self.fm.update_operation(operation.id, "active", False, self.user)
+            for user in (self.user, self.collaboratoruser):
+                assert self.fm.save_file(operation.id, self.content1, user) is False
+                assert self.fm.set_version_name(ch_id, operation.id, user.id, "THIS") is False
+                assert self.fm.undo_changes(ch_id, user)[0] is False
+            assert self.fm.get_file(operation.id, self.user) == self.content2
+            assert len(self.fm.get_all_changes(operation.id, self.user)) == 2
+            assert db.session.get(Change, ch_id).version_name is None
+            # it can still be read
+            assert self.fm.get_change_content(ch_id, self.collaboratoruser) == self.content1
+            # once unarchived, it can be changed again
+            assert self.fm.update_operation(operation.id, "active", True, self.user)
+            assert self.fm.set_version_name(ch_id, operation.id, self.collaboratoruser.id, "THIS")
+            assert self.fm.undo_changes(ch_id, self.collaboratoruser)[0] is True
+            assert self.fm.get_file(operation.id, self.user) == self.content1
+
+    def test_get_user_profile_image(self):
+        with self.app.test_client():
+            _, operation = self._create_operation_with_users(flight_path="operation8")
+            _, other_operation = self._create_operation(flight_path="other", user=self.anotheruser)
+            for user in (self.user, self.vieweruser, self.anotheruser):
+                user.profile_image_path = f"profile/{user.id}.png"
+            db.session.commit()
+            image = f"profile/{self.vieweruser.id}.png"
+            # their own image
+            assert self.fm.get_user_profile_image(self.vieweruser.id, None, self.vieweruser.id) == (True, image)
+            assert self.fm.get_user_profile_image(
+                str(self.vieweruser.id), str(other_operation.id), str(self.vieweruser.id)) == (True, image)
+            # the image of another member of an operation both are members of
+            assert self.fm.get_user_profile_image(self.vieweruser.id, operation.id, self.user.id) == (True, image)
+            assert self.fm.get_user_profile_image(
+                str(self.vieweruser.id), str(operation.id), str(self.user.id)) == (True, image)
+            # without the operation
+            assert self.fm.get_user_profile_image(self.vieweruser.id, None, self.user.id)[0] is False
+            # requested by a user who is not a member of the operation the image's user is a member of
+            assert self.fm.get_user_profile_image(self.vieweruser.id, operation.id, self.anotheruser.id)[0] is False
+            # of a user who is not a member of the operation the requesting user is a member of
+            assert self.fm.get_user_profile_image(self.anotheruser.id, operation.id, self.user.id)[0] is False
+            assert self.fm.get_user_profile_image(self.anotheruser.id, other_operation.id, self.user.id)[0] is False
+            # invalid ids
+            for user_id, op_id, requesting_user_id in (("abc", None, self.user.id), (self.user.id, "abc", 1),
+                                                       (self.vieweruser.id, None, None)):
+                assert self.fm.get_user_profile_image(user_id, op_id, requesting_user_id)[0] is False
 
     def test_fetch_users_without_permission(self):
         with self.app.test_client():

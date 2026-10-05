@@ -649,6 +649,158 @@ class Test_Server:
             data = json.loads(response.data.decode('utf-8'))
             assert data["users"] == [{'access_level': 'creator', 'username': self.userdata[1], 'id': 1}]
 
+    @pytest.mark.parametrize("endpoint", ['/authorized_users', '/active_users'])
+    @pytest.mark.parametrize("op_id", [None, "abc", ""])
+    def test_operation_users_invalid_op_id(self, endpoint, op_id):
+        assert add_user(*self.userdata)
+        with self.app.test_client() as test_client:
+            token = self._get_token(test_client, self.userdata)
+            data = {"token": token} if op_id is None else {"token": token, "op_id": op_id}
+            response = test_client.get(endpoint, data=data)
+            assert response.status_code == 400
+            assert response.data == b"False"
+
+    def test_operation_users_require_membership(self):
+        # the members of an operation and who of them is online are shown only to its members
+        other_userdata = 'UV20@uv20.de', 'UV20', 'uv20.de', 'User UV20'
+        assert add_user(*self.userdata)
+        assert add_user(*other_userdata)
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            other_token = self._get_token(test_client, other_userdata)
+            for endpoint in ('/authorized_users', '/active_users'):
+                for op_id in (operation.id, 987654):
+                    response = test_client.get(endpoint, data={"token": other_token, "op_id": op_id})
+                    assert response.status_code == 403
+                    assert response.data == b"False"
+            assert add_user_to_operation(path=operation.path, emailid=other_userdata[0])
+            response = test_client.get('/authorized_users', data={"token": other_token, "op_id": operation.id})
+            assert response.status_code == 200
+            assert len(json.loads(response.data.decode('utf-8'))["users"]) == 2
+
+    def test_active_users(self):
+        assert add_user(*self.userdata)
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            # nobody has selected the operation yet
+            response = test_client.get('/active_users', data={"token": token, "op_id": operation.id})
+            assert response.status_code == 200
+            assert response.get_json() == {"active_users": []}
+            self.sockio.sm.active_users_per_operation[operation.id] = {get_user(self.userdata[0]).id}
+            response = test_client.get('/active_users', data={"token": token, "op_id": operation.id})
+            assert response.status_code == 200
+            assert response.get_json() == {"active_users": [get_user(self.userdata[0]).id]}
+
+    def test_unknown_or_foreign_change(self):
+        other_userdata = 'UV20@uv20.de', 'UV20', 'uv20.de', 'User UV20'
+        assert add_user(*self.userdata)
+        assert add_user(*other_userdata)
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            user = self._save_content(operation, self.userdata)
+            ch_id = self.fm.get_all_changes(operation.id, user)[0]["id"]
+            other_token = self._get_token(test_client, other_userdata)
+            with mock.patch.object(self.sockio.sm, "emit_file_change") as emit_file_change:
+                for change_id, user_token in ((987654, token), (ch_id, other_token)):
+                    response = test_client.get('/get_change_content', data={"token": user_token, "ch_id": change_id})
+                    assert response.status_code == 404
+                    assert response.data == b"False"
+                    response = test_client.post('/undo_changes', data={"token": user_token, "ch_id": change_id})
+                    assert response.status_code == 404
+                    assert response.data == b"False"
+            emit_file_change.assert_not_called()
+
+    def test_undo_changes(self):
+        assert add_user(*self.userdata)
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            user = self._save_content(operation, self.userdata)
+            ch_id = self.fm.get_all_changes(operation.id, user)[0]["id"]
+            with mock.patch.object(self.sockio.sm, "emit_file_change") as emit_file_change:
+                response = test_client.post('/undo_changes', data={"token": token, "ch_id": ch_id})
+            assert response.status_code == 200
+            assert response.data == b"True"
+            emit_file_change.assert_called_once_with(operation.id)
+
+    def test_set_version_name_of_other_operation(self):
+        # the attacker is creator of an operation of their own and names it in the request
+        other_userdata = 'UV20@uv20.de', 'UV20', 'uv20.de', 'User UV20'
+        assert add_user(*self.userdata)
+        assert add_user(*other_userdata)
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            user = self._save_content(operation, self.userdata)
+            ch_id = self.fm.get_all_changes(operation.id, user)[0]["id"]
+            attacker_operation, attacker_token = self._create_operation(test_client, other_userdata, path="attacker")
+            response = test_client.post('/set_version_name', data={"token": attacker_token,
+                                                                   "ch_id": ch_id,
+                                                                   "op_id": attacker_operation.id,
+                                                                   "version_name": "renamed"})
+            assert response.status_code == 200
+            assert response.get_json()["success"] is False
+            assert self.fm.get_all_changes(operation.id, user)[0]["version_name"] is None
+
+    def test_fetch_profile_image_requires_membership(self):
+        # a user sees the profile images of the members of operations they are a member of
+        other_userdata = 'UV20@uv20.de', 'UV20', 'uv20.de', 'User UV20'
+        assert add_user(*self.userdata)
+        assert add_user(*other_userdata)
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            assert self._upload_profile_image(test_client, token, self.userdata[0]).status_code == 200
+            user_id = get_user(self.userdata[0]).id
+            other_token = self._get_token(test_client, other_userdata)
+            # their own image
+            response = test_client.get('/fetch_profile_image', data={"token": token, "user_id": user_id})
+            assert response.status_code == 200
+            image = response.data
+            # another user, also when naming an operation the image's user is a member of
+            response = test_client.get('/fetch_profile_image', data={"token": other_token, "user_id": user_id})
+            assert response.status_code == 404
+            response = test_client.get('/fetch_profile_image', data={"token": other_token, "user_id": user_id,
+                                                                     "op_id": operation.id})
+            assert response.status_code == 404
+            # once a member of that operation
+            assert add_user_to_operation(path=operation.path, emailid=other_userdata[0])
+            response = test_client.get('/fetch_profile_image', data={"token": other_token, "user_id": user_id,
+                                                                     "op_id": operation.id})
+            assert response.status_code == 200
+            assert response.data == image
+
+    def test_archived_operation_is_read_only(self):
+        assert add_user(*self.userdata)
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            user = self._save_content(operation, self.userdata)
+            ch_id = self.fm.get_all_changes(operation.id, user)[0]["id"]
+            response = test_client.post('/update_operation', data={
+                "token": token, "op_id": operation.id, "attribute": "active", "value": "False"})
+            assert response.data == b"True"
+            response = test_client.post('/set_version_name', data={"token": token,
+                                                                   "ch_id": ch_id,
+                                                                   "op_id": operation.id,
+                                                                   "version_name": "THIS"})
+            assert response.get_json()["success"] is False
+            response = test_client.post('/undo_changes', data={"token": token, "ch_id": ch_id})
+            assert response.data == b"False"
+            response = test_client.post('/message_attachment', data={"token": token,
+                                                                     "op_id": operation.id,
+                                                                     "file": (io.BytesIO(b"text"), 'test.txt'),
+                                                                     "message_type": "3"})
+            assert response.data == b"False"
+            # it can still be read
+            response = test_client.get('/get_change_content', data={"token": token, "ch_id": ch_id})
+            assert response.status_code == 200
+            # and be unarchived
+            response = test_client.post('/update_operation', data={
+                "token": token, "op_id": operation.id, "attribute": "active", "value": "True"})
+            assert response.data == b"True"
+            response = test_client.post('/set_version_name', data={"token": token,
+                                                                   "ch_id": ch_id,
+                                                                   "op_id": operation.id,
+                                                                   "version_name": "THIS"})
+            assert response.get_json()["success"] is True
+
     def test_delete_operation(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:

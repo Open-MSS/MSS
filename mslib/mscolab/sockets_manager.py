@@ -283,7 +283,8 @@ class SocketsManager:
     def _message_access_level(self, user, message_id, op_id):
         """
         Returns the message `message_id` of operation `op_id` and the access level of `user` on that operation,
-        or (None, None) when there is no such message or the user has no permission on the operation.
+        or (None, None) when there is no such message, the user has no permission on the operation or the
+        operation is archived, which makes its chat read-only.
         """
         message_id, op_id = _as_id(message_id), _as_id(op_id)
         if message_id is None or op_id is None:
@@ -292,7 +293,7 @@ class SocketsManager:
         if message is None:
             return None, None
         access_level = self.fm.auth_type(user.id, op_id)
-        if access_level is False:
+        if access_level is False or self.fm.is_archived(op_id):
             return None, None
         return message, access_level
 
@@ -348,13 +349,10 @@ class SocketsManager:
         """
         u_id: user-id
         op_id: operation-id
+
+        Whether the user may write to the flight track and the chat of the operation
         """
-        permission = Permission.query.filter_by(u_id=u_id, op_id=op_id).first()
-        if not permission:
-            return False
-        if permission.access_level == "viewer":
-            return False
-        return True
+        return self.fm.may_write(u_id, op_id)
 
     def permission_check_admin(self, u_id, op_id):
         """
@@ -384,17 +382,29 @@ class SocketsManager:
         user = User.verify_auth_token(json_req['token'])
         if user is not None:
             # when the socket connection is expired this in None and also on wrong tokens
-            perm = self.permission_check_emit(user.id, int(op_id))
-            # if permission is correct and file saved properly
-            if perm and self.fm.save_file(int(op_id), content, user, version_name=version_name, comment=comment):
+            if not self.permission_check_emit(user.id, int(op_id)):
+                # e.g. the operation was archived while the user was editing it
+                self._refuse_file_save(op_id, "You can't change this operation (any more), e.g. because it "
+                                              "was archived or your access level is viewer.")
+            elif self.fm.save_file(int(op_id), content, user, version_name=version_name, comment=comment):
                 # send service message
                 message_ = f"[service message] **{user.username}** saved changes. {messageText}"
                 new_message = self.cm.add_message(user, message_, str(op_id), message_type=MessageType.SYSTEM_MESSAGE)
                 self.emit_chat_message(new_message)
                 # emit file-changed event to trigger reload of flight track
                 self._emit_to_operation(SocketEvents.FILE_CHANGED, op_id, json.dumps({"op_id": op_id, "u_id": user.id}))
+            else:
+                self._refuse_file_save(op_id, "The server could not save the flight track, e.g. because its "
+                                              "waypoints or its version name are invalid.")
         else:
             logging.debug("Auth Token expired!")
+
+    def _refuse_file_save(self, op_id, reason):
+        """
+        Tells the client that sent a FILE_SAVE that its changes were not saved, so it doesn't keep showing them
+        """
+        self.socketio.emit(SocketEvents.FILE_SAVE_REFUSED, json.dumps({"op_id": op_id, "message": reason}),
+                           to=request.sid)
 
     def emit_chat_message(self, message, reply=False):
         """

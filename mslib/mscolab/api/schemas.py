@@ -869,6 +869,10 @@ class GetChangeContentResponse:
         return cls(content=json.loads(text)["content"])
 
 
+# the server refuses longer version names, Change.version_name is a String(255)
+MAX_VERSION_NAME_LENGTH = 255
+
+
 @dataclass
 class SetVersionNameRequest:
     """POST endpoints.SET_VERSION_NAME.

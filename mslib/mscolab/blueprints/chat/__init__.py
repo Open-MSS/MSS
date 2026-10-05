@@ -67,7 +67,8 @@ def message_attachment():
     user = g.user
     req = MessageAttachmentRequest.from_form(request.form)
     fm = current_app.extensions['fm']
-    if fm.is_member(user.id, req.op_id) and not fm.is_viewer(user.id, req.op_id):
+    # viewers can't send, and nothing can be sent to the read-only chat of an archived operation
+    if fm.may_write(user.id, req.op_id):
         # an attachment is an image or a document, a TEXT one could be edited to point elsewhere and
         # a SYSTEM_MESSAGE one could not be deleted by its author
         if req.message_type not in (MessageType.IMAGE, MessageType.DOCUMENT):

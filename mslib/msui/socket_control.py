@@ -50,6 +50,7 @@ def response_message(response, default):
 class ConnectionManager(QtCore.QObject):
 
     signal_reload = QtCore.pyqtSignal(int, name="reload_wps")
+    signal_file_save_refused = QtCore.pyqtSignal(int, str, name="file save refused")
     signal_message_receive = QtCore.pyqtSignal(str, name="message rcv")
     signal_message_reply_receive = QtCore.pyqtSignal(str, name="message reply")
     signal_message_edited = QtCore.pyqtSignal(str, name="message edited")
@@ -76,6 +77,7 @@ class ConnectionManager(QtCore.QObject):
         logging.debug("Transport Layer: %s", self.sio.transport())
 
         self.sio.on(SocketEvents.FILE_CHANGED, handler=self.handle_file_change)
+        self.sio.on(SocketEvents.FILE_SAVE_REFUSED, handler=self.handle_file_save_refused)
         self.sio.on(SocketEvents.CHAT_MESSAGE_CLIENT, handler=self.handle_incoming_message)
         self.sio.on(SocketEvents.CHAT_MESSAGE_REPLY_CLIENT, handler=self.handle_incoming_message_reply)
         self.sio.on(SocketEvents.EDIT_MESSAGE_CLIENT, handler=self.handle_message_edited)
@@ -150,6 +152,13 @@ class ConnectionManager(QtCore.QObject):
     def handle_file_change(self, message):
         message = json.loads(message)
         self.signal_reload.emit(message["op_id"])
+
+    def handle_file_save_refused(self, message):
+        """
+        The server didn't save the flight track this client sent, e.g. because the operation was archived
+        """
+        message = json.loads(message)
+        self.signal_file_save_refused.emit(int(message["op_id"]), str(message["message"]))
 
     def handle_operation_deleted(self, message):
         op_id = int(json.loads(message)["op_id"])
