@@ -74,6 +74,12 @@ class default_mswms_settings:
     GDPR = ""
     data = {}
     ENABLE_BASIC_HTTP_AUTHENTICATION = False
+    # Limits of a GetMap request, see the sample mswms_settings.py
+    max_image_width = 4096
+    max_image_height = 4096
+    max_layers = 10
+    max_section_points = 2000
+    max_path_waypoints = 1000
     __file__ = None
 
 
