@@ -42,6 +42,7 @@ from mslib.mscolab.conf import setup_saml2_backend
 from mslib.mscolab.forms import ResetPasswordForm, ResetRequestForm
 from mslib.mscolab.models import User
 from mslib.mscolab.api import endpoints
+from mslib.mscolab.api.attachments import normalized_extensions
 from mslib.mscolab.api.schemas import (
     IdpLoginAuthRequest,
     IdpLoginAuthResponse,
@@ -67,6 +68,9 @@ def hello():
         message="Mscolab server",
         use_saml2=current_app.config['USE_SAML2'],
         direct_login=current_app.config['DIRECT_LOGIN'],
+        # msui offers and checks attachments with these before uploading them
+        attachment_extensions=sorted(normalized_extensions(current_app.config['MSCOLAB_ATTACHMENT_EXTENSIONS'])),
+        max_upload_size=current_app.config['MAX_UPLOAD_SIZE'],
     )
     return json.dumps(response.to_dict())
 

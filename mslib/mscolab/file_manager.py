@@ -42,6 +42,7 @@ from sqlalchemy.exc import IntegrityError
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
 from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX, is_valid_operation_path, get_operation_dir
+from mslib.mscolab.api.attachments import file_extension, normalized_extensions
 
 # "creator" is assigned only by create_operation
 ASSIGNABLE_ACCESS_LEVELS = ("admin", "collaborator", "viewer")
@@ -305,9 +306,15 @@ class FileManager:
         subfolder_path.mkdir(parents=True, exist_ok=True)
 
         # Creating unique and secure filename
-        file_name, _ = file.filename.rsplit('.', 1)
-        mime_type, _ = mimetypes.guess_type(file.filename)
-        file_ext = mimetypes.guess_extension(mime_type) if mime_type else '.unknown'
+        # a name without an extension is allowed, it gets the extension .unknown
+        file_name = file.filename.rsplit('.', 1)[0]
+        extension = file_extension(file.filename)
+        if extension in normalized_extensions(current_app.config['MSCOLAB_ATTACHMENT_EXTENSIONS']):
+            # e.g. .ftml or .gpx, which mimetypes doesn't know, and independent of the MIME types of the host
+            file_ext = f".{extension}"
+        else:
+            mime_type, _ = mimetypes.guess_type(file.filename)
+            file_ext = mimetypes.guess_extension(mime_type) if mime_type else '.unknown'
         token = secrets.token_urlsafe()
         timestamp = time.strftime("%Y%m%dT%H%M%S")
 

@@ -38,7 +38,9 @@ from markdown.extensions import Extension
 from markdown.treeprocessors import Treeprocessor
 from urllib.parse import urljoin, urlsplit
 
+from mslib.mscolab.api.attachments import DEFAULT_ATTACHMENT_EXTENSIONS, IMAGE_EXTENSIONS, file_extension
 from mslib.mscolab.api.message_type import MessageType
+from mslib.msui.socket_control import response_message
 from PyQt5 import QtCore, QtGui, QtWidgets
 from mslib.utils.qt import get_open_filename, get_save_filename, show_popup
 from mslib.msui.qt5 import ui_mscolab_operation_window as ui
@@ -53,6 +55,7 @@ from mslib.mscolab.api.schemas import (
     GetMessagesRequest,
     GetMessagesResponse,
     MessageAttachmentRequest,
+    MessageAttachmentResponse,
 )
 
 # Links of chat messages are chosen by their author. Anything else, e.g. file:, smb:, ms-msdt: or search-ms:,
@@ -123,7 +126,8 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
     reloadWindows = QtCore.pyqtSignal(name="reloadWindows")
 
     def __init__(self, token, op_id, user, operation_name, access_level, conn, parent=None,
-                 mscolab_server_url=config_loader(dataset="default_MSCOLAB")):
+                 mscolab_server_url=config_loader(dataset="default_MSCOLAB"),
+                 attachment_extensions=None, max_upload_size=None):
         """
         token: access_token
         op_id: operation id
@@ -134,11 +138,16 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             to be connected at parents'
         parent: widget parent
         mscolab_server_url: server url for mscolab
+        attachment_extensions: extensions of the attachments the server accepts, from its status,
+            None if it doesn't say, then it accepts any
+        max_upload_size: size limit of attachments of the server in bytes, None if it doesn't say
         """
         super().__init__(parent)
         self.setupUi(self)
 
         self.mscolab_server_url = mscolab_server_url
+        self.attachment_extensions = attachment_extensions
+        self.max_upload_size = max_upload_size
         self.token = token
         self.user = user
         self.op_id = op_id
@@ -296,14 +305,19 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             self.previewBtn.setText("Write")
 
     def handle_upload(self):
-        img_type = "Image (*.png *.gif *.jpg *jpeg *.bmp)"
-        doc_type = "Document (*.*)"
-        file_filter = f'{img_type};;{doc_type}'
+        # the file types the server accepts, the default ones if it doesn't say
+        extensions = (DEFAULT_ATTACHMENT_EXTENSIONS if self.attachment_extensions is None
+                      else self.attachment_extensions)
+        images = [f"*.{extension}" for extension in IMAGE_EXTENSIONS if extension in extensions]
+        documents = [f"*.{extension}" for extension in extensions if extension not in IMAGE_EXTENSIONS]
+        file_filters = [f"Image ({' '.join(images)})"] if images else []
+        if documents:
+            file_filters.append(f"Document ({' '.join(documents)})")
+        file_filter = ";;".join(file_filters + ["All files (*)"])
         file_path = get_open_filename(self, "Select a file", "", file_filter)
         if file_path is None or file_path == "":
             return
-        file_type = file_path.split('.')[-1]
-        message_type = MessageType.IMAGE if file_type in ['png', 'gif', 'jpg', 'jpeg', 'bmp'] else MessageType.DOCUMENT
+        message_type = MessageType.IMAGE if file_extension(file_path) in IMAGE_EXTENSIONS else MessageType.DOCUMENT
         self._stage_attachment(file_path, message_type)
 
     def handle_pasted_image(self, image):
@@ -317,10 +331,34 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
         tmp_file = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
         tmp_file.close()
         image.save(tmp_file.name, "PNG")
-        self._pasted_attachment_path = tmp_file.name
-        self._stage_attachment(tmp_file.name, MessageType.IMAGE)
+        if self._stage_attachment(tmp_file.name, MessageType.IMAGE):
+            self._pasted_attachment_path = tmp_file.name
+        else:
+            os.remove(tmp_file.name)
+
+    def refused_attachment(self, file_path):
+        """
+        Why the server would refuse an attachment, None if it accepts it or doesn't say what it accepts
+
+        The server checks this too, msui only saves the user an upload that would fail.
+        """
+        extension = file_extension(file_path)
+        if self.attachment_extensions is not None:
+            if extension == "":
+                return "Files without an extension can not be sent to this MSColab server."
+            if extension not in self.attachment_extensions:
+                return f"Files of type .{extension} can not be sent to this MSColab server."
+        if self.max_upload_size is not None and os.path.getsize(file_path) > self.max_upload_size:
+            return (f"The file is too large. The upload limit of this MSColab server is "
+                    f"{self.max_upload_size / 1024 / 1024:.1f} MiB.")
+        return None
 
     def _stage_attachment(self, file_path, message_type):
+        """Stages a file as attachment, False if the server would refuse it"""
+        refused = self.refused_attachment(file_path)
+        if refused is not None:
+            show_popup(self, "Error", refused)
+            return False
         self.attachment = file_path
         self.attachment_type = message_type
         if message_type == MessageType.IMAGE:
@@ -330,6 +368,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
         self.uploadBtn.setVisible(False)
         self.cancelBtn.setVisible(True)
         self.previewBtn.setVisible(False)
+        return True
 
     def send_message(self):
         """
@@ -349,11 +388,20 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             req = MessageAttachmentRequest(op_id=self.op_id, message_type=int(self.attachment_type))
             url = urljoin(self.mscolab_server_url, endpoints.MESSAGE_ATTACHMENT)
             try:
-                requests.post(
+                response = requests.post(
                     url, data={**req.to_form_data(), "token": self.token}, files=files,
                     timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             except requests.exceptions.ConnectionError:
+                # a server may close the connection instead of answering a request above its limit
                 show_popup(self, "Error", "File size too large")
+            else:
+                if response.status_code == 413:
+                    show_popup(self, "Error", response_message(response, "File size too large"))
+                else:
+                    parsed = (MessageAttachmentResponse.from_text(response.text)
+                              if response.status_code == 200 else None)
+                    if parsed is None or not parsed.success:
+                        show_popup(self, "Error", response_message(response, "The attachment could not be sent."))
         self.send_message_state()
 
     def start_message_reply(self, message_item):

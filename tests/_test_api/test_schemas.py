@@ -588,6 +588,18 @@ class Test_StatusResponse:
         response = StatusResponse.from_text("not json")
         assert response == StatusResponse(message="", use_saml2=False, direct_login=True)
 
+    def test_round_trip_with_attachment_settings(self):
+        response = StatusResponse(message="Mscolab server", use_saml2=False, direct_login=True,
+                                  attachment_extensions=["csv", "ftml"], max_upload_size=2 * 1024 * 1024)
+        assert StatusResponse.from_text(json.dumps(response.to_dict())) == response
+
+    def test_attachment_settings_of_older_servers(self):
+        # older servers don't send them, they accept any attachment
+        response = StatusResponse.from_text(json.dumps({"message": "Mscolab server"}))
+        assert response.attachment_extensions is None
+        assert response.max_upload_size is None
+        assert "attachment_extensions" not in StatusResponse(message="", use_saml2=False, direct_login=True).to_dict()
+
 
 class Test_RegisterRequest:
     def test_round_trip(self):

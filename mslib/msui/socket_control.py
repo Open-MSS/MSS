@@ -38,6 +38,15 @@ from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.config import config_loader
 
 
+def response_message(response, default):
+    """The message of a JSON answer of the MSColab server, e.g. why a request was refused, else default"""
+    try:
+        message = response.json().get("message")
+    except (ValueError, AttributeError):
+        message = None
+    return message if isinstance(message, str) and message else default
+
+
 class ConnectionManager(QtCore.QObject):
 
     signal_reload = QtCore.pyqtSignal(int, name="reload_wps")

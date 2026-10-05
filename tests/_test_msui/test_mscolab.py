@@ -814,6 +814,18 @@ class Test_Mscolab:
         assert self.window.mscolab.active_op_id is not None
         assert self.window.mscolab.active_operation_description == "new_description"
 
+    def test_create_operation_too_large(self, qtbot):
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
+        self._create_user(qtbot, "something", "something@something.org", "something", "Test User")
+        answer = mock.Mock(status_code=413, text="", json=lambda: {
+            "success": False, "message": "Request too large. The limit is 16.0 MiB."})
+        with mock.patch.object(self.window.mscolab.conn, "request_post", return_value=answer), \
+                mock.patch("PyQt5.QtWidgets.QErrorMessage.showMessage") as show_message:
+            self._create_operation_unchecked("large", "large flight track")
+        show_message.assert_called_once_with(
+            "The flight track is too large for the MSColab server. Request too large. The limit is 16.0 MiB.")
+
     def test_archive_operation(self, qtbot):
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
