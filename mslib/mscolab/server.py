@@ -26,12 +26,13 @@
 """
 import logging
 import hashlib
+import sys
 
 from flask import request
 from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth
 
-from mslib.mscolab.app import create_app, initialise_db
+from mslib.mscolab.app import InsecureSecretError, create_app, initialise_db
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.sockets_manager import _setup_managers
 
@@ -111,7 +112,12 @@ def start_server(app, sockio, cm, fm, port=8083):
 
 
 def main():
-    app = create_server_app()
+    try:
+        app = create_server_app()
+    except InsecureSecretError as ex:
+        # a configuration error, no traceback
+        print(f"mscolab: {ex}", file=sys.stderr)
+        sys.exit(1)
     start_server(app, app.extensions['sockio'], app.extensions['cm'], app.extensions['fm'])
 
 

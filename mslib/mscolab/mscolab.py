@@ -41,7 +41,7 @@ from flask import current_app
 
 from mslib import __version__
 from mslib.mscolab import migrations
-from mslib.mscolab.app import create_app, create_files
+from mslib.mscolab.app import InsecureSecretError, create_app, create_files
 from mslib.mscolab.seed import seed_data, add_user, add_all_users_default_operation, \
     add_all_users_to_all_operations, delete_user
 from mslib.utils import setup_logging
@@ -403,6 +403,15 @@ def handle_sso_metadata_init(repo_exists):
 
 
 def main():
+    try:
+        _main()
+    except InsecureSecretError as ex:
+        # a configuration error, no traceback
+        print(f"mscolab: {ex}", file=sys.stderr)
+        sys.exit(1)
+
+
+def _main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
 

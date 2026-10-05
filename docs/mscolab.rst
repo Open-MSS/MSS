@@ -17,6 +17,14 @@ Description of the variables can be found in comments.
 
  .. literalinclude:: samples/config/mscolab/mscolab_settings.py.sample
 
+:code:`SECRET_KEY` signs the login tokens, so anyone who knows it can log in as any user. Use a random key of
+your own with at least 32 characters, e.g. from :code:`python -c "import secrets; print(secrets.token_urlsafe(32))"`,
+and pass it in the environment variable :code:`MSCOLAB_SECRET_KEY`, which wins over :code:`SECRET_KEY` in
+mscolab_settings.py. There is no default: the server and the :code:`mscolab` command refuse to start without a key,
+with a shorter key, with fewer than 10 different characters or with :code:`'MySecretKey'` from earlier versions of
+this sample. All processes of the server, e.g. gunicorn workers, have to use the same key. :code:`ADMIN_TOKEN`, if
+you set it, needs at least 16 characters.
+
 .. _configuration-mscolab:
 
 Protecting Login
@@ -132,8 +140,9 @@ Then install gunicorn by pixi::
   $ pixi global install gunicorn
 
 
-and start the server by::
+and start the server with your secret key (see :code:`SECRET_KEY` above) by::
 
+  $ export MSCOLAB_SECRET_KEY='<your key>'
   $ gunicorn -b 0.0.0.0:8087 server:app
 
 For further options read `<https://flask.palletsoperations.com/en/1.1.x/deploying/wsgi-standalone/#gunicorn>`_

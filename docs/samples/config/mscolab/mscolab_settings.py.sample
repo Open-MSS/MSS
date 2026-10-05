@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -61,8 +61,16 @@ UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
 # Max image/document upload size in mscolab chat (default 2MB)
 MAX_UPLOAD_SIZE = 2 * 1024 * 1024
 
-# Set your secret key for token generation
-SECRET_KEY = 'MySecretKey'
+# Secret key that signs the login tokens and the email confirmation and password reset links.
+# Anyone who knows it can log in as any user, so keep it secret and use a key of your own.
+# Create one with
+#     python -c "import secrets; print(secrets.token_urlsafe(32))"
+# and pass it to the server in the environment variable MSCOLAB_SECRET_KEY, which wins
+# over this file, or set it here:
+# SECRET_KEY = '<your key>'
+# The server does not start without a key, with a key shorter than 32 characters or with
+# fewer than 10 different characters. All processes of the server (e.g. gunicorn workers)
+# and the mscolab command line tool must use the same key.
 
 # looks for a given category for an operation ending with GROUP_POSTFIX
 # e.g. category = Tex will look for TexGroup

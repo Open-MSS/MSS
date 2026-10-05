@@ -108,7 +108,7 @@ SOCKETIO_LOGGER = True
 ENGINEIO_LOGGER = True
 
 # used to generate and parse tokens
-SECRET_KEY = secrets.token_urlsafe(16)
+SECRET_KEY = secrets.token_urlsafe(32)
 
 # used to generate the password token
 SECURITY_PASSWORD_SALT = secrets.token_urlsafe(16)
