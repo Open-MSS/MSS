@@ -35,8 +35,12 @@ SOCKETIO_LOGGER = False
 # To enable Engine.IO logging set to True or pass a logger object to use.
 ENGINEIO_LOGGER = False
 
-# Set which origins are allowed to communicate with your server
-CORS_ORIGINS = ["*"]
+# Origins of web pages that may send requests to your server from a browser.
+# Without this setting only the server's own address may: the address a request
+# came to and the address of SERVER_URL. If you set it, also list the address
+# msui users connect to: msui sends it as origin of its socket connection.
+# ["*"] allows every web page.
+# CORS_ORIGINS = ["https://mscolab.example.org"]
 
 # Set base directory where you want to save Mscolab data
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -88,7 +92,9 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'mscolab.db')
 # Set to True for testing and False for production
 SQLALCHEMY_ECHO = False
 
-enable_basic_http_authentication = False
+# If you require basic HTTP authentication in front of the login, set this to True
+# and add the users with an argon2 hash of their password to mscolab_auth.py.
+ENABLE_BASIC_HTTP_AUTHENTICATION = False
 
 # accounts on a database on the server
 DIRECT_LOGIN = True

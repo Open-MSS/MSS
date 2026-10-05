@@ -885,12 +885,14 @@ class DataFiles:
 #
 # HTTP Authentication                               ###
 #
-#
-# Use the following code to create a new md5 digest of a password (e.g. in
-# ipython):
-#     import hashlib; hashlib.md5("my_new_password").hexdigest()
-allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
-                 ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
+# Users that may log in when ENABLE_BASIC_HTTP_AUTHENTICATION is True in
+# mswms_settings.py, with an argon2 hash of their password. The command
+#     python -m mslib.utils.basic_auth
+# asks for a password and prints its hash, e.g. "$argon2id$v=19$m=65536,...".
+# Never store the password itself. MD5 digests of earlier versions still work,
+# but can be cracked quickly, replace them.
+allowed_users = [("mswms", "add_argon2_hash_of_PASSWORD_here"),
+                 ("add_new_user_here", "add_argon2_hash_of_PASSWORD_here")]
 
 '''
         if detailed_information:
@@ -974,8 +976,9 @@ import mslib.mswms
 # HTTP Authentication
 #
 # If you require basic HTTP authentication, set the following variable
-# to True. Add usernames in the list "allowed:users". Note that the
-# passwords are not specified in plain text but by their md5 digest.
+# to True and add the users with an argon2 hash of their password to the
+# list "allowed_users" in mswms_auth.py. Then every page of the server
+# needs the login, also the gallery, its plots and the documentation.
 #ENABLE_BASIC_HTTP_AUTHENTICATION = False
 
 

@@ -23,16 +23,13 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import hashlib
-import hmac
 import logging
 import os
 import traceback
 import urllib.parse
-from functools import wraps
 
 from flask import Blueprint, abort, send_from_directory, render_template, url_for, send_file, request, make_response, \
-    current_app, Response
+    current_app
 from multidict import CIMultiDict
 
 from mslib.msui.icons import icons
@@ -48,54 +45,8 @@ DOCS_BP = Blueprint("docs", __name__, template_folder='templates',
                     static_folder='static', static_url_path='/docs-static')
 
 
-def basic_auth(allowed_users):
-    def decorator(f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            auth = request.authorization
-
-            if not auth:
-                return Response(
-                    "Authentication required",
-                    401,
-                    {"WWW-Authenticate": 'Basic realm="Login Required"'},
-                )
-
-            password_hash = hashlib.md5(auth.password.encode()).hexdigest()
-
-            authenticated = any(
-                hmac.compare_digest(auth.username, username)
-                and hmac.compare_digest(password_hash, stored_hash)
-                for username, stored_hash in allowed_users
-            )
-
-            if not authenticated:
-                return Response(
-                    "Authentication required",
-                    401,
-                    {"WWW-Authenticate": 'Basic realm="Login Required"'},
-                )
-
-            return f(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
-
-
-def build_auth_backend(enabled, allowed_users):
-    def auth_backend(view):
-        if not enabled:
-            return view
-
-        return basic_auth(allowed_users)(view)
-
-    return auth_backend
-
-
-def init_docs_bp(app, auth_backend):
-    view = auth_backend(_application_impl)
-    app.add_url_rule("/", view_func=view)
+def init_docs_bp(app):
+    app.add_url_rule("/", view_func=_application_impl)
 
 
 def _application_impl():

@@ -76,9 +76,10 @@ import mss_chem_plots
 # HTTP Authentication
 #
 # If you require basic HTTP authentication, set the following variable
-# to True. Add usernames in the list "allowed:users". Note that the
-# passwords are not specified in plain text but by their md5 digest.
-#enable_basic_http_authentication = False
+# to True and add the users with an argon2 hash of their password to the
+# list "allowed_users" in mswms_auth.py. Then every page of the server
+# needs the login, also the gallery, its plots and the documentation.
+#ENABLE_BASIC_HTTP_AUTHENTICATION = False
 
 
 #xml_template directory is a sub directory of mswms

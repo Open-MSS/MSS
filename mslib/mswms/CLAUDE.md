@@ -30,6 +30,11 @@ grandfathered) or `mslib.mscolab`. Enforced: `wms-isolation` contract.
   generate one in conftest); there is no config_loader here.
 - `WMSServer.__init__` scans data dirs — test data must exist before import
   (root conftest guarantees this; don't move that seeding).
+- With `ENABLE_BASIC_HTTP_AUTHENTICATION` the `before_request` hook
+  `_require_login` in `app/__init__.py` protects every path, also docs,
+  gallery and static files. Don't protect single views; new routes are
+  covered automatically. Users come from `mswms_auth.allowed_users`, checked by
+  `mslib.utils.basic_auth`.
 - New styles: subclass a base from `mpl_{h,v,l}sec.py`, set `name`/`title`/
   `styles`, implement `_plot_style()`; register per `(dataset, name)` —
   duplicates raise `ValueError`.

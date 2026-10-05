@@ -32,9 +32,9 @@ import mock
 from nco import Nco
 import pytest
 
+import mslib.mswms.app
 import mslib.mswms.wms
 import mslib.mswms.gallery_builder
-from importlib import reload
 from tests.utils import callback_ok_image, callback_ok_xml, callback_ok_html, callback_404_plain
 from tests.constants import MSWMS_DATA_DIR
 
@@ -498,15 +498,10 @@ class Test_WMS:
         assert b"<MaxWidth>4096</MaxWidth>" in result.data
         assert b"<MaxHeight>4096</MaxHeight>" in result.data
 
-    @pytest.mark.skip(reason="disabled because of reload")
-    def test_import_error(self):
-        with mock.patch.dict("sys.modules", {"mswms_settings": None, "mswms_auth": None}):
-            reload(mslib.mswms.wms)
-            assert mslib.mswms.wms.mswms_settings.__file__ is None
-            assert mslib.mswms.wms.mswms_auth.__file__ is None
-        reload(mslib.mswms.wms)
-        assert mslib.mswms.wms.mswms_settings.__file__ is not None
-        assert mslib.mswms.wms.mswms_auth.__file__ is not None
+    def test_missing_mswms_auth_allows_nobody(self):
+        # without mswms_auth basic authentication lets nobody in (fail closed)
+        with mock.patch.dict("sys.modules", {"mswms_auth": None}):
+            assert mslib.mswms.app._load_allowed_users() == []
 
     def test_files_changed(self):
         def do_test():

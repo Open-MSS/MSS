@@ -56,17 +56,12 @@ from chameleon import PageTemplateLoader
 from owslib.crs import axisorder_yx
 from PIL import Image
 import numpy as np
-from flask import request, current_app
-from flask_httpauth import HTTPBasicAuth
 from mslib.mswms.app import create_app
 
 from mslib.mswms.app import mswms_settings
 from mslib.utils.time import parse_iso_datetime
 from mslib.mswms.gallery_builder import add_image, write_html, add_levels, add_times, \
     write_doc_index, write_code_pages, STATIC_LOCATION, DOCS_LOCATION
-
-# Flask basic auth's documentation
-# https://flask-basicauth.readthedocs.io/en/latest/#flask.ext.basicauth.BasicAuth.check_credentials
 
 try:
     import mswms_settings as user_settings
@@ -75,41 +70,6 @@ except ImportError as ex:
     logging.warning("Couldn't import mswms_settings (ImportError:'%s'), Using dummy config.", ex)
 
 APP = create_app(__name__, imprint=mswms_settings.IMPRINT, gdpr=mswms_settings.GDPR)
-auth = HTTPBasicAuth()
-with APP.app_context():
-    current_app.extensions['basic_auth'] = auth
-
-realm = 'Mission Support Web Map Service'
-APP.config['realm'] = realm
-
-try:
-    import mswms_auth
-except ImportError as ex:
-    logging.warning("Couldn't import mswms_auth (ImportError:'{%s), creating dummy config.", ex)
-
-    class mswms_auth:
-        allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
-                         ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
-        __file__ = None
-with APP.app_context():
-    if current_app.config.get("ENABLE_BASIC_HTTP_AUTHENTICATION", False):
-        logging.debug("Enabling basic HTTP authentication. Username and "
-                      "password required to access the service.")
-        import hashlib
-
-        def authfunc(username, password):
-            for u, p in mswms_auth.allowed_users:
-                if (u == username) and (p == hashlib.md5(password.encode('utf-8')).hexdigest()):
-                    return True
-            return False
-
-    @auth.verify_password
-    def verify_pw(username, password):
-        if request.authorization:
-            auth = request.authorization
-            username = auth.username
-            password = auth.password
-        return authfunc(username, password)
 
 from mslib.mswms import mss_plot_driver
 from mslib.utils.get_projection_params import get_projection_params
