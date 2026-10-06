@@ -10,6 +10,8 @@ import logging
 import sqlalchemy as sa
 from alembic import op
 
+from mslib.mscolab.migrations.schema_repair import add_token_nonce, has_column
+
 
 # revision identifiers, used by Alembic.
 revision = '3a1c5e2b9d47'
@@ -54,7 +56,16 @@ def upgrade():
     with op.batch_alter_table('permissions', schema=None) as batch_op:
         batch_op.create_unique_constraint(batch_op.f('uq_permissions_u_id'), ['u_id', 'op_id'])
 
+    # login tokens carry a random value of their user, a new one revokes them; every user gets their own
+    if not has_column(conn, 'users', 'token_nonce'):
+        add_token_nonce(op, conn)
+
 
 def downgrade():
+    # missing in a database that ran an earlier development state of this migration
+    if has_column(op.get_bind(), 'users', 'token_nonce'):
+        with op.batch_alter_table('users', schema=None) as batch_op:
+            batch_op.drop_column('token_nonce')
+
     with op.batch_alter_table('permissions', schema=None) as batch_op:
         batch_op.drop_constraint(batch_op.f('uq_permissions_u_id'), type_='unique')

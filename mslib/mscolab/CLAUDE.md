@@ -19,7 +19,11 @@ Global map: ../../ARCHITECTURE.md
 - `file_manager.py` — operations/permissions/versioning (git-backed) — core
 - `chat_manager.py`, `sockets_manager.py` — chat + socket.io event handlers;
   `_setup_managers(app)` builds a SocketIO instance per app, never a shared one
-- `models.py` — SQLAlchemy models; `migrations/` — Alembic, never edit
+- `models.py` — SQLAlchemy models; `migrations/` — Alembic. Never edit the migration of a
+  released version; model changes go into the one migration of the next major release
+  (docs/development.rst), currently 3a1c5e2b9d47 for 12.0.0. Development databases already
+  stamped with that revision don't run a later added change: make the change idempotent in
+  `migrations/schema_repair.py` and add it to `app.repair_schema()` (server start, `mscolab db`)
 - `api/schemas.py` + `api/endpoints.py` — the typed client/server contract
   (request/response dataclasses, endpoint-name registry); `api/events.py`
   (`SocketEvents`) + `api/message_type.py` (`MessageType`) — socket
@@ -46,6 +50,10 @@ Global map: ../../ARCHITECTURE.md
   `tests/_test_mscolab/test_api_contract.py` (schemas against real routes).
 - Socket event names come from `SocketEvents`; never emit a bare string.
 - Tokens are validated per request; don't cache auth state in handlers.
+- Login tokens carry the user's random `token_nonce`; `User.revoke_tokens()` (password reset,
+  `logout_everywhere`) sets a new one and invalidates all earlier tokens. Email-link tokens use
+  `generate_confirmation_token(email, purpose)` with their own salt per purpose, and
+  links in emails are built with `public_url_for` from `PUBLIC_URL`, never `_external=True`.
 - No module level state that belongs to one app (app, db engine, SocketIO,
   HTTPBasicAuth, managers). It lives on the app: `app.config` or
   `app.extensions['sockio' | 'cm' | 'fm' | 'basic_auth']`, read via `current_app`.

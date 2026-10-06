@@ -45,6 +45,7 @@ from mslib.mscolab.api.schemas import (
     DeleteOperationRequest,
     DeleteOperationResponse,
     DeleteOwnAccountResponse,
+    LogoutEverywhereResponse,
     FetchProfileImageRequest,
     GetActiveUsersRequest,
     GetActiveUsersResponse,
@@ -377,6 +378,15 @@ class Test_DeleteOwnAccountResponse:
         assert DeleteOwnAccountResponse.from_text(AUTH_FAILED_TEXT) is None
 
 
+class Test_LogoutEverywhereResponse:
+    def test_round_trip(self):
+        response = LogoutEverywhereResponse(success=True)
+        assert LogoutEverywhereResponse.from_text(json.dumps(response.to_dict())) == response
+
+    def test_auth_failure_sentinel(self):
+        assert LogoutEverywhereResponse.from_text(AUTH_FAILED_TEXT) is None
+
+
 class Test_GetOperationUsersRequest:
     def test_round_trip(self):
         req = GetOperationUsersRequest(op_id=1)
@@ -587,6 +597,16 @@ class Test_StatusResponse:
     def test_defaults_on_invalid_json(self):
         response = StatusResponse.from_text("not json")
         assert response == StatusResponse(message="", use_saml2=False, direct_login=True)
+
+    @pytest.mark.parametrize("mail_enabled", [True, False])
+    def test_round_trip_with_mail_enabled(self, mail_enabled):
+        response = StatusResponse(message="Mscolab server", use_saml2=False, direct_login=True,
+                                  mail_enabled=mail_enabled)
+        assert StatusResponse.from_text(json.dumps(response.to_dict())) == response
+
+    def test_mail_enabled_of_older_servers(self):
+        # older servers don't send it, msui then offers the password reset as before
+        assert StatusResponse.from_text(json.dumps({"message": "Mscolab server"})).mail_enabled is None
 
     def test_round_trip_with_attachment_settings(self):
         response = StatusResponse(message="Mscolab server", use_saml2=False, direct_login=True,

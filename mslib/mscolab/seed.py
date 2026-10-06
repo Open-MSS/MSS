@@ -72,22 +72,7 @@ def add_all_users_default_operation(path='TEMPLATE', description="Operation to k
         operation = Operation(path, description)
         db.session.add(operation)
         db.session.commit()
-        operation_file_name = Path(current_app.config['OPERATIONS_DATA']) / path
-        if not operation_file_name.exists():
-            operation_file_name.mkdir(parents=True, exist_ok=True)
-            operation_file_path = operation_file_name / "main.ftml"
-            xml_content = '''<?xml version="1.0" encoding="UTF-8"?>
-            <waypoints>
-            </waypoints>'''
-            operation_file_path.write_text(xml_content, encoding='utf-8')
-            git_repo_path = Path(current_app.config['OPERATIONS_DATA']) / path
-            git_repo_path.mkdir(parents=True, exist_ok=True)
-            r = git.Repo.init(str(git_repo_path))
-            r.git.clear_cache()
-            main_file_git = git_repo_path / "main.ftml"
-            main_file_git.write_text(XML_CONTENT_INIT, encoding='utf-8')
-            r.index.add(['main.ftml'])
-            r.index.commit("initial commit")
+        _create_operation_files(path)
 
     operation = Operation.query.filter_by(path=path).first()
     op_id = operation.id
@@ -142,7 +127,8 @@ def add_user(email, username, password, fullname):
         db_user = User(email, username, password, fullname)
         db.session.add(db_user)
         db.session.commit()
-        logging.info("Userdata: %s %s %s %s", email, username, password, fullname)
+        # not the password
+        logging.info("Userdata: %s %s %s", email, username, fullname)
         return True
     else:
         logging.info("%s already in db", user_name_exists)
@@ -157,6 +143,25 @@ def get_operation(operation_name):
     return Operation.query.filter_by(path=operation_name).first()
 
 
+def _create_operation_files(operation_name):
+    """
+    Creates main.ftml and the git repository of a new operation, if they are missing
+
+    The directory can already exist without them, e.g. left over by an interrupted reset of the database; checking
+    only the directory would leave the operation without its flight track.
+    """
+    operation_path = Path(current_app.config['OPERATIONS_DATA']) / operation_name
+    operation_path.mkdir(parents=True, exist_ok=True)
+    main_ftml = operation_path / "main.ftml"
+    if main_ftml.exists() and (operation_path / ".git").exists():
+        return
+    main_ftml.write_text(XML_CONTENT_INIT, encoding='utf-8')
+    with git.Repo.init(str(operation_path)) as repo:
+        repo.git.clear_cache()
+        repo.index.add(['main.ftml'])
+        repo.index.commit("initial commit")
+
+
 def add_operation(operation_name, description):
     if not is_valid_operation_path(operation_name):
         logging.error("invalid operation name %r", operation_name)
@@ -166,20 +171,7 @@ def add_operation(operation_name, description):
         operation = Operation(operation_name, description)
         db.session.add(operation)
         db.session.commit()
-        operation_file_name = Path(current_app.config['OPERATIONS_DATA']) / operation_name
-
-        if not operation_file_name.exists():
-            operation_file_name.mkdir(parents=True, exist_ok=True)
-            operation_file_path = operation_file_name / "main.ftml"
-            operation_file_path.write_text(XML_CONTENT_INIT, encoding='utf-8')
-            git_repo_path = Path(current_app.config['OPERATIONS_DATA']) / operation_name
-            git_repo_path.mkdir(parents=True, exist_ok=True)
-            r = git.Repo.init(str(git_repo_path))
-            r.git.clear_cache()
-            main_file_git = git_repo_path / "main.ftml"
-            main_file_git.write_text(XML_CONTENT_INIT, encoding='utf-8')
-            r.index.add(['main.ftml'])
-            r.index.commit("initial commit")
+        _create_operation_files(operation_name)
         return True
     else:
         return False

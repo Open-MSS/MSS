@@ -28,6 +28,7 @@ import os
 import logging
 import sys
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import flask_migrate
 import sqlalchemy
@@ -218,8 +219,32 @@ ORDER BY sequence_namespace.nspname, class_sequence.relname;
 
     # Upgrade to the latest database revision
     flask_migrate.upgrade(directory=migrations.__path__[0])
+    repair_schema()
 
     logging.info("Database initialised successfully!")
+
+
+def repair_schema():
+    """
+    Adds what a database at the latest revision misses because it ran an earlier development state of the migration
+
+    All changes of a major release go into its one migration. A development database that already ran that migration
+    before a change was added to it is stamped with the revision, so alembic doesn't run it again. Must be called in
+    an application context, after the upgrade.
+    """
+    from alembic.migration import MigrationContext
+    from alembic.operations import Operations
+    from mslib.mscolab.migrations.schema_repair import add_token_nonce, has_column
+    from mslib.mscolab.models import db
+
+    with db.engine.begin() as conn:
+        if MigrationContext.configure(conn).get_current_revision() is None:
+            # an empty database, the upgrade creates everything
+            return
+        if not has_column(conn, "users", "token_nonce"):
+            logging.warning("The database misses users.token_nonce, it ran an earlier development state of the "
+                            "12.0.0 migration. Adding it now; every user has to log in again.")
+            add_token_nonce(Operations(MigrationContext.configure(conn)), conn)
 
 
 class MSColabRequest(Request):
@@ -245,6 +270,14 @@ def error413(error):
 
 class InsecureSecretError(RuntimeError):
     """A secret of the MSColab settings, SECRET_KEY or ADMIN_TOKEN, is missing or can be guessed"""
+
+
+class InsecureMailSettingError(InsecureSecretError):
+    """
+    MAIL_ENABLED without a valid PUBLIC_URL: links in emails would be built from the address of the request
+
+    The server refuses to start like for an insecure secret.
+    """
 
 
 def check_secret(name, secret, min_length, where):
@@ -288,6 +321,24 @@ def check_secrets(app):
     check_secret("SECRET_KEY", app.config.get("SECRET_KEY"), MIN_SECRET_KEY_LENGTH,
                  "the environment variable MSCOLAB_SECRET_KEY or in your mscolab_settings")
     check_secret("ADMIN_TOKEN", app.config.get("ADMIN_TOKEN"), MIN_ADMIN_TOKEN_LENGTH, "your mscolab_settings")
+    check_public_url(app)
+
+
+def check_public_url(app):
+    """
+    Raises InsecureMailSettingError if MAIL_ENABLED is set without a PUBLIC_URL with scheme and host
+
+    Links in emails, e.g. for a password reset, are built from PUBLIC_URL. Built from the address of the request,
+    they would point to any host a request names in its Host header, and the reset token would go there.
+    """
+    if not app.config.get("MAIL_ENABLED", False):
+        return
+    public_url = app.config.get("PUBLIC_URL")
+    parts = urlsplit(public_url) if isinstance(public_url, str) else None
+    if parts is None or parts.scheme not in ("http", "https") or not parts.netloc:
+        raise InsecureMailSettingError(
+            "MAIL_ENABLED needs PUBLIC_URL in your mscolab_settings, the address users reach the server under, "
+            f"e.g. 'https://mscolab.example.org'; links in emails are built from it. Got {public_url!r}.")
 
 
 def create_app(config_object=mscolab_settings):
@@ -300,8 +351,8 @@ def create_app(config_object=mscolab_settings):
     The returned app is not connected to a database schema yet, call
     :func:`initialise_db` within an application context of it to do so.
 
-    :raises InsecureSecretError: if SECRET_KEY or ADMIN_TOKEN is missing or can be guessed,
-        see :func:`check_secrets`.
+    :raises InsecureSecretError: if SECRET_KEY or ADMIN_TOKEN is missing or can be guessed, or if MAIL_ENABLED is
+        set without PUBLIC_URL, see :func:`check_secrets`.
     """
     app = Flask(__name__, template_folder=DOCS_TEMPLATES_DIR)
     app.config.from_object(config_object)

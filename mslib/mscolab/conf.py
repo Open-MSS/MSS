@@ -39,13 +39,15 @@ from mslib.mscolab.api.attachments import DEFAULT_ATTACHMENT_EXTENSIONS
 
 
 class DefaultSettings:
-    # expire token in seconds
-    # EXPIRATION = 86400
+    # lifetime of a login token in seconds, 10 days; a user can revoke all their tokens earlier ("Log out everywhere"),
+    # a password reset revokes them too
+    EXPIRATION = 864000
 
     # In the unit days when Operations get archived because not used
     ARCHIVE_THRESHOLD = 30
 
     # To enable logging set to True or pass a logger object to use.
+    # Both loggers log every received message with its content, including the login token of the user.
     SOCKETIO_LOGGER = False
 
     # To enable Engine.IO logging set to True or pass a logger object to use.
@@ -94,9 +96,6 @@ class DefaultSettings:
     # environment variable MSCOLAB_SECRET_KEY, which wins over this setting, or in your mscolab_settings.
     SECRET_KEY = None
 
-    # used to generate the password token
-    SECURITY_PASSWORD_SALT = secrets.token_urlsafe(16)
-
     # looks for a given category forn a operation ending with GROUP_POSTFIX
     # e.g. category = Tex will look for TexGroup
     # all users in that Group are set to the operations of that category
@@ -137,6 +136,10 @@ class DefaultSettings:
     # done through the REST API. The CLI runs as its own process, separate from the
     # server, so it cannot emit socket.io events directly.
     SERVER_URL = "http://localhost:8083"
+
+    # The address users reach the server under, e.g. "https://mscolab.example.org". Links in emails (confirmation,
+    # password reset) are built from it, not from the address of the request. Needed when MAIL_ENABLED is True.
+    PUBLIC_URL = None
 
     # shared secret the CLI uses to authenticate against the server's internal
     # notify endpoint (see SERVER_URL above). Like SECRET_KEY, this is randomized

@@ -144,7 +144,8 @@ class SocketsManager:
         self.active_users_per_operation.clear()
 
     def handle_operation_selected(self, json_config):
-        logging.debug("Operation selected: {}".format(json_config))
+        # not the message itself, it contains the token
+        logging.debug("Operation %r selected by socket %s", json_config.get('op_id'), request.sid)
         token = json_config['token']
         try:
             op_id = int(json_config['op_id'])
@@ -196,7 +197,8 @@ class SocketsManager:
         """
         json is a dictionary version of data sent to backend
         """
-        logging.info('received json: ' + str(json_config))
+        # not the message itself, it contains the token
+        logging.debug("Start event of socket %s", request.sid)
         # authenticate socket
         token = json_config['token']
         user = User.verify_auth_token(token)

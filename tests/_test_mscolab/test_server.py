@@ -85,6 +85,13 @@ class Test_Server:
             assert "Mscolab server" in data['message']
             assert True or False in data['use_saml2 ']
 
+    @pytest.mark.parametrize("mail_enabled", [False, True])
+    def test_status_sends_mail_enabled(self, mail_enabled):
+        with mock.patch.dict(current_app.config, {'MAIL_ENABLED': mail_enabled}):
+            with self.app.test_client() as test_client:
+                data = json.loads(test_client.get('/status').text)
+        assert data["mail_enabled"] is mail_enabled
+
     def test_status_sends_attachment_settings(self):
         with mock.patch.dict(current_app.config, {'MSCOLAB_ATTACHMENT_EXTENSIONS': [".ZIP", "csv"]}):
             with self.app.test_client() as test_client:

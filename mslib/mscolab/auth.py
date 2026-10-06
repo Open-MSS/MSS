@@ -28,11 +28,13 @@
 
 import datetime
 import functools
+import hashlib
+import hmac
 import logging
 
 import email_validator
 import sqlalchemy
-from flask import current_app, request, abort, g
+from flask import current_app, request, abort, g, url_for
 from itsdangerous import URLSafeTimedSerializer, BadSignature
 
 from mslib.mscolab.conf import setup_saml2_backend
@@ -131,22 +133,80 @@ def verify_user_http(func):
     return wrapper
 
 
-def confirm_token(token, expiration=3600):
-    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+# Purposes of the tokens of generate_confirmation_token. Each has its own salt, so a token of one purpose, e.g. the
+# email confirmation, can't be used for another, e.g. a password reset.
+EMAIL_CONFIRMATION = "email-confirmation"
+PASSWORD_RESET = "password-reset"
+IDP_LOGIN = "idp-login"
+_TOKEN_PURPOSES = (EMAIL_CONFIRMATION, PASSWORD_RESET, IDP_LOGIN)
+
+
+def _serializer(purpose):
+    # signed with SECRET_KEY, which every process of the server shares since #3239; a fixed salt per purpose, so
+    # links still work after a restart or on another worker
+    if purpose not in _TOKEN_PURPOSES:
+        raise ValueError(f"unknown token purpose {purpose!r}")
+    return URLSafeTimedSerializer(current_app.config['SECRET_KEY'], salt=f"mscolab-{purpose}")
+
+
+def confirm_token(token, purpose, expiration=3600):
+    """
+    The email of a token of generate_confirmation_token for purpose, False if it is invalid or expired
+    """
     try:
-        email = serializer.loads(
-            token,
-            salt=current_app.config['SECURITY_PASSWORD_SALT'],
-            max_age=expiration
-        )
+        email = _serializer(purpose).loads(token, max_age=expiration)
     except (IOError, BadSignature):
         return False
     return email
 
 
-def generate_confirmation_token(email):
-    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-    return serializer.dumps(email, salt=current_app.config['SECURITY_PASSWORD_SALT'])
+def generate_confirmation_token(email, purpose):
+    """
+    A signed token with email for purpose, one of EMAIL_CONFIRMATION, PASSWORD_RESET and IDP_LOGIN
+    """
+    return _serializer(purpose).dumps(email)
+
+
+def _password_fingerprint(password_hash):
+    # changes with the password; a keyed digest, so the token doesn't tell anything about the password hash
+    key = current_app.config['SECRET_KEY']
+    if isinstance(key, str):
+        key = key.encode("utf-8")
+    return hmac.new(key, str(password_hash).encode("utf-8"), hashlib.sha256).hexdigest()[:32]
+
+
+def generate_password_reset_token(user):
+    """
+    A token for one password reset of user: it is no longer valid once the password has changed
+    """
+    return _serializer(PASSWORD_RESET).dumps({"email": user.emailid, "password": _password_fingerprint(user.password)})
+
+
+def confirm_password_reset_token(token, expiration=86400):
+    """
+    (user, password hash) of a token of generate_password_reset_token, None if it is invalid, expired or already
+    used; the password hash is the one the token was made for, see User.reset_password
+    """
+    try:
+        data = _serializer(PASSWORD_RESET).loads(token, max_age=expiration)
+    except (IOError, BadSignature):
+        return None
+    if not isinstance(data, dict):
+        return None
+    user = User.query.filter_by(emailid=str(data.get("email"))).first()
+    if user is None or not hmac.compare_digest(str(data.get("password")), _password_fingerprint(user.password)):
+        return None
+    return user, user.password
+
+
+def public_url_for(endpoint, **values):
+    """
+    The URL of endpoint for links in emails, built from PUBLIC_URL, not from the address of the request
+
+    A request can name any host in its Host header; url_for(..., _external=True) would put it into the link, and
+    the token of the link would go to that host.
+    """
+    return current_app.config['PUBLIC_URL'].rstrip("/") + url_for(endpoint, **values)
 
 
 def get_idp_entity_id(selected_idp):

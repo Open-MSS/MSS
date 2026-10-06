@@ -24,11 +24,15 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from pathlib import Path
+
+import git
 import pytest
+from flask import current_app
 
 from mslib.mscolab.models import User, Operation
 from mslib.mscolab.seed import (add_user, get_user, add_operation, add_user_to_operation,
-                                delete_user, delete_operation, add_all_users_default_operation)
+                                delete_user, delete_operation, add_all_users_default_operation, XML_CONTENT_INIT)
 
 
 class Test_Seed:
@@ -152,3 +156,28 @@ class Test_Seed:
             assert delete_user(self.userdata_2[0])
             user = User.query.filter_by(emailid=self.userdata_2[0]).first()
             assert user is None
+
+
+@pytest.mark.parametrize("leftover", ["empty", "main.ftml"])
+def test_add_operation_creates_missing_files(mscolab_app, leftover):
+    """A directory left over without main.ftml or git repository, e.g. by an interrupted reset"""
+    with mscolab_app.app_context():
+        operation_dir = Path(current_app.config['OPERATIONS_DATA']) / "leftover"
+        operation_dir.mkdir(parents=True)
+        if leftover == "main.ftml":
+            (operation_dir / "main.ftml").write_text("not a flight track")
+        assert add_operation("leftover", "description")
+        assert (operation_dir / "main.ftml").read_text(encoding="utf-8") == XML_CONTENT_INIT
+        with git.Repo(operation_dir) as repo:
+            assert repo.head.commit.message == "initial commit"
+            assert not repo.is_dirty()
+
+
+def test_add_operation_keeps_existing_files(mscolab_app):
+    with mscolab_app.app_context():
+        operation_dir = Path(current_app.config['OPERATIONS_DATA']) / "existing"
+        assert add_operation("existing", "description")
+        (operation_dir / "main.ftml").write_text("changed", encoding="utf-8")
+        assert delete_operation("existing")
+        assert add_operation("existing", "description")
+        assert (operation_dir / "main.ftml").read_text(encoding="utf-8") == "changed"

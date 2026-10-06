@@ -36,7 +36,8 @@ from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from saml2.metadata import create_metadata_string
 
 from mslib.mscolab.auth import check_login, register_user, generate_confirmation_token, create_or_update_idp_user, \
-    get_idp_entity_id, confirm_token
+    get_idp_entity_id, confirm_token, generate_password_reset_token, confirm_password_reset_token, public_url_for, \
+    EMAIL_CONFIRMATION, IDP_LOGIN
 from mslib.mscolab.auth import optional_auth
 from mslib.mscolab.conf import setup_saml2_backend
 from mslib.mscolab.forms import ResetPasswordForm, ResetRequestForm
@@ -71,6 +72,8 @@ def hello():
         # msui offers and checks attachments with these before uploading them
         attachment_extensions=sorted(normalized_extensions(current_app.config['MSCOLAB_ATTACHMENT_EXTENSIONS'])),
         max_upload_size=current_app.config['MAX_UPLOAD_SIZE'],
+        # msui offers the password reset only if the server can send the email
+        mail_enabled=bool(current_app.config['MAIL_ENABLED']),
     )
     return json.dumps(response.to_dict())
 
@@ -118,8 +121,8 @@ def user_register_handler():
             status_code = 201
             if current_app.config['MAIL_ENABLED']:
                 status_code = 204
-                token = generate_confirmation_token(req.email)
-                confirm_url = url_for('auth.confirm_email', token=token, _external=True)
+                token = generate_confirmation_token(req.email, EMAIL_CONFIRMATION)
+                confirm_url = public_url_for('auth.confirm_email', token=token)
                 html = render_template('auth/user/activate.html', username=req.username, confirm_url=confirm_url)
                 subject = "MSColab Please confirm your email"
                 send_email(req.email, subject, html)
@@ -162,7 +165,7 @@ def register_saml_routes():
                 try:
                     email = authn_response.ava["email"][0]
                     username = authn_response.ava["givenName"][0]
-                    token = generate_confirmation_token(email)
+                    token = generate_confirmation_token(email, IDP_LOGIN)
                 except (NameError, AttributeError, KeyError):
                     try:
                         # Initialize an empty dictionary to store attribute values
@@ -179,7 +182,7 @@ def register_saml_routes():
                         # Extract the email and givenname attributes
                         email = attributes["email"]
                         username = attributes["givenName"]
-                        token = generate_confirmation_token(email)
+                        token = generate_confirmation_token(email, IDP_LOGIN)
                     except (NameError, AttributeError, KeyError):
                         return render_template('auth/errors/403.html'), 403
 
@@ -247,7 +250,7 @@ def register_saml_routes():
         """Handle the SAML authentication validation of client application."""
         try:
             req = IdpLoginAuthRequest.from_json_data(request.get_json())
-            email = confirm_token(req.token, expiration=1200)
+            email = confirm_token(req.token, IDP_LOGIN, expiration=1200)
             if email:
                 user = check_login(email, req.token)
                 if user:
@@ -283,7 +286,7 @@ AUTH_BP.record_once(init_saml)
 def confirm_email(token):
     if current_app.config['MAIL_ENABLED']:
         try:
-            email = confirm_token(token)
+            email = confirm_token(token, EMAIL_CONFIRMATION)
         except TypeError:
             return jsonify({"success": False}), 401
         if email is False:
@@ -304,21 +307,27 @@ def confirm_email(token):
 @AUTH_BP.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     try:
-        email = confirm_token(token, expiration=86400)
+        # None also once the link was used: the token is bound to the password it was sent for
+        confirmed = confirm_password_reset_token(token)
     except TypeError:
         return jsonify({"success": False}), 401
-    if email is False:
+    if confirmed is None:
         flash("Sorry, your token has expired or is invalid! We will need to resend your authentication email",
               'category_info')
         return render_template('auth/user/status_password.html',
                                uri={"path": url_for("auth.reset_request"), "name": "Resend ""authentication ""email"})
-    user = User.query.filter_by(emailid=email).first_or_404()
+    user, password_hash = confirmed
     form = ResetPasswordForm()
     if form.validate_on_submit():
         try:
-            fm = current_app.extensions['fm']
-            user.hash_password(form.confirm_password.data)
-            fm.modify_user(user, "confirmed", True)
+            # only if the password is still the one of the link, and whoever may have known the old password is
+            # logged out everywhere
+            if not user.reset_password(password_hash, form.confirm_password.data):
+                flash("Sorry, your token has expired or is invalid! We will need to resend your authentication email",
+                      'category_info')
+                return render_template('auth/user/status_password.html', uri={
+                    "path": url_for("auth.reset_request"), "name": "Resend ""authentication ""email"})
+            current_app.extensions['sockio'].sm.forget_user(user.id)
             flash('Password reset Success. Please login by the user interface.', 'category_success')
             return render_template('auth/user/status_password.html')
         except IOError:
@@ -336,8 +345,8 @@ def reset_request():
             if user:
                 try:
                     username = user.username
-                    token = generate_confirmation_token(form.email.data)
-                    reset_password_url = url_for('auth.reset_password', token=token, _external=True)
+                    token = generate_password_reset_token(user)
+                    reset_password_url = public_url_for('auth.reset_password', token=token)
                     html = render_template('auth/user/reset_confirmation.html',
                                            reset_password_url=reset_password_url, username=username)
                     subject = "MSColab Password reset request"

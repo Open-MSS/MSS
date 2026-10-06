@@ -26,7 +26,10 @@
 """
 
 import datetime
+import hmac
 import logging
+import secrets
+
 import jwt
 
 from argon2 import PasswordHasher
@@ -76,6 +79,9 @@ class User(db.Model):
     permissions = db.relationship('Permission', cascade='all,delete,delete-orphan', backref='user')
     authentication_backend = db.Column(db.String(255), nullable=False, default='local')
     fullname = db.Column(db.String(255), nullable=True)
+    # random value in every login token of the user; a new one makes all earlier tokens invalid, see revoke_tokens.
+    # Random, not a counter: a new user who gets the id of a deleted one (SQLite reuses ids) must not match its tokens
+    token_nonce = db.Column(db.String(32), nullable=False)
 
     def __init__(self, emailid, username, password, fullname="", profile_image_path=None, confirmed=False,
                  confirmed_on=None, authentication_backend='local'):
@@ -88,6 +94,7 @@ class User(db.Model):
         self.confirmed = bool(confirmed)
         self.confirmed_on = confirmed_on
         self.authentication_backend = str(authentication_backend)
+        self.token_nonce = secrets.token_hex(16)
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -112,6 +119,7 @@ class User(db.Model):
         token = jwt.encode(
             {
                 "id": self.id,
+                "nonce": self.token_nonce,
                 "exp": datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=expiration)
             },
             current_app.config['SECRET_KEY'],
@@ -138,7 +146,35 @@ class User(db.Model):
             return None
 
         user = User.query.filter_by(id=data.get('id')).first()
+        # a token with another nonce was revoked or belongs to a deleted user with the same id; tokens of older
+        # servers have none and are refused too
+        if user is None or not isinstance(data.get("nonce"), str) or \
+                not hmac.compare_digest(data["nonce"], user.token_nonce):
+            return None
         return user
+
+    def revoke_tokens(self):
+        """
+        Makes all login tokens of the user created so far invalid, e.g. after a password reset
+
+        A new random value, not an increment: of two revocations at the same time the last one wins, and tokens
+        issued in between are invalid too. The caller commits the session.
+        """
+        self.token_nonce = secrets.token_hex(16)
+
+    def reset_password(self, password_hash, password):
+        """
+        Sets password and revokes all login tokens, if the password hash is still password_hash; returns whether
+
+        For a password reset link, which works once: of two requests with the same link at the same time only the
+        first changes the password, the stored hash no longer matches for the second. Commits the session.
+        """
+        updated = User.query.filter_by(id=self.id, password=password_hash).update(
+            {User.password: PH.hash(password), User.token_nonce: secrets.token_hex(16), User.confirmed: True},
+            synchronize_session=False)
+        db.session.commit()
+        db.session.refresh(self)
+        return updated == 1
 
 
 class Permission(db.Model):
