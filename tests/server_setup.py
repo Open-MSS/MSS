@@ -110,9 +110,6 @@ ENGINEIO_LOGGER = True
 # used to generate and parse tokens
 SECRET_KEY = secrets.token_urlsafe(32)
 
-# used to generate the password token
-SECURITY_PASSWORD_SALT = secrets.token_urlsafe(16)
-
 # looks for a given category for an operation ending with GROUP_POSTFIX
 # e.g. category = Tex will look for TexGroup
 # all users in that Group are set to the operations of that category

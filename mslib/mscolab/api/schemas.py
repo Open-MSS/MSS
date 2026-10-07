@@ -531,6 +531,23 @@ class DeleteOwnAccountResponse:
 
 
 @dataclass
+class LogoutEverywhereResponse:
+    """Response body for POST endpoints.LOGOUT_EVERYWHERE: all login tokens of the user are revoked, also the one
+    of this request."""
+
+    success: bool
+
+    def to_dict(self):
+        return {"success": self.success}
+
+    @classmethod
+    def from_text(cls, text):
+        if text == AUTH_FAILED_TEXT:
+            return None
+        return cls(success=json.loads(text)["success"])
+
+
+@dataclass
 class GetOperationUsersRequest:
     """GET endpoints.USERS_WITHOUT_PERMISSION / endpoints.USERS_WITH_PERMISSION
     -- identical request shape for both routes.
@@ -965,6 +982,9 @@ class StatusResponse:
     attachment_extensions and max_upload_size tell msui which chat attachments
     the server accepts (MSCOLAB_ATTACHMENT_EXTENSIONS, MAX_UPLOAD_SIZE). They
     are None from servers that don't send them; those accept any file type.
+
+    mail_enabled tells msui whether the server sends emails (MAIL_ENABLED), which
+    the password reset needs. None from servers that don't send it.
     """
 
     message: str
@@ -972,6 +992,7 @@ class StatusResponse:
     direct_login: bool
     attachment_extensions: Optional[List[str]] = None
     max_upload_size: Optional[int] = None
+    mail_enabled: Optional[bool] = None
 
     def to_dict(self):
         data = {"message": self.message, "use_saml2": self.use_saml2, "direct_login": self.direct_login}
@@ -979,6 +1000,8 @@ class StatusResponse:
             data["attachment_extensions"] = self.attachment_extensions
         if self.max_upload_size is not None:
             data["max_upload_size"] = self.max_upload_size
+        if self.mail_enabled is not None:
+            data["mail_enabled"] = self.mail_enabled
         return data
 
     @classmethod
@@ -993,6 +1016,7 @@ class StatusResponse:
             direct_login=data.get("direct_login", True),
             attachment_extensions=data.get("attachment_extensions"),
             max_upload_size=data.get("max_upload_size"),
+            mail_enabled=data.get("mail_enabled"),
         )
 
 

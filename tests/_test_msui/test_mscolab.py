@@ -29,6 +29,7 @@ import os
 import io
 import sys
 from pathlib import Path
+import requests
 import requests.exceptions
 import mock
 import pytest
@@ -140,6 +141,27 @@ class Test_Mscolab_connect_window:
             # test operation listing visibility
             assert self.main_window.listOperationsMSC.model().rowCount() == 1
         qtbot.wait_until(assert_)
+
+    @pytest.mark.parametrize("mail_enabled", [False, True, None])
+    def test_wrong_password_message_follows_mail_setting(self, qtbot, mail_enabled):
+        self._connect_to_mscolab(qtbot)
+        # the test server sends no emails and says so in its status
+        assert self.main_window.mscolab.server_status.mail_enabled is False
+        # True: a server with email, None: an older server that doesn't tell
+        self.main_window.mscolab.server_status.mail_enabled = mail_enabled
+        self.window.loginEmailLe.setText(self.userdata[0])
+        self.window.loginPasswordLe.setText("wrong password")
+        QtTest.QTest.mouseClick(self.window.loginBtn, QtCore.Qt.LeftButton)
+
+        def assert_():
+            assert "Invalid credentials" in self.window.statusLabel.text()
+        qtbot.wait_until(assert_)
+        text = self.window.statusLabel.text()
+        if mail_enabled is False:
+            assert "reset_request" not in text
+            assert "ask its administrator to reset your password" in text
+        else:
+            assert f'<a href="{self.url}/reset_request">recover your password</a>' in text
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_login_with_different_account_shows_update_credentials_popup(self, mockbox, qtbot):
@@ -1023,6 +1045,51 @@ class Test_Mscolab:
         op_id = self.window.mscolab.get_recent_op_id()
         self.window.mscolab.delete_operation_from_list(op_id)
         assert self.window.mscolab.active_op_id is None
+
+    @pytest.mark.parametrize("answer", [QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No])
+    def test_logout_everywhere(self, qtbot, answer):
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
+        self._create_user(qtbot, "something", "something@something.org", "something", "Test User")
+        token = self.window.mscolab.token
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=answer) as question:
+            self.window.mscolab.logout_everywhere_action.trigger()
+        question.assert_called_once()
+        authorized = requests.get(f"{self.url}/test_authorized", params={"token": token}, timeout=10).text
+        if answer == QtWidgets.QMessageBox.Yes:
+            # the server revoked every token of the user, this msui is logged out too
+            assert authorized == "False"
+            assert self.window.usernameLabel.isVisible() is False
+            assert self.window.connectBtn.isVisible() is True
+            # this machine needs the password again too
+            assert self.url + "something@something.org" not in mslib.utils.auth.keyring.get_keyring().passwords
+        else:
+            assert authorized == "True"
+            assert self.window.usernameLabel.isVisible() is True
+
+    def test_profile_reset_password_opens_the_reset_page(self, qtbot):
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
+        self._create_user(qtbot, "something", "something@something.org", "something", "Test User")
+        # as for a server that sends emails; the test server doesn't
+        self.window.mscolab.server_status.mail_enabled = True
+        self.window.mscolab.open_profile_window()
+        assert self.window.mscolab.profile_dialog.resetPasswordBtn.isEnabled()
+        with mock.patch("PyQt5.QtGui.QDesktopServices.openUrl") as open_url:
+            QtTest.QTest.mouseClick(self.window.mscolab.profile_dialog.resetPasswordBtn, QtCore.Qt.LeftButton)
+        open_url.assert_called_once()
+        assert open_url.call_args.args[0].toString() == f"{self.url}/reset_request"
+
+    def test_profile_reset_password_disabled_without_mail(self, qtbot):
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
+        self._create_user(qtbot, "something", "something@something.org", "something", "Test User")
+        # the test server sends no emails and says so in its status
+        assert self.window.mscolab.server_status.mail_enabled is False
+        self.window.mscolab.open_profile_window()
+        button = self.window.mscolab.profile_dialog.resetPasswordBtn
+        assert not button.isEnabled()
+        assert "sends no emails" in button.toolTip()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_user_delete(self, mockmessage, qtbot):

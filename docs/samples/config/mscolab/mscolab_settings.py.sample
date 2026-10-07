@@ -30,6 +30,8 @@ import os
 ARCHIVE_THRESHOLD = 30
 
 # To enable logging set to True or pass a logger object to use.
+# Both log every received message with its content, including the login token of the
+# user; only enable them for debugging and treat such logs as secret.
 SOCKETIO_LOGGER = False
 
 # To enable Engine.IO logging set to True or pass a logger object to use.
@@ -75,6 +77,14 @@ MAX_UPLOAD_SIZE = 2 * 1024 * 1024
 # The server does not start without a key, with a key shorter than 32 characters or with
 # fewer than 10 different characters. All processes of the server (e.g. gunicorn workers)
 # and the mscolab command line tool must use the same key.
+
+# Lifetime of a login token in seconds, by default 10 days. A password reset and
+# "Log out everywhere" in msui make all earlier tokens of a user invalid.
+# EXPIRATION = 864000
+
+# With MAIL_ENABLED = True: the address users reach the server under. Links in emails
+# (confirmation, password reset) are built from it; the server doesn't start without it.
+# PUBLIC_URL = "https://mscolab.example.org"
 
 # looks for a given category for an operation ending with GROUP_POSTFIX
 # e.g. category = Tex will look for TexGroup

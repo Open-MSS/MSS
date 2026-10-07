@@ -25,12 +25,16 @@
     limitations under the License.
 """
 import copy
+import mock
 import pytest
 import itertools
 import flask_migrate
 import sqlalchemy
 import mslib.mscolab.migrations
-from mslib.mscolab.app import create_app, db
+import mslib.mscolab.models
+import mslib.mscolab.mscolab
+import mslib.mscolab.seed
+from mslib.mscolab.app import create_app, db, initialise_db
 from mslib.mscolab.conf import mscolab_settings
 
 
@@ -163,3 +167,60 @@ def test_upgrade_removes_duplicate_permissions(mscolab_app):
             "SELECT COUNT(*) FROM permissions WHERE op_id = :op_id AND u_id IN (:creator, :other)"),
             {"op_id": creator.op_id, "creator": creator.u_id, "other": other_user.id}).scalar()
         assert counts == 2
+
+
+def test_upgrade_gives_every_user_a_token_nonce(mscolab_app):
+    """Users of a database before 12.0.0 get a random token nonce of their own."""
+    migrations_path = mslib.mscolab.migrations.__path__[0]
+    with mscolab_app.app_context():
+        mslib.mscolab.mscolab.handle_db_seed()
+        flask_migrate.downgrade(directory=migrations_path, revision="922e4d9c94e2")
+        flask_migrate.upgrade(directory=migrations_path)
+        nonces = [row.token_nonce for row in db.session.execute(sqlalchemy.text("SELECT token_nonce FROM users"))]
+        assert len(nonces) > 1
+        assert all(isinstance(nonce, str) and len(nonce) == 32 for nonce in nonces)
+        assert len(set(nonces)) == len(nonces)
+
+
+def _remove_token_nonce():
+    # the state of a development database that ran the 12.0.0 migration before token_nonce was added to it
+    from alembic.migration import MigrationContext
+    from alembic.operations import Operations
+    with db.engine.begin() as conn:
+        with Operations(MigrationContext.configure(conn)).batch_alter_table('users') as batch_op:
+            batch_op.drop_column('token_nonce')
+    db.session.remove()
+
+
+def _columns_of_users():
+    db.session.remove()
+    return {column["name"] for column in sqlalchemy.inspect(db.engine).get_columns("users")}
+
+
+def test_reset_of_database_without_token_nonce(mscolab_app):
+    """mscolab db --reset downgrades through the 12.0.0 migration, also without the column"""
+    with mscolab_app.app_context():
+        mslib.mscolab.mscolab.handle_db_seed()
+        _remove_token_nonce()
+        assert "token_nonce" not in _columns_of_users()
+        mslib.mscolab.mscolab.handle_db_reset(verbose=False)
+        assert "token_nonce" in _columns_of_users()
+
+
+def test_repair_of_database_without_token_nonce(mscolab_app):
+    """The server start adds the column to such a database, every user gets a nonce and can log in again"""
+    # the upgrade reconfigures logging (alembic's env.py), so caplog doesn't see the warning
+    with mscolab_app.app_context():
+        mslib.mscolab.mscolab.handle_db_seed()
+        _remove_token_nonce()
+        with mock.patch("mslib.mscolab.app.logging.warning") as warning:
+            initialise_db()
+        assert "earlier development state of the 12.0.0 migration" in warning.call_args.args[0]
+        nonces = [row.token_nonce for row in db.session.execute(sqlalchemy.text("SELECT token_nonce FROM users"))]
+        assert len(nonces) > 1 and len(set(nonces)) == len(nonces)
+        user = mslib.mscolab.seed.get_user("a@notexisting.org")
+        assert mslib.mscolab.models.User.verify_auth_token(user.generate_auth_token()).id == user.id
+        # nothing to repair any more
+        with mock.patch("mslib.mscolab.app.logging.warning") as warning:
+            initialise_db()
+        warning.assert_not_called()

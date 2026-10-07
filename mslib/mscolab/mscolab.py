@@ -42,7 +42,8 @@ from flask import current_app
 from mslib import __version__
 from mslib.mscolab import migrations
 from mslib.utils.basic_auth import BasicAuthSettingError
-from mslib.mscolab.app import InsecureSecretError, create_app, create_files
+from mslib.mscolab.app import InsecureSecretError, create_app, create_files, repair_schema
+
 from mslib.mscolab.seed import seed_data, add_user, add_all_users_default_operation, \
     add_all_users_to_all_operations, delete_user
 from mslib.utils import setup_logging
@@ -74,6 +75,11 @@ def confirm_action(confirmation_prompt, assume_yes=False):
             print("Invalid input! Please select an option between y or n")
 
 
+def _is_database_file(path, db_path):
+    """True for the SQLite database db_path and its journal files, e.g. mscolab.db-journal or mscolab.db-wal"""
+    return path == db_path or (path.parent == db_path.parent and path.name.startswith(f"{db_path.name}-"))
+
+
 def handle_db_reset(verbose=True):
     import sqlalchemy as _sa
     from mslib.mscolab.models import db
@@ -94,6 +100,19 @@ def handle_db_reset(verbose=True):
         previous_levels = [logger.level for logger in alembic_loggers]
         for logger in alembic_loggers:
             logger.setLevel(logging.WARNING)
+    # the database directory has to exist for the migrations
+    create_files()
+    # The migrations first, the data files afterwards: if a migration fails, the database still matches its files
+    try:
+        flask_migrate.downgrade(directory=migrations.__path__[0], revision="base")
+        flask_migrate.upgrade(directory=migrations.__path__[0])
+    finally:
+        if previous_levels is not None:
+            for logger, level in zip(alembic_loggers, previous_levels):
+                logger.setLevel(level)
+    # close the connections of the migrations before files next to the database are removed
+    db.session.remove()
+    db.engine.dispose()
     if current_app.config['SQLALCHEMY_DATABASE_URI'].startswith("sqlite:///") and (
         db_path := Path(current_app.config['SQLALCHEMY_DATABASE_URI'].removeprefix("sqlite:///"))
     ).is_relative_to(current_app.config['DATA_DIR']):
@@ -103,7 +122,7 @@ def handle_db_reset(verbose=True):
         for root, dirs, files in os.walk(p, topdown=False):
             for name in files:
                 full_file_path = Path(root) / name
-                if full_file_path != db_path:
+                if not _is_database_file(full_file_path, db_path):
                     full_file_path.unlink()
             for name in dirs:
                 dir_path = Path(root) / name
@@ -117,13 +136,6 @@ def handle_db_reset(verbose=True):
     elif Path(current_app.config['DATA_DIR']).exists():
         shutil.rmtree(current_app.config['DATA_DIR'])
     create_files()
-    try:
-        flask_migrate.downgrade(directory=migrations.__path__[0], revision="base")
-        flask_migrate.upgrade(directory=migrations.__path__[0])
-    finally:
-        if previous_levels is not None:
-            for logger, level in zip(alembic_loggers, previous_levels):
-                logger.setLevel(level)
     # Release the connections opened during migration, mirroring the dispose() at the
     # start of this function. This frees the SQLite write lock so another process
     # sharing the same database file (e.g. a subprocess server) can acquire it.
@@ -478,6 +490,8 @@ def _main():
 
     elif args.action == "db":
         with create_app().app_context():
+            # a development database that ran an earlier state of the migration of the next release
+            repair_schema()
             if args.reset:
                 confirmation = confirm_action(
                     "Are you sure you want to reset the database? This would delete "

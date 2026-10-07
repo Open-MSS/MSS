@@ -31,7 +31,7 @@ from pathlib import Path
 
 from flask import current_app
 from mslib.mscolab.models import Operation, User, Permission
-from mslib.mscolab.mscolab import handle_db_reset, handle_db_seed, confirm_action, main
+from mslib.mscolab.mscolab import handle_db_reset, handle_db_seed, confirm_action, main, _is_database_file
 from mslib.mscolab.seed import add_operation
 
 
@@ -58,6 +58,17 @@ def test_main():
                                                     delete_users_by_file=False)):
         main()
         # currently only checking precedence of all args
+
+
+@pytest.mark.parametrize("name, kept", [
+    ("mscolab.db", True), ("mscolab.db-journal", True), ("mscolab.db-wal", True), ("mscolab.db-shm", True),
+    ("mscolab.dbx", False), ("other.db", False), ("main.ftml", False),
+])
+def test_is_database_file(tmp_path, name, kept):
+    # the reset removes every file of DATA_DIR but the database and its journal files
+    db_path = tmp_path / "mscolab.db"
+    assert _is_database_file(tmp_path / name, db_path) is kept
+    assert _is_database_file(tmp_path / "filedata" / "mscolab.db-journal", db_path) is False
 
 
 class Test_Mscolab:
@@ -93,6 +104,17 @@ class Test_Mscolab:
         assert operation is None
         all_operations = Operation.query.all()
         assert all_operations == []
+
+    def test_handle_db_reset_keeps_files_when_migration_fails(self):
+        # the migrations run before the files are removed, so the database still matches its files
+        handle_db_seed()
+        main_ftml = Path(current_app.config['OPERATIONS_DATA']) / "one" / "main.ftml"
+        assert main_ftml.is_file()
+        with mock.patch("mslib.mscolab.mscolab.flask_migrate.downgrade", side_effect=RuntimeError("migration")):
+            with pytest.raises(RuntimeError, match="migration"):
+                handle_db_reset(verbose=False)
+        assert main_ftml.is_file()
+        assert Operation.query.filter_by(path="one").first() is not None
 
     def test_handle_db_seed(self):
         all_operations = Operation.query.all()

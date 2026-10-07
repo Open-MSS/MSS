@@ -112,6 +112,9 @@ parameters of `flask-mail` ::
         # enable verification by Mail
         MAIL_ENABLED = True
 
+        # the address users reach the server under; links in emails are built from it
+        PUBLIC_URL = 'https://mscolab.example.org'
+
         # mail settings
         MAIL_SERVER = 'localhost'
         MAIL_PORT = 25
@@ -129,6 +132,29 @@ A new user gets an email with an url including a token to become verified on the
 she can login.
 If an existing user does not remember the password, she can reset the password by sending an email to the user's email
 address and using the token that the system sent along with the email.
+
+The links in these emails are built from :code:`PUBLIC_URL`, not from the address of the request, so they always point
+to your server. The server doesn't start with :code:`MAIL_ENABLED = True` and without a :code:`PUBLIC_URL` with scheme
+and host. If a reverse proxy serves MSColab below a path and removes that path before passing the request on, e.g.
+:code:`https://example.org/mscolab`, use the address with the path as :code:`PUBLIC_URL`. If MSColab itself runs below
+the path (:code:`SCRIPT_NAME`), use only scheme and host. A password reset link can be used once and is valid for one
+day.
+
+Login tokens
+............
+
+msui gets a login token from the server when the user logs in. It is valid for 10 days, :code:`EXPIRATION` in
+mscolab_settings.py sets another lifetime in seconds. "Log out everywhere" in the user menu of msui makes all earlier
+tokens of the user invalid: every msui of the user has to log in again. A password reset does the same.
+
+After a device got lost, reset the password: msui stores the password in the keyring of the device, so "Log out
+everywhere" alone doesn't keep the device out, it can log in again. The profile dialog of msui has a "Reset Password"
+button, and the login dialog shows a link after a wrong password; both open the page of the server where you request
+the reset email. This needs :code:`MAIL_ENABLED`: the server tells msui whether it sends emails, and without them msui
+disables the button and the login dialog asks to contact the administrator of the server instead.
+
+The socket.io loggers (:code:`SOCKETIO_LOGGER`, :code:`ENGINEIO_LOGGER`) log every received message with its content,
+including the login token. Only enable them for debugging and treat such logs as secret.
 
 Instructions to use mscolab wsgi
 ................................

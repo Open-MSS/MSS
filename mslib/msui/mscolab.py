@@ -38,6 +38,7 @@ import types
 import requests
 import re
 import mimetypes
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -62,6 +63,7 @@ from mslib.mscolab.api.schemas import (
     DeleteBulkPermissionsRequest,
     DeleteBulkPermissionsResponse,
     DeleteOwnAccountResponse,
+    LogoutEverywhereResponse,
     FetchProfileImageRequest,
     GetCreatorOfOperationRequest,
     GetCreatorOfOperationResponse,
@@ -178,6 +180,7 @@ class MSUIMscolab(QtCore.QObject):
         self.profile_action = self.user_menu.addAction("Profile", self.open_profile_window)
         self.user_menu.addSeparator()
         self.logout_action = self.user_menu.addAction("Logout", self.logout)
+        self.logout_everywhere_action = self.user_menu.addAction("Log out everywhere", self.logout_everywhere)
         self.ui.userOptionsTb.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         self.ui.userOptionsTb.setMenu(self.user_menu)
         # self.ui.userOptionsTb.setAutoRaise(True)
@@ -483,6 +486,12 @@ class MSUIMscolab(QtCore.QObject):
         self.profile_dialog.mscolabURLLabel_2.setText(self.mscolab_server_url)
         self.profile_dialog.emailLabel_2.setText(self.email)
         self.profile_dialog.deleteAccountBtn.clicked.connect(self.delete_own_account)
+        self.profile_dialog.resetPasswordBtn.clicked.connect(self.open_password_reset)
+        if getattr(self.server_status, "mail_enabled", None) is False:
+            # the reset sends an email, this server can't
+            self.profile_dialog.resetPasswordBtn.setEnabled(False)
+            self.profile_dialog.resetPasswordBtn.setToolTip(
+                "This MSColab server sends no emails, ask its administrator to reset your password")
         self.profile_dialog.uploadImageBtn.clicked.connect(self.upload_image)
 
         # add context menu for right click on image
@@ -561,6 +570,38 @@ class MSUIMscolab(QtCore.QObject):
             parsed = DeleteOwnAccountResponse.from_text(response.text)
             if parsed is not None and parsed.success is True:
                 self.logout()
+
+    def open_password_reset(self, _=None):
+        """
+        Opens the page of the MSColab server where the user requests an email to reset the password, like the link
+        of the login dialog; e.g. after a device with the stored password got lost
+        """
+        QtGui.QDesktopServices.openUrl(QtCore.QUrl(urllib.parse.urljoin(self.mscolab_server_url, "reset_request")))
+
+    def logout_everywhere(self, _=None):
+        """
+        Revokes all login tokens of the user on the server, every msui of the user has to log in again
+        """
+        reply = QMessageBox.question(
+            self.ui,
+            self.tr('Continue?'),
+            self.tr("You're about to log out from this MSColab server on all your devices, "
+                    "also here. You have to log in again everywhere."),
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No)
+        if reply == QMessageBox.No:
+            return
+        try:
+            response = self.conn.request_post(endpoints.LOGOUT_EVERYWHERE)
+        except requests.exceptions.RequestException as ex:
+            raise MSColabConnectionError(f"Some error occurred ({ex})! Please reconnect.")
+        parsed = LogoutEverywhereResponse.from_text(response.text) if response.status_code == 200 else None
+        if parsed is None or parsed.success is not True:
+            show_popup(self.ui, "Error", "Logging out everywhere failed, your session may have expired.")
+            return
+        # this machine has to log in with the password again too
+        del_password_from_keyring(self.mscolab_server_url, self.email)
+        self.logout()
 
     def add_operation_handler(self, _=None):
         self.add_operation_dialog()

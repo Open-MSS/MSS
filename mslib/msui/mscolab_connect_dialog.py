@@ -267,8 +267,13 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
         else:
             if response.text == "False":
                 # show status indicating about wrong credentials
-                self.set_status("Error", 'Invalid credentials. Fix them, create a new user, or '
-                                f'<a href="{url_recover_password}">recover your password</a>.')
+                if getattr(self.mscolab.server_status, "mail_enabled", None) is False:
+                    # the password reset sends an email, this server can't
+                    self.set_status("Error", 'Invalid credentials. Fix them or create a new user. This server sends '
+                                    'no emails, ask its administrator to reset your password.')
+                else:
+                    self.set_status("Error", 'Invalid credentials. Fix them, create a new user, or '
+                                    f'<a href="{url_recover_password}">recover your password</a>.')
                 self.loginBtn.setEnabled(True)
             else:
                 self.save_user_credentials_to_config_file(req.email, req.password)

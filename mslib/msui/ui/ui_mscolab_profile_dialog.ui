@@ -135,6 +135,19 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="resetPasswordBtn">
+       <property name="toolTip">
+        <string>Opens the page of the MSColab server where you can request an email to reset your password</string>
+       </property>
+       <property name="text">
+        <string>Reset Password</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="uploadImageBtn">
        <property name="text">
         <string>Change Avatar</string>

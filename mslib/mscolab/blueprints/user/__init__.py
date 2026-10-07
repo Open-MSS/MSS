@@ -32,17 +32,33 @@ from PIL import Image
 from flask import Blueprint, g, request, jsonify, send_from_directory, current_app
 
 from mslib.mscolab.auth import verify_user
+from mslib.mscolab.models import db
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.attachments import IMAGE_EXTENSIONS, IMAGE_FORMATS
 from mslib.mscolab.api.schemas import (
     DeleteOwnAccountResponse,
     FetchProfileImageRequest,
     GetUserResponse,
+    LogoutEverywhereResponse,
     ProfileImageMessageResponse,
     UserInfo,
 )
 
 USER_BP = Blueprint('user', __name__)
+
+
+@USER_BP.route(f"/{endpoints.LOGOUT_EVERYWHERE}", methods=["POST"])
+@verify_user
+def logout_everywhere():
+    """
+    Revokes all login tokens of the user, e.g. after a lost laptop; every msui of the user has to log in again
+    """
+    user = g.user
+    user.revoke_tokens()
+    db.session.commit()
+    # its connected sockets no longer get the events of its operations
+    current_app.extensions['sockio'].sm.forget_user(user.id)
+    return jsonify(LogoutEverywhereResponse(success=True).to_dict()), 200
 
 
 @USER_BP.route(f"/{endpoints.USER}", methods=["GET"])
