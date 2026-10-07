@@ -16,10 +16,9 @@ defusedxml = "*"
 email_validator = "*"
 execnet = "*"
 fastkml = ">=1.1.0,<2"
-flask = ">=2.3.2"
+flask = ">=3.1.3"
 flask-cors = "*"
 flask-httpauth = "*"
-flask-login = "*"
 flask-mail = "*"
 flask-migrate = "*"
 flask-socketio = ">=5.1.0"
@@ -64,7 +63,7 @@ skyfield-data = ">=7"
 tk = "*"
 unicodecsv = "*"
 websocket-client = "*"
-werkzeug = ">=2.2.3, <3.0.0"
+werkzeug = ">=3.1.5"
 xstatic = "<2.0.0"
 xstatic-bootstrap = ">=5"
 xstatic-jquery = "*"
@@ -81,6 +80,10 @@ libxmlsec1 = "*"
 [target.osx-arm64.dependencies]
 dbus-python = "*"
 libxmlsec1 = "*"
+
+[target.win-64.dependencies]
+# 3.1.9 fixes safe_join with Windows device names (GHSA-g6x2-hccm-hh4m); chat attachments and the gallery use it
+werkzeug = ">=3.1.9"
 
 [feature.addons.dependencies]
 geographiclib = "*"

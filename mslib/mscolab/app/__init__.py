@@ -35,7 +35,7 @@ import sqlalchemy
 from flask_mail import Mail
 
 from flask_migrate import Migrate
-from flask import Flask, Request, current_app, jsonify, request, url_for
+from flask import Flask, current_app, jsonify, request, url_for
 
 import mslib
 
@@ -248,25 +248,39 @@ def repair_schema():
             add_token_nonce(Operations(MigrationContext.configure(conn)), conn)
 
 
-class MSColabRequest(Request):
+# endpoints of uploads, a request to them is limited to MAX_UPLOAD_SIZE instead of MAX_CONTENT_LENGTH
+UPLOAD_ENDPOINTS = ("chat.message_attachment", "user.upload_profile_image")
+# endpoints with a large form field, the flight track of a new operation; it may be as large as the whole request
+LARGE_FORM_FIELD_ENDPOINTS = ("operation.create_operation",)
+
+
+def limit_request_size():
     """
     Limits the size of an upload to MAX_UPLOAD_SIZE and of any other request to MAX_CONTENT_LENGTH
 
-    Flask refuses a larger request with 413 before reading it.
+    A form field is limited to Flask's MAX_FORM_MEMORY_SIZE (by default 500 kB), also on the endpoints anyone can
+    reach, e.g. /token. Only on LARGE_FORM_FIELD_ENDPOINTS it may be as large as the whole request. Flask refuses a
+    larger request with 413 before reading it.
     """
-    UPLOAD_ENDPOINTS = ("chat.message_attachment", "user.upload_profile_image")
-
-    @property
-    def max_content_length(self):
-        if current_app and self.endpoint in self.UPLOAD_ENDPOINTS:
-            return current_app.config["MAX_UPLOAD_SIZE"]
-        return super().max_content_length
+    if request.endpoint in UPLOAD_ENDPOINTS:
+        request.max_content_length = current_app.config["MAX_UPLOAD_SIZE"]
+    # without a MAX_CONTENT_LENGTH (None), Flask keeps MAX_FORM_MEMORY_SIZE
+    if request.endpoint in LARGE_FORM_FIELD_ENDPOINTS and request.max_content_length is not None:
+        request.max_form_memory_size = request.max_content_length
 
 
 # 413: Payload Too Large
 def error413(error):
-    limit = request.max_content_length / 1024 / 1024
-    return jsonify({"success": False, "message": f"Request too large. The limit is {limit:.1f} MiB."}), 413
+    """
+    Answers a request that is too large: the whole request (MAX_CONTENT_LENGTH or MAX_UPLOAD_SIZE), a form field
+    (MAX_FORM_MEMORY_SIZE) or the number of form parts (MAX_FORM_PARTS); Werkzeug doesn't say which
+    """
+    limit = request.max_content_length
+    if limit is not None and (request.content_length is None or request.content_length > limit):
+        message = f"Request too large. The limit is {limit / 1024 / 1024:.1f} MiB."
+    else:
+        message = "A form field of the request is too large, or the request has too many form parts."
+    return jsonify({"success": False, "message": message}), 413
 
 
 class InsecureSecretError(RuntimeError):
@@ -361,7 +375,7 @@ def create_app(config_object=mscolab_settings):
     check_basic_auth_setting(config_object, "mscolab_settings")
     app.register_error_handler(PasswordCheckBusy, lambda error: (str(error), 503, {"Retry-After": "10"}))
     # uploads are limited to MAX_UPLOAD_SIZE, other requests to MAX_CONTENT_LENGTH
-    app.request_class = MSColabRequest
+    app.before_request(limit_request_size)
     app.register_error_handler(413, error413)
     # Expose docs path for callers/tests and make it part of Flask config for consistency.
     app.config['DOCS_SERVER_PATH'] = DOCS_SERVER_PATH

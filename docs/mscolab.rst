@@ -306,7 +306,10 @@ You can use the `Preview` button to see how your text is formatted before sendin
 
 There is also support for image/document upload. You can set the upload size limit with ``MAX_UPLOAD_SIZE`` in the
 mscolab_settings.py file. The default limit is 2 MiB. Any other request, e.g. creating an operation from a large
-flight track, is limited by ``MAX_CONTENT_LENGTH``, by default 16 MiB.
+flight track, is limited by ``MAX_CONTENT_LENGTH``, by default 16 MiB. A single form field is limited by Flask's
+``MAX_FORM_MEMORY_SIZE``, by default 500 kB; only the flight track of a new operation may be as large as the whole
+request. Without a ``MAX_CONTENT_LENGTH`` (``None``) requests are not limited, but form fields, also the flight
+track, are limited by ``MAX_FORM_MEMORY_SIZE``.
 
 Only files with an extension of ``MSCOLAB_ATTACHMENT_EXTENSIONS`` can be sent as chat attachments. By default these are
 flight tracks (ftml, csv, txt, kml, gpx), science data (nc, nc4, h5, json), documents (pdf, md, docx, xlsx, pptx, odt,

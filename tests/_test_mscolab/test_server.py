@@ -198,8 +198,8 @@ class Test_Server:
 
     def test_upload_endpoints_exist(self):
         # the upload limit applies to these endpoints by name, a renamed view would get the larger limit
-        from mslib.mscolab.app import MSColabRequest
-        assert set(MSColabRequest.UPLOAD_ENDPOINTS) <= set(self.app.view_functions)
+        from mslib.mscolab.app import UPLOAD_ENDPOINTS
+        assert set(UPLOAD_ENDPOINTS) <= set(self.app.view_functions)
         assert current_app.config['MAX_CONTENT_LENGTH'] > current_app.config['MAX_UPLOAD_SIZE']
 
     def test_operation_larger_than_upload_limit(self):
@@ -217,6 +217,59 @@ class Test_Server:
             limit = current_app.config['MAX_CONTENT_LENGTH'] / 1024 / 1024
             assert response.get_json() == {"success": False,
                                            "message": f"Request too large. The limit is {limit:.1f} MiB."}
+
+    @pytest.mark.parametrize("content_type", ["application/x-www-form-urlencoded", "multipart/form-data"])
+    def test_operation_larger_than_form_memory_size(self, content_type):
+        # Werkzeug limits a form field to MAX_FORM_MEMORY_SIZE (500 kB), the flight track of an operation
+        # is a form field and may be as large as the whole request. Werkzeug 3.1.9 limits only multipart forms, so
+        # the multipart case guards the fix on every platform; msui sends urlencoded forms, which Werkzeug 3.1.5 to
+        # 3.1.8 limit too.
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        padding = "x" * (current_app.config['MAX_FORM_MEMORY_SIZE'] + 1)
+        large = XML_CONTENT_INIT.replace("<ListOfWaypoints>", f"<!-- {padding} --><ListOfWaypoints>", 1)
+        with self.app.test_client() as test_client:
+            response = test_client.post('/token', data={"email": self.userdata[0], "password": self.userdata[2]})
+            token = json.loads(response.data.decode("utf-8"))["token"]
+            response = test_client.post('/create_operation', content_type=content_type,
+                                        data={"token": token, "path": "largeflight", "description": "d",
+                                              "content": large})
+            assert response.status_code == 200
+            assert Operation.query.filter_by(path="largeflight").first() is not None
+
+    def test_form_fields_of_other_endpoints_keep_the_form_memory_size(self):
+        # only the flight track of a new operation may be larger, not a field sent to /token by anyone
+        large = "x" * (current_app.config['MAX_FORM_MEMORY_SIZE'] + 1)
+        with self.app.test_client() as test_client:
+            response = test_client.post('/token', content_type="multipart/form-data",
+                                        data={"email": large, "password": "x"})
+        assert response.status_code == 413
+        assert response.get_json() == {
+            "success": False,
+            "message": "A form field of the request is too large, or the request has too many form parts."}
+
+    def test_too_many_form_parts(self):
+        # the request is small, the message must not claim a size limit
+        data = {f"field{i}": "x" for i in range(current_app.config['MAX_FORM_PARTS'] + 1)}
+        with self.app.test_client() as test_client:
+            response = test_client.post('/token', content_type="multipart/form-data", data=data)
+        assert response.status_code == 413
+        assert "too many form parts" in response.get_json()["message"]
+
+    def test_without_max_content_length(self, monkeypatch):
+        # MAX_CONTENT_LENGTH None: no limit for the request, Flask's MAX_FORM_MEMORY_SIZE for a form field,
+        # and a 413 is answered with JSON, not with an error in the handler
+        monkeypatch.setitem(current_app.config, 'MAX_CONTENT_LENGTH', None)
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        padding = "x" * (current_app.config['MAX_FORM_MEMORY_SIZE'] + 1)
+        large = XML_CONTENT_INIT.replace("<ListOfWaypoints>", f"<!-- {padding} --><ListOfWaypoints>", 1)
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            assert operation is not None
+            response = test_client.post('/create_operation', content_type="multipart/form-data",
+                                        data={"token": token, "path": "largeflight", "description": "d",
+                                              "content": large})
+        assert response.status_code == 413
+        assert response.get_json()["success"] is False
 
     def test_oversized_uploads_refused(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
