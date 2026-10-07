@@ -33,7 +33,8 @@ from urllib.parse import urljoin
 
 from PyQt5 import QtCore
 from mslib.mscolab.api.events import SocketEvents
-from mslib.msui.mscolab_exceptions import MSColabConnectionError
+from mslib.mscolab.api.schemas import AUTH_FAILED_TEXT
+from mslib.msui.mscolab_exceptions import MSColabConnectionError, MSColabSessionExpiredError
 from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.config import config_loader
 
@@ -249,4 +250,8 @@ class ConnectionManager(QtCore.QObject):
             timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         if response.status_code != 200:
             raise MSColabConnectionError
+        # the server answers a rejected token with HTTP 200 and the bare body "False" instead of the JSON
+        # every caller parses
+        if response.content == AUTH_FAILED_TEXT.encode():
+            raise MSColabSessionExpiredError("Session expired, new login required")
         return response

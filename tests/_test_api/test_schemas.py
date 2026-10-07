@@ -282,6 +282,9 @@ class Test_GetCreatorOfOperationResponse:
         response = GetCreatorOfOperationResponse(success=False, message="You don't have access to this data")
         assert GetCreatorOfOperationResponse.from_text(json.dumps(response.to_dict())) == response
 
+    def test_auth_failed_returns_none(self):
+        assert GetCreatorOfOperationResponse.from_text(AUTH_FAILED_TEXT) is None
+
     def test_to_dict_only_includes_the_relevant_field(self):
         assert "message" not in GetCreatorOfOperationResponse(success=True, username="berta").to_dict()
         assert "username" not in GetCreatorOfOperationResponse(success=False, message="m").to_dict()

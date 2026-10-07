@@ -39,6 +39,7 @@ from PIL import Image
 from tests.constants import ROOT_DIR, MSCOLAB_DATA_DIR
 from tests import constants
 import mslib.utils.auth
+from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.message_type import MessageType
 from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
@@ -47,6 +48,7 @@ from mslib.utils.config import MSUIDefaultConfig, read_config_file, config_loade
 from tests.utils import create_msui_settings_file, ExceptionMock
 from mslib.msui import msui
 from mslib.msui import mscolab
+from mslib.msui.mscolab_exceptions import MSColabSessionExpiredError
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 
 
@@ -1177,6 +1179,57 @@ class Test_Mscolab:
         assert "<b>bold</b>" not in text
         assert "<img" not in text
         assert text.count("&lt;b&gt;bold&lt;/b&gt;") == 3
+
+    def test_request_get_raises_on_rejected_token(self, qtbot):
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
+        self._create_user(qtbot, "something", "something@something.org", "something", "Test User")
+        conn = self.window.mscolab.conn
+        conn.request_post(endpoints.LOGOUT_EVERYWHERE)
+        with pytest.raises(MSColabSessionExpiredError):
+            conn.request_get(endpoints.OPERATIONS)
+
+    def test_view_description_with_revoked_token(self, qtbot):
+        # issue #3220, e.g. "Log out everywhere" on another device
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
+        self._create_user(qtbot, "something", "something@something.org", "something", "Test User")
+        self._create_operation(qtbot, "flight1234", "Description flight1234")
+        self._activate_operation_at_index(0)
+        self.window.mscolab.conn.request_post(endpoints.LOGOUT_EVERYWHERE)
+        with mock.patch("mslib.msui.mscolab.show_popup") as popup, \
+                mock.patch("PyQt5.QtWidgets.QMessageBox.information") as information:
+            self.window.mscolab.view_description()
+        popup.assert_called_once()
+        assert "Session expired" in popup.call_args.args[2]
+        information.assert_not_called()
+        assert self.window.mscolab.conn is None
+        assert self.window.connectBtn.isVisible() is True
+
+    def test_view_description_with_unreachable_server(self, qtbot):
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
+        self._create_user(qtbot, "something", "something@something.org", "something", "Test User")
+        self._create_operation(qtbot, "flight1234", "Description flight1234")
+        self._activate_operation_at_index(0)
+        with mock.patch.object(self.window.mscolab.conn, "request_get",
+                               side_effect=requests.exceptions.ConnectionError), \
+                mock.patch("PyQt5.QtWidgets.QMessageBox.information") as information:
+            self.window.mscolab.view_description()
+        assert "Creator: <b>unknown</b>" in information.call_args.args[2]
+        # still logged in
+        assert self.window.mscolab.conn is not None
+
+    def test_render_new_permission_with_revoked_token(self, qtbot):
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
+        self._create_user(qtbot, "something", "something@something.org", "something", "Test User")
+        self.window.mscolab.conn.request_post(endpoints.LOGOUT_EVERYWHERE)
+        with mock.patch("mslib.msui.mscolab.show_popup") as popup:
+            self.window.mscolab.render_new_permission(1, self.window.mscolab.user["id"])
+        popup.assert_called_once()
+        assert "Session expired" in popup.call_args.args[2]
+        assert self.window.mscolab.conn is None
 
     def test_profile_dialog(self, qtbot):
         self._connect_to_mscolab(qtbot)

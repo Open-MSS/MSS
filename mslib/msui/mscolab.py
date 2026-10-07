@@ -49,7 +49,7 @@ from mslib.msui import mscolab_chat as mc
 from mslib.msui import mscolab_admin_window as maw
 from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import socket_control as sc
-from mslib.msui.mscolab_exceptions import MSColabConnectionError
+from mslib.msui.mscolab_exceptions import MSColabConnectionError, MSColabSessionExpiredError
 from mslib.msui.mscolab_archive_browser import MSColab_OperationArchiveBrowser
 from mslib.msui.mscolab_connect_dialog import MSColab_ConnectDialog
 from mslib.mscolab.api import endpoints
@@ -258,10 +258,15 @@ class MSUIMscolab(QtCore.QObject):
         req = GetCreatorOfOperationRequest(op_id=self.active_op_id)
         try:
             response = self.conn.request_get(endpoints.GET_CREATOR_OF_OPERATION, req.to_form_data())
-        except MSColabConnectionError:
+        except MSColabSessionExpiredError as ex:
+            show_popup(self.ui, "Error", str(ex))
+            self.logout()
+            return
+        except (MSColabConnectionError, requests.exceptions.RequestException):
             creator_name = "unknown"
         else:
-            creator_name = GetCreatorOfOperationResponse.from_text(response.text).username
+            parsed = GetCreatorOfOperationResponse.from_text(response.text)
+            creator_name = parsed.username if parsed is not None else "unknown"
         QMessageBox.information(
             self.ui, "Operation Description",
             # chosen by users, must not be interpreted as markup
@@ -1195,7 +1200,12 @@ class MSUIMscolab(QtCore.QObject):
         to render new permission if added
         """
         logging.debug('render_new_permission')
-        response = self.conn.request_get(endpoints.USER)
+        try:
+            response = self.conn.request_get(endpoints.USER)
+        except MSColabSessionExpiredError as ex:
+            show_popup(self.ui, "Error", str(ex))
+            self.logout()
+            return
         parsed = GetUserResponse.from_text(response.text)
         if parsed is not None:
             if parsed.user.id == u_id:
@@ -1212,7 +1222,7 @@ class MSUIMscolab(QtCore.QObject):
             if self.chat_window is not None:
                 self.chat_window.load_users()
         else:
-            show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+            show_popup(self.ui, "Error", "Session expired, new login required")
             self.logout()
 
     @QtCore.pyqtSlot(int, int, str)

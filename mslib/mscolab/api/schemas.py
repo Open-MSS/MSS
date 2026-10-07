@@ -330,9 +330,11 @@ class GetCreatorOfOperationResponse:
 
     HTTP 200 + {"success": True, "username": ...} on success, HTTP 403 +
     {"success": False, "message": ...} if the caller isn't a member of the
-    operation. mslib.msui.mscolab.view_description only ever sees the success
-    shape in practice: request_get() raises MSColabConnectionError itself on
-    any non-200 status, before the body is ever parsed.
+    operation. A rejected token is answered by @verify_user with HTTP 200 and
+    bare "False" (see AUTH_FAILED_TEXT), for which from_text() returns None.
+    mslib.msui.mscolab.view_description never parses either failure:
+    request_get() raises MSColabConnectionError on any non-200 status and
+    MSColabSessionExpiredError on AUTH_FAILED_TEXT.
     """
 
     success: bool
@@ -346,6 +348,8 @@ class GetCreatorOfOperationResponse:
 
     @classmethod
     def from_text(cls, text):
+        if text == AUTH_FAILED_TEXT:
+            return None
         data = json.loads(text)
         return cls(success=data["success"], username=data.get("username"), message=data.get("message"))
 
