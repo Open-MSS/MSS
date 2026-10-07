@@ -31,6 +31,7 @@ import pytest
 from pathlib import Path
 
 from mslib import utils
+from mslib.utils import constants
 from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.config import config_loader, read_config_file, modify_config_file
 from mslib.utils.config import merge_dict
@@ -286,3 +287,47 @@ class TestMergeDict:
         users_options_dict = {"export_plugins": {"Text": ["txt", "mslib.plugins.io.text", "save_to_txt"]}}
         changed_dict = merge_dict(self.default_dict, users_options_dict)
         assert changed_dict["export_plugins"]["Text"] == ["txt", "mslib.plugins.io.text", "save_to_txt", "default"]
+
+    def test_user_option_with_path(self):
+        """
+        The entries of an option in free_string_list_options take any string, a path
+        included. The flight track of an "automated_plotting_flights" entry is stored
+        as path + file name, its default is "".
+        """
+        users_options_dict = {
+            "automated_plotting_flights": [["flight1", "01 SADPAP (stereo)", "", "/home/mss/example.ftml", "", ""]],
+        }
+        changed_dict = merge_dict(self.default_dict, users_options_dict)
+        assert changed_dict["automated_plotting_flights"] == [
+            ["flight1", "01 SADPAP (stereo)", "", "/home/mss/example.ftml", "", ""]]
+
+    def test_string_option_outside_free_string_list_needs_its_type(self):
+        """
+        Only the options in free_string_list_options take any string. A plain string
+        option elsewhere keeps its type check, a path is not taken over.
+        """
+        assert self.default_dict["filepicker_default"] == "default"
+        users_options_dict = {"filepicker_default": "/tmp/x"}
+        changed_dict = merge_dict(self.default_dict, users_options_dict)
+        assert changed_dict["filepicker_default"] == "default"
+
+    def test_path_option_needs_a_path(self):
+        """
+        An option whose default is a path keeps requiring one, a relative directory
+        is not taken over.
+        """
+        assert self.default_dict["data_dir"] == str(constants.MSUI_DOCUMENTS_PATH)
+        users_options_dict = {"data_dir": "/home/mss/mssdata", "wms_cache": "wms_cache"}
+        changed_dict = merge_dict(self.default_dict, users_options_dict)
+        assert changed_dict["data_dir"] == "/home/mss/mssdata"
+        assert changed_dict["wms_cache"] == str(constants.MSUI_CACHE_PATH / "wms_cache")
+
+    def test_url_option_needs_a_url(self):
+        """
+        An option whose default is a url keeps requiring one, a path is not taken over.
+        A plain string stays accepted, e.g. a server which is named without a scheme.
+        """
+        users_options_dict = {"default_WMS": ["/home/mss/wms"], "default_VSEC_WMS": ["localhost:8081"]}
+        changed_dict = merge_dict(self.default_dict, users_options_dict)
+        assert changed_dict["default_WMS"] == self.default_dict["default_WMS"]
+        assert changed_dict["default_VSEC_WMS"] == ["localhost:8081"]

@@ -307,6 +307,8 @@ class MSUIDefaultConfig:
     fixed_dict_options = ["layout", "wms_prefetch", "topview", "sideview", "linearview"]
     # List options with fixed length
     fixed_list_options = ["MSCOLAB_timeout", ]
+    # List options whose string entries take any string, e.g. a flight track path
+    free_string_list_options = ["automated_plotting_flights", ]
 
     # Fixed key/value pair options
     key_value_options = [
@@ -420,6 +422,7 @@ for key in [
     "list_option_structure",
     "key_value_options",
     "config_descriptions",
+    "free_string_list_options",
 ]:
     del default_options[key]
 
@@ -655,7 +658,9 @@ def merge_dict(existing_dict, new_dict):
             if key not in MSUIDefaultConfig.fixed_list_options:
                 for i in range(len(new_dict[key])):
                     for los_key_item in los[key]:
-                        data, match = compare_data(los_key_item, new_dict[key][i])
+                        data, match = compare_data(los_key_item,
+                                                   new_dict[key][i],
+                                                   any_string=key in MSUIDefaultConfig.free_string_list_options)
                         if match:
                             temp_data.append(data)
                             break
@@ -681,7 +686,7 @@ def merge_dict(existing_dict, new_dict):
     return existing_dict
 
 
-def compare_data(default, user_data):
+def compare_data(default, user_data, any_string=False):
     """
     Recursively compares two dictionaries based on qt_json_view datatypes
     and returns default or user_data appropriately.
@@ -694,6 +699,8 @@ def compare_data(default, user_data):
     if not isinstance(default, dict) and not isinstance(default, list):
         if isinstance(default, float) and isinstance(user_data, int):
             user_data = float(default)
+        if any_string and isinstance(default, str) and isinstance(user_data, str):
+            return user_data, True
         if isinstance(match_type(default), UrlType) and isinstance(match_type(user_data), StrType):
             return user_data, True
         if isinstance(match_type(default), type(match_type(user_data))):
@@ -707,7 +714,7 @@ def compare_data(default, user_data):
     if isinstance(default, list) and isinstance(user_data, list):
         if len(default) == len(user_data):
             for i in range(len(default)):
-                data[i], match = compare_data(default[i], user_data[i])
+                data[i], match = compare_data(default[i], user_data[i], any_string=any_string)
                 matches.append(match)
         else:
             return default, False
@@ -717,7 +724,7 @@ def compare_data(default, user_data):
         if default.keys() == user_data.keys():
             for key in default:
                 if key in user_data:
-                    data[key], match = compare_data(default[key], user_data[key])
+                    data[key], match = compare_data(default[key], user_data[key], any_string=any_string)
                     matches.append(match)
                 else:
                     matches.append(False)

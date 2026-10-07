@@ -41,6 +41,7 @@ import click
 import defusedxml.ElementTree as etree
 import PIL.Image
 import matplotlib
+import matplotlib.backends.backend_agg
 from slugify import slugify
 
 import mslib
@@ -68,6 +69,28 @@ TEXT_CONFIG = {
     "zorder": 4, "fontsize": 6, "clip_on": True}
 
 mpl_logger = configure_mpl_logger()
+
+
+def resolve_ftml_path(filename, fpath=None, directory=None):
+    """Resolve the flight track file of an "automated_plotting_flights" entry.
+
+    The single place which defines where such an entry is looked up, used by the
+    CLI and by the dockwidget which writes the entries.
+
+    The entry stores the path together with the file name, "~" is expanded. A
+    relative name is taken relative to <directory>, the directory of the
+    configuration file which named it, and relative to the current working
+    directory without one. <fpath>, the --fpath option of the CLI, replaces the
+    directory of the entry altogether.
+
+    Returns an absolute Path, which does not need to exist.
+    """
+    path = Path(filename).expanduser()
+    if fpath:
+        path = Path(fpath).expanduser() / path.name
+    elif directory is not None and not path.is_absolute():
+        path = Path(directory) / path
+    return path.resolve()
 
 
 def load_from_ftml(filename):
@@ -187,7 +210,8 @@ def get_op_id(msc_url, token, op_name):
 
 
 class Plotting:
-    def __init__(self, cpath, msc_url=None, msc_auth_password=None, username=None, password=None, pdlg=None, raw=False):
+    def __init__(self, cpath, msc_url=None, msc_auth_password=None, username=None, password=None, pdlg=None, raw=False,
+                 fpath=None):
         """
         Initialize the Plotting object with the provided parameters.
 
@@ -197,9 +221,12 @@ class Plotting:
         :msc_auth_password: Authentication password for MSColab service
         :username: User's username
         :password: User's password
+        :fpath: Directory of the flight track files, overrides the directory
+                stored in the configuration file
         """
         read_config_file(cpath)
         self.pdlg = pdlg
+        self.fpath = fpath
         self.config = config_loader()
         self.num_interpolation_points = self.config["num_interpolation_points"]
         self.num_labels = self.config["num_labels"]
@@ -224,14 +251,6 @@ class Plotting:
         if filename != "" and filename == flight:
             self.read_operation(flight, msc_url, msc_auth_password, username, password)
         elif filename != "":
-            # Todo add the dir to the file in the mssautoplot.json
-            dirpath = "./"
-            file_path = os.path.join(dirpath, filename)
-            exists = os.path.exists(file_path)
-            if not exists:
-                print("Filename {} doesn't exist".format(filename))
-                self.pdlg.close()
-                raise SystemExit("Filename {} doesn't exist".format(filename))
             self.read_ftml(filename)
 
     def setup(self):
@@ -264,8 +283,25 @@ class Plotting:
         self.plotter.update_from_waypoints(self.wp_model_data)
         self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
 
+    def ftml_file(self, filename):
+        """
+        Flight track file of an "automated_plotting_flights" entry, checked for existence.
+
+        Raises FileNotFoundError when the file is not there. draw() in main() catches it,
+        so a missing file skips the plots of that entry only and the run goes on with
+        the next one.
+        """
+        file_path = resolve_ftml_path(filename, self.fpath)
+        if not file_path.exists():
+            message = "Filename {} doesn't exist".format(file_path)
+            print(message)
+            if self.pdlg is not None:
+                self.pdlg.close()
+            raise FileNotFoundError(message)
+        return file_path
+
     def read_ftml(self, filename):
-        self.wps, self.wp_model_data = load_from_ftml(filename)
+        self.wps, self.wp_model_data = load_from_ftml(self.ftml_file(filename))
         self.wp_lats, self.wp_lons, self.wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
         self.wp_press = [mslib.utils.thermolib.flightlevel2pressure(wp[2] * units.hft).to("Pa").m for wp in self.wps]
         self.path = [(wp[0], wp[1], datetime.now()) for wp in self.wps]
@@ -290,8 +326,9 @@ class Plotting:
 
 
 class TopViewPlotting(Plotting):
-    def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw=False):
-        super(TopViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw)
+    def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw=False, fpath=None):
+        super(TopViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw,
+                                              fpath)
         self.pdlg = pdlg
         self.myfig = viewplotter.TopViewPlotter()
         self.myfig.fig.canvas.draw()
@@ -359,8 +396,9 @@ class TopViewPlotting(Plotting):
 
 
 class SideViewPlotting(Plotting):
-    def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw=False):
-        super(SideViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw)
+    def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw=False, fpath=None):
+        super(SideViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw,
+                                               fpath)
         self.pdlg = pdlg
         self.myfig = viewplotter.SideViewPlotter()
         self.ax = self.myfig.ax
@@ -475,8 +513,9 @@ class SideViewPlotting(Plotting):
 
 class LinearViewPlotting(Plotting):
     # ToDo Implement access of MSColab
-    def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw=False):
-        super(LinearViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password, raw)
+    def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw=False, fpath=None):
+        super(LinearViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg,
+                                                 raw, fpath)
         self.pdlg = pdlg
         self.myfig = viewplotter.LinearViewPlotter()
         self.ax = self.myfig.ax
@@ -573,6 +612,9 @@ class LinearViewPlotting(Plotting):
 @click.option('--cpath', default=constants.MSS_AUTOPLOT, help='Path of the configuration file.')
 @click.option('--view', default="top", help='View of the plot (top/side/linear).')
 @click.option('--ftrack', default="", help='Flight track.')
+@click.option('--fpath', default="", help='Directory of the flight track files. Replaces the directory stored '
+                                          'with the file name in the configuration file, '
+                                          'any subdirectory of that stored path is discarded.')
 @click.option('--itime', default="", help='Initial time.')
 @click.option('--vtime', default="", help='Valid time.')
 @click.option('--intv', default=0, help='Time interval.')
@@ -580,7 +622,7 @@ class LinearViewPlotting(Plotting):
 @click.option('--etime', default="", help='Ending time for downloading multiple plots with a fixed interval.')
 @click.option('--raw', default=False, help='Saves the raw image with its projection in topview')
 @click.pass_context
-def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime, raw):
+def main(ctx, cpath, view, ftrack, fpath, itime, vtime, intv, stime, etime, raw):
     pdlg = None
 
     def close_process_dialog(pdlg):
@@ -627,13 +669,14 @@ def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime, raw):
 
     # Choose view (top or side)
     if view == "top":
-        top_view = TopViewPlotting(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw)
+        top_view = TopViewPlotting(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw, fpath)
         sec = "automated_plotting_hsecs"
     elif view == "side":
-        side_view = SideViewPlotting(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw)
+        side_view = SideViewPlotting(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw, fpath)
         sec = "automated_plotting_vsecs"
     elif view == "linear":
-        linear_view = LinearViewPlotting(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw)
+        linear_view = LinearViewPlotting(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw,
+                                         fpath)
         sec = "automated_plotting_lsecs"
     else:
         print("Invalid view")
