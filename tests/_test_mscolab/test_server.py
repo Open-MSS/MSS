@@ -43,6 +43,7 @@ from flask import current_app
 import mslib.mscolab.mscolab
 import mslib.mscolab.server
 from mslib.mscolab.app import InsecureSecretError, create_app
+from mslib.utils.basic_auth import BasicAuthSettingError
 from mslib.mscolab.auth import register_user, check_login
 from mslib.mscolab.api.message_type import MessageType
 from mslib.mscolab.conf import DefaultSettings, mscolab_settings
@@ -1112,16 +1113,57 @@ def test_sample_settings_have_no_secret_key(no_secret_key_in_environment):
     assert "SECRET_KEY" not in runpy.run_path(SAMPLE_SETTINGS)
 
 
+@pytest.mark.parametrize("error", [InsecureSecretError("SECRET_KEY is not set"),
+                                   BasicAuthSettingError("SECRET_KEY is not set")])
 @pytest.mark.parametrize("module, argv", [
     (mslib.mscolab.mscolab, ["mscolab", "db", "--seed", "-y"]),
     (mslib.mscolab.server, ["server"]),
 ])
-def test_cli_reports_insecure_secret_without_traceback(monkeypatch, capsys, module, argv):
+def test_cli_reports_insecure_secret_without_traceback(monkeypatch, capsys, module, argv, error):
     monkeypatch.setattr(sys, "argv", argv)
-    error = InsecureSecretError("SECRET_KEY is not set")
     with mock.patch.object(module, "create_app", side_effect=error), \
             mock.patch.object(module, "create_server_app", side_effect=error, create=True):
         with pytest.raises(SystemExit) as exit_info:
             module.main()
     assert exit_info.value.code == 1
     assert capsys.readouterr().err == "mscolab: SECRET_KEY is not set\n"
+
+
+def test_create_app_refuses_lowercase_basic_auth_setting(no_secret_key_in_environment):
+    # earlier samples spelled it in lower case, Flask ignores that and the server would run without login
+    settings = copy.copy(mscolab_settings)
+    settings.enable_basic_http_authentication = True
+    with pytest.raises(BasicAuthSettingError, match="ENABLE_BASIC_HTTP_AUTHENTICATION"):
+        create_app(settings)
+
+
+@pytest.mark.parametrize("cors_setting, server_url, expected", [
+    (None, "http://localhost:8083", ["http://localhost:8083"]),
+    (None, "https://mscolab.example.org/prefix/", ["https://mscolab.example.org"]),
+    (["https://web.example.org"], "http://localhost:8083", ["https://web.example.org"]),
+    (["*"], "http://localhost:8083", ["*"]),
+])
+def test_cors_origins(cors_setting, server_url, expected):
+    assert mslib.mscolab.server.cors_origins({"CORS_ORIGINS": cors_setting, "SERVER_URL": server_url}) == expected
+
+
+def test_socketio_allowed_origins_default():
+    allowed = mslib.mscolab.server.socketio_allowed_origins(
+        {"CORS_ORIGINS": None, "SERVER_URL": "http://localhost:8083"})
+    environ = {"wsgi.url_scheme": "http", "HTTP_HOST": "mscolab.internal:8083"}
+    proxied = dict(environ, HTTP_X_FORWARDED_PROTO="https", HTTP_X_FORWARDED_HOST="mscolab.example.org")
+    # the address the request came to, which msui sends as Origin of its websocket, and SERVER_URL
+    assert allowed("http://mscolab.internal:8083", environ)
+    assert allowed("https://mscolab.example.org", proxied)
+    assert allowed("http://localhost:8083", environ)
+    # any other web page
+    assert not allowed("https://attacker.example", environ)
+    assert not allowed("https://attacker.example", proxied)
+    assert not allowed(None, environ)
+
+
+def test_socketio_allowed_origins_configured():
+    config = {"SERVER_URL": "http://localhost:8083"}
+    assert mslib.mscolab.server.socketio_allowed_origins(dict(config, CORS_ORIGINS=["*"])) == "*"
+    assert mslib.mscolab.server.socketio_allowed_origins(
+        dict(config, CORS_ORIGINS=["https://web.example.org"])) == ["https://web.example.org"]

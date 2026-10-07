@@ -14,6 +14,8 @@ Global map: ../../ARCHITECTURE.md
   safest modules to edit; keep them dependency-free
 - `netCDF4tools.py` — NetCDF read helpers; `ogcwms.py` — hardened OWSLib WMS
 - `auth.py` — keyring-backed credential storage (tests mock the keyring)
+- `basic_auth.py` — password check of the basic HTTP auth of mswms, mscolab and
+  `auth.wsgi` (argon2, deprecated MD5); `python -m mslib.utils.basic_auth` prints a hash
 - `qt.py`, `colordialog.py` — Qt helpers (the only Qt code outside msui/support)
 - `airdata.py` — airport/airspace downloads; `find_location.py`,
   `get_projection_params.py`

@@ -56,8 +56,10 @@ class DefaultSettings:
     # To enable flask socketio debugging, this sets in flask_socketio app.debug too
     DEBUG = False
 
-    # Which origins are allowed to communicate with your server
-    CORS_ORIGINS = ["*"]
+    # Which origins (scheme://host:port) of web pages are allowed to communicate with your server. None allows only
+    # the server's own address, the origin of SERVER_URL; ["*"] allows every web page. msui is no web page and
+    # isn't affected.
+    CORS_ORIGINS = None
 
     # dir where msui output files are stored
     BASE_DIR = os.path.join(os.path.expanduser("~"), 'mss')

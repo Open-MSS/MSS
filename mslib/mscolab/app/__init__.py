@@ -44,6 +44,7 @@ from flask_sqlalchemy import SQLAlchemy
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab import migrations
 from mslib.utils import prefix_route, release_info
+from mslib.utils.basic_auth import PasswordCheckBusy, check_basic_auth_setting
 from mslib.utils.file_exists import file_exists
 from xstatic.main import XStatic
 
@@ -357,6 +358,8 @@ def create_app(config_object=mscolab_settings):
     app = Flask(__name__, template_folder=DOCS_TEMPLATES_DIR)
     app.config.from_object(config_object)
     check_secrets(app)
+    check_basic_auth_setting(config_object, "mscolab_settings")
+    app.register_error_handler(PasswordCheckBusy, lambda error: (str(error), 503, {"Retry-After": "10"}))
     # uploads are limited to MAX_UPLOAD_SIZE, other requests to MAX_CONTENT_LENGTH
     app.request_class = MSColabRequest
     app.register_error_handler(413, error413)

@@ -1,3 +1,8 @@
+# Users that may pass the basic HTTP authentication when ENABLE_BASIC_HTTP_AUTHENTICATION
+# is True in mscolab_settings.py, with an argon2 hash of their password. The command
+#     python -m mslib.utils.basic_auth
+# asks for a password and prints its hash, e.g. "$argon2id$v=19$m=65536,...".
+# Never store the password itself. MD5 digests of earlier versions still work,
+# but can be cracked quickly, replace them.
 class mscolab_auth:
-     password = "please use the methods to save only the encrypted value"
-     allowed_users = [("user", hashlib.md5(password.encode('utf-8')).hexdigest())]
+    allowed_users = [("user", "add_argon2_hash_of_PASSWORD_here")]

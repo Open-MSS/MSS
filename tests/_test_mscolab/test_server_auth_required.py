@@ -24,8 +24,12 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import base64
+
 import pytest
 
+import mslib.mscolab.server
+from mslib.utils.basic_auth import PasswordCheckBusy
 from mslib.mscolab.server import authfunc, verify_pw, _initialize_managers
 
 
@@ -49,6 +53,24 @@ class Test_Server_Auth_Not_Valid:
     def test_authfunc(self):
         assert authfunc("user", "testvaluepassword")
         assert authfunc("user", "wrong") is False
+        assert authfunc("unknown", "testvaluepassword") is False
+        assert authfunc("user", None) is False
+
+    def test_busy_password_checks_answer_503(self, monkeypatch):
+        def busy(*args):
+            raise PasswordCheckBusy("busy")
+
+        monkeypatch.setattr(mslib.mscolab.server, "check_credentials", busy)
+        credentials = base64.b64encode(b"user:testvaluepassword").decode("ascii")
+        with self.app.test_client() as test_client:
+            response = test_client.get("/status", headers={"Authorization": f"Basic {credentials}"})
+        assert response.status_code == 503
+        assert response.headers["Retry-After"] == "10"
+
+    def test_authfunc_md5_digest_still_works(self):
+        assert authfunc("md5user", "md5password")
+        assert authfunc("md5user", "wrong") is False
+        assert authfunc("user", "md5password") is False
 
     def test_verify_pw(self):
         with self.app.test_request_context():
@@ -69,3 +91,15 @@ class Test_Server_Auth_Not_Valid:
             response = test_client.post('/token', data={"email": "test@test.io",
                                                         "password": "test"})
         assert response.status_code == 401
+
+    @pytest.mark.parametrize("username, password", [("user", "testvaluepassword"), ("md5user", "md5password")])
+    def test_basic_auth_login_passes(self, username, password):
+        credentials = base64.b64encode(f"{username}:{password}".encode()).decode()
+        with self.app.test_client() as test_client:
+            response = test_client.post('/token', data={"email": "test@test.io", "password": "test"},
+                                        headers={"Authorization": f"Basic {credentials}"})
+            assert response.status_code == 200
+            wrong = base64.b64encode(f"{username}:wrong".encode()).decode()
+            response = test_client.post('/token', data={"email": "test@test.io", "password": "test"},
+                                        headers={"Authorization": f"Basic {wrong}"})
+            assert response.status_code == 401
