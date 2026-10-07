@@ -41,6 +41,7 @@ from flask import current_app
 
 from mslib import __version__
 from mslib.mscolab import migrations
+from mslib.utils.basic_auth import BasicAuthSettingError
 from mslib.mscolab.app import InsecureSecretError, create_app, create_files
 from mslib.mscolab.seed import seed_data, add_user, add_all_users_default_operation, \
     add_all_users_to_all_operations, delete_user
@@ -405,7 +406,7 @@ def handle_sso_metadata_init(repo_exists):
 def main():
     try:
         _main()
-    except InsecureSecretError as ex:
+    except (InsecureSecretError, BasicAuthSettingError) as ex:
         # a configuration error, no traceback
         print(f"mscolab: {ex}", file=sys.stderr)
         sys.exit(1)

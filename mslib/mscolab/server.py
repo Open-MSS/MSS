@@ -25,8 +25,8 @@
     limitations under the License.
 """
 import logging
-import hashlib
 import sys
+from urllib.parse import urlsplit
 
 from flask import request
 from flask_cors import CORS
@@ -35,6 +35,7 @@ from flask_httpauth import HTTPBasicAuth
 from mslib.mscolab.app import InsecureSecretError, create_app, initialise_db
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.sockets_manager import _setup_managers
+from mslib.utils.basic_auth import BasicAuthSettingError, check_allowed_users, check_credentials
 
 
 try:
@@ -43,17 +44,13 @@ except ImportError as ex:
     logging.warning("Couldn't import mscolab_auth (ImportError:'{%s), creating dummy config.", ex)
 
     class mscolab_auth:
-        allowed_users = [("mscolab", "add_md5_digest_of_PASSWORD_here"),
-                         ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
+        allowed_users = []
         __file__ = None
 
 
 # setup http auth
 def authfunc(username, password):
-    for u, p in mscolab_auth.allowed_users:
-        if (u == username) and (p == hashlib.md5(password.encode('utf-8')).hexdigest()):
-            return True
-    return False
+    return check_credentials(mscolab_auth.allowed_users, username, password)
 
 
 def verify_pw(username, password):
@@ -62,6 +59,49 @@ def verify_pw(username, password):
         username = _auth.username
         password = _auth.password
     return authfunc(username, password)
+
+
+def _origin(url):
+    parts = urlsplit(url)
+    return f"{parts.scheme}://{parts.netloc}"
+
+
+def _request_origins(environ):
+    """The origins of the server as the request addressed it, also behind a proxy, as Engine.IO computes them"""
+    origins = set()
+    if "wsgi.url_scheme" in environ and "HTTP_HOST" in environ:
+        origins.add(f"{environ['wsgi.url_scheme']}://{environ['HTTP_HOST']}")
+        if "HTTP_X_FORWARDED_PROTO" in environ or "HTTP_X_FORWARDED_HOST" in environ:
+            scheme = environ.get("HTTP_X_FORWARDED_PROTO", environ["wsgi.url_scheme"]).split(",")[0].strip()
+            host = environ.get("HTTP_X_FORWARDED_HOST", environ["HTTP_HOST"]).split(",")[0].strip()
+            origins.add(f"{scheme}://{host}")
+    return origins
+
+
+def cors_origins(config):
+    """
+    The origins of web pages that may send requests to the server from a browser
+
+    CORS_ORIGINS, by default (None) the origin of SERVER_URL. Requests of the server's own pages are same-origin
+    and need no CORS header.
+    """
+    origins = config.get("CORS_ORIGINS")
+    return [_origin(config["SERVER_URL"])] if origins is None else origins
+
+
+def socketio_allowed_origins(config):
+    """
+    cors_allowed_origins for Flask-SocketIO
+
+    By default (CORS_ORIGINS None) the origin the request addressed the server with, which msui sends as Origin of
+    its websocket, and the origin of SERVER_URL. A list of CORS_ORIGINS replaces both and has to contain the address
+    msui users connect to; ["*"] allows every origin.
+    """
+    origins = config.get("CORS_ORIGINS")
+    if origins is None:
+        server_origin = _origin(config["SERVER_URL"])
+        return lambda origin, environ: origin == server_origin or origin in _request_origins(environ)
+    return "*" if "*" in origins else origins
 
 
 def _initialize_managers(app):
@@ -74,8 +114,7 @@ def _initialize_managers(app):
     sockio.init_app(app,
                     logger=app.config['SOCKETIO_LOGGER'],
                     engineio_logger=app.config['ENGINEIO_LOGGER'],
-                    cors_allowed_origins=("*" if "*" in app.config['CORS_ORIGINS']
-                                          else app.config['CORS_ORIGINS']))
+                    cors_allowed_origins=socketio_allowed_origins(app.config))
     return app, sockio, cm, fm
 
 
@@ -91,7 +130,7 @@ def create_server_app(config_object=mscolab_settings):
     with app.app_context():
         initialise_db()
 
-    CORS(app, origins=app.config.get('CORS_ORIGINS', ["*"]))
+    CORS(app, origins=cors_origins(app.config))
     # Every app gets its own HTTPBasicAuth instance, so that apps existing side by side
     # (e.g. in the tests) cannot overwrite each other's authentication callback. The
     # callback is always registered; whether it is applied is decided per request from
@@ -102,6 +141,7 @@ def create_server_app(config_object=mscolab_settings):
     if app.config.get('ENABLE_BASIC_HTTP_AUTHENTICATION', False):
         logging.debug("Enabling basic HTTP authentication. Username and "
                       "password required to access the service.")
+        check_allowed_users(mscolab_auth.allowed_users, "mscolab_auth")
 
     _initialize_managers(app)
     return app
@@ -114,7 +154,7 @@ def start_server(app, sockio, cm, fm, port=8083):
 def main():
     try:
         app = create_server_app()
-    except InsecureSecretError as ex:
+    except (InsecureSecretError, BasicAuthSettingError) as ex:
         # a configuration error, no traceback
         print(f"mscolab: {ex}", file=sys.stderr)
         sys.exit(1)

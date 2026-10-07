@@ -28,13 +28,16 @@ import os
 import logging
 import mslib
 
-from flask import Flask, url_for
+from flask import Flask, current_app, url_for
+from flask_httpauth import HTTPBasicAuth
 from xstatic.main import XStatic
-from mslib.mswms.blueprints.docs import DOCS_BP, init_docs_bp, build_auth_backend
+from mslib.mswms.blueprints.docs import DOCS_BP, init_docs_bp
 from mslib.mswms.blueprints.gallery import GALLERY_BP
 
 from mslib.mswms.gallery_builder import STATIC_LOCATION
 from mslib.utils import prefix_route, release_info
+from mslib.utils.basic_auth import (PasswordCheckBusy, check_allowed_users, check_basic_auth_setting,
+                                    check_credentials)
 from mslib.utils.file_exists import file_exists
 
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
@@ -98,7 +101,7 @@ except ImportError as ex:
 
 
 def _load_allowed_users():
-    """Return the (username, md5-hex-password) pairs for HTTP basic auth.
+    """Return the (username, password-hash) pairs for HTTP basic auth.
 
     Sourced from the operator-provided ``mswms_auth`` module; falls back to an
     empty list (auth then rejects everyone -- fail closed) when it is absent.
@@ -121,6 +124,42 @@ APP.config.from_object(mswms_settings)
 APP.route = prefix_route(APP.route, SCRIPT_NAME)
 
 APP.jinja_env.globals.update(file_exists=file_exists)
+
+
+@APP.before_request
+def _require_login():
+    """With ENABLE_BASIC_HTTP_AUTHENTICATION every page needs the login, not only the WMS on "/".
+
+    This includes the gallery, the plots and code under /static and /gallery-static, and the docs pages.
+    """
+    if not current_app.config.get("ENABLE_BASIC_HTTP_AUTHENTICATION", False):
+        return None
+    # None if the login is right, otherwise the 401 answer of flask-httpauth
+    return current_app.extensions["basic_auth"].login_required(lambda: None)()
+
+
+@APP.errorhandler(PasswordCheckBusy)
+def _password_check_busy(error):
+    return str(error), 503, {"Retry-After": "10"}
+
+
+def _init_basic_auth(app):
+    """Set up the basic authentication of :func:`_require_login` with the users of mswms_auth.
+
+    Like MSColab, it uses flask-httpauth; every app gets its own HTTPBasicAuth.
+    """
+    check_basic_auth_setting(mswms_settings, "mswms_settings")
+    allowed_users = []
+    if app.config.get("ENABLE_BASIC_HTTP_AUTHENTICATION", False):
+        logging.debug("Enabling basic HTTP authentication. Username and "
+                      "password required to access the service.")
+        allowed_users = _load_allowed_users()
+        check_allowed_users(allowed_users, "mswms_auth")
+    app.extensions["mswms_allowed_users"] = allowed_users
+    basic_auth = HTTPBasicAuth(realm="Login Required")
+    basic_auth.verify_password(lambda username, password: check_credentials(
+        app.extensions["mswms_allowed_users"], username, password))
+    app.extensions["basic_auth"] = basic_auth
 
 
 def _xstatic(name):
@@ -160,13 +199,8 @@ def create_app(name="", imprint=None, gdpr=None):
 
     APP.config.from_object(mswms_settings)
 
-    allowed_users = _load_allowed_users()
-    auth_backend = build_auth_backend(
-        enabled=APP.config.get("ENABLE_BASIC_HTTP_AUTHENTICATION", False),
-        allowed_users=allowed_users
-    )
-
-    init_docs_bp(APP, auth_backend)
+    _init_basic_auth(APP)
+    init_docs_bp(APP)
 
     APP.jinja_env.globals.update(file_exists=file_exists)
     APP.jinja_env.globals["imprint"] = imprint_file

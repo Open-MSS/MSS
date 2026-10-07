@@ -156,9 +156,12 @@ USE_SAML2 = False
             config_string = '''
 import hashlib
 
+from mslib.utils.basic_auth import hash_password
+
 class mscolab_auth:
-     password = "testvaluepassword"
-     allowed_users = [("user", hashlib.md5(password.encode('utf-8')).hexdigest())]
+     # "md5user" has a digest as recommended by earlier versions, which still works
+     allowed_users = [("user", hash_password("testvaluepassword")),
+                      ("md5user", hashlib.md5("md5password".encode('utf-8')).hexdigest())]
 '''
             MSCOLAB_AUTH_FILE.write_text(config_string)
 

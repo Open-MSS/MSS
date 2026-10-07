@@ -34,6 +34,10 @@ The login to the MSColab server can be protected by an additional auth method.
  .. literalinclude:: samples/config/mscolab/mscolab_auth.py.sample
 
 Make a copy of the above file, rename it to mscolab_auth.py, make the necessary changes in the file and add it to your $PYTHONPATH.
+It is used with :code:`ENABLE_BASIC_HTTP_AUTHENTICATION = True` in mscolab_settings.py. The passwords are stored as
+argon2 hashes; :code:`python -m mslib.utils.basic_auth` asks for a password and prints its hash. MD5 digests of the
+password, as recommended by earlier versions, still work, but the server logs a warning, because they can be cracked
+quickly. Replace them by argon2 hashes.
 
 Steps to Run MSColab Server
 ---------------------------

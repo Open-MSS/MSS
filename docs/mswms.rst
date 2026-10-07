@@ -76,6 +76,12 @@ For setting authentication see *mswms_auth.py*
 
  .. literalinclude:: samples/config/mswms/mswms_auth.py.sample
 
+With :code:`ENABLE_BASIC_HTTP_AUTHENTICATION = True` in mswms_settings.py every page of the server needs one of
+these logins: the WMS, the gallery with its plots and code, and the documentation pages. The passwords are stored as
+argon2 hashes; :code:`python -m mslib.utils.basic_auth` asks for a password and prints its hash. MD5 digests of the
+password, as recommended by earlier versions, still work, but the server logs a warning, because they can be cracked
+quickly. Replace them by argon2 hashes.
+
 
 
 Configuration file of the wms server
@@ -574,7 +580,10 @@ Configuration of wsgi auth
 
 As long as you have only one instance of the server running you can use this method to restrict access.
 
-To restrict access to your data use this script.
+To restrict access to your data use this script. Apache runs it in its own Python, not in the pixi environment of
+the WSGI daemon process, so it only uses the standard library and argon2: install argon2 for Apache's Python, e.g.
+:code:`pip install argon2-cffi` or the :code:`python3-argon2` package of your system. Passwords with characters
+other than ASCII work, the script converts them from the encoding Apache passes them in.
 
 **/home/mss/INSTANCE/wsgi/auth.wsgi**
 
@@ -584,6 +593,9 @@ To restrict access to your data use this script.
 This needs also a configuration **/home/mss/INSTANCE/config/mswms_auth.py** script.
 
  .. literalinclude:: samples/config/mswms/mswms_auth.py.sample
+
+With the vhost below, which serves every path by wms.wsgi, Apache asks for this login on every page, also the gallery
+and the documentation pages.
 
 
 At the moment you have many different instances with different users or different versions of mss you have to use

@@ -12,4 +12,4 @@ sys.stdout = sys.stderr
 import logging
 logging.basicConfig(stream=sys.stderr)
 
-from mslib.mswms.wms import app as application
+from mslib.mswms.wms import APP as application
