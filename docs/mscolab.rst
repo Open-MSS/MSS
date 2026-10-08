@@ -147,6 +147,9 @@ msui gets a login token from the server when the user logs in. It is valid for 1
 mscolab_settings.py sets another lifetime in seconds. "Log out everywhere" in the user menu of msui makes all earlier
 tokens of the user invalid: every msui of the user has to log in again. A password reset does the same.
 
+msui sends the token of GET requests in the header :code:`X-MSColab-Token`, so it doesn't end up in access logs; a
+reverse proxy in front of the server has to pass this header on, which nginx does by default.
+
 After a device got lost, reset the password: msui stores the password in the keyring of the device, so "Log out
 everywhere" alone doesn't keep the device out, it can log in again. The profile dialog of msui has a "Reset Password"
 button, and the login dialog shows a link after a wrong password; both open the page of the server where you request

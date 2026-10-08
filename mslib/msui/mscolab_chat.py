@@ -40,7 +40,7 @@ from urllib.parse import urljoin
 
 from mslib.mscolab.api.attachments import DEFAULT_ATTACHMENT_EXTENSIONS, IMAGE_EXTENSIONS, file_extension
 from mslib.mscolab.api.message_type import MessageType
-from mslib.msui.socket_control import response_message
+from mslib.msui.socket_control import mscolab_get, response_message
 from PyQt5 import QtCore, QtGui, QtWidgets
 from mslib.utils.qt import get_open_filename, get_save_filename, plain_text_message_box, show_popup
 from mslib.msui.qt5 import ui_mscolab_operation_window as ui
@@ -463,12 +463,8 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
         active_users_url = urljoin(self.mscolab_server_url, endpoints.ACTIVE_USERS)
 
         # Fetch both authorized and active users
-        users_response = requests.get(
-            users_url, data={**users_req.to_form_data(), "token": self.token},
-            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-        active_response = requests.get(
-            active_users_url, data={**active_req.to_form_data(), "token": self.token},
-            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        users_response = mscolab_get(users_url, self.token, users_req.to_params())
+        active_response = mscolab_get(active_users_url, self.token, active_req.to_params())
 
         users_parsed = GetAuthorizedUsersResponse.from_text(users_response.text)
         active_parsed = GetActiveUsersResponse.from_text(active_response.text)
@@ -481,11 +477,10 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
                 item = QtWidgets.QListWidgetItem(display_text, parent=self.collaboratorsList)
 
                 # Pixmap for icon i.e. profile image
-                image_req = FetchProfileImageRequest(user_id=str(user.id))
+                # the server shows the images of other users only to members of an operation of both
+                image_req = FetchProfileImageRequest(user_id=user.id, op_id=self.op_id)
                 url = urljoin(self.mscolab_server_url, endpoints.FETCH_PROFILE_IMAGE)
-                response = requests.get(
-                    url, data={**image_req.to_form_data(), "token": self.token},
-                    timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                response = mscolab_get(url, self.token, image_req.to_params())
                 pixmap = QtGui.QPixmap()
                 if response.status_code == 200:
                     # pixmap = QtGui.QPixmap()
@@ -528,9 +523,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
         # returns an array of messages
         url = urljoin(self.mscolab_server_url, endpoints.MESSAGES)
 
-        res = requests.get(
-            url, data={**req.to_form_data(), "token": self.token},
-            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        res = mscolab_get(url, self.token, req.to_params())
         parsed = GetMessagesResponse.from_text(res.text)
         if parsed is not None:
             # render_new_message()/MessageItem also consume socket.io chat events
@@ -691,8 +684,7 @@ class MessageItem(QtWidgets.QWidget):
         if url is None:
             return None
         try:
-            response = requests.get(url, data={"token": self.chat_window.token},
-                                    timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            response = mscolab_get(url, self.chat_window.token)
         except requests.exceptions.RequestException as ex:
             logging.warning("could not load attachment %s: %s", url, ex)
             return None

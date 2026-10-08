@@ -14,8 +14,8 @@
     Only migrated routes have a schema here -- see endpoints.py for which
     ones. This is stdlib dataclasses only (Python <3.12 pin, no new runtime
     dependency). The type hints are documentation for readers and IDEs
-    only: nothing checks them at runtime, and ``op_id: object`` marks
-    fields the server does not convert to int. tests/_test_api/ only checks
+    only: nothing checks them at runtime; integer ids are converted with
+    int_field, which raises InvalidRequest. tests/_test_api/ only checks
     each schema against itself;
     tests/_test_mscolab/test_api_contract.py checks schemas against the real
     Flask routes.
@@ -39,9 +39,9 @@
 """
 
 import json
+import re
 from dataclasses import dataclass, field
 from typing import List, Optional, Union
-from urllib.parse import urlencode
 
 # mslib.mscolab.auth.verify_user (the @verify_user decorator wrapping every
 # authenticated route) returns this bare, non-JSON string -- instead of
@@ -51,6 +51,48 @@ from urllib.parse import urlencode
 # it rather than raising a JSON-decode error, matching what the routes have
 # always actually done on the wire.
 AUTH_FAILED_TEXT = "False"
+
+# msui sends the login token of a GET request in this header, its parameters in
+# the query string: a GET request has no body a proxy has to forward, and a
+# token in the URL would end up in access logs. Servers up to 11.x read the
+# token only from the query string or the body, msui sends it there too until
+# their support is dropped.
+TOKEN_HEADER = "X-MSColab-Token"
+
+
+class InvalidRequest(ValueError):
+    """A request field the server can't use, e.g. a missing or non-integer op_id.
+
+    The server answers it with HTTP 400 and the message.
+    """
+
+
+# the ids are INTEGER columns, 32 bit on PostgreSQL
+_INT_FIELD_RANGE = range(-2 ** 31, 2 ** 31)
+_INT_FIELD_PATTERN = re.compile(r"-?[0-9]{1,10}")
+
+
+def int_field(value, name):
+    """Returns value of the request field name as int, raises InvalidRequest unless it is one.
+
+    Only plain decimal digits are accepted: int() would also take e.g. "1_0"
+    as 10, " 1 " or other Unicode digits.
+    """
+    if isinstance(value, str) and _INT_FIELD_PATTERN.fullmatch(value):
+        value = int(value)
+    if isinstance(value, int) and not isinstance(value, bool) and value in _INT_FIELD_RANGE:
+        return value
+    raise InvalidRequest(f"{name} must be an integer")
+
+
+def _int_list_field(value, name):
+    try:
+        values = json.loads(value)
+    except (TypeError, ValueError):
+        values = None
+    if not isinstance(values, list):
+        raise InvalidRequest(f"{name} must be a JSON list of integers")
+    return [int_field(item, name) for item in values]
 
 
 def _record_dict(record):
@@ -120,7 +162,7 @@ class OperationInfo:
     path: str
     description: Optional[str]
     category: str
-    active: bool = True
+    active: bool
 
     def to_dict(self):
         return {
@@ -140,10 +182,8 @@ class OperationInfo:
             path=data["path"],
             description=data["description"],
             category=data["category"],
-            # mslib.msui.mscolab.add_operations_to_ui has always defaulted this
-            # to True for compatibility with servers older than 8.x that don't
-            # send "active" at all -- preserved here rather than in the client.
-            active=data.get("active", True),
+            # every supported server (8.3.3 and later) sends it
+            active=data["active"],
         )
 
 
@@ -153,15 +193,14 @@ class GetOperationsRequest:
 
     skip_archived: bool = False
 
-    def to_form_data(self):
+    def to_params(self):
         return {"skip_archived": str(self.skip_archived)}
 
     @classmethod
     def from_args_and_form(cls, args, form):
         """Mirrors the route's ``request.args.get(x, request.form.get(x, default))``
-        fallback chain -- request_get() puts its payload in the request body,
-        so request.args is normally empty, but the handler has always checked
-        both.
+        fallback chain -- msui sends the parameters of a GET request in the
+        query string, msui up to 11.x sent them in the body.
         """
         return cls(skip_archived=args.get("skip_archived", form.get("skip_archived", "False")) == "True")
 
@@ -193,15 +232,12 @@ class GetOperationByIdRequest:
 
     op_id: int
 
-    def to_form_data(self):
+    def to_params(self):
         return {"op_id": self.op_id}
 
     @classmethod
     def from_args_and_form(cls, args, form):
-        # int(None) raises TypeError here, same as the route's previous bare
-        # request.args/request.form reads -- a missing op_id was never
-        # validated any more gracefully than that.
-        return cls(op_id=int(args.get("op_id", form.get("op_id", None))))
+        return cls(op_id=int_field(args.get("op_id", form.get("op_id", None)), "op_id"))
 
 
 @dataclass
@@ -238,9 +274,9 @@ class DeleteOperationRequest:
 
     @classmethod
     def from_form(cls, form):
-        # int(...) on a missing op_id defaults to 0 -- matches the route's
-        # previous request.form.get('op_id', 0).
-        return cls(op_id=int(form.get("op_id", 0)))
+        # a missing op_id defaults to 0 -- matches the route's previous
+        # request.form.get('op_id', 0).
+        return cls(op_id=int_field(form.get("op_id", 0), "op_id"))
 
 
 @dataclass
@@ -285,10 +321,10 @@ class UpdateOperationRequest:
 
     @classmethod
     def from_form(cls, form):
-        # int(None) raises TypeError on a missing op_id, and form["attribute"]/
-        # form["value"] raise KeyError -- matches the route's previous bare
-        # request.form reads exactly.
-        return cls(op_id=int(form.get("op_id", None)), attribute=form["attribute"], value=form["value"])
+        # form["attribute"]/form["value"] raise KeyError -- matches the route's
+        # previous bare request.form reads exactly.
+        return cls(op_id=int_field(form.get("op_id", None), "op_id"), attribute=form["attribute"],
+                   value=form["value"])
 
 
 @dataclass
@@ -307,21 +343,16 @@ class UpdateOperationResponse:
 
 @dataclass
 class GetCreatorOfOperationRequest:
-    """GET endpoints.GET_CREATOR_OF_OPERATION.
+    """GET endpoints.GET_CREATOR_OF_OPERATION."""
 
-    Unlike the other op_id-taking routes, this one never casts op_id to int
-    before querying the DB (SQLite tolerates the string; preserved as-is
-    rather than "fixed" here).
-    """
+    op_id: int
 
-    op_id: object
-
-    def to_form_data(self):
+    def to_params(self):
         return {"op_id": self.op_id}
 
     @classmethod
     def from_args_and_form(cls, args, form):
-        return cls(op_id=args.get("op_id", form.get("op_id", None)))
+        return cls(op_id=int_field(args.get("op_id", form.get("op_id", None)), "op_id"))
 
 
 @dataclass
@@ -330,8 +361,9 @@ class GetCreatorOfOperationResponse:
 
     HTTP 200 + {"success": True, "username": ...} on success, HTTP 403 +
     {"success": False, "message": ...} if the caller isn't a member of the
-    operation. A rejected token is answered by @verify_user with HTTP 200 and
-    bare "False" (see AUTH_FAILED_TEXT), for which from_text() returns None.
+    operation; HTTP 400 for a missing or non-integer op_id. A rejected token
+    is answered by @verify_user with HTTP 200 and bare "False" (see
+    AUTH_FAILED_TEXT), for which from_text() returns None.
     mslib.msui.mscolab.view_description never parses either failure:
     request_get() raises MSColabConnectionError on any non-200 status and
     MSColabSessionExpiredError on AUTH_FAILED_TEXT.
@@ -369,7 +401,8 @@ class DeleteBulkPermissionsRequest:
 
     @classmethod
     def from_form(cls, form):
-        return cls(op_id=int(form.get("op_id")), user_ids=json.loads(form.get("selected_userids", "[]")))
+        return cls(op_id=int_field(form.get("op_id"), "op_id"),
+                   user_ids=_int_list_field(form.get("selected_userids", "[]"), "selected_userids"))
 
 
 @dataclass
@@ -464,29 +497,17 @@ class LoginResponse:
 
 
 @dataclass
-class UploadProfileImageRequest:
-    """POST endpoints.UPLOAD_PROFILE_IMAGE (multipart, plus an "image" file
-    field the client attaches separately -- not part of this dataclass).
-
-    user_id is sent by the client but ignored server-side (the route uses
-    g.user.id from the auth token instead) -- preserved as-is here, since
-    it's still part of the actual wire payload today.
-    """
-
-    user_id: int
-
-    def to_form_data(self):
-        return {"user_id": self.user_id}
-
-
-@dataclass
 class FetchProfileImageRequest:
-    """GET endpoints.FETCH_PROFILE_IMAGE."""
+    """GET endpoints.FETCH_PROFILE_IMAGE.
+
+    FileManager.get_user_profile_image converts user_id and op_id to int and
+    refuses values it can't convert.
+    """
 
     user_id: int
     op_id: Optional[int] = None
 
-    def to_form_data(self):
+    def to_params(self):
         data = {"user_id": self.user_id}
         if self.op_id is not None:
             data["op_id"] = self.op_id
@@ -494,7 +515,8 @@ class FetchProfileImageRequest:
 
     @classmethod
     def from_args_and_form(cls, args, form):
-        return cls(user_id=form["user_id"], op_id=args.get("op_id", form.get("op_id", None)))
+        return cls(user_id=args.get("user_id", form.get("user_id", None)),
+                   op_id=args.get("op_id", form.get("op_id", None)))
 
 
 @dataclass
@@ -559,12 +581,12 @@ class GetOperationUsersRequest:
 
     op_id: int
 
-    def to_form_data(self):
+    def to_params(self):
         return {"op_id": self.op_id}
 
     @classmethod
     def from_args_and_form(cls, args, form):
-        return cls(op_id=int(args.get("op_id", form.get("op_id", None))))
+        return cls(op_id=int_field(args.get("op_id", form.get("op_id", None)), "op_id"))
 
 
 @dataclass
@@ -616,8 +638,8 @@ class BulkPermissionsRequest:
     @classmethod
     def from_form(cls, form):
         return cls(
-            op_id=int(form.get("op_id")),
-            user_ids=json.loads(form.get("selected_userids", "[]")),
+            op_id=int_field(form.get("op_id"), "op_id"),
+            user_ids=_int_list_field(form.get("selected_userids", "[]"), "selected_userids"),
             access_level=form.get("selected_access_level"),
         )
 
@@ -657,8 +679,8 @@ class ImportPermissionsRequest:
     @classmethod
     def from_form(cls, form):
         return cls(
-            current_op_id=int(form.get("current_op_id")),
-            import_op_id=int(form.get("import_op_id")),
+            current_op_id=int_field(form.get("current_op_id"), "current_op_id"),
+            import_op_id=int_field(form.get("import_op_id"), "import_op_id"),
         )
 
 
@@ -714,12 +736,12 @@ class GetAuthorizedUsersRequest:
 
     op_id: int
 
-    def to_form_data(self):
+    def to_params(self):
         return {"op_id": self.op_id}
 
     @classmethod
     def from_args_and_form(cls, args, form):
-        return cls(op_id=int(args.get("op_id", form.get("op_id", None))))
+        return cls(op_id=int_field(args.get("op_id", form.get("op_id", None)), "op_id"))
 
 
 @dataclass
@@ -748,12 +770,12 @@ class GetActiveUsersRequest:
 
     op_id: int
 
-    def to_form_data(self):
+    def to_params(self):
         return {"op_id": self.op_id}
 
     @classmethod
     def from_args_and_form(cls, args, form):
-        return cls(op_id=int(args.get("op_id", form.get("op_id", None))))
+        return cls(op_id=int_field(args.get("op_id", form.get("op_id", None)), "op_id"))
 
 
 @dataclass
@@ -810,25 +832,20 @@ class ChangeInfo:
 class GetAllChangesRequest:
     """GET endpoints.GET_ALL_CHANGES.
 
-    named_version is sent as a real URL query parameter (?named_version=...);
-    op_id (and token) go in the request body via requests' data= -- two
-    separate wire channels, preserved as-is rather than merged into one,
-    since that's the actual client behavior today.
+    msui up to 11.x sent op_id in the body and named_version in the query
+    string, which is why the server reads named_version only from there.
     """
 
     op_id: int
     named_version: bool = False
 
-    def to_form_data(self):
-        return {"op_id": self.op_id}
-
-    def to_query_string(self):
-        return urlencode({"named_version": self.named_version})
+    def to_params(self):
+        return {"op_id": self.op_id, "named_version": str(self.named_version)}
 
     @classmethod
     def from_args_and_form(cls, args, form):
         return cls(
-            op_id=int(args.get("op_id", form.get("op_id", None))),
+            op_id=int_field(args.get("op_id", form.get("op_id", None)), "op_id"),
             named_version=args.get("named_version") == "True",
         )
 
@@ -861,12 +878,12 @@ class GetChangeContentRequest:
 
     ch_id: int
 
-    def to_form_data(self):
+    def to_params(self):
         return {"ch_id": self.ch_id}
 
     @classmethod
     def from_args_and_form(cls, args, form):
-        return cls(ch_id=int(args.get("ch_id", form.get("ch_id", 0))))
+        return cls(ch_id=int_field(args.get("ch_id", form.get("ch_id", 0)), "ch_id"))
 
 
 @dataclass
@@ -918,8 +935,8 @@ class SetVersionNameRequest:
     @classmethod
     def from_form(cls, form):
         return cls(
-            op_id=int(form.get("op_id", 0)),
-            ch_id=int(form.get("ch_id", 0)),
+            op_id=int_field(form.get("op_id", 0), "op_id"),
+            ch_id=int_field(form.get("ch_id", 0), "ch_id"),
             version_name=form.get("version_name", None),
         )
 
@@ -953,7 +970,7 @@ class UndoChangesRequest:
 
     @classmethod
     def from_form(cls, form):
-        return cls(ch_id=int(form.get("ch_id", -1)))
+        return cls(ch_id=int_field(form.get("ch_id", -1), "ch_id"))
 
 
 @dataclass
@@ -1013,6 +1030,8 @@ class StatusResponse:
         try:
             data = json.loads(text)
         except json.decoder.JSONDecodeError:
+            data = {}
+        if not isinstance(data, dict):
             data = {}
         return cls(
             message=data.get("message", ""),
@@ -1192,22 +1211,18 @@ class ChatMessageInfo:
 
 @dataclass
 class GetMessagesRequest:
-    """GET endpoints.MESSAGES.
+    """GET endpoints.MESSAGES."""
 
-    op_id is never cast to int server-side (same as
-    GetCreatorOfOperationRequest.op_id) -- preserved, not "fixed".
-    """
-
-    op_id: object
+    op_id: int
     timestamp: str = "1970-01-01T00:00:00+00:00"
 
-    def to_form_data(self):
+    def to_params(self):
         return {"op_id": self.op_id, "timestamp": self.timestamp}
 
     @classmethod
     def from_args_and_form(cls, args, form):
         return cls(
-            op_id=args.get("op_id", form.get("op_id", None)),
+            op_id=int_field(args.get("op_id", form.get("op_id", None)), "op_id"),
             timestamp=args.get("timestamp", form.get("timestamp", "1970-01-01T00:00:00+00:00")),
         )
 
@@ -1243,11 +1258,11 @@ class MessageAttachmentRequest:
     """POST endpoints.MESSAGE_ATTACHMENT (multipart, plus a "file" field the
     client attaches separately -- not part of this dataclass).
 
-    op_id is never cast to int server-side (same pattern as
-    GetCreatorOfOperationRequest.op_id) -- preserved, not "fixed".
+    op_id is also the name of the upload folder of the attachment, the
+    route serving attachments only accepts it as digits.
     """
 
-    op_id: object
+    op_id: int
     message_type: Optional[int]
 
     def to_form_data(self):
@@ -1257,8 +1272,8 @@ class MessageAttachmentRequest:
     def from_form(cls, form):
         # a missing message_type must not fail before the route's membership check
         message_type = form.get("message_type")
-        return cls(op_id=form.get("op_id", None),
-                   message_type=int(message_type) if message_type is not None else None)
+        return cls(op_id=int_field(form.get("op_id", None), "op_id"),
+                   message_type=int_field(message_type, "message_type") if message_type is not None else None)
 
 
 @dataclass
