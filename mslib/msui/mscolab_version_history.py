@@ -34,6 +34,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from mslib.msui.flighttrack import WaypointsTableModel
 from mslib.msui.qt5 import ui_mscolab_version_history as ui
 from mslib.utils.qt import show_popup
+from mslib.msui.socket_control import mscolab_get
 from mslib.utils.config import config_loader
 from mslib.utils.time import utc_to_local_datetime
 from mslib.mscolab.api import endpoints
@@ -122,9 +123,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
     def load_current_waypoints(self):
         req = GetOperationByIdRequest(op_id=self.op_id)
         url = urljoin(self.mscolab_server_url, endpoints.GET_OPERATION_BY_ID)
-        res = requests.get(
-            url, data={**req.to_form_data(), "token": self.token},
-            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        res = mscolab_get(url, self.token, req.to_params())
         parsed = GetOperationByIdResponse.from_text(res.text)
         if parsed is not None:
             waypoint_model = WaypointsTableModel(name="Current Waypoints", xml_content=parsed.content)
@@ -141,11 +140,8 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
         if self.versionFilterCB.currentIndex() == 1:
             named_version_only = True
         req = GetAllChangesRequest(op_id=self.op_id, named_version=named_version_only)
-        url_path = f'{endpoints.GET_ALL_CHANGES}?{req.to_query_string()}'
-        url = urljoin(self.mscolab_server_url, url_path)
-        r = requests.get(
-            url, data={**req.to_form_data(), "token": self.token},
-            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        url = urljoin(self.mscolab_server_url, endpoints.GET_ALL_CHANGES)
+        r = mscolab_get(url, self.token, req.to_params())
         parsed = GetAllChangesResponse.from_text(r.text)
         if parsed is not None:
             self.changes.clear()
@@ -180,9 +176,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
         current_item.setFont(font)
         req = GetChangeContentRequest(ch_id=current_item.id)
         url = urljoin(self.mscolab_server_url, endpoints.GET_CHANGE_CONTENT)
-        res = requests.get(
-            url, data={**req.to_form_data(), "token": self.token},
-            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        res = mscolab_get(url, self.token, req.to_params())
         parsed = GetChangeContentResponse.from_text(res.text)
         if parsed is not None:
             waypoint_model = WaypointsTableModel(xml_content=parsed.content)

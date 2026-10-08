@@ -42,7 +42,7 @@ import mslib.utils.auth
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.message_type import MessageType
 from mslib.mscolab.models import Permission, User
-from mslib.msui.flighttrack import WaypointsTableModel
+from mslib.msui.flighttrack import LON, WaypointsTableModel
 from PyQt5 import QtCore, QtGui, QtTest, QtWidgets
 from mslib.utils.config import MSUIDefaultConfig, read_config_file, config_loader, modify_config_file
 from tests.utils import create_msui_settings_file, ExceptionMock
@@ -813,7 +813,7 @@ class Test_Mscolab:
         assert os.path.isdir(os.path.join(MSCOLAB_DATA_DIR, operation_name))
 
         self._activate_operation_at_index(0)
-        op_id = self.window.mscolab.get_recent_op_id()
+        op_id = self.window.mscolab.get_op_id(operation_name)
         assert op_id is not None
         assert self.window.listOperationsMSC.model().rowCount() == 1
         with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m, \
@@ -824,7 +824,7 @@ class Test_Mscolab:
                     self.window, "Information", 'Active operation "flight7" is inaccessible!')
             )
         assert self.window.mscolab.active_op_id is None
-        op_id = self.window.mscolab.get_recent_op_id()
+        op_id = self.window.mscolab.get_op_id(operation_name)
         assert op_id is None
         # check operation dir name removed
         assert os.path.isdir(os.path.join(MSCOLAB_DATA_DIR, operation_name)) is False
@@ -841,7 +841,7 @@ class Test_Mscolab:
         assert self.window.listOperationsMSC.model().rowCount() == 1
         assert self.window.mscolab.active_op_id is None
         self._activate_operation_at_index(0)
-        op_id = self.window.mscolab.get_recent_op_id()
+        op_id = self.window.mscolab.active_op_id
         assert op_id is not None
 
         self.window.actionTopView.trigger()
@@ -956,22 +956,23 @@ class Test_Mscolab:
         assert ["flight5678"] == operation_pathes
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok)
-    def test_get_recent_op_id(self, mockbox, qtbot):
+    def test_get_op_id(self, mockbox, qtbot):
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: "anton@something.org"}})
         self._create_user(qtbot, "anton", "anton@something.org", "something", "Test User")
         assert self.window.usernameLabel.text() == 'anton'
         assert self.window.connectBtn.isVisible() is False
         assert self.window.listOperationsMSC.model().rowCount() == 0
-        self._create_operation(qtbot, "flight2", "Description flight2")
-        current_op_id = self.window.mscolab.get_recent_op_id()
-        self._create_operation(qtbot, "flight3", "Description flight3")
-        self._create_operation(qtbot, "flight4", "Description flight4")
-        # ToDo fix number after cleanup initial data
-        assert self.window.mscolab.get_recent_op_id() == current_op_id + 2
+        for path in ("flight2", "flight3", "flight4"):
+            self._create_operation(qtbot, path, f"Description {path}")
+        listed = {self.window.listOperationsMSC.item(row).operation_path: self.window.listOperationsMSC.item(row).op_id
+                  for row in range(self.window.listOperationsMSC.count())}
+        assert {path: self.window.mscolab.get_op_id(path) for path in listed} == listed
+        assert len(set(listed.values())) == 3
+        assert self.window.mscolab.get_op_id("flight5") is None
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok)
-    def test_get_recent_operation(self, mockbox, qtbot):
+    def test_get_operation(self, mockbox, qtbot):
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: "berta@something.org"}})
         self._create_user(qtbot, "berta", "berta@something.org", "something", "Test User")
@@ -980,9 +981,10 @@ class Test_Mscolab:
         assert self.window.listOperationsMSC.model().rowCount() == 0
         self._create_operation(qtbot, "flight1234", "Description flight1234")
         self._activate_operation_at_index(0)
-        operation = self.window.mscolab.get_recent_operation()
+        operation = self.window.mscolab.get_operation(self.window.mscolab.active_op_id)
         assert operation.path == "flight1234"
         assert operation.access_level == "creator"
+        assert self.window.mscolab.get_operation(self.window.mscolab.active_op_id + 1000) is None
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok)
     def test_open_chat_window(self, mockbox, qtbot):
@@ -1044,7 +1046,7 @@ class Test_Mscolab:
         assert self.window.listOperationsMSC.model().rowCount() == 0
         self._create_operation(qtbot, "flight3", "Description flight3")
         self._activate_operation_at_index(0)
-        op_id = self.window.mscolab.get_recent_op_id()
+        op_id = self.window.mscolab.get_op_id("flight3")
         self.window.mscolab.delete_operation_from_list(op_id)
         assert self.window.mscolab.active_op_id is None
 
@@ -1150,6 +1152,48 @@ class Test_Mscolab:
             # a refusal for another operation than the active one is ignored
             self.window.mscolab.conn.handle_file_save_refused(json.dumps({"op_id": op_id + 1000, "message": "x"}))
             popup.assert_called_once()
+
+    def test_new_permission_lists_the_operation_of_the_permission(self, qtbot):
+        # the operations of a user come in no particular order, "four" was created after "europe"
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
+        self._create_user(qtbot, "something", "something@something.org", "something", "Test User")
+        self._create_operation(qtbot, "four", "Description four")
+        with self.app.app_context():
+            assert add_user_to_operation(path=self.operation_name, access_level="collaborator",
+                                         emailid="something@something.org")
+        mscolab_ = self.window.mscolab
+        op_id = mscolab_.get_op_id(self.operation_name)
+        with mock.patch.object(mscolab_, "signal_render_new_permission") as signal:
+            mscolab_.render_new_permission(op_id, mscolab_.user["id"])
+            # the event can come again, e.g. for a second socket of the user
+            mscolab_.render_new_permission(op_id, mscolab_.user["id"])
+        operations = self.window.listOperationsMSC
+        listed = [operations.item(row).text() for row in range(operations.count())]
+        assert listed == ["europe - collaborator", "four - creator"]
+        assert self.window.listOperationsMSC.item(0).op_id == op_id
+        signal.emit.assert_called_once_with(op_id, self.operation_name)
+
+    def test_waypoint_change_is_sent_once(self, qtbot):
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
+        self._create_user(qtbot, "something", "something@something.org", "something", "Test User")
+        self._create_operation(qtbot, "flight1234", "Description flight1234")
+        self._activate_operation_at_index(0)
+        mscolab_ = self.window.mscolab
+        model = mscolab_.waypoints_model
+        with mock.patch.object(mscolab_.conn, "save_file") as save_file:
+            # setData emits dataChanged twice, from update_distances and for the changed cell
+            model.setData(model.index(0, LON), QtCore.QVariant(model.waypoint_data(0).lon + 1))
+            save_file.assert_called_once()
+            assert save_file.call_args.args[:2] == (mscolab_.active_op_id, model.get_xml_content())
+            # a reloaded flight track, e.g. after the server refused the change, is sent again when it changes
+            mscolab_.waypoints_model = WaypointsTableModel(xml_content=model.get_xml_content())
+            mscolab_.handle_waypoints_changed()
+            assert save_file.call_count == 2
+            # a version name is always sent
+            mscolab_.handle_waypoints_changed(version_name="imported")
+            assert save_file.call_count == 3
 
     def test_user_chosen_text_is_not_markup(self, qtbot):
         markup = '<b>bold</b><img src="file://attacker.example/s/x.png">'

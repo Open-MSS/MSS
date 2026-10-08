@@ -37,6 +37,7 @@ import sqlalchemy
 from flask import current_app, request, abort, g, url_for
 from itsdangerous import URLSafeTimedSerializer, BadSignature
 
+from mslib.mscolab.api.schemas import TOKEN_HEADER
 from mslib.mscolab.conf import setup_saml2_backend
 from mslib.mscolab.models import User
 
@@ -92,12 +93,22 @@ def register_user(email, password, username, fullname):
     return {"success": result}
 
 
+def request_token():
+    """
+    Returns the login token of the request, False if there is none
+
+    msui sends it in the header TOKEN_HEADER with GET requests, in the body with others; older clients sent it in
+    the query string or the body.
+    """
+    return request.headers.get(TOKEN_HEADER) or request.args.get('token', request.form.get('token', False))
+
+
 def _request_user():
     """
     Returns the user authenticated by the token of the request, None if there is none or it is not confirmed
     """
     try:
-        user = User.verify_auth_token(request.args.get('token', request.form.get('token', False)))
+        user = User.verify_auth_token(request_token())
     except TypeError:
         logging.debug("no token in request form")
         abort(404)

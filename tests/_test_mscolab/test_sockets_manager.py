@@ -829,6 +829,18 @@ class Test_Socket_Manager:
         with self.app.app_context():
             assert Change.query.filter_by(op_id=self.operation.id).one().version_name == "x" * 255
 
+    def test_file_save_without_changes_is_not_refused(self):
+        # msui sends a change twice, the second save finds the flight track saved already
+        sio = self._connect(self.token)
+        self._save(sio, self.token)
+        self._save(sio, self.token)
+        assert self._refusals(sio) == []
+        with self.app.app_context():
+            assert self.fm.get_file(self.operation.id, self.user) == XML_CONTENT1
+            assert Change.query.filter_by(op_id=self.operation.id).count() == 1
+            # one service message for the one change
+            assert Message.query.filter_by(op_id=self.operation.id).count() == 1
+
     def test_archived_operation_chat_and_flight_track_are_read_only(self):
         message_id = self._add_message(self.user, self.operation, "written before archiving")
         self._set_active(self.operation, False)

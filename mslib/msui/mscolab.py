@@ -73,7 +73,6 @@ from mslib.mscolab.api.schemas import (
     LoginResponse,
     UpdateOperationRequest,
     UpdateOperationResponse,
-    UploadProfileImageRequest,
 )
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -202,6 +201,8 @@ class MSUIMscolab(QtCore.QObject):
         self.operations = None
         # store active_flight_path here as object
         self.waypoints_model = None
+        # model, operation and content of the last flight track sent to the server
+        self.last_sent_flight_track = None
         # Store active operation's file path
         self.local_ftml_file = None
         # Store active_operation_description
@@ -257,7 +258,7 @@ class MSUIMscolab(QtCore.QObject):
     def view_description(self, _=None):
         req = GetCreatorOfOperationRequest(op_id=self.active_op_id)
         try:
-            response = self.conn.request_get(endpoints.GET_CREATOR_OF_OPERATION, req.to_form_data())
+            response = self.conn.request_get(endpoints.GET_CREATOR_OF_OPERATION, req.to_params())
         except MSColabSessionExpiredError as ex:
             show_popup(self.ui, "Error", str(ex))
             self.logout()
@@ -387,7 +388,7 @@ class MSUIMscolab(QtCore.QObject):
     def fetch_profile_image(self, refresh=False):
         req = FetchProfileImageRequest(user_id=str(self.user["id"]))
         try:
-            response = self.conn.request_get(endpoints.FETCH_PROFILE_IMAGE, req.to_form_data())
+            response = self.conn.request_get(endpoints.FETCH_PROFILE_IMAGE, req.to_params())
         except MSColabConnectionError:
             self.fetch_gravatar(refresh)
         else:
@@ -528,11 +529,10 @@ class MSUIMscolab(QtCore.QObject):
                 # Prepare the file data for upload
                 try:
                     img_byte_arr.seek(0)  # Reset buffer position
-                    req = UploadProfileImageRequest(user_id=str(self.user["id"]))
+                    # the image is stored for the user of the token
                     response = self.conn.request_post(
                         endpoints.UPLOAD_PROFILE_IMAGE,
-                        req.to_form_data(),
-                        {'image': (os.path.basename(file_name), img_byte_arr, mime_type)})
+                        files={'image': (os.path.basename(file_name), img_byte_arr, mime_type)})
 
                     # Check response status
                     if response.status_code == 200:
@@ -723,7 +723,7 @@ class MSUIMscolab(QtCore.QObject):
                 self.ui, "Creation successful",
                 "Your operation was created successfully.",
             )
-            op_id = self.get_recent_op_id()
+            op_id = self.get_op_id(path)
             self.new_op_id = op_id
             self.conn.handle_new_operation(op_id)
             self.signal_operation_added.emit(op_id, path)
@@ -731,22 +731,27 @@ class MSUIMscolab(QtCore.QObject):
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('The path already exists')
 
-    def get_recent_op_id(self):
+    def _operations(self):
         """
-        get most recent operation's op_id
+        Returns the operations of the user, in no particular order
         """
-        logging.debug('get_recent_op_id')
-        skip_archived = config_loader(dataset="MSCOLAB_skip_archived_operations")
-        req = GetOperationsRequest(skip_archived=skip_archived)
-        response = self.conn.request_get(endpoints.OPERATIONS, req.to_form_data())
+        response = self.conn.request_get(endpoints.OPERATIONS)
         parsed = GetOperationsResponse.from_text(response.text)
         if parsed is None:
             raise MSColabConnectionError("Session expired, new login required")
-        op_id = None
-        if parsed.operations:
-            op_id = parsed.operations[-1].op_id
-        logging.debug("recent op_id %s", op_id)
-        return op_id
+        return parsed.operations
+
+    def get_op_id(self, path):
+        """
+        Returns the op_id of the operation path of the user, None if the user has none of this path
+        """
+        return next((operation.op_id for operation in self._operations() if operation.path == path), None)
+
+    def get_operation(self, op_id):
+        """
+        Returns the operation op_id of the user, None if the user is no member of it
+        """
+        return next((operation for operation in self._operations() if operation.op_id == op_id), None)
 
     def operation_options_handler(self):
         if self.sender() == self.ui.actionChat:
@@ -1152,20 +1157,6 @@ class MSUIMscolab(QtCore.QObject):
         self.merge_dialog.close()
         self.merge_dialog = None
 
-    def get_recent_operation(self):
-        """
-        get most recent operation
-        """
-        logging.debug('get_recent_operation')
-        response = self.conn.request_get(endpoints.OPERATIONS)
-        parsed = GetOperationsResponse.from_text(response.text)
-        if parsed is None:
-            raise MSColabConnectionError("Session expired, new login required")
-        recent_operation = None
-        if parsed.operations:
-            recent_operation = parsed.operations[-1]
-        return recent_operation
-
     @QtCore.pyqtSlot()
     def reload_operation_list(self):
         if self.mscolab_server_url is not None:
@@ -1209,21 +1200,38 @@ class MSUIMscolab(QtCore.QObject):
         parsed = GetUserResponse.from_text(response.text)
         if parsed is not None:
             if parsed.user.id == u_id:
-                operation = self.get_recent_operation()
-                operation_desc = f'{operation.path} - {operation.access_level}'
-                widgetItem = QtWidgets.QListWidgetItem(operation_desc, parent=self.ui.listOperationsMSC)
-                widgetItem.op_id = operation.op_id
-                widgetItem.operation_category = operation.category
-                widgetItem.operation_path = operation.path
-                widgetItem.access_level = operation.access_level
-                widgetItem.active_operation_description = operation.description
-                self.ui.listOperationsMSC.addItem(widgetItem)
-                self.signal_render_new_permission.emit(operation.op_id, operation.path)
+                self._add_operation_to_list(op_id)
             if self.chat_window is not None:
                 self.chat_window.load_users()
         else:
             show_popup(self.ui, "Error", "Session expired, new login required")
             self.logout()
+
+    def _add_operation_to_list(self, op_id):
+        """
+        Adds the operation op_id the user got a permission for to the list of operations, sorted by path like
+        add_operations_to_ui does
+        """
+        operation = self.get_operation(op_id)
+        if operation is None or (not operation.active and config_loader(dataset="MSCOLAB_skip_archived_operations")):
+            return
+        operations_list = self.ui.listOperationsMSC if operation.active else \
+            self.operation_archive_browser.listArchivedOperations
+        items = [operations_list.item(row) for row in range(operations_list.count())]
+        if any(item.op_id == op_id for item in items):
+            return
+        widgetItem = QtWidgets.QListWidgetItem(f'{operation.path} - {operation.access_level}')
+        widgetItem.op_id = operation.op_id
+        widgetItem.operation_category = operation.category
+        widgetItem.operation_path = operation.path
+        widgetItem.access_level = operation.access_level
+        widgetItem.active_operation_description = operation.description
+        widgetItem.active = operation.active
+        row = next((row for row, item in enumerate(items) if item.operation_path.lower() > operation.path.lower()),
+                   len(items))
+        operations_list.insertItem(row, widgetItem)
+        if operation.active:
+            self.signal_render_new_permission.emit(operation.op_id, operation.path)
 
     @QtCore.pyqtSlot(int, int, str)
     def handle_update_permission(self, op_id, u_id, access_level):
@@ -1367,7 +1375,7 @@ class MSUIMscolab(QtCore.QObject):
         logging.debug('add_operations_to_ui')
         skip_archived = config_loader(dataset="MSCOLAB_skip_archived_operations")
         req = GetOperationsRequest(skip_archived=skip_archived)
-        response = self.conn.request_get(endpoints.OPERATIONS, req.to_form_data())
+        response = self.conn.request_get(endpoints.OPERATIONS, req.to_params())
         parsed = GetOperationsResponse.from_text(response.text)
         if parsed is None:
             raise MSColabConnectionError("Session expired, new login required")
@@ -1389,12 +1397,7 @@ class MSUIMscolab(QtCore.QObject):
             widgetItem.operation_path = operation["path"]
             widgetItem.access_level = operation["access_level"]
             widgetItem.active_operation_description = operation["description"]
-            try:
-                # compatibility to 7.x
-                # a newer server can distinguish older operations and move those into inactive state
-                widgetItem.active = operation["active"]
-            except KeyError:
-                widgetItem.active = True
+            widgetItem.active = operation["active"]
             if widgetItem.active:
                 self.ui.listOperationsMSC.addItem(widgetItem)
                 if widgetItem.op_id == self.active_op_id:
@@ -1582,7 +1585,7 @@ class MSUIMscolab(QtCore.QObject):
         if op_id is None:
             op_id = self.active_op_id
         req = GetOperationByIdRequest(op_id=op_id)
-        response = self.conn.request_get(endpoints.GET_OPERATION_BY_ID, req.to_form_data())
+        response = self.conn.request_get(endpoints.GET_OPERATION_BY_ID, req.to_params())
         parsed = GetOperationByIdResponse.from_text(response.text)
         if parsed is not None:
             return parsed.content
@@ -1620,6 +1623,13 @@ class MSUIMscolab(QtCore.QObject):
             self.waypoints_model.save_to_ftml(self.local_ftml_file)
         else:
             xml_content = self.waypoints_model.get_xml_content()
+            # one change emits dataChanged twice, e.g. from setData and from update_distances; a reloaded flight
+            # track is a new model, so after it the same content is sent again
+            sent = (self.waypoints_model, self.active_op_id, xml_content)
+            if version_name is None and self.last_sent_flight_track is not None and \
+                    self.last_sent_flight_track[0] is sent[0] and self.last_sent_flight_track[1:] == sent[1:]:
+                return
+            self.last_sent_flight_track = sent
             self.conn.save_file(self.active_op_id, xml_content, comment=None, version_name=version_name)
             # Reset the last change message to make sure that it is used only once
             self.lastChangeMessage = ""

@@ -38,7 +38,7 @@ from saml2.metadata import create_metadata_string
 from mslib.mscolab.auth import check_login, register_user, generate_confirmation_token, create_or_update_idp_user, \
     get_idp_entity_id, confirm_token, generate_password_reset_token, confirm_password_reset_token, public_url_for, \
     EMAIL_CONFIRMATION, IDP_LOGIN
-from mslib.mscolab.auth import optional_auth
+from mslib.mscolab.auth import optional_auth, request_token
 from mslib.mscolab.conf import setup_saml2_backend
 from mslib.mscolab.forms import ResetPasswordForm, ResetRequestForm
 from mslib.mscolab.models import User
@@ -96,7 +96,7 @@ def get_auth_token():
 
 @AUTH_BP.route('/test_authorized')
 def authorized():
-    token = request.args.get('token', request.form.get('token'))
+    token = request_token()
     user = User.verify_auth_token(token)
     if user is not None:
         if current_app.config['MAIL_ENABLED']:

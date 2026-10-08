@@ -71,6 +71,7 @@ from mslib.mscolab.api.schemas import (
     IdpUserInfo,
     ImportPermissionsRequest,
     ImportPermissionsResponse,
+    InvalidRequest,
     LoginRequest,
     LoginResponse,
     MessageAttachmentRequest,
@@ -86,8 +87,8 @@ from mslib.mscolab.api.schemas import (
     UndoChangesResponse,
     UpdateOperationRequest,
     UpdateOperationResponse,
-    UploadProfileImageRequest,
     UserInfo,
+    int_field,
 )
 
 
@@ -144,17 +145,17 @@ class Test_OperationInfo:
             op_id=1, access_level="creator", path="p", description="d", category="default", active=True)
         assert OperationInfo.from_dict(op.to_dict()) == op
 
-    def test_from_dict_defaults_active_for_pre_8x_servers(self):
-        # mslib.msui.mscolab.add_operations_to_ui has always tolerated servers
-        # that don't send "active" at all (mscolab < 8.x) by assuming True.
+    def test_from_dict_requires_active(self):
+        # every supported server (8.3.3 and later) sends it
         data = {"op_id": 1, "access_level": "creator", "path": "p", "description": None, "category": "default"}
-        assert OperationInfo.from_dict(data).active is True
+        with pytest.raises(KeyError):
+            OperationInfo.from_dict(data)
 
 
 class Test_GetOperationsRequest:
     def test_round_trip(self):
         req = GetOperationsRequest(skip_archived=True)
-        assert GetOperationsRequest.from_args_and_form({}, req.to_form_data()) == req
+        assert GetOperationsRequest.from_args_and_form(req.to_params(), {}) == req
 
     def test_default(self):
         req = GetOperationsRequest()
@@ -166,12 +167,18 @@ class Test_GetOperationsRequest:
         parsed = GetOperationsRequest.from_args_and_form({"skip_archived": "True"}, {"skip_archived": "False"})
         assert parsed.skip_archived is True
 
+    def test_form_of_older_clients(self):
+        # msui up to 11.x sent the parameters of GET requests in the body
+        assert GetOperationsRequest.from_args_and_form({}, {"skip_archived": "True"}).skip_archived is True
+
 
 class Test_GetOperationsResponse:
     def test_round_trip(self):
         response = GetOperationsResponse(operations=[
-            OperationInfo(op_id=1, access_level="creator", path="a", description=None, category="default"),
-            OperationInfo(op_id=2, access_level="collaborator", path="b", description="d", category="cat"),
+            OperationInfo(op_id=1, access_level="creator", path="a", description=None, category="default",
+                          active=True),
+            OperationInfo(op_id=2, access_level="collaborator", path="b", description="d", category="cat",
+                          active=False),
         ])
         assert GetOperationsResponse.from_text(response.to_text()) == response
 
@@ -180,7 +187,8 @@ class Test_GetOperationsResponse:
         assert GetOperationsResponse.from_text(response.to_text()) == response
 
     def test_manager_dicts_serialize_like_typed_entries(self):
-        op = OperationInfo(op_id=1, access_level="creator", path="a", description=None, category="default")
+        op = OperationInfo(op_id=1, access_level="creator", path="a", description=None, category="default",
+                           active=True)
         typed = GetOperationsResponse(operations=[op])
         assert GetOperationsResponse(operations=[op.to_dict()]).to_text() == typed.to_text()
 
@@ -191,11 +199,12 @@ class Test_GetOperationsResponse:
 class Test_GetOperationByIdRequest:
     def test_round_trip(self):
         req = GetOperationByIdRequest(op_id=42)
-        assert GetOperationByIdRequest.from_args_and_form({}, req.to_form_data()) == req
+        assert GetOperationByIdRequest.from_args_and_form(req.to_params(), {}) == req
 
-    def test_missing_op_id_raises_like_the_bare_reads_did(self):
-        with pytest.raises(TypeError):
-            GetOperationByIdRequest.from_args_and_form({}, {})
+    @pytest.mark.parametrize("args", [{}, {"op_id": "abc"}, {"op_id": "1.0"}, {"op_id": ""}])
+    def test_missing_or_non_integer_op_id_is_invalid(self, args):
+        with pytest.raises(InvalidRequest, match="op_id must be an integer"):
+            GetOperationByIdRequest.from_args_and_form(args, {})
 
 
 class Test_GetOperationByIdResponse:
@@ -247,7 +256,7 @@ class Test_UpdateOperationRequest:
             UpdateOperationRequest.from_form({"op_id": 1, "attribute": "category"})
 
     def test_from_form_requires_op_id(self):
-        with pytest.raises(TypeError):
+        with pytest.raises(InvalidRequest):
             UpdateOperationRequest.from_form({"attribute": "category", "value": "mycat"})
 
 
@@ -265,12 +274,15 @@ class Test_UpdateOperationResponse:
 class Test_GetCreatorOfOperationRequest:
     def test_round_trip(self):
         req = GetCreatorOfOperationRequest(op_id=1)
-        assert GetCreatorOfOperationRequest.from_args_and_form({}, req.to_form_data()) == req
+        assert GetCreatorOfOperationRequest.from_args_and_form(req.to_params(), {}) == req
 
-    def test_op_id_is_not_cast_to_int(self):
-        # Unlike the other op_id routes, this one passes op_id straight
-        # through to the DB query untouched -- preserved, not "fixed", here.
-        assert GetCreatorOfOperationRequest.from_args_and_form({}, {"op_id": "1"}).op_id == "1"
+    def test_op_id_is_converted_to_int(self):
+        assert GetCreatorOfOperationRequest.from_args_and_form({"op_id": "1"}, {}).op_id == 1
+
+    def test_non_integer_op_id_is_invalid(self):
+        # SQLite would match "1.0" to operation 1
+        with pytest.raises(InvalidRequest):
+            GetCreatorOfOperationRequest.from_args_and_form({"op_id": "1.0"}, {})
 
 
 class Test_GetCreatorOfOperationResponse:
@@ -302,6 +314,11 @@ class Test_DeleteBulkPermissionsRequest:
     def test_missing_selected_userids_defaults_to_empty(self):
         assert DeleteBulkPermissionsRequest.from_form({"op_id": 1}) == DeleteBulkPermissionsRequest(
             op_id=1, user_ids=[])
+
+    @pytest.mark.parametrize("selected_userids", ["abc", "5", '{"a": 1}', '["a"]', "[1.5]"])
+    def test_selected_userids_must_be_a_list_of_integers(self, selected_userids):
+        with pytest.raises(InvalidRequest, match="selected_userids must be"):
+            DeleteBulkPermissionsRequest.from_form({"op_id": 1, "selected_userids": selected_userids})
 
 
 class Test_DeleteBulkPermissionsResponse:
@@ -348,21 +365,21 @@ class Test_LoginResponse:
         assert LoginResponse.from_text(AUTH_FAILED_TEXT) is None
 
 
-class Test_UploadProfileImageRequest:
-    def test_to_form_data(self):
-        assert UploadProfileImageRequest(user_id=1).to_form_data() == {"user_id": 1}
-
-
 class Test_FetchProfileImageRequest:
     def test_round_trip(self):
         req = FetchProfileImageRequest(user_id=1, op_id=2)
-        assert FetchProfileImageRequest.from_args_and_form({}, req.to_form_data()) == req
+        assert FetchProfileImageRequest.from_args_and_form(req.to_params(), {}) == req
 
     def test_op_id_defaults_to_none_and_is_omitted(self):
         req = FetchProfileImageRequest(user_id=1)
-        data = req.to_form_data()
+        data = req.to_params()
         assert "op_id" not in data
-        assert FetchProfileImageRequest.from_args_and_form({}, data) == req
+        assert FetchProfileImageRequest.from_args_and_form(data, {}) == req
+
+    def test_user_id_in_the_body_of_older_clients(self):
+        # msui up to 11.x sent it in the body
+        req = FetchProfileImageRequest(user_id=1, op_id=2)
+        assert FetchProfileImageRequest.from_args_and_form({}, {"user_id": 1, "op_id": 2}) == req
 
 
 class Test_ProfileImageMessageResponse:
@@ -393,7 +410,7 @@ class Test_LogoutEverywhereResponse:
 class Test_GetOperationUsersRequest:
     def test_round_trip(self):
         req = GetOperationUsersRequest(op_id=1)
-        assert GetOperationUsersRequest.from_args_and_form({}, req.to_form_data()) == req
+        assert GetOperationUsersRequest.from_args_and_form(req.to_params(), {}) == req
 
 
 class Test_GetOperationUsersResponse:
@@ -454,7 +471,7 @@ class Test_AuthorizedUserInfo:
 class Test_GetAuthorizedUsersRequest:
     def test_round_trip(self):
         req = GetAuthorizedUsersRequest(op_id=1)
-        assert GetAuthorizedUsersRequest.from_args_and_form({}, req.to_form_data()) == req
+        assert GetAuthorizedUsersRequest.from_args_and_form(req.to_params(), {}) == req
 
 
 class Test_GetAuthorizedUsersResponse:
@@ -476,7 +493,7 @@ class Test_GetAuthorizedUsersResponse:
 class Test_GetActiveUsersRequest:
     def test_round_trip(self):
         req = GetActiveUsersRequest(op_id=1)
-        assert GetActiveUsersRequest.from_args_and_form({}, req.to_form_data()) == req
+        assert GetActiveUsersRequest.from_args_and_form(req.to_params(), {}) == req
 
 
 class Test_GetActiveUsersResponse:
@@ -503,15 +520,15 @@ class Test_ChangeInfo:
 
 
 class Test_GetAllChangesRequest:
-    def test_round_trip(self):
-        req = GetAllChangesRequest(op_id=1, named_version=True)
-        assert GetAllChangesRequest.from_args_and_form(
-            dict(pair.split("=") for pair in req.to_query_string().split("&")), req.to_form_data()) == req
+    @pytest.mark.parametrize("named_version", [True, False])
+    def test_round_trip(self, named_version):
+        req = GetAllChangesRequest(op_id=1, named_version=named_version)
+        assert GetAllChangesRequest.from_args_and_form(req.to_params(), {}) == req
 
-    def test_query_string_is_separate_from_form_data(self):
-        req = GetAllChangesRequest(op_id=1, named_version=True)
-        assert "named_version" not in req.to_form_data()
-        assert "op_id" not in req.to_query_string()
+    def test_op_id_in_the_body_of_older_clients(self):
+        # msui up to 11.x sent op_id in the body and named_version in the query string
+        assert GetAllChangesRequest.from_args_and_form({"named_version": "True"}, {"op_id": "1"}) == \
+            GetAllChangesRequest(op_id=1, named_version=True)
 
 
 class Test_GetAllChangesResponse:
@@ -532,7 +549,7 @@ class Test_GetAllChangesResponse:
 class Test_GetChangeContentRequest:
     def test_round_trip(self):
         req = GetChangeContentRequest(ch_id=1)
-        assert GetChangeContentRequest.from_args_and_form({}, req.to_form_data()) == req
+        assert GetChangeContentRequest.from_args_and_form(req.to_params(), {}) == req
 
 
 class Test_GetChangeContentResponse:
@@ -597,8 +614,9 @@ class Test_StatusResponse:
         assert response.use_saml2 is False
         assert response.direct_login is True
 
-    def test_defaults_on_invalid_json(self):
-        response = StatusResponse.from_text("not json")
+    @pytest.mark.parametrize("text", ["not json", "[]", '"Mscolab server"', "null"])
+    def test_defaults_on_invalid_json(self, text):
+        response = StatusResponse.from_text(text)
         assert response == StatusResponse(message="", use_saml2=False, direct_login=True)
 
     @pytest.mark.parametrize("mail_enabled", [True, False])
@@ -691,7 +709,7 @@ class Test_ChatMessageInfo:
 class Test_GetMessagesRequest:
     def test_round_trip(self):
         req = GetMessagesRequest(op_id=1, timestamp="2026-01-01T00:00:00+00:00")
-        assert GetMessagesRequest.from_args_and_form({}, req.to_form_data()) == req
+        assert GetMessagesRequest.from_args_and_form(req.to_params(), {}) == req
 
     def test_default_timestamp(self):
         req = GetMessagesRequest(op_id=1)
@@ -724,6 +742,15 @@ class Test_MessageAttachmentRequest:
     def test_missing_message_type_parses_to_none(self):
         assert MessageAttachmentRequest.from_form({"op_id": "1"}).message_type is None
 
+    def test_op_id_is_converted_to_int(self):
+        # it names the upload folder, which the attachment route only accepts as digits
+        assert MessageAttachmentRequest.from_form({"op_id": "1", "message_type": "2"}).op_id == 1
+
+    @pytest.mark.parametrize("form", [{}, {"op_id": "1.0"}, {"op_id": "1", "message_type": "x"}])
+    def test_missing_or_non_integer_fields_are_invalid(self, form):
+        with pytest.raises(InvalidRequest):
+            MessageAttachmentRequest.from_form(form)
+
 
 class Test_MessageAttachmentResponse:
     def test_round_trip_success(self):
@@ -739,3 +766,16 @@ class Test_MessageAttachmentResponse:
 
     def test_auth_failure_sentinel(self):
         assert MessageAttachmentResponse.from_text(AUTH_FAILED_TEXT) is None
+
+
+class Test_int_field:
+    @pytest.mark.parametrize("value, expected", [("0", 0), ("42", 42), ("-1", -1), (7, 7), ("2147483647", 2 ** 31 - 1)])
+    def test_integers(self, value, expected):
+        assert int_field(value, "op_id") == expected
+
+    @pytest.mark.parametrize("value", [
+        None, "", "abc", "1.0", "1_0", " 1", "1 ", "+1", "\u0661", "\uff11", "2147483648", "100000000000000000000",
+        2 ** 31, True, 1.0])
+    def test_no_integers(self, value):
+        with pytest.raises(InvalidRequest, match="op_id must be an integer"):
+            int_field(value, "op_id")
