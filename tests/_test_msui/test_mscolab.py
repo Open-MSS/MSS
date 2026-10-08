@@ -164,6 +164,11 @@ class Test_Mscolab_connect_window:
             assert "ask its administrator to reset your password" in text
         else:
             assert f'<a href="{self.url}/reset_request">recover your password</a>' in text
+        if mail_enabled is True:
+            # an account that isn't confirmed gets the same answer as a wrong password
+            assert f'<a href="{self.url}/resend_confirmation">get a new confirmation email</a>' in text
+        else:
+            assert "resend_confirmation" not in text
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_login_with_different_account_shows_update_credentials_popup(self, mockbox, qtbot):

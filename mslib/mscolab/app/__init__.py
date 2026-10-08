@@ -290,9 +290,10 @@ class InsecureSecretError(RuntimeError):
 
 class InsecureMailSettingError(InsecureSecretError):
     """
-    MAIL_ENABLED without a valid PUBLIC_URL: links in emails would be built from the address of the request
+    MAIL_ENABLED without a valid PUBLIC_URL or MAIL_DEFAULT_SENDER
 
-    The server refuses to start like for an insecure secret.
+    Without PUBLIC_URL links in emails would be built from the address of the request, without
+    MAIL_DEFAULT_SENDER no email could be sent. The server refuses to start like for an insecure secret.
     """
 
 
@@ -338,6 +339,7 @@ def check_secrets(app):
                  "the environment variable MSCOLAB_SECRET_KEY or in your mscolab_settings")
     check_secret("ADMIN_TOKEN", app.config.get("ADMIN_TOKEN"), MIN_ADMIN_TOKEN_LENGTH, "your mscolab_settings")
     check_public_url(app)
+    check_mail_sender(app)
 
 
 def check_public_url(app):
@@ -357,6 +359,28 @@ def check_public_url(app):
             f"e.g. 'https://mscolab.example.org'; links in emails are built from it. Got {public_url!r}.")
 
 
+def check_mail_sender(app):
+    """
+    Raises InsecureMailSettingError if MAIL_ENABLED is set without MAIL_DEFAULT_SENDER
+
+    Every email of the server, e.g. to confirm an email address, is sent from MAIL_DEFAULT_SENDER, an address like
+    'MSS@localhost' or a pair of name and address.
+    """
+    if not app.config.get("MAIL_ENABLED", False):
+        return
+    sender = app.config.get("MAIL_DEFAULT_SENDER")
+    if isinstance(sender, str):
+        valid = bool(sender.strip())
+    elif isinstance(sender, (tuple, list)):
+        valid = len(sender) == 2 and all(isinstance(part, str) and part.strip() for part in sender)
+    else:
+        valid = False
+    if not valid:
+        raise InsecureMailSettingError(
+            "MAIL_ENABLED needs MAIL_DEFAULT_SENDER in your mscolab_settings, the address emails are sent from, "
+            f"e.g. 'MSS@localhost'. Got {sender!r}.")
+
+
 def create_app(config_object=mscolab_settings):
     """Create and configure an MSColab Flask application.
 
@@ -368,7 +392,7 @@ def create_app(config_object=mscolab_settings):
     :func:`initialise_db` within an application context of it to do so.
 
     :raises InsecureSecretError: if SECRET_KEY or ADMIN_TOKEN is missing or can be guessed, or if MAIL_ENABLED is
-        set without PUBLIC_URL, see :func:`check_secrets`.
+        set without PUBLIC_URL or MAIL_DEFAULT_SENDER, see :func:`check_secrets`.
     """
     app = Flask(__name__, template_folder=DOCS_TEMPLATES_DIR)
     app.config.from_object(config_object)

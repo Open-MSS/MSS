@@ -119,7 +119,7 @@ class DefaultSettings:
     # MAIL_USERNAME = os.environ.get('APP_MAIL_USERNAME')
     # MAIL_PASSWORD = os.environ.get('APP_MAIL_PASSWORD')
 
-    # mail accounts
+    # mail accounts: the address the emails are sent from, needed when MAIL_ENABLED is True
     # MAIL_DEFAULT_SENDER = 'MSS@localhost'
     # filepath to md file with imprint
     IMPRINT = None

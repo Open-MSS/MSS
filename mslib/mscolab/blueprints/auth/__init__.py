@@ -40,7 +40,7 @@ from mslib.mscolab.auth import check_login, register_user, generate_confirmation
     EMAIL_CONFIRMATION, IDP_LOGIN
 from mslib.mscolab.auth import optional_auth, request_token
 from mslib.mscolab.conf import setup_saml2_backend
-from mslib.mscolab.forms import ResetPasswordForm, ResetRequestForm
+from mslib.mscolab.forms import ResendConfirmationForm, ResetPasswordForm, ResetRequestForm
 from mslib.mscolab.models import User
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.attachments import normalized_extensions
@@ -125,7 +125,14 @@ def user_register_handler():
                 confirm_url = public_url_for('auth.confirm_email', token=token)
                 html = render_template('auth/user/activate.html', username=req.username, confirm_url=confirm_url)
                 subject = "MSColab Please confirm your email"
-                send_email(req.email, subject, html)
+                if not send_email(req.email, subject, html):
+                    # without the email the account can't be confirmed, and its address would stay taken
+                    user = User.query.filter_by(emailid=str(req.email)).first()
+                    if user is not None:
+                        current_app.extensions['fm'].modify_user(user, action="delete")
+                    result = {"success": False,
+                              "message": "The email to confirm your address could not be sent. Please try again later."}
+                    status_code = 503
     except TypeError:
         result, status_code = {"success": False}, 401
     response = RegisterResponse(success=result["success"], message=result.get("message"))
@@ -288,9 +295,12 @@ def confirm_email(token):
         try:
             email = confirm_token(token, EMAIL_CONFIRMATION)
         except TypeError:
-            return jsonify({"success": False}), 401
+            email = False
         if email is False:
-            return jsonify({"success": False}), 401
+            flash("Sorry, the link to confirm your email address has expired or is invalid", 'category_info')
+            return render_template('auth/user/status_password.html', title="Confirm your email address",
+                                   uri={"path": url_for("auth.resend_confirmation"),
+                                        "name": "get a new confirmation email"}), 401
         user = User.query.filter_by(emailid=email).first_or_404()
         if user.confirmed:
             return render_template('auth/user/confirmed.html', username=user.username)
@@ -335,6 +345,33 @@ def reset_password(token):
     return render_template('auth/user/reset_password.html', form=form)
 
 
+@AUTH_BP.route("/resend_confirmation", methods=['GET', 'POST'])
+def resend_confirmation():
+    """
+    Sends a new email to confirm the email address of an unconfirmed account
+
+    For a confirmation link that expired, and for the accounts created before the server sent emails. Like
+    reset_request it answers the same for an unknown address, a confirmed account and a sent email.
+    """
+    if not current_app.config['MAIL_ENABLED']:
+        logging.warning("To send emails, the value of `MAIL_ENABLED` in `conf.py` should be set to True.")
+        return render_template('auth/errors/403.html'), 403
+    form = ResendConfirmationForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(emailid=form.email.data).first()
+        if user is not None and not user.confirmed:
+            token = generate_confirmation_token(user.emailid, EMAIL_CONFIRMATION)
+            confirm_url = public_url_for('auth.confirm_email', token=token)
+            html = render_template('auth/user/activate.html', username=user.username, confirm_url=confirm_url)
+            if not send_email(user.emailid, "MSColab Please confirm your email", html):
+                flash('''We apologize, but it seems that there was an issue sending
+                the confirmation email. Please try again later.''', 'category_info')
+                return render_template('auth/user/resend_confirmation.html', form=form)
+        flash('An email was sent if this address has an account that is not confirmed yet', 'category_success')
+        return render_template('auth/user/status_password.html', title="Confirm your email address")
+    return render_template('auth/user/resend_confirmation.html', form=form)
+
+
 @AUTH_BP.route("/reset_request", methods=['GET', 'POST'])
 def reset_request():
     if current_app.config['MAIL_ENABLED']:
@@ -343,19 +380,17 @@ def reset_request():
             # Check whether user exists or not based on the db
             user = User.query.filter_by(emailid=form.email.data).first()
             if user:
-                try:
-                    username = user.username
-                    token = generate_password_reset_token(user)
-                    reset_password_url = public_url_for('auth.reset_password', token=token)
-                    html = render_template('auth/user/reset_confirmation.html',
-                                           reset_password_url=reset_password_url, username=username)
-                    subject = "MSColab Password reset request"
-                    send_email(form.email.data, subject, html)
+                username = user.username
+                token = generate_password_reset_token(user)
+                reset_password_url = public_url_for('auth.reset_password', token=token)
+                html = render_template('auth/user/reset_confirmation.html',
+                                       reset_password_url=reset_password_url, username=username)
+                subject = "MSColab Password reset request"
+                if send_email(form.email.data, subject, html):
                     flash('An email was sent if this user account exists', 'category_success')
                     return render_template('auth/user/status_password.html')
-                except IOError:
-                    flash('''We apologize, but it seems that there was an issue sending
-                    your request email. Please try again later.''', 'category_info')
+                flash('''We apologize, but it seems that there was an issue sending
+                your request email. Please try again later.''', 'category_info')
             else:
                 flash('An email was sent if this user account exists', 'category_success')
                 return render_template('auth/user/status_password.html')

@@ -174,6 +174,10 @@ class User(db.Model):
             synchronize_session=False)
         db.session.commit()
         db.session.refresh(self)
+        if updated == 1 and self.confirmed_on is None:
+            # the reset link came by email, so the reset confirms the email address
+            self.confirmed_on = datetime.datetime.now(tz=datetime.timezone.utc)
+            db.session.commit()
         return updated == 1
 
 

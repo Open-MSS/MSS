@@ -253,6 +253,7 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
         session.headers.update({'x-test': 'true'})
         url = urljoin(self.mscolab_server_url, endpoints.TOKEN)
         url_recover_password = urljoin(self.mscolab_server_url, "reset_request")
+        url_resend_confirmation = urljoin(self.mscolab_server_url, "resend_confirmation")
         try:
             response = session.post(
                 url, data=req.to_form_data(), timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
@@ -271,7 +272,14 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
                     # the password reset sends an email, this server can't
                     self.set_status("Error", 'Invalid credentials. Fix them or create a new user. This server sends '
                                     'no emails, ask its administrator to reset your password.')
+                elif getattr(self.mscolab.server_status, "mail_enabled", None):
+                    # an account that isn't confirmed can't log in either
+                    self.set_status("Error", 'Invalid credentials. Fix them, create a new user, or '
+                                    f'<a href="{url_recover_password}">recover your password</a>. '
+                                    'If you have not confirmed your email address yet, '
+                                    f'<a href="{url_resend_confirmation}">get a new confirmation email</a>.')
                 else:
+                    # an older server, which doesn't tell whether it sends emails
                     self.set_status("Error", 'Invalid credentials. Fix them, create a new user, or '
                                     f'<a href="{url_recover_password}">recover your password</a>.')
                 self.loginBtn.setEnabled(True)

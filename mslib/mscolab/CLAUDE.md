@@ -11,7 +11,13 @@ Global map: ../../ARCHITECTURE.md
 - `app/__init__.py` — `create_app()` factory (config, extensions, blueprints)
   and `initialise_db()`; there is no module level app instance
 - `mail.py` — `send_email` through the app's Flask-Mail (`current_app.mail`);
-  it lives here, not in `mslib.utils`, so that utils needs no Flask
+  it lives here, not in `mslib.utils`, so that utils needs no Flask. It returns
+  False when the send fails — callers must tell the user, never report success.
+  `create_app` refuses to start with `MAIL_ENABLED` but without `PUBLIC_URL` or
+  `MAIL_DEFAULT_SENDER`. With `MAIL_ENABLED` an unconfirmed account can't log in;
+  `/resend_confirmation` sends a new confirmation link, and a password reset
+  confirms the address too (`User.reset_password`). Accounts created without
+  mail stay unconfirmed on purpose: they confirm once mail is switched on.
 - `blueprints/{operation,auth,chat,user,docs,admin}/` — all ~50 REST routes; keep
   handlers thin, business logic belongs in the managers. `admin` is
   token-authenticated (`ADMIN_TOKEN`) and localhost-only, not per-user — it's the
