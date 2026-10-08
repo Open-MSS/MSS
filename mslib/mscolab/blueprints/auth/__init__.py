@@ -55,7 +55,7 @@ from mslib.mscolab.api.schemas import (
     StatusResponse,
     UserInfo,
 )
-from mslib.utils.auth import send_email
+from mslib.mscolab.mail import send_email
 
 AUTH_BP = Blueprint('auth', __name__, template_folder='templates')
 

@@ -10,6 +10,8 @@ Global map: ../../ARCHITECTURE.md
   HTTP basic auth and the socket.io managers to the app
 - `app/__init__.py` — `create_app()` factory (config, extensions, blueprints)
   and `initialise_db()`; there is no module level app instance
+- `mail.py` — `send_email` through the app's Flask-Mail (`current_app.mail`);
+  it lives here, not in `mslib.utils`, so that utils needs no Flask
 - `blueprints/{operation,auth,chat,user,docs,admin}/` — all ~50 REST routes; keep
   handlers thin, business logic belongs in the managers. `admin` is
   token-authenticated (`ADMIN_TOKEN`) and localhost-only, not per-user — it's the

@@ -56,11 +56,10 @@ under `ignore_imports` and must only shrink):
 - the deprecation shim `msui/constants.py` re-exports `utils/constants.py`
   (`docs/samples/plugins/navaid.py` uses it).
 - To-dos of the package split (#2307), each labelled with the change that
-  removes it: `utils` modules import Qt,
-  `mslib.support`, Flask and keyring (`utils-base-layer`,
-  `client-without-server-stack`). import-linter
-  reports an entry whose import is gone ("No matches for ignored import"), so
-  the PR that removes an import has to delete its entry.
+  removes it: `utils` modules import Qt, `mslib.support` and keyring
+  (`utils-base-layer`). import-linter reports an entry whose import is gone
+  ("No matches for ignored import"), so the PR that removes an import has to
+  delete its entry.
 
 ## Module index
 
@@ -97,7 +96,8 @@ under `ignore_imports` and must only shrink):
 - `api/events.py` — `SocketEvents` name registry (shared with client — contract)
 - `api/message_type.py` — chat message enum (shared with client — contract)
 - `conf.py` — `DefaultSettings`; `mscolab.py` — CLI (db init/seed/reset)
-- `seed.py` — demo users/operations; `utils.py`, `auth.py`, `forms.py`
+- `seed.py` — demo users/operations; `utils.py`, `auth.py`, `forms.py`;
+  `mail.py` — `send_email` (Flask-Mail)
 
 ### mslib/mswms — WMS server (entry: `mswms`)
 

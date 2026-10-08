@@ -32,8 +32,7 @@ split (#2307); don't add more:
 - Qt: `qt`, `colordialog`, `config`, `airdata` and `migration/` import PyQt5
   (`config` and `migration/` also `mslib.support`), so `find_location` and
   `ogcwms`, which import `config`, need Qt as well;
-- keyring: `auth`, `migration/update_json_file_to_version_eight`;
-- Flask: `auth` (`send_email`).
+- keyring: `auth`, `migration/update_json_file_to_version_eight`.
 
 ## Invariants
 

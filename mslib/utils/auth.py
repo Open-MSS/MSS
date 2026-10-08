@@ -34,8 +34,6 @@ import logging
 from urllib.parse import urlsplit
 
 import keyring
-from flask import current_app
-from flask_mail import Message
 
 
 try:
@@ -133,19 +131,3 @@ def same_origin(url, base_url):
     except ValueError:
         # e.g. an invalid port
         return False
-
-
-def send_email(to, subject, template):
-    if current_app.config['MAIL_DEFAULT_SENDER'] is not None:
-        msg = Message(
-            subject,
-            recipients=[to],
-            html=template,
-            sender=current_app.config['MAIL_DEFAULT_SENDER']
-        )
-        try:
-            current_app.mail.send(msg)
-        except (IOError, AttributeError):
-            logging.error("Can't send email to %s", to)
-    else:
-        logging.debug("setup user verification by email")

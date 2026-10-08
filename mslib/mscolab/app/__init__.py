@@ -389,7 +389,7 @@ def create_app(config_object=mscolab_settings):
     db.init_app(app)
     migrate.init_app(app, db)
     mail.init_app(app)
-    # mslib.utils.auth.send_email sends its messages via current_app.mail
+    # mslib.mscolab.mail.send_email sends its messages via current_app.mail
     app.mail = mail
 
     app.jinja_env.globals.update(file_exists=file_exists)
