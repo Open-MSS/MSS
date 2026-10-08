@@ -29,13 +29,14 @@ import json
 import pytest
 import datetime
 
-from mslib.msui.icons import icons
 from mslib.mscolab.api.events import SocketEvents
 from mslib.mscolab.chat_manager import MAX_MESSAGE_TEXT_LENGTH
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation, get_operation, \
     XML_CONTENT_INIT
 from mslib.mscolab.models import db, Change, Operation, Permission, User, Message, MessageType
 from tests.utils import XML_CONTENT1
+
+IMAGE_FILE = os.path.join(os.path.dirname(__file__), "..", "data", "mss-logo-16x16.png")
 
 
 class Test_Socket_Manager:
@@ -513,10 +514,11 @@ class Test_Socket_Manager:
             "token": self.token,
             "op_id": self.operation.id,
             "message_type": int(MessageType.IMAGE),
-            "file": open(icons('16x16'), 'rb'),
+            "file": open(IMAGE_FILE, 'rb'),
         }
         with self.app.test_client() as c:
             c.post("message_attachment", data=data, content_type="multipart/form-data")
+        data["file"].close()
         upload_dir = os.path.join(self.app.config['UPLOAD_FOLDER'], str(self.user.id))
         assert os.path.exists(upload_dir)
         file = os.listdir(upload_dir)[0]
@@ -753,7 +755,7 @@ class Test_Socket_Manager:
         data = {
             "token": self.token,
             "op_id": self.operation.id,
-            "file": open(icons('16x16'), 'rb'),
+            "file": open(IMAGE_FILE, 'rb'),
         }
         if message_type is not None:
             data["message_type"] = int(message_type)
@@ -893,7 +895,7 @@ class Test_Socket_Manager:
             "token": self.token,
             "op_id": self.operation.id,
             "message_type": int(MessageType.IMAGE),
-            "file": open(icons('16x16'), 'rb'),
+            "file": open(IMAGE_FILE, 'rb'),
         }
         with self.app.test_client() as c:
             res = c.post("message_attachment", data=data, content_type="multipart/form-data")

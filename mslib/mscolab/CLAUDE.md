@@ -37,13 +37,17 @@ Global map: ../../ARCHITECTURE.md
 
 ## May import
 
-`mslib.utils` only (plus stdlib/Flask stack). Never `mslib.msui` (exception:
-`blueprints/docs` icons, a to-do of the package split, #2307) or
+`mslib.utils` only (plus stdlib/Flask stack). Never `mslib.msui` or
 `mslib.mswms`, and never Qt. Enforced by the `gui-isolation`, `wms-isolation`
 and `servers-without-qt` contracts in setup.cfg.
 
 ## Invariants
 
+- The favicon and logo of the server pages
+  (`blueprints/docs/static/icons/{favicon.ico,mss-logo.png}`) are copies of
+  `mslib/msui/icons/{16x16/favicon.ico,64x64/mss-logo.png}`, the server must
+  not import `mslib.msui` for them; change the copies in mswms, mscolab and
+  msui together (`tests/test_meta.py` checks it).
 - Every REST payload has a mirror-image consumer in `mslib/msui/mscolab.py` —
   change both sides in the same commit and grep the endpoint name. For a
   route migrated to `api/schemas.py`, change the dataclass instead and both
