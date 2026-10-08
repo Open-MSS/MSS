@@ -38,8 +38,9 @@ Global map: ../../ARCHITECTURE.md
 ## May import
 
 `mslib.utils` only (plus stdlib/Flask stack). Never `mslib.msui` (exception:
-`blueprints/docs` icons, grandfathered) or `mslib.mswms`. Enforced by the
-`gui-isolation` contract in setup.cfg.
+`blueprints/docs` icons, a to-do of `plans/PACKAGE_SPLIT_PLAN.md`) or
+`mslib.mswms`, and never Qt. Enforced by the `gui-isolation`, `wms-isolation`
+and `servers-without-qt` contracts in setup.cfg.
 
 ## Invariants
 

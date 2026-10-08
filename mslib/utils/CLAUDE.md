@@ -23,16 +23,26 @@ Global map: ../../ARCHITECTURE.md
 
 ## May import
 
-Nothing from `mslib` outside `utils` — this is the base layer, enforced by
-the `gui-isolation` contract in setup.cfg.
+Nothing from `mslib` outside `utils`, and no Qt, keyring or server stack
+(Flask & co., SQLAlchemy, Werkzeug, pysaml2) — this is the base layer, enforced
+by the `gui-isolation` and `utils-base-layer` contracts in setup.cfg. The
+imports that still break this are listed there as to-dos of
+`plans/PACKAGE_SPLIT_PLAN.md`; don't add more:
+
+- Qt: `qt`, `colordialog`, `config`, `airdata` and `migration/` import PyQt5
+  (`config` and `migration/` also `mslib.support`), so `find_location` and
+  `ogcwms`, which import `config`, need Qt as well;
+- keyring: `auth`, `migration/update_json_file_to_version_eight`;
+- Flask: `auth` (`send_email`).
 
 ## Invariants
 
 - New config keys: add the attribute on `MSUIDefaultConfig` AND, if dict/list
   shaped, the matching entry in `dict_option_structure`/`list_option_structure`
   and a line in `config_descriptions`.
-- Everything except `qt.py`/`colordialog.py` (Qt)  must stay importable without Qt
-  or a running server.
+- Everything except the modules above that need Qt (`qt`, `colordialog`,
+  `config`, `airdata`, `migration/`, `find_location`, `ogcwms`) must stay
+  importable without Qt or a running server.
 
 ## Verify
 
