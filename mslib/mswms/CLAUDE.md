@@ -22,7 +22,7 @@ Global map: ../../ARCHITECTURE.md
 ## May import
 
 `mslib.utils` only. Never `mslib.msui` (exception: `blueprints/docs` icons, a
-to-do of `plans/PACKAGE_SPLIT_PLAN.md`) or `mslib.mscolab`, and never Qt.
+to-do of the package split, #2307) or `mslib.mscolab`, and never Qt.
 Enforced: `gui-isolation`, `server-isolation`, `servers-without-qt` contracts.
 
 ## Invariants

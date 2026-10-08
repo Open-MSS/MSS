@@ -26,8 +26,8 @@ Global map: ../../ARCHITECTURE.md
 Nothing from `mslib` outside `utils`, and no Qt, keyring or server stack
 (Flask & co., SQLAlchemy, Werkzeug, pysaml2) — this is the base layer, enforced
 by the `gui-isolation` and `utils-base-layer` contracts in setup.cfg. The
-imports that still break this are listed there as to-dos of
-`plans/PACKAGE_SPLIT_PLAN.md`; don't add more:
+imports that still break this are listed there as to-dos of the package
+split (#2307); don't add more:
 
 - Qt: `qt`, `colordialog`, `config`, `airdata` and `migration/` import PyQt5
   (`config` and `migration/` also `mslib.support`), so `find_location` and

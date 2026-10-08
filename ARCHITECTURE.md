@@ -47,8 +47,8 @@ and pysaml2:
 - `mslib.msidp` imports no Qt, numpy or Flask (`msidp-standalone`), and no
   other package imports it (`msidp-not-imported`).
 
-This is what lets the conda recipe ship the packages separately
-(`plans/PACKAGE_SPLIT_PLAN.md`).
+This is what lets the conda recipe ship the packages separately (package
+split, #2307).
 
 Grandfathered violations (do not add new ones; the lists live in `setup.cfg`
 under `ignore_imports` and must only shrink):
@@ -57,8 +57,8 @@ under `ignore_imports` and must only shrink):
   ship in the `mss-msui` package).
 - the deprecation shim `msui/constants.py` re-exports `utils/constants.py`
   (`docs/samples/plugins/navaid.py` uses it).
-- To-dos of the package split, each labelled with the decoupling PR of
-  `plans/PACKAGE_SPLIT_PLAN.md` that removes it: `{mscolab,mswms}.blueprints.docs`
+- To-dos of the package split (#2307), each labelled with the change that
+  removes it: `{mscolab,mswms}.blueprints.docs`
   import `msui.icons`; `utils` modules import Qt, `mslib.support`, Flask and
   keyring (`utils-base-layer`, `client-without-server-stack`). import-linter
   reports an entry whose import is gone ("No matches for ignored import"), so
@@ -145,7 +145,7 @@ under `ignore_imports` and must only shrink):
 3. All configuration access goes through `mslib.utils.config.config_loader`;
    never read the settings JSON directly.
 4. Qt imports are allowed only in `mslib/msui` and `mslib/support` — and, until
-   decoupling PR 4 moves them to msui, in the `mslib/utils` modules listed in the
+   they move to msui, in the `mslib/utils` modules listed in the
    `utils-base-layer` contract (`qt`, `colordialog`, `config`, `airdata`,
    `migration/`).
 5. New cross-package imports must satisfy the import-linter contracts in
