@@ -29,3 +29,10 @@
 
 class MSColabConnectionError(RuntimeError):
     pass
+
+
+class MSColabSessionExpiredError(MSColabConnectionError):
+    """
+    The MSColab server rejected the login token, e.g. it expired or was revoked by "Log out everywhere"
+    """
+    pass
