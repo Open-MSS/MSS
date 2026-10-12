@@ -56,6 +56,21 @@ The **left treewidget** is used to configure the automated plotting flights list
 - Flight, filename, and section parameters are configured in the **Top View**.
 - The vertical parameter is configured in the **Side View**.
 
+The filename is taken from the flight track currently loaded. The treewidget shows the
+file name alone, while the configuration file stores it with its path, so that
+mssautoplot finds it independent of the directory it is started in. A flight track
+which was never saved has no file yet, for that one only its name is stored and the
+file is looked up in the current working directory. Because a flight track without a
+file cannot be plotted, the **Download Plots Button** stops before it downloads anything
+and tells you where the file was looked up: next to the selected configuration file
+which named it, or in the working directory for a name stored without a directory.
+
+A configuration file selected with the **Select configuration file** button may name
+its flight tracks without a path, or relative to its own directory, as long as it was
+not written by this dockwidget. Such a name is resolved against the directory of the
+selected configuration file, the working directory the GUI happens to be started in
+is of no use here.
+
 The **right treewidget** is used to configure the automated plotting flight sections, which are based on the view:
 
 - For **Top View**, it is `"automated_plotting_hsecs": [["URL", "Layer", "Styles", "Level"]]`.

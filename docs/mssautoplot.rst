@@ -15,6 +15,10 @@ The CLI tool has the following parameters:
 +--------------+-------+----------------------------------------------------------------------+
 | ``--ftrack`` | TEXT  |   Flight track.                                                      |
 +--------------+-------+----------------------------------------------------------------------+
+| ``--fpath``  | TEXT  |   Directory of the flight track files. Replaces the directory        |
+|              |       |   stored with the file name in the config file;                      |
+|              |       |   only the base name of the entry is kept.                           |
++--------------+-------+----------------------------------------------------------------------+
 | ``--itime``  | TEXT  |   Initial time.                                                      |
 +--------------+-------+----------------------------------------------------------------------+
 | ``--vtime``  | TEXT  |   Valid time.                                                        |
@@ -50,6 +54,11 @@ For downloading plots of multiple flight tracks, specify the flight track and it
            ["flight1", "section1", "vertical1", "filename1", "init_time1", "time1"]
            ["flight2", "section2, "vertical2", "filename2", "init_time2", "time2"]]
 
+The filename is stored together with its path, e.g. "/home/mss/flights/flight1.ftml"
+or "~/flights/flight1.ftml". Only then the flight track is found independent of the
+directory mssautoplot is called in. A bare file name without a path is looked up in
+the current working directory.
+
 3. ``mssautoplot --cpath mssautoplot.json --stime="2019-09-01T00:00:00" --etime="2019-09-02T00:00:00" --intv=6``
 
 The above command will download plots of the with/without flight track from start time "2019-09-01T00:00:00" to end time "2019-09-02T00:00:00". The user would need to compulsorily specify the init_time and time in mss_autoplot.json inorder to use this functionality.
@@ -60,6 +69,18 @@ The above command will download plots of the with/without flight track from star
 This command stores the data of topview as PNG for overlays without axis, titles etc.
 This could be used in systems like PLANET. You may want to set large values in the layout
 of topview in the mssautoplot.json.
+
+5. ``mssautoplot --cpath mssautoplot.json --fpath /home/mss/flights/campaign2``
+
+This command reads the flight tracks from the given directory instead of the directory
+stored in mss_autoplot.json. Only the base name of each stored flight track is kept,
+any subdirectory stored with it is discarded, so the "/home/mss/campaign1/example.ftml"
+of the configuration is loaded from "/home/mss/flights/campaign2/example.ftml".
+This lets the same configuration be used for the flight tracks of several campaigns,
+provided they share the file names.
+
+On Windows give the directory in full, e.g. ``--fpath C:\Users\mss\flights\campaign2``,
+recent Windows shells do not expand "~" reliably.
 
 
 Settings file
