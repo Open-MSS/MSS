@@ -752,6 +752,15 @@ def show_other_widgets():
     switch_window(presses=3)
 
 
+def bring_main_window_to_front():
+    # activate the MSUI main window.
+    if sys.platform == 'darwin':
+        pag.hotkey(WIN, 'up')
+    else:
+        pag.hotkey(CTRL, 'up')
+    pag.sleep(1)
+
+
 def msui_full_screen_and_open_first_view(view_cmd='h'):
     """
     Open the first view and go full screen in MSUI.
@@ -763,6 +772,8 @@ def msui_full_screen_and_open_first_view(view_cmd='h'):
     """
     pag.sleep(1)
     if view_cmd is not None:
+        # The view shortcut is window-scoped
+        bring_main_window_to_front()
         pag.hotkey(CTRL, view_cmd)
         pag.sleep(1)
     create_tutorial_images()
