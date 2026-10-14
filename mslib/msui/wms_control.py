@@ -65,8 +65,8 @@ def add_wms_urls(combo_box, url_list):
         combo_box.addItem(url)
 
 
-class MSUIWebMapService(ogcwms.WebMapService):
-    """Overloads the getmap() method of owslib.wms.WebMapService:
+class MSUIWebMapServiceMixin:
+    """Overloads the getmap() method of the owslib WebMapService classes:
 
         added parameters are
          init_time
@@ -302,6 +302,24 @@ def getmap_url_warning(wms):
                  "map requests. If the WMS needs it for the maps, they fail with 'Unauthorized'.\n")
     text += "\nThe operator of the WMS can correct the address in its capabilities."
     return text
+
+
+#: The owslib service classes with the MSUI getmap() on top, one per WMS version. The
+#: names have to keep the "MSUIWebMapService" prefix, mslib.utils.qt.Worker recognises
+#: the services by it (it cannot import this module, see the gui-isolation contract).
+MSUI_SERVICE_CLASSES = {
+    version: type(f"MSUIWebMapService_{version.replace('.', '_')}",
+                  (MSUIWebMapServiceMixin, service_class), {})
+    for version, service_class in ogcwms.SERVICE_CLASSES.items()
+}
+
+
+def MSUIWebMapService(url, **kwargs):
+    """Return a WebMapService for `url` that uses the MSUI getmap().
+
+    See mslib.utils.ogcwms.WebMapService, this only picks the service classes.
+    """
+    return ogcwms.WebMapService(url, service_classes=MSUI_SERVICE_CLASSES, **kwargs)
 
 
 class MSS_WMS_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthenticationDialog):
