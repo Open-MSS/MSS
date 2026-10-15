@@ -111,8 +111,9 @@ class FileManager:
             # here we can import the permissions from Group file
             if not path.endswith(current_app.config['GROUP_POSTFIX']):
                 import_op = Operation.query.filter_by(path=f"{category}{current_app.config['GROUP_POSTFIX']}").first()
-                # only for the creator of the Group operation, admin can be granted by others without consent
-                if import_op is not None and self.is_creator(user.id, import_op.id):
+                # only for the creator of the Group operation, admin can be granted by others without consent;
+                # an archived Group operation is not used
+                if import_op is not None and import_op.active and self.is_creator(user.id, import_op.id):
                     self.import_permissions(import_op.id, operation_id, user.id)
             operation_dir.mkdir(parents=True, exist_ok=True)
 
@@ -436,6 +437,7 @@ class FileManager:
         elif attribute == "active":
             if isinstance(value, str):
                 value = value.upper() == "TRUE"
+        unarchived = attribute == "active" and value and not operation.active
         setattr(operation, attribute, value)
         db.session.commit()
         if attribute == "path":
@@ -443,7 +445,27 @@ class FileManager:
             # the user manages
             for ops in self._group_member_operations(operation, user):
                 self.import_permissions(op_id, ops.id, user.id)
+        elif unarchived:
+            self._import_unarchived_group_operation(operation)
         return True
+
+    def _import_unarchived_group_operation(self, operation):
+        """
+        An archived Group operation is not used for the members of its category. Once unarchived, its members
+        are imported into the operations of its category its creator created, as for a new operation.
+        """
+        if not self._is_group_operation(operation):
+            return
+        creator = Permission.query.filter_by(op_id=operation.id, access_level="creator").first()
+        if creator is None:
+            return
+        category_operations = Operation.query \
+            .join(Permission, Permission.op_id == Operation.id) \
+            .filter(Operation.category == self._group_category(operation), Operation.id != operation.id,
+                    Permission.u_id == creator.u_id, Permission.access_level == "creator").all()
+        for ops in category_operations:
+            if not self._is_group_operation(ops):
+                self.import_permissions(operation.id, ops.id, creator.u_id)
 
     def delete_operation(self, op_id, user):
         """
@@ -483,6 +505,9 @@ class FileManager:
         op_id: operation-id,
         content: content of the file to be saved
         # ToDo save change in schema
+
+        Returns True if the flight track was saved, None if content is the stored flight track already, and False
+        if it was refused, e.g. for invalid waypoints or version name.
         """
         if not verify_waypoint_data(content):
             return False
@@ -528,7 +553,8 @@ class FileManager:
                 db.session.add(change)
                 db.session.commit()
                 return True
-            return False
+            # msui sends some changes twice, nothing to save is no error
+            return None
 
     def get_file(self, op_id, user):
         """
@@ -699,16 +725,25 @@ class FileManager:
         Changes to the members of the Group operation fan out only to these operations, so managing a Group
         operation never grants rights beyond those the user already has on the operations of that category.
         With managed_only=False all other operations of that category are returned, e.g. for a user leaving.
+        An archived Group operation is not used for the members of its category, nothing is returned for it.
         """
-        postfix = current_app.config['GROUP_POSTFIX']
-        if not postfix or operation is None or not operation.path.endswith(postfix):
+        if operation is None or not operation.active or not self._is_group_operation(operation):
             return []
-        category = operation.path[:-len(postfix)]
-        query = Operation.query.filter(Operation.category == category, Operation.id != operation.id)
+        query = Operation.query.filter(Operation.category == self._group_category(operation),
+                                       Operation.id != operation.id)
         if managed_only:
             query = query.join(Permission, Permission.op_id == Operation.id) \
                 .filter(Permission.u_id == user.id, Permission.access_level.in_(("admin", "creator")))
-        return [ops for ops in query if not ops.path.endswith(postfix)]
+        return [ops for ops in query if not self._is_group_operation(ops)]
+
+    @staticmethod
+    def _is_group_operation(operation):
+        postfix = current_app.config['GROUP_POSTFIX']
+        return bool(postfix) and operation.path.endswith(postfix)
+
+    @staticmethod
+    def _group_category(operation):
+        return operation.path[:-len(current_app.config['GROUP_POSTFIX'])]
 
     def add_bulk_permission(self, op_id, user, new_u_ids, access_level):
         """
@@ -818,6 +853,9 @@ class FileManager:
         perm = Permission.query.filter_by(u_id=u_id, op_id=import_op_id).first()
         if perm is None:
             return False, None, "Not a member of this operation"
+        # e.g. an archived Group operation is not used for the members of its category
+        if not db.session.get(Operation, import_op_id).active:
+            return False, None, "The operation is archived, its permissions can't be imported"
 
         existing_perms = Permission.query \
             .filter(Permission.op_id == current_op_id) \

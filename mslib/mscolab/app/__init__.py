@@ -41,6 +41,7 @@ import mslib
 
 from flask_sqlalchemy import SQLAlchemy
 
+from mslib.mscolab.api.schemas import InvalidRequest
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab import migrations
 from mslib.utils import prefix_route, release_info
@@ -374,6 +375,8 @@ def create_app(config_object=mscolab_settings):
     check_secrets(app)
     check_basic_auth_setting(config_object, "mscolab_settings")
     app.register_error_handler(PasswordCheckBusy, lambda error: (str(error), 503, {"Retry-After": "10"}))
+    # e.g. a missing or non-integer op_id
+    app.register_error_handler(InvalidRequest, lambda error: (str(error), 400))
     # uploads are limited to MAX_UPLOAD_SIZE, other requests to MAX_CONTENT_LENGTH
     app.before_request(limit_request_size)
     app.register_error_handler(413, error413)

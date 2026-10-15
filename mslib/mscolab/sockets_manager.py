@@ -388,14 +388,16 @@ class SocketsManager:
                 # e.g. the operation was archived while the user was editing it
                 self._refuse_file_save(op_id, "You can't change this operation (any more), e.g. because it "
                                               "was archived or your access level is viewer.")
-            elif self.fm.save_file(int(op_id), content, user, version_name=version_name, comment=comment):
+                return
+            saved = self.fm.save_file(int(op_id), content, user, version_name=version_name, comment=comment)
+            if saved:
                 # send service message
                 message_ = f"[service message] **{user.username}** saved changes. {messageText}"
                 new_message = self.cm.add_message(user, message_, str(op_id), message_type=MessageType.SYSTEM_MESSAGE)
                 self.emit_chat_message(new_message)
                 # emit file-changed event to trigger reload of flight track
                 self._emit_to_operation(SocketEvents.FILE_CHANGED, op_id, json.dumps({"op_id": op_id, "u_id": user.id}))
-            else:
+            elif saved is False:
                 self._refuse_file_save(op_id, "The server could not save the flight track, e.g. because its "
                                               "waypoints or its version name are invalid.")
         else:

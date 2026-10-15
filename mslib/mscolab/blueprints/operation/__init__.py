@@ -30,7 +30,7 @@ import json
 
 from flask import Blueprint, request, g, jsonify, current_app
 
-from mslib.mscolab.auth import verify_user
+from mslib.mscolab.auth import request_token, verify_user
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.schemas import (
     BulkPermissionsRequest,
@@ -65,6 +65,7 @@ from mslib.mscolab.api.schemas import (
     UndoChangesResponse,
     UpdateOperationRequest,
     UpdateOperationResponse,
+    int_field,
 )
 
 OPERATION_BP = Blueprint('operation', __name__)
@@ -84,7 +85,7 @@ def create_operation():
         sockio = current_app.extensions['sockio']
         # the members of the group operation of the category got permissions too
         sockio.sm.sync_rooms()
-        token = request.args.get('token', request.form.get('token', False))
+        token = request_token()
         json_config = {"token": token}
         sockio.sm.update_operation_list(json_config)
     return response.to_text()
@@ -144,11 +145,7 @@ def set_version_name():
 @verify_user
 def authorized_users():
     fm = current_app.extensions['fm']
-    try:
-        req = GetAuthorizedUsersRequest.from_args_and_form(request.args, request.form)
-    except (TypeError, ValueError):
-        # a missing or non-numeric op_id
-        return "False", 400
+    req = GetAuthorizedUsersRequest.from_args_and_form(request.args, request.form)
     if not fm.is_member(g.user.id, req.op_id):
         return "False", 403
     return GetAuthorizedUsersResponse(users=fm.get_authorized_users(req.op_id)).to_text()
@@ -159,11 +156,7 @@ def authorized_users():
 def active_users():
     fm = current_app.extensions['fm']
     sockio = current_app.extensions['sockio']
-    try:
-        req = GetActiveUsersRequest.from_args_and_form(request.args, request.form)
-    except (TypeError, ValueError):
-        # a missing or non-numeric op_id
-        return "False", 400
+    req = GetActiveUsersRequest.from_args_and_form(request.args, request.form)
     if not fm.is_member(g.user.id, req.op_id):
         return "False", 403
     # an operation nobody has selected yet has no entry
@@ -205,10 +198,12 @@ def update_operation():
     success = fm.update_operation(req.op_id, req.attribute, req.value, user)
     if success is True:
         sockio = current_app.extensions['sockio']
-        if req.attribute == "path" and req.value.endswith(current_app.config['GROUP_POSTFIX']):
-            # the permissions of the group operation were imported into all operations of its category
+        if req.attribute == "path" and req.value.endswith(current_app.config['GROUP_POSTFIX']) or \
+                req.attribute == "active":
+            # the permissions of the group operation were imported into all operations of its category, also
+            # when it was unarchived
             sockio.sm.sync_rooms()
-        token = request.args.get('token', request.form.get('token', False))
+        token = request_token()
         json_config = {"token": token}
         sockio.sm.update_operation_list(json_config)
     return UpdateOperationResponse(success=success).to_text()
@@ -218,9 +213,9 @@ def update_operation():
 @verify_user
 def get_operation_details():
     fm = current_app.extensions['fm']
-    op_id = request.args.get('op_id', request.form.get('op_id', None))
+    op_id = int_field(request.args.get('op_id', request.form.get('op_id', None)), "op_id")
     user = g.user
-    result = fm.get_operation_details(int(op_id), user)
+    result = fm.get_operation_details(op_id, user)
     if result is False:
         return "False"
     return json.dumps(result)
@@ -229,15 +224,15 @@ def get_operation_details():
 @OPERATION_BP.route('/set_last_used', methods=["POST"])
 @verify_user
 def set_last_used():
-    op_id = request.form.get('op_id', None)
+    op_id = int_field(request.form.get('op_id', None), "op_id")
     user = g.user
-    days_ago = int(request.form.get('days', 0))
+    days_ago = int_field(request.form.get('days', 0), "days")
     if days_ago > 99999:
         days_ago = 99999
     elif days_ago < -99999:
         days_ago = -99999
     fm = current_app.extensions['fm']
-    fm.update_operation(int(op_id), 'last_used',
+    fm.update_operation(op_id, 'last_used',
                         datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(days=days_ago),
                         user)
     return jsonify({"success": True}), 200
@@ -380,7 +375,7 @@ def import_permissions():
             # invalidate waypoint table, title of windows
             sockio.sm.emit_revoke_permission(u_id, req.current_op_id)
 
-        token = request.args.get('token', request.form.get('token', False))
+        token = request_token()
         json_config = {"token": token}
         sockio.sm.update_operation_list(json_config)
 

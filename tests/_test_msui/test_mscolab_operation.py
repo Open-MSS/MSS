@@ -312,7 +312,7 @@ class Test_MscolabOperation:
                    "time": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
                    "op_id": self.chat_window.op_id}
         target = tmp_path / "x.png"
-        with mock.patch("mslib.msui.mscolab_chat.requests.get") as get, \
+        with mock.patch("mslib.msui.mscolab_chat.mscolab_get") as get, \
                 mock.patch("mslib.msui.mscolab_chat.get_save_filename", return_value=str(target)), \
                 mock.patch("mslib.msui.mscolab_chat.show_popup") as popup:
             self.chat_window.handle_incoming_message(json.dumps(message))

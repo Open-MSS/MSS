@@ -33,6 +33,9 @@ from PyQt5 import QtCore, QtTest, QtWidgets
 from tests import constants
 from mslib.msui import mscolab
 from mslib.msui import msui
+from mslib.mscolab.api import endpoints
+from mslib.mscolab.api.schemas import UpdateOperationRequest
+from mslib.mscolab.models import Operation
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 from mslib.utils.config import modify_config_file
 
@@ -188,6 +191,21 @@ class Test_MscolabAdminWindow:
         self.admin_window.importPermissionsCB.setCurrentIndex(index)
         QtTest.QTest.mouseClick(self.admin_window.importPermissionsBtn, QtCore.Qt.LeftButton)
         assert self.admin_window.modifyUsersTable.rowCount() == 1
+
+    def test_operation_archived_while_open_is_no_longer_offered_for_import(self, qtbot):
+        # e.g. an archived Group operation is not used for memberships
+        def offered():
+            return [self.admin_window.importPermissionsCB.itemText(row)
+                    for row in range(self.admin_window.importPermissionsCB.count())]
+        assert offered() == ["paris", "tokyo"]
+        with self.app.app_context():
+            op_id = Operation.query.filter_by(path="tokyo").first().id
+        req = UpdateOperationRequest(op_id=op_id, attribute="active", value="False")
+        assert self.window.mscolab.conn.request_post(endpoints.UPDATE_OPERATION, req.to_form_data()).text == "True"
+
+        def assert_():
+            assert offered() == ["paris"]
+        qtbot.wait_until(assert_)
 
     def _connect_to_mscolab(self, qtbot):
         self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)

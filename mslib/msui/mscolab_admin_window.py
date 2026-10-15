@@ -30,6 +30,7 @@ from urllib.parse import urljoin
 from PyQt5 import QtCore, QtWidgets
 from mslib.msui.qt5 import ui_mscolab_admin_window as ui
 from mslib.utils.qt import show_popup
+from mslib.msui.socket_control import mscolab_get
 from mslib.utils.config import config_loader
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.schemas import (
@@ -95,6 +96,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
 
         # Setting handlers for connection manager
         self.conn.signal_operation_permissions_updated.connect(self.handle_permissions_updated)
+        # e.g. an operation was archived, which is no longer offered for import
+        self.conn.signal_operation_list_updated.connect(self.load_import_operations)
         self.filterCategoryCb.currentIndexChanged.connect(self.operation_category_handler)
         self.set_label_text()
         self.load_import_operations()
@@ -134,7 +137,9 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
     def populate_import_permission_cb(self):
         self.importPermissionsCB.clear()
         for operation in self.operations:
-            if operation['op_id'] != self.op_id:
+            # like the list of operations, archived ones are left out, e.g. an archived Group operation
+            # is not used for memberships
+            if operation['op_id'] != self.op_id and operation['active']:
                 self.importPermissionsCB.addItem(operation['path'], operation['op_id'])
 
     def get_selected_userids(self, table, users):
@@ -185,9 +190,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
     def set_label_text(self):
         req = GetCreatorOfOperationRequest(op_id=self.op_id)
         url = urljoin(self.mscolab_server_url, endpoints.GET_CREATOR_OF_OPERATION)
-        r = requests.get(
-            url, data={**req.to_form_data(), "token": self.token},
-            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        r = mscolab_get(url, self.token, req.to_params())
         # chosen by users, must not be interpreted as markup
         for label in (self.operationNameLabel, self.creatorNameLabel, self.usernameLabel):
             label.setTextFormat(QtCore.Qt.PlainText)
@@ -200,21 +203,18 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
     def load_import_operations(self):
         req = GetOperationsRequest()
         url = urljoin(self.mscolab_server_url, endpoints.OPERATIONS)
-        r = requests.get(
-            url, data={**req.to_form_data(), "token": self.token},
-            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        r = mscolab_get(url, self.token, req.to_params())
         parsed = GetOperationsResponse.from_text(r.text)
         if parsed is not None:
-            self.operations = [op.to_dict() for op in parsed.operations]
-            self.populate_import_permission_cb()
+            # the category filter starts from these
+            self.initial_operations = [op.to_dict() for op in parsed.operations]
+            self.operation_category_handler()
 
     def load_users_without_permission(self):
         self.addUsers = []
         req = GetOperationUsersRequest(op_id=self.op_id)
         url = urljoin(self.mscolab_server_url, endpoints.USERS_WITHOUT_PERMISSION)
-        res = requests.get(
-            url, data={**req.to_form_data(), "token": self.token},
-            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        res = mscolab_get(url, self.token, req.to_params())
         parsed = GetOperationUsersResponse.from_text(res.text)
         if parsed is not None:
             if parsed.success:
@@ -232,9 +232,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.modifyUsers = []
         req = GetOperationUsersRequest(op_id=self.op_id)
         url = urljoin(self.mscolab_server_url, endpoints.USERS_WITH_PERMISSION)
-        res = requests.get(
-            url, data={**req.to_form_data(), "token": self.token},
-            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        res = mscolab_get(url, self.token, req.to_params())
         parsed = GetOperationUsersResponse.from_text(res.text)
         if parsed is not None:
             if parsed.success:

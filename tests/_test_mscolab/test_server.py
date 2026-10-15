@@ -727,7 +727,7 @@ class Test_Server:
             data = {"token": token} if op_id is None else {"token": token, "op_id": op_id}
             response = test_client.get(endpoint, data=data)
             assert response.status_code == 400
-            assert response.data == b"False"
+            assert response.data == b"op_id must be an integer"
 
     def test_operation_users_require_membership(self):
         # the members of an operation and who of them is online are shown only to its members
@@ -1004,6 +1004,29 @@ class Test_Server:
             data = json.loads(response.data.decode('utf-8'))
             # creator is not listed
             assert data["success"] is True
+
+    @pytest.mark.parametrize("import_path", ["europeGroup", "import"])
+    def test_import_permissions_from_archived_operation(self, import_path):
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        another_user = 'UV20@uv20', 'UV20', 'uv20', 'User20'
+        assert add_user(another_user[0], another_user[1], another_user[2], another_user[3])
+        with self.app.test_client() as test_client:
+            import_operation, token = self._create_operation(test_client, self.userdata, path=import_path)
+            fm = FileManager(self.app.config["OPERATIONS_DATA"])
+            fm.add_bulk_permission(import_operation.id, get_user(self.userdata[0]), [get_user(another_user[0]).id],
+                                   "viewer")
+            response = test_client.post('/update_operation', data={
+                "token": token, "op_id": import_operation.id, "attribute": "active", "value": "False"})
+            assert response.text == "True"
+            current_operation, token = self._create_operation(test_client, self.userdata, path="current")
+            response = test_client.post('/import_permissions', data={"token": token,
+                                                                     "import_op_id": import_operation.id,
+                                                                     "current_op_id": current_operation.id})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            assert data["success"] is False
+            assert "archived" in data["message"]
+            assert fm.is_member(get_user(another_user[0]).id, current_operation.id) is False
 
     def test_bulk_permissions_notify_group_member_operations(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])

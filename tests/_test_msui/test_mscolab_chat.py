@@ -31,8 +31,10 @@ from markdown import Markdown
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from mslib.mscolab.api.message_type import MessageType
+from mslib.mscolab.api import endpoints
 from mslib.msui.mscolab_chat import (
-    ChatTextBrowser, DeregisterSyntax, MessageItem, MessageTextEdit, chat_link_target, open_chat_link,
+    ChatTextBrowser, DeregisterSyntax, MessageItem, MessageTextEdit, MSColabChatWindow, chat_link_target,
+    open_chat_link,
 )
 
 
@@ -207,3 +209,25 @@ def test_reply_link_of_document_is_opened_not_downloaded(qtbot, chat_window):
         # the document itself is still downloaded with the token
         item.messageBox.anchorClicked.emit(QtCore.QUrl(item.attachment_url()))
         download.assert_called_once()
+
+
+def test_avatars_of_members_are_requested_for_the_operation(qtbot):
+    # the server shows the profile image of another user only to members of an operation of both
+    window = types.SimpleNamespace(op_id=5, token="token", mscolab_server_url="http://localhost:8083",
+                                   collaboratorsList=QtWidgets.QListWidget())
+    qtbot.addWidget(window.collaboratorsList)
+    texts = {
+        endpoints.AUTHORIZED_USERS: '{"users": [{"username": "berta", "access_level": "collaborator", "id": 2}]}',
+        endpoints.ACTIVE_USERS: '{"active_users": []}',
+    }
+
+    def get(url, token, params=None):
+        endpoint = url.rsplit("/", 1)[1]
+        return mock.Mock(status_code=200 if endpoint in texts else 404, text=texts.get(endpoint, ""))
+
+    with mock.patch("mslib.msui.mscolab_chat.mscolab_get", side_effect=get) as mscolab_get:
+        MSColabChatWindow.load_users(window)
+    image_requests = [call for call in mscolab_get.call_args_list
+                      if call.args[0].endswith(endpoints.FETCH_PROFILE_IMAGE)]
+    assert [call.args[2] for call in image_requests] == [{"user_id": 2, "op_id": 5}]
+    assert window.collaboratorsList.count() == 1

@@ -25,12 +25,12 @@
     limitations under the License.
 """
 import random
-import requests
 from PyQt5 import QtWidgets, QtGui, QtCore
 from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
 from mslib.msui import flighttrack as ft
 import mslib.msui.msui_mainwindow as msui_mainwindow
 from mslib.utils.qt import Worker
+from mslib.msui.socket_control import mscolab_get
 from mslib.utils.config import config_loader
 from urllib.parse import urljoin
 from mslib.utils.colordialog import CustomColorDialog
@@ -803,9 +803,7 @@ class MultipleFlightpathOperations:
         skip_archived = config_loader(dataset="MSCOLAB_skip_archived_operations")
         req = GetOperationsRequest(skip_archived=skip_archived)
         url = urljoin(self.mscolab_server_url, endpoints.OPERATIONS)
-        r = requests.get(
-            url, data={**req.to_form_data(), "token": self.token},
-            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        r = mscolab_get(url, self.token, req.to_params())
         parsed = GetOperationsResponse.from_text(r.text)
         if parsed is not None:
             operations = parsed.operations
@@ -817,9 +815,7 @@ class MultipleFlightpathOperations:
     def request_wps_from_server(self, op_id):
         req = GetOperationByIdRequest(op_id=op_id)
         url = urljoin(self.mscolab_server_url, endpoints.GET_OPERATION_BY_ID)
-        r = requests.get(
-            url, data={**req.to_form_data(), "token": self.token},
-            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        r = mscolab_get(url, self.token, req.to_params())
         parsed = GetOperationByIdResponse.from_text(r.text)
         if parsed is not None:
             return parsed.content

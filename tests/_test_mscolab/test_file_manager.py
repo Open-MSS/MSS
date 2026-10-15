@@ -292,8 +292,8 @@ class Test_FileManager:
     def test_save_file(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation6", content=self.content1)
-            # nothing changed
-            assert self.fm.save_file(operation.id, self.content1, self.user) is False
+            # nothing changed, nothing to save
+            assert self.fm.save_file(operation.id, self.content1, self.user) is None
             assert self.fm.save_file(operation.id, self.content2, self.user)
 
     def test_upload_chat_attachment(self):
@@ -767,6 +767,58 @@ class Test_FileManager:
             assert success
             assert self.fm.is_admin(self.user.id, operation_admin.id)
             assert self.fm.is_creator(self.adminuser.id, operation_admin.id)
+
+    def test_archived_group_operation_is_not_used_for_memberships(self):
+        with self.app.test_client():
+            _, operation_no_1 = self._create_operation(flight_path="flightno1", category="bergen")
+            assert self.fm.add_bulk_permission(operation_no_1.id, self.user, [self.vieweruser.id], "viewer")
+            _, operation_group = self._create_operation(flight_path="bergenGroup", category="bergen")
+            assert self.fm.update_operation(operation_group.id, "active", "False", self.user)
+
+            # its members are changed, those of the operations of its category not
+            assert self.fm.add_bulk_permission(operation_group.id, self.user,
+                                               [self.collaboratoruser.id, self.vieweruser.id], "collaborator") == {
+                operation_group.id: [self.collaboratoruser.id, self.vieweruser.id]}
+            assert self.fm.is_member(self.collaboratoruser.id, operation_no_1.id) is False
+            assert self.fm.modify_bulk_permission(operation_group.id, self.user, [self.vieweruser.id], "admin") == {
+                operation_group.id: [self.vieweruser.id]}
+            assert self.fm.is_viewer(self.vieweruser.id, operation_no_1.id)
+            assert self.fm.delete_bulk_permission(operation_group.id, self.user, [self.vieweruser.id]) == {
+                operation_group.id: [self.vieweruser.id]}
+            assert self.fm.is_viewer(self.vieweruser.id, operation_no_1.id)
+
+            # a new operation of the category doesn't get its members, they can't be cloned from it
+            _, operation_no_2 = self._create_operation(flight_path="flightno2", category="bergen")
+            assert self.fm.is_member(self.collaboratoruser.id, operation_no_2.id) is False
+            success, users, message = self.fm.import_permissions(operation_group.id, operation_no_2.id, self.user.id)
+            assert (success, users) == (False, None)
+            assert "archived" in message
+            assert self.fm.is_member(self.collaboratoruser.id, operation_no_2.id) is False
+
+    def test_unarchived_group_operation_updates_the_operations_of_its_creator(self):
+        with self.app.test_client():
+            _, operation_own = self._create_operation(flight_path="ownop", category="bergen")
+            _, operation_other = self._create_operation(flight_path="otherop", user=self.op2user, category="bergen")
+            assert self.fm.add_bulk_permission(operation_other.id, self.op2user, [self.user.id], "admin")
+            _, operation_oslo = self._create_operation(flight_path="osloop", category="oslo")
+            _, operation_group = self._create_operation(flight_path="bergenGroup", category="bergen")
+            assert self.fm.update_operation(operation_group.id, "active", "False", self.user)
+            assert self.fm.add_bulk_permission(operation_group.id, self.user, [self.vieweruser.id], "viewer")
+            assert self.fm.add_bulk_permission(operation_group.id, self.user, [self.adminuser.id], "admin")
+            assert self.fm.is_member(self.vieweruser.id, operation_own.id) is False
+
+            # also when an admin of the Group operation unarchives it, the operations of its creator get updated
+            assert self.fm.update_operation(operation_group.id, "active", "True", self.adminuser)
+            assert self.fm.is_viewer(self.vieweruser.id, operation_own.id)
+            assert self.fm.is_admin(self.adminuser.id, operation_own.id)
+            assert self.fm.is_creator(self.user.id, operation_own.id)
+            # not those of other creators or of other categories
+            assert self.fm.is_member(self.vieweruser.id, operation_other.id) is False
+            assert self.fm.is_member(self.vieweruser.id, operation_oslo.id) is False
+
+            # and it is used again for the memberships of the category
+            assert self.fm.add_bulk_permission(operation_group.id, self.user, [self.collaboratoruser.id], "viewer")
+            assert self.fm.is_viewer(self.collaboratoruser.id, operation_own.id)
 
     def test_creator_permission_can_not_be_changed_by_admin(self):
         with self.app.test_client():

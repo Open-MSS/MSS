@@ -33,7 +33,7 @@ from urllib.parse import urljoin
 
 from PyQt5 import QtCore
 from mslib.mscolab.api.events import SocketEvents
-from mslib.mscolab.api.schemas import AUTH_FAILED_TEXT
+from mslib.mscolab.api.schemas import AUTH_FAILED_TEXT, TOKEN_HEADER
 from mslib.msui.mscolab_exceptions import MSColabConnectionError, MSColabSessionExpiredError
 from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.config import config_loader
@@ -46,6 +46,19 @@ def response_message(response, default):
     except (ValueError, AttributeError):
         message = None
     return message if isinstance(message, str) and message else default
+
+
+def mscolab_get(url, token, params=None):
+    """
+    Sends a GET request with the login token to url of an MSColab server and returns the response
+
+    params go into the query string and the token into the header TOKEN_HEADER. Servers up to 11.x read the token
+    only from the query string or the body, and user_id of fetch_profile_image only from the body, so until their
+    support is dropped params and token are sent in the body as well.
+    """
+    return requests.get(
+        url, params=params, data=(params or {}) | {"token": token}, headers={TOKEN_HEADER: token},
+        timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
 
 
 class ConnectionManager(QtCore.QObject):
@@ -243,11 +256,8 @@ class ConnectionManager(QtCore.QObject):
             files=files, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         return response
 
-    def request_get(self, api, data=None):
-        response = requests.get(
-            urljoin(self.mscolab_server_url, api),
-            data=((data if data is not None else {}) | {"token": self.token}),
-            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+    def request_get(self, api, params=None):
+        response = mscolab_get(urljoin(self.mscolab_server_url, api), self.token, params)
         if response.status_code != 200:
             raise MSColabConnectionError
         # the server answers a rejected token with HTTP 200 and the bare body "False" instead of the JSON

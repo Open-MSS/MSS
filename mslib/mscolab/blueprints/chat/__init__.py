@@ -42,6 +42,8 @@ from mslib.mscolab.api.schemas import (
     GetMessagesResponse,
     MessageAttachmentRequest,
     MessageAttachmentResponse,
+    InvalidRequest,
+    int_field,
 )
 
 CHAT_BP = Blueprint('chat', __name__)
@@ -128,9 +130,12 @@ def uploads(name=None, filename=None):
         abort(404)
     if filename is None:
         abort(404)
-    # name is the id of the operation the attachment was sent to, only its members may fetch it,
-    # isdigit alone accepts digits like "²" which int() refuses
-    if not (name.isascii() and name.isdigit()) or not current_app.extensions['fm'].is_member(g.user.id, int(name)):
+    # name is the id of the operation the attachment was sent to, only its members may fetch it
+    try:
+        op_id = int_field(name, "name")
+    except InvalidRequest:
+        abort(404)
+    if not current_app.extensions['fm'].is_member(g.user.id, op_id):
         abort(404)
     # attachments are uploaded by any member, e.g. HTML or SVG files, a browser must not render them
     # as a page of the MSColab server
