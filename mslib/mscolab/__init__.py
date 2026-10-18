@@ -2,7 +2,7 @@
 """
 
     mslib.mscolab
-    ~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~
 
     init module of mscolab
 

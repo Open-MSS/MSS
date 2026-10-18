@@ -2,7 +2,7 @@
 """
 
     mslib.mscolab.seed
-    ~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~
 
     Seeder utility for database
 

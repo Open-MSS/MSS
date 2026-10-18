@@ -2,7 +2,7 @@
 """
 
     mslib.msui.mscolab
-    ~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~
 
     Window to display authentication and operation details for mscolab
 

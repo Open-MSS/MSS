@@ -2,7 +2,7 @@
 """
 
     mslib.mscolab.conf.py.example
-    ~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     config for mscolab.
 

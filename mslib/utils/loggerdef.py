@@ -2,7 +2,7 @@
 """
 
     mslib.utils.loggerdef
-    ~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~
 
     This module sets the logging level and prevent code repetition.
 

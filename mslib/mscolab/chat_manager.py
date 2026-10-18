@@ -2,7 +2,7 @@
 """
 
     mslib.mscolab.chat_manager
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Code to handle socket connections in mscolab
 

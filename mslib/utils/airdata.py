@@ -2,7 +2,7 @@
 """
 
     mslib.utils.airdata
-    ~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~
 
     Functions for getting and downloading airspaces and airports.
 

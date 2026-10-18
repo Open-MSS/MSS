@@ -1,6 +1,6 @@
 """
     mslib.msui.multilayers
-    ~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~
 
     This module contains classes for object oriented managing of WMS layers.
     Improves upon the old method of loading each layer on UI changes,

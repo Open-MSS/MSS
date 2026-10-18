@@ -2,7 +2,7 @@
 """
 
     mslib.msui.linearview
-    ~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~
 
     Linear view module of the msui
 
