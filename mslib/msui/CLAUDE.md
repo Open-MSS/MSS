@@ -22,10 +22,10 @@ Global map: ../../ARCHITECTURE.md
 
 ## May import
 
-`mslib.utils`, `mslib.support`, and ONLY `mslib.mscolab.{events,message_type,
-api.schemas,api.endpoints}` from the server package (enforced:
-`server-isolation` contract in setup.cfg). Never `mslib.mswms` — WMS is
-consumed over HTTP.
+`mslib.utils`, `mslib.support`, and ONLY `mslib.mscolab.api.*` from the server
+package (enforced: `server-isolation` contract in setup.cfg). Never
+`mslib.mswms` — WMS is consumed over HTTP — and never the server stack (Flask,
+SQLAlchemy; `client-without-server-stack` contract).
 
 ## Invariants
 
