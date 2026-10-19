@@ -25,6 +25,8 @@
     limitations under the License.
 """
 import collections
+import datetime
+import warnings
 
 from matplotlib.collections import LineCollection
 from matplotlib.colors import BoundaryNorm, ListedColormap
@@ -56,7 +58,15 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         self.setupUi(self)
 
         self.view = view
-        self.load_bsp = Loader(skyfield_data.get_skyfield_data_path(), verbose=False)
+        with warnings.catch_warnings():
+            # skyfield-data checks the expiry of every file it ships, finals2000A.all expires every year;
+            # MSS doesn't read that file: the time scale below comes from the tables bundled with skyfield
+            # (builtin=True), only de421.bsp comes from skyfield-data, so only its expiry is checked here
+            warnings.simplefilter("ignore", RuntimeWarning)
+            self.load_bsp = Loader(skyfield_data.get_skyfield_data_path(), verbose=False)
+        if skyfield_data.expirations.get_all().get("de421.bsp", datetime.date.max) <= datetime.date.today():
+            warnings.warn("The file de421.bsp of skyfield-data has expired, please upgrade skyfield-data",
+                          RuntimeWarning)
 
         self.planets = self.load_bsp('de421.bsp')
         self.timescale = self.load_bsp.timescale(builtin=True)

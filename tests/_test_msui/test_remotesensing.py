@@ -36,9 +36,31 @@ from mslib.msui.remotesensing_dockwidget import RemoteSensingControlWidget
 from mslib.msui import viewplotter
 
 
-def test_skyfield_data_expiration(recwarn):
-    skyfield_data.check_expirations()
-    assert len(recwarn) == 0, [_x.message for _x in recwarn]
+def test_skyfield_data_ephemeris_has_not_expired():
+    # de421.bsp is the only file MSS loads from skyfield-data; the time scale comes from skyfield itself
+    # (timescale(builtin=True)), so the expiry of finals2000A.all, every year, doesn't matter
+    expirations = skyfield_data.expirations.get_all()
+    assert "de421.bsp" in expirations, sorted(expirations)
+    assert expirations["de421.bsp"] > datetime.date.today()
+
+
+def _expire(monkeypatch, filename):
+    past = datetime.date.today() - datetime.timedelta(days=1)
+    future = datetime.date.today() + datetime.timedelta(days=365)
+    expirations = {"finals2000A.all": future, "de421.bsp": future, filename: past}
+    monkeypatch.setattr(skyfield_data.expirations, "get_all", lambda: expirations)
+
+
+def test_no_warning_about_the_unused_finals_file(qtbot, monkeypatch, recwarn):
+    _expire(monkeypatch, "finals2000A.all")
+    qtbot.addWidget(RemoteSensingControlWidget(view=Mock()))
+    assert not [w for w in recwarn if issubclass(w.category, RuntimeWarning)], [str(w.message) for w in recwarn]
+
+
+def test_warning_about_the_used_ephemeris(qtbot, monkeypatch):
+    _expire(monkeypatch, "de421.bsp")
+    with pytest.warns(RuntimeWarning, match="de421.bsp"):
+        qtbot.addWidget(RemoteSensingControlWidget(view=Mock()))
 
 
 class Test_RemoteSensingControlWidget:

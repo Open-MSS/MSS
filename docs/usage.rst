@@ -314,10 +314,10 @@ Remote sensing Docking Widget
 The TopView has a docking widget that allows the visualization of remote sensing related features.
 It may visualize the position of tangent points of limb sounders and can overlay the flight path with colours
 according to the relative position of sun, moon, and some planets (to either avoid or seek out alignments).
-Upon first starting the widget, it is thus necessary to download astronomic positional data
-(`see here for more information <http://rhodesmill.org/skyfield/files.html>`_).
-This is automatically performed by the skyfield python package, retrieving the data from public sources of JPL
-and other US services. The data is stored in the MSS configuration directory and may need to update irregularly.
+The positions are computed by the skyfield python package from the JPL ephemeris de421
+(`see here for more information <https://rhodesmill.org/skyfield/files.html>`_), which the skyfield-data package
+provides and which is valid until 2053. The time scale comes from the tables bundled with skyfield. Nothing is
+downloaded.
 
 
 
