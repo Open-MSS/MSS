@@ -36,9 +36,15 @@ from mslib.msui.remotesensing_dockwidget import RemoteSensingControlWidget
 from mslib.msui import viewplotter
 
 
-def test_skyfield_data_expiration(recwarn):
-    skyfield_data.check_expirations()
-    assert len(recwarn) == 0, [_x.message for _x in recwarn]
+def test_skyfield_data_ephemeris_has_not_expired():
+    # de421.bsp is the only file MSS loads from skyfield-data; the time scale comes from skyfield itself
+    # (timescale(builtin=True)), so the expiry of finals2000A.all, every year, doesn't matter (#2860)
+    assert skyfield_data.expirations.get_all()["de421.bsp"] > datetime.date.today()
+
+
+def test_no_warning_about_the_unused_finals_file(qtbot, recwarn):
+    RemoteSensingControlWidget(view=Mock())
+    assert not [w for w in recwarn if "finals2000A.all" in str(w.message)]
 
 
 class Test_RemoteSensingControlWidget:
