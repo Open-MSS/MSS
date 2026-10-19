@@ -38,7 +38,7 @@ from mslib.msui import viewplotter
 
 def test_skyfield_data_ephemeris_has_not_expired():
     # de421.bsp is the only file MSS loads from skyfield-data; the time scale comes from skyfield itself
-    # (timescale(builtin=True)), so the expiry of finals2000A.all, every year, doesn't matter (#2860)
+    # (timescale(builtin=True)), so the expiry of finals2000A.all, every year, doesn't matter
     expirations = skyfield_data.expirations.get_all()
     assert "de421.bsp" in expirations, sorted(expirations)
     assert expirations["de421.bsp"] > datetime.date.today()
