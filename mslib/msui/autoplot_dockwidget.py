@@ -174,7 +174,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             QMessageBox.information(
                 self,
                 "WARNING",
-                self.missing_flighttrack_message(flight, entry, path, self.flighttrack_sources.get(entry))
+                plain_text_as_html(self.missing_flighttrack_message(flight, entry, path,
+                                                                    self.flighttrack_sources.get(entry)))
             )
             return
         if self.intv == "":
