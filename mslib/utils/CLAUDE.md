@@ -12,7 +12,9 @@ Global map: ../../ARCHITECTURE.md
 - `constants.py` — MSUI config/cache paths (`MSUI_CONFIG_PATH`, `MSUI_SETTINGS`)
 - `coordinate.py`, `units.py`, `time.py`, `thermolib.py` — pure functions; the
   safest modules to edit; keep them dependency-free
-- `netCDF4tools.py` — NetCDF read helpers; `ogcwms.py` — hardened OWSLib WMS
+- `netCDF4tools.py` — NetCDF read helpers; `ogcwms.py` — thin wrapper around the
+  OWSLib WMS classes (version negotiation, capabilities document, all dimensions,
+  proxies); it patches `owslib.map.wms111/wms130.ContentMetadata.__init__`
 - `auth.py` — keyring-backed credential storage (tests mock the keyring)
 - `basic_auth.py` — password check of the basic HTTP auth of mswms, mscolab and
   `auth.wsgi` (argon2, deprecated MD5); `python -m mslib.utils.basic_auth` prints a hash
