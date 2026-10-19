@@ -49,3 +49,18 @@ def test_qWait_is_not_used_in_tests(request):
         assert (
             "qWait(" not in test_file.read_text()
         ), "qWait is mentioned in {}".format(test_file.relative_to(request.config.rootdir))
+
+
+def test_server_icons_are_copies_of_the_msui_icons(request):
+    """Check that favicon and logo of the mswms and mscolab pages are still the msui icons.
+
+    The servers have their own copies, so that they don't need mslib.msui; the copies change together.
+    """
+    mslib_path = pathlib.Path(request.config.rootdir) / "mslib"
+    msui_icons = mslib_path / "msui" / "icons"
+    for server in ("mswms", "mscolab"):
+        server_icons = mslib_path / server / "blueprints" / "docs" / "static" / "icons"
+        for copy, original in (("favicon.ico", "16x16/favicon.ico"), ("mss-logo.png", "64x64/mss-logo.png")):
+            assert (server_icons / copy).read_bytes() == (msui_icons / original).read_bytes(), \
+                "{} differs from {}".format((server_icons / copy).relative_to(request.config.rootdir),
+                                            (msui_icons / original).relative_to(request.config.rootdir))

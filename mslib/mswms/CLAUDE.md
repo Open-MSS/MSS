@@ -21,12 +21,16 @@ Global map: ../../ARCHITECTURE.md
 
 ## May import
 
-`mslib.utils` only. Never `mslib.msui` (exception: `blueprints/docs` icons, a
-to-do of the package split, #2307) or `mslib.mscolab`, and never Qt.
+`mslib.utils` only. Never `mslib.msui` or `mslib.mscolab`, and never Qt.
 Enforced: `gui-isolation`, `server-isolation`, `servers-without-qt` contracts.
 
 ## Invariants
 
+- The favicon and logo of the server pages
+  (`blueprints/docs/static/icons/{favicon.ico,mss-logo.png}`) are copies of
+  `mslib/msui/icons/{16x16/favicon.ico,64x64/mss-logo.png}`, the server must
+  not import `mslib.msui` for them; change the copies in mswms, mscolab and
+  msui together (`tests/test_meta.py` checks it).
 - Configuration comes from a user-supplied `mswms_settings` module (tests
   generate one in conftest); there is no config_loader here.
 - `WMSServer.__init__` scans data dirs — test data must exist before import

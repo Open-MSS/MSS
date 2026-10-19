@@ -29,13 +29,14 @@ import os
 from flask import Blueprint, abort, send_from_directory, render_template, url_for, send_file, current_app
 
 from mslib.mscolab.auth import optional_auth
-from mslib.msui.icons import icons
 from mslib.utils.file_exists import file_exists
 from mslib.utils.get_content import get_content
 
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(__file__))
 DOCS_STATIC_DIR = os.path.join(DOCS_SERVER_PATH, 'static')
 DOCS_IMG_DIR = os.path.join(DOCS_STATIC_DIR, 'img')
+# favicon and logo of the server pages, copies of mslib/msui/icons/{16x16/favicon.ico,64x64/mss-logo.png}
+DOCS_ICONS_DIR = os.path.join(DOCS_STATIC_DIR, 'icons')
 DOCS_DOCS_DIR = os.path.join(DOCS_STATIC_DIR, 'docs')
 
 DOCS_BP = Blueprint("docs", __name__, template_folder='templates', static_folder='static', static_url_path='/static')
@@ -122,14 +123,12 @@ def gdpr():
 
 @DOCS_BP.route('/mss/favicon.ico')
 def favicons():
-    base_path = icons("16x16", "favicon.ico")
-    return send_file(base_path)
+    return send_from_directory(DOCS_ICONS_DIR, 'favicon.ico')
 
 
 @DOCS_BP.route('/mss/logo.png')
 def logo():
-    base_path = icons("64x64", "mss-logo.png")
-    return send_file(base_path)
+    return send_from_directory(DOCS_ICONS_DIR, 'mss-logo.png')
 
 
 @DOCS_BP.route('/mss/overview.png')

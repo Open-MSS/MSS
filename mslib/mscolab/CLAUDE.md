@@ -10,6 +10,8 @@ Global map: ../../ARCHITECTURE.md
   HTTP basic auth and the socket.io managers to the app
 - `app/__init__.py` — `create_app()` factory (config, extensions, blueprints)
   and `initialise_db()`; there is no module level app instance
+- `mail.py` — `send_email` through the app's Flask-Mail (`current_app.mail`);
+  it lives here, not in `mslib.utils`, so that utils needs no Flask
 - `blueprints/{operation,auth,chat,user,docs,admin}/` — all ~50 REST routes; keep
   handlers thin, business logic belongs in the managers. `admin` is
   token-authenticated (`ADMIN_TOKEN`) and localhost-only, not per-user — it's the
@@ -37,13 +39,17 @@ Global map: ../../ARCHITECTURE.md
 
 ## May import
 
-`mslib.utils` only (plus stdlib/Flask stack). Never `mslib.msui` (exception:
-`blueprints/docs` icons, a to-do of the package split, #2307) or
+`mslib.utils` only (plus stdlib/Flask stack). Never `mslib.msui` or
 `mslib.mswms`, and never Qt. Enforced by the `gui-isolation`, `wms-isolation`
 and `servers-without-qt` contracts in setup.cfg.
 
 ## Invariants
 
+- The favicon and logo of the server pages
+  (`blueprints/docs/static/icons/{favicon.ico,mss-logo.png}`) are copies of
+  `mslib/msui/icons/{16x16/favicon.ico,64x64/mss-logo.png}`, the server must
+  not import `mslib.msui` for them; change the copies in mswms, mscolab and
+  msui together (`tests/test_meta.py` checks it).
 - Every REST payload has a mirror-image consumer in `mslib/msui/mscolab.py` —
   change both sides in the same commit and grep the endpoint name. For a
   route migrated to `api/schemas.py`, change the dataclass instead and both

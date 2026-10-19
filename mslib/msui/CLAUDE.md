@@ -30,6 +30,9 @@ SQLAlchemy; `client-without-server-stack` contract).
 ## Invariants
 
 - Never edit `qt5/ui_*.py`; change the `.ui` file and regenerate with pyuic5.
+- `icons/16x16/favicon.ico` and `icons/64x64/mss-logo.png` have copies in
+  `mslib/{mswms,mscolab}/blueprints/docs/static/icons/` (the servers must not
+  import msui); change all three together — `tests/test_meta.py` checks it.
 - REST payloads to MSColab are mostly still implicit dicts: when changing a
   call in `mscolab.py`, update the matching blueprint in
   `mslib/mscolab/blueprints/` in the same commit. A handful of routes (see
