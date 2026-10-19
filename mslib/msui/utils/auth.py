@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.utils.auth
+    mslib.msui.utils.auth
     ~~~~~~~~~~~~~~~~
 
     handles passwords from the keyring for login and http_auuth
@@ -46,7 +46,7 @@ except (ImportError, ModuleNotFoundError):
         def __init__(self, message):
             super().__init__(message)
 
-from mslib.utils import constants
+from mslib.msui.utils import constants
 
 
 NAME = __name__

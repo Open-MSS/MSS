@@ -36,7 +36,7 @@ import traceback
 
 from PyQt5 import QtCore, QtWidgets, QtGui  # noqa
 
-from mslib.utils.config import config_loader
+from mslib.msui.utils.config import config_loader
 from mslib.utils import FatalUserError
 
 

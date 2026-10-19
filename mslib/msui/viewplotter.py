@@ -39,7 +39,7 @@ from matplotlib.lines import Line2D
 from metpy.units import units
 from mslib.msui import mpl_map
 from mslib.utils import thermolib
-from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings
+from mslib.msui.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings
 from mslib.utils.loggerdef import configure_mpl_logger
 
 

@@ -4,7 +4,7 @@
     tests._test_utils.test_service_manager
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module provides pytest functions to tests mslib.utils.service_manager
+    This module provides pytest functions to tests mslib.msui.utils.service_manager
 
     This file is part of MSS.
 
@@ -25,7 +25,7 @@
 """
 import pytest
 
-from mslib.utils.service_manager import WMSServiceManager, service_cache_key, strip_request_params
+from mslib.msui.utils.service_manager import WMSServiceManager, service_cache_key, strip_request_params
 
 
 class TestStripRequestParams:

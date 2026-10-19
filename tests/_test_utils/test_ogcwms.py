@@ -4,7 +4,7 @@
     tests._test_utils.test_ogcwms
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module provides pytest functions to tests mslib.utils.ogcwms
+    This module provides pytest functions to tests mslib.msui.utils.ogcwms
 
     This file is part of MSS.
 
@@ -27,7 +27,7 @@ import pytest
 
 from owslib.util import ServiceException
 
-from mslib.utils.ogcwms import DEFAULT_VERSION, WebMapService
+from mslib.msui.utils.ogcwms import DEFAULT_VERSION, WebMapService
 
 
 CAPABILITIES_111 = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>

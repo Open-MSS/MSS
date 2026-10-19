@@ -16,9 +16,9 @@ Arrows mean "may import". Anything not drawn is forbidden.
         ┌──────────────┼───────────────────────┐
         ▼              ▼                       ▼
  mslib.mscolab.api mslib.support         mslib.utils
- (typed REST       (vendored              (shared: config, constants,
-  contract, socket  qt_json_view)          coordinates, units,
-  vocabulary; stdlib                       netCDF, auth, qt helpers)
+ (typed REST       (vendored              (shared: coordinates, units,
+  contract, socket  qt_json_view)          time, netCDF, the servers'
+  vocabulary; stdlib                       basic auth; no Qt)
   only, ONLY this of                           ▲
   mslib.mscolab)                               │
         ▲                                      │
@@ -53,13 +53,12 @@ under `ignore_imports` and must only shrink):
 
 - `plugins.io.{csv,text,flitestar}` import `msui.flighttrack` (all of them
   ship in the `mss-msui` package).
-- the deprecation shim `msui/constants.py` re-exports `utils/constants.py`
+- the deprecation shim `msui/constants.py` re-exports `msui/utils/constants.py`
   (`docs/samples/plugins/navaid.py` uses it).
-- To-dos of the package split (#2307), each labelled with the change that
-  removes it: `utils` modules import Qt, `mslib.support` and keyring
-  (`utils-base-layer`). import-linter reports an entry whose import is gone
-  ("No matches for ignored import"), so the PR that removes an import has to
-  delete its entry.
+
+import-linter reports an `ignore_imports` entry whose import is gone ("No matches
+for ignored import"), so a change that removes such an import has to delete its
+entry.
 
 ## Module index
 
@@ -80,7 +79,15 @@ under `ignore_imports` and must only shrink):
 - `*_dockwidget.py` — airdata, autoplot, hexagon, kmloverlay, remotesensing,
   satellite, multiple_flightpath, multilayers dock widgets
 - `editor.py` — JSON config editor; `performance_settings.py`, `aircraft.py`
-- `constants.py` — deprecated shim; real module is `mslib/utils/constants.py`
+- `utils/` — the client's helpers (moved from `mslib/utils` for the package
+  split, same module names): `config.py` — `MSUIDefaultConfig` defaults +
+  `config_loader` (THE config API); `constants.py` — MSUI config paths;
+  `qt.py` — Qt helpers; `colordialog.py` — CustomColorDialog; `auth.py` —
+  keyring/password handling; `ogcwms.py` — OWSLib WMS wrapper;
+  `service_manager.py`; `airdata.py` — airport/airspace download;
+  `find_location.py`; `migration/` — config-format migrations between major
+  versions
+- `constants.py` — deprecated shim; real module is `mslib/msui/utils/constants.py`
 - `ui/` — Qt Designer sources; `qt5/` — pyuic5 output, NEVER edit by hand
 
 ### mslib/mscolab — collaboration server (Flask + SocketIO; entry: `mscolab`)
@@ -111,13 +118,11 @@ under `ignore_imports` and must only shrink):
 
 ### mslib/utils — shared utilities (the base layer)
 
-- `config.py` — `MSUIDefaultConfig` defaults + `config_loader` (THE config API)
-- `constants.py` — MSUI config paths (moved here from msui in v11.1)
 - `coordinate.py`, `units.py`, `time.py`, `thermolib.py` — pure science helpers
-- `netCDF4tools.py` — NetCDF helpers; `ogcwms.py` — OWSLib WMS wrapper
-- `auth.py` — keyring/password handling; `qt.py` — Qt helpers
-- `colordialog.py` — CustomColorDialog; `airdata.py` — airport/airspace download
-- `migration/` — config-format migrations between major versions
+- `netCDF4tools.py` — NetCDF helpers; `get_projection_params.py`
+- `basic_auth.py` — basic HTTP auth passwords of mswms and mscolab (argon2)
+- `file_exists.py`, `get_content.py` — docs pages of the servers;
+  `release_info.py`, `loggerdef.py`, `verify_waypoint_data.py`
 
 ### Smaller packages
 
@@ -140,12 +145,10 @@ under `ignore_imports` and must only shrink):
    name. A route with a schema in `mslib/mscolab/api/schemas.py` only needs
    the dataclass changed; run `pixi run -e dev test-api` (schema self-consistency)
    and `tests/_test_mscolab/test_api_contract.py` (schemas against real routes).
-3. All configuration access goes through `mslib.utils.config.config_loader`;
+3. All configuration access goes through `mslib.msui.utils.config.config_loader`;
    never read the settings JSON directly.
-4. Qt imports are allowed only in `mslib/msui` and `mslib/support` — and, until
-   they move to msui, in the `mslib/utils` modules listed in the
-   `utils-base-layer` contract (`qt`, `colordialog`, `config`, `airdata`,
-   `migration/`).
+4. Qt imports are allowed only in `mslib/msui` (including `mslib/msui/utils`),
+   `mslib/autoplot` and `mslib/support`.
 5. New cross-package imports must satisfy the import-linter contracts in
    `setup.cfg` — never extend an `ignore_imports` list; its entries only shrink.
 

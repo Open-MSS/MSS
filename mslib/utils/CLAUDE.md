@@ -1,49 +1,34 @@
 # mslib.utils — shared utilities
 
-Purpose: the base layer — configuration, coordinates, units, time, thermodynamic
-and NetCDF helpers used by every other package.
+Purpose: the base layer — coordinates, units, time, thermodynamic and NetCDF
+helpers and the small helpers the servers share; used by every other package.
+The helpers of the desktop client (Qt, the msui configuration, keyring, airdata,
+the WMS client) live in `mslib/msui/utils/`.
 Global map: ../../ARCHITECTURE.md
 
 ## Layout
 
-- `config.py` — `MSUIDefaultConfig` (all config keys as class attributes) +
-  `config_loader(dataset=...)` (THE accessor) + JSON settings file IO +
-  structural validation registries (`dict_option_structure` etc.)
-- `constants.py` — MSUI config/cache paths (`MSUI_CONFIG_PATH`, `MSUI_SETTINGS`)
 - `coordinate.py`, `units.py`, `time.py`, `thermolib.py` — pure functions; the
   safest modules to edit; keep them dependency-free
-- `netCDF4tools.py` — NetCDF read helpers; `ogcwms.py` — thin wrapper around the
-  OWSLib WMS classes (version negotiation, capabilities document, all dimensions,
-  proxies); it patches `owslib.map.wms111/wms130.ContentMetadata.__init__`
-- `auth.py` — keyring-backed credential storage (tests mock the keyring)
+- `netCDF4tools.py` — NetCDF read helpers; `get_projection_params.py`
 - `basic_auth.py` — password check of the basic HTTP auth of mswms, mscolab and
   `auth.wsgi` (argon2, deprecated MD5); `python -m mslib.utils.basic_auth` prints a hash
-- `qt.py`, `colordialog.py` — Qt helpers (the only Qt code outside msui/support)
-- `airdata.py` — airport/airspace downloads; `find_location.py`,
-  `get_projection_params.py`
-- `migration/` — converts settings files between major config versions
+- `file_exists.py`, `get_content.py` — docs pages of the servers;
+  `release_info.py` — newest release on GitHub; `loggerdef.py`;
+  `verify_waypoint_data.py`
+- `__init__.py` — `FatalUserError`, `setup_logging`, `prefix_route`
 
 ## May import
 
 Nothing from `mslib` outside `utils`, and no Qt, keyring or server stack
 (Flask & co., SQLAlchemy, Werkzeug, pysaml2) — this is the base layer, enforced
-by the `gui-isolation` and `utils-base-layer` contracts in setup.cfg. The
-imports that still break this are listed there as to-dos of the package
-split (#2307); don't add more:
-
-- Qt: `qt`, `colordialog`, `config`, `airdata` and `migration/` import PyQt5
-  (`config` and `migration/` also `mslib.support`), so `find_location` and
-  `ogcwms`, which import `config`, need Qt as well;
-- keyring: `auth`, `migration/update_json_file_to_version_eight`.
+by the `gui-isolation` and `utils-base-layer` contracts in setup.cfg, with no
+exception. Code that needs Qt or keyring belongs to `mslib/msui/utils/`.
 
 ## Invariants
 
-- New config keys: add the attribute on `MSUIDefaultConfig` AND, if dict/list
-  shaped, the matching entry in `dict_option_structure`/`list_option_structure`
-  and a line in `config_descriptions`.
-- Everything except the modules above that need Qt (`qt`, `colordialog`,
-  `config`, `airdata`, `migration/`, `find_location`, `ogcwms`) must stay
-  importable without Qt or a running server.
+- Everything must stay importable without Qt, keyring or a running server: the
+  servers ship with this package, without the desktop client.
 
 ## Verify
 

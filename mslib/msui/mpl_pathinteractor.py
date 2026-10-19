@@ -52,12 +52,12 @@ import matplotlib.patches as mpatches
 from PyQt5 import QtCore, QtWidgets
 
 from mslib.utils.coordinate import get_distance, latlon_points, path_points
-from mslib.utils.find_location import find_location
+from mslib.msui.utils.find_location import find_location
 from mslib.utils.units import units
 from mslib.utils.thermolib import pressure2flightlevel
 from mslib.msui import flighttrack as ft
 from mslib.utils.loggerdef import configure_mpl_logger
-from mslib.utils.qt import plain_text_as_html
+from mslib.msui.utils.qt import plain_text_as_html
 
 
 mpl_logger = configure_mpl_logger()

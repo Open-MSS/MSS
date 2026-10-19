@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.utils.service_manager
+    mslib.msui.utils.service_manager
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     caches wms services

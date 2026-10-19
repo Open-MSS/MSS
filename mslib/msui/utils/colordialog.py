@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.utils.colordialog.py
+    mslib.msui.utils.colordialog.py
     ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Custom Color Dialog to select color from predefined swatches.

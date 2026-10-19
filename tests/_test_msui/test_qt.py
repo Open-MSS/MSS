@@ -4,7 +4,7 @@
     tests._test_utils.test_qt
     ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module provides pytest functions for mslib.utils.qt
+    This module provides pytest functions for mslib.msui.utils.qt
 
     This file is part of MSS.
 
@@ -31,9 +31,9 @@ from pathlib import Path
 import pytest
 import mock
 import mslib
-import mslib.utils.qt as mqt
+import mslib.msui.utils.qt as mqt
 import PyQt5 as pqt
-from mslib.utils.config import config_loader
+from mslib.msui.utils.config import config_loader
 from mslib.utils import FatalUserError
 
 
@@ -97,20 +97,20 @@ def test_variant_to_float():
 
 def test_get_open_filename_qt():
     filename = "example.csv"
-    with mock.patch("mslib.utils.qt.QtWidgets.QFileDialog.getOpenFileName", return_value=(filename, )):
+    with mock.patch("mslib.msui.utils.qt.QtWidgets.QFileDialog.getOpenFileName", return_value=(filename, )):
         _filename = mqt.get_open_filename_qt()
         assert _filename == filename
-    with mock.patch("mslib.utils.qt.QtWidgets.QFileDialog.getOpenFileName", return_value=filename):
+    with mock.patch("mslib.msui.utils.qt.QtWidgets.QFileDialog.getOpenFileName", return_value=filename):
         _filename = mqt.get_open_filename_qt()
         assert _filename == filename
 
 
 def test_get_open_filenames_qt():
     filename = "example.csv"
-    with mock.patch("mslib.utils.qt.QtWidgets.QFileDialog.getOpenFileNames", return_value=(filename, )):
+    with mock.patch("mslib.msui.utils.qt.QtWidgets.QFileDialog.getOpenFileNames", return_value=(filename, )):
         _filename = mqt.get_open_filenames_qt()
         assert _filename == filename
-    with mock.patch("mslib.utils.qt.QtWidgets.QFileDialog.getOpenFileNames", return_value=filename):
+    with mock.patch("mslib.msui.utils.qt.QtWidgets.QFileDialog.getOpenFileNames", return_value=filename):
         _filename = mqt.get_open_filenames_qt()
         assert _filename == filename
 
@@ -126,10 +126,10 @@ def test_get_pickertype():
 
 def test_get_open_filename():
     filename = "example.csv"
-    with mock.patch("mslib.utils.qt.get_open_filename_qt", return_value="example.csv"):
+    with mock.patch("mslib.msui.utils.qt.get_open_filename_qt", return_value="example.csv"):
         _filename = mqt.get_open_filename(None, "", "", "csv", pickertype="qt")
         assert _filename == filename
-    with mock.patch("mslib.utils.qt.get_open_filename_qt", return_value=""):
+    with mock.patch("mslib.msui.utils.qt.get_open_filename_qt", return_value=""):
         _filename = mqt.get_open_filename(None, "", "", "csv", pickertype="qt")
         assert _filename is None
     with pytest.raises(FatalUserError) as exc_info:
@@ -139,26 +139,26 @@ def test_get_open_filename():
 
 def test_get_open_filenames():
     filenames = ["example1.csv", "example2.csv"]
-    with mock.patch("mslib.utils.qt.get_open_filenames_qt", return_value=filenames):
+    with mock.patch("mslib.msui.utils.qt.get_open_filenames_qt", return_value=filenames):
         _filenames = mqt.get_open_filenames(None, "", "", "csv", pickertype="qt")
         assert _filenames == filenames
     with pytest.raises(FatalUserError) as exc_info:
         mqt.get_open_filenames(None, "", "", "csv", pickertype="undefined")
         assert type(exc_info.value.__cause__) is FatalUserError
-    with mock.patch("mslib.utils.qt.get_open_filenames_qt", return_value=[]):
+    with mock.patch("mslib.msui.utils.qt.get_open_filenames_qt", return_value=[]):
         filenames = mqt.get_open_filenames(None, "", "", "csv", pickertype="qt")
         assert filenames is None
 
 
 def test_save_filename():
     filename = "example.csv"
-    with mock.patch("mslib.utils.qt.get_save_filename_qt", return_value="example.csv"):
+    with mock.patch("mslib.msui.utils.qt.get_save_filename_qt", return_value="example.csv"):
         _filename = mqt.get_save_filename(None, "", "", filename, pickertype="qt")
         assert _filename == filename
     with pytest.raises(FatalUserError) as exc_info:
         _filename = mqt.get_save_filename(None, "", "", filename, pickertype="undefined")
         assert type(exc_info.value.__cause__) is FatalUserError
-    with mock.patch("mslib.utils.qt.get_save_filename_qt", return_value=""):
+    with mock.patch("mslib.msui.utils.qt.get_save_filename_qt", return_value=""):
         _filename = mqt.get_save_filename(None, "", "", "", pickertype="qt")
         assert _filename is None
 

@@ -48,7 +48,7 @@ except ImportError:
     import pyproj
 
 from mslib.msui import mpl_pathinteractor as mpl_pi
-from mslib.utils.airdata import get_airports, get_airspaces
+from mslib.msui.utils.airdata import get_airports, get_airspaces
 from mslib.utils.loggerdef import configure_mpl_logger
 
 

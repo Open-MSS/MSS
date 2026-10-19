@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.utils.constants
+    mslib.msui.utils.constants
     ~~~~~~~~~~~~~~~~~~~~~
 
     This module provides constants

@@ -42,10 +42,10 @@ from mslib.mscolab.api.attachments import DEFAULT_ATTACHMENT_EXTENSIONS, IMAGE_E
 from mslib.mscolab.api.message_type import MessageType
 from mslib.msui.socket_control import mscolab_get, response_message
 from PyQt5 import QtCore, QtGui, QtWidgets
-from mslib.utils.qt import get_open_filename, get_save_filename, plain_text_message_box, show_popup
+from mslib.msui.utils.qt import get_open_filename, get_save_filename, plain_text_message_box, show_popup
 from mslib.msui.qt5 import ui_mscolab_operation_window as ui
-from mslib.utils.config import config_loader
-from mslib.utils.auth import same_origin
+from mslib.msui.utils.config import config_loader
+from mslib.msui.utils.auth import same_origin
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.schemas import (
     FetchProfileImageRequest,

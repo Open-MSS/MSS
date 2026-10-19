@@ -29,11 +29,11 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
 from mslib.msui import flighttrack as ft
 import mslib.msui.msui_mainwindow as msui_mainwindow
-from mslib.utils.qt import Worker
+from mslib.msui.utils.qt import Worker
 from mslib.msui.socket_control import mscolab_get
-from mslib.utils.config import config_loader
+from mslib.msui.utils.config import config_loader
 from urllib.parse import urljoin
-from mslib.utils.colordialog import CustomColorDialog
+from mslib.msui.utils.colordialog import CustomColorDialog
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.schemas import (
     GetOperationByIdRequest,

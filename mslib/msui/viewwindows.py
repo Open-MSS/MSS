@@ -32,9 +32,9 @@ import os
 from abc import abstractmethod
 
 from PyQt5 import QtCore, QtWidgets
-from mslib.utils import constants
-from mslib.utils.config import load_settings_qsettings, save_settings_qsettings
-from mslib.utils.qt import plain_text_as_html
+from mslib.msui.utils import constants
+from mslib.msui.utils.config import load_settings_qsettings, save_settings_qsettings
+from mslib.msui.utils.qt import plain_text_as_html
 
 
 class MSUIViewWindow(QtWidgets.QMainWindow):

@@ -25,7 +25,7 @@
     limitations under the License.
 """
 import pytest
-from mslib.utils.service_manager import WMSServiceManager
+from mslib.msui.utils.service_manager import WMSServiceManager
 
 from tests.server_setup import ensure_example_ftml, reset_mscolab_config_dir
 

@@ -38,7 +38,7 @@ import requests
 import traceback
 import urllib.parse
 import defusedxml.ElementTree as etree
-from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings
+from mslib.msui.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 import owslib.util
@@ -46,17 +46,17 @@ from owslib.crs import axisorder_yx
 from PIL import Image, ImageOps
 from keyring.errors import NoKeyringError, PasswordSetError, InitError
 
-from mslib.utils import constants
+from mslib.msui.utils import constants
 from mslib.msui import wms_capabilities
 from mslib.msui.qt5 import ui_wms_dockwidget as ui
 from mslib.msui.qt5 import ui_wms_password_dialog as ui_pw
-from mslib.utils.qt import Worker, plain_text_as_html
+from mslib.msui.utils.qt import Worker, plain_text_as_html
 from mslib.msui.multilayers import Multilayers, Layer
-import mslib.utils.ogcwms as ogcwms
-from mslib.utils.service_manager import WMSServiceManager, strip_request_params
+import mslib.msui.utils.ogcwms as ogcwms
+from mslib.msui.utils.service_manager import WMSServiceManager, strip_request_params
 from mslib.utils.time import parse_iso_datetime, parse_iso_duration
-from mslib.utils.auth import save_password_to_keyring, get_auth_from_url_and_name, same_origin
-from mslib.utils.config import modify_config_file
+from mslib.msui.utils.auth import save_password_to_keyring, get_auth_from_url_and_name, same_origin
+from mslib.msui.utils.config import modify_config_file
 
 
 def add_wms_urls(combo_box, url_list):
@@ -305,7 +305,7 @@ def getmap_url_warning(wms):
 
 
 #: The owslib service classes with the MSUI getmap() on top, one per WMS version. The
-#: names have to keep the "MSUIWebMapService" prefix, mslib.utils.qt.Worker recognises
+#: names have to keep the "MSUIWebMapService" prefix, mslib.msui.utils.qt.Worker recognises
 #: the services by it (it cannot import this module, see the gui-isolation contract).
 MSUI_SERVICE_CLASSES = {
     version: type(f"MSUIWebMapService_{version.replace('.', '_')}",
@@ -317,7 +317,7 @@ MSUI_SERVICE_CLASSES = {
 def MSUIWebMapService(url, **kwargs):
     """Return a WebMapService for `url` that uses the MSUI getmap().
 
-    See mslib.utils.ogcwms.WebMapService, this only picks the service classes.
+    See mslib.msui.utils.ogcwms.WebMapService, this only picks the service classes.
     """
     return ogcwms.WebMapService(url, service_classes=MSUI_SERVICE_CLASSES, **kwargs)
 

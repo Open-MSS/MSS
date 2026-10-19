@@ -28,7 +28,7 @@ import time
 from pathlib import Path
 from slugify import slugify
 from PIL import Image
-from mslib.utils.constants import MSUI_CONFIG_PATH
+from mslib.msui.utils.constants import MSUI_CONFIG_PATH
 
 
 def picture(name, bounding_box=None):

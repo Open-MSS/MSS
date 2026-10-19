@@ -41,8 +41,8 @@ from mslib.msui.viewplotter import LAST_SAVE_DIRECTORY, TopViewPlotter, SideView
 
 from mslib.utils.thermolib import convert_pressure_to_vertical_axis_measure
 from mslib.utils import thermolib
-from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings
-from mslib.utils.qt import Worker, figure_to_clipboard
+from mslib.msui.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings
+from mslib.msui.utils.qt import Worker, figure_to_clipboard
 from mslib.utils.units import units
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import mpl_map

@@ -29,9 +29,9 @@ from urllib.parse import urljoin
 
 from PyQt5 import QtCore, QtWidgets
 from mslib.msui.qt5 import ui_mscolab_admin_window as ui
-from mslib.utils.qt import show_popup
+from mslib.msui.utils.qt import show_popup
 from mslib.msui.socket_control import mscolab_get
-from mslib.utils.config import config_loader
+from mslib.msui.utils.config import config_loader
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.schemas import (
     BulkPermissionsRequest,

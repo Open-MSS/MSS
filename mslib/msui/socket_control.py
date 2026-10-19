@@ -35,8 +35,8 @@ from PyQt5 import QtCore
 from mslib.mscolab.api.events import SocketEvents
 from mslib.mscolab.api.schemas import AUTH_FAILED_TEXT, TOKEN_HEADER
 from mslib.msui.mscolab_exceptions import MSColabConnectionError, MSColabSessionExpiredError
-from mslib.utils.config import MSUIDefaultConfig as mss_default
-from mslib.utils.config import config_loader
+from mslib.msui.utils.config import MSUIDefaultConfig as mss_default
+from mslib.msui.utils.config import config_loader
 
 
 def response_message(response, default):

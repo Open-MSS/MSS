@@ -29,7 +29,7 @@ import pyautogui as pag
 from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view, create_tutorial_images, move_window,
                              select_listelement, find_and_click_picture, zoom_in, type_and_key, switch_window)
 from tutorials.utils.platform_keys import platform_keys
-from mslib.utils.config import load_settings_qsettings
+from mslib.msui.utils.config import load_settings_qsettings
 
 CTRL, ENTER, WIN, ALT = platform_keys()
 

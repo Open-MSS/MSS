@@ -38,13 +38,13 @@ from PIL import Image
 
 from tests.constants import ROOT_DIR, MSCOLAB_DATA_DIR
 from tests import constants
-import mslib.utils.auth
+import mslib.msui.utils.auth
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.message_type import MessageType
 from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import LON, WaypointsTableModel
 from PyQt5 import QtCore, QtGui, QtTest, QtWidgets
-from mslib.utils.config import MSUIDefaultConfig, read_config_file, config_loader, modify_config_file
+from mslib.msui.utils.config import MSUIDefaultConfig, read_config_file, config_loader, modify_config_file
 from tests.utils import create_msui_settings_file, ExceptionMock
 from mslib.msui import msui
 from mslib.msui import mscolab
@@ -86,7 +86,7 @@ class Test_Mscolab_connect_window:
         for email in ["something@something.org", "anand@something.org",
                       "berta@something.org", "anton@something.org",
                       "other@something.org"]:
-            mslib.utils.auth.del_password_from_keyring(service_name="MSCOLAB", username=email)
+            mslib.msui.utils.auth.del_password_from_keyring(service_name="MSCOLAB", username=email)
         yield
         self.main_window.mscolab.logout()
         self.window.hide()
@@ -115,10 +115,10 @@ class Test_Mscolab_connect_window:
     @mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet")
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
     def test_connect_success(self, mockbox, mockset, qtbot):
-        assert mslib.utils.auth.get_password_from_keyring("MSCOLAB_AUTH_" + self.url, "mscolab") != "fnord"
+        assert mslib.msui.utils.auth.get_password_from_keyring("MSCOLAB_AUTH_" + self.url, "mscolab") != "fnord"
         self._connect_to_mscolab(qtbot, password="fnord")
 
-        assert mslib.utils.auth.get_password_from_keyring("MSCOLAB_AUTH_" + self.url, "mscolab") == "fnord"
+        assert mslib.msui.utils.auth.get_password_from_keyring("MSCOLAB_AUTH_" + self.url, "mscolab") == "fnord"
         assert mockset.call_args_list == [mock.call("color: green;")]
 
     def test_disconnect(self, qtbot):
@@ -218,8 +218,8 @@ class Test_Mscolab_connect_window:
         modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user("something", "something@something.org", "something", "Something")
         assert config_loader(dataset="MSS_auth").get(self.url) == "something@something.org"
-        assert mslib.utils.auth.get_password_from_keyring("MSCOLAB",
-                                                          "something@something.org") == "password from TestKeyring"
+        assert mslib.msui.utils.auth.get_password_from_keyring("MSCOLAB",
+                                                               "something@something.org") == "password from TestKeyring"
         # assert self.window.stackedWidget.currentWidget() == self.window.newuserPage
         assert self.main_window.usernameLabel.text() == 'something'
         assert self.main_window.mscolab.connect_window is None
@@ -234,8 +234,8 @@ class Test_Mscolab_connect_window:
         assert self.window.mscolab_server_url is not None
         self._create_user("anand", "anand@something.org", "anand_pass", "Anand User")
         # check changed settings
-        assert mslib.utils.auth.get_password_from_keyring(service_name=self.url,
-                                                          username="anand@something.org") == "anand_pass"
+        assert mslib.msui.utils.auth.get_password_from_keyring(service_name=self.url,
+                                                               username="anand@something.org") == "anand_pass"
         assert config_loader(dataset="MSS_auth").get(self.url) == "something@something.org"
         # check user is logged in
         assert self.main_window.usernameLabel.text() == "anand"
@@ -243,8 +243,8 @@ class Test_Mscolab_connect_window:
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_add_users_with_updating_credentials_in_config_file(self, mockmessage, qtbot):
         create_msui_settings_file('{"MSS_auth": {"' + self.url + '": "something@something.org"}}')
-        mslib.utils.auth.save_password_to_keyring(service_name=self.url,
-                                                  username="something@something.org", password="something")
+        mslib.msui.utils.auth.save_password_to_keyring(service_name=self.url,
+                                                       username="something@something.org", password="something")
         read_config_file()
         # check current settings
         assert config_loader(dataset="MSS_auth").get(self.url) == "something@something.org"
@@ -253,8 +253,8 @@ class Test_Mscolab_connect_window:
         self._create_user("anand", "anand@something.org", "anand_pass", "Anand User")
         # check changed settings
         assert config_loader(dataset="MSS_auth").get(self.url) == "anand@something.org"
-        assert mslib.utils.auth.get_password_from_keyring(service_name=self.url,
-                                                          username="anand@something.org") == "anand_pass"
+        assert mslib.msui.utils.auth.get_password_from_keyring(service_name=self.url,
+                                                               username="anand@something.org") == "anand_pass"
         # check user is logged in
         assert self.main_window.usernameLabel.text() == "anand"
 
@@ -1066,7 +1066,7 @@ class Test_Mscolab:
             assert self.window.usernameLabel.isVisible() is False
             assert self.window.connectBtn.isVisible() is True
             # this machine needs the password again too
-            assert self.url + "something@something.org" not in mslib.utils.auth.keyring.get_keyring().passwords
+            assert self.url + "something@something.org" not in mslib.msui.utils.auth.keyring.get_keyring().passwords
         else:
             assert authorized == "True"
             assert self.window.usernameLabel.isVisible() is True
@@ -1103,18 +1103,19 @@ class Test_Mscolab:
         u_id = self.window.mscolab.user['id']
         self.window.mscolab.open_profile_window()
         # Uses 'TestKeyring' from conftest.py for verification.
-        assert self.url + "something@something.org" in mslib.utils.auth.keyring.get_keyring().passwords
-        assert "MSCOLAB_AUTH_" + self.url, "something@something.org" in mslib.utils.auth.keyring.get_keyring().passwords
+        passwords = mslib.msui.utils.auth.keyring.get_keyring().passwords
+        assert self.url + "something@something.org" in passwords
+        assert "MSCOLAB_AUTH_" + self.url, "something@something.org" in passwords
         QtTest.QTest.mouseClick(self.window.mscolab.profile_dialog.deleteAccountBtn, QtCore.Qt.LeftButton)
         assert self.window.listOperationsMSC.model().rowCount() == 0
         assert self.window.usernameLabel.isVisible() is False
         assert self.window.connectBtn.isVisible() is True
         assert (
             self.url + "something@something.org"
-            not in mslib.utils.auth.keyring.get_keyring().passwords
+            not in mslib.msui.utils.auth.keyring.get_keyring().passwords
         )
         assert "MSCOLAB_AUTH_" + self.url, "something@something.org" not in (
-            mslib.utils.auth.keyring.get_keyring().passwords
+            mslib.msui.utils.auth.keyring.get_keyring().passwords
         )
         with self.app.app_context():
             assert User.query.filter_by(emailid='something').count() == 0

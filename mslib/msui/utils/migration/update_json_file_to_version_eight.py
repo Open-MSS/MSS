@@ -34,12 +34,12 @@ import copy
 from keyring.errors import NoKeyringError, PasswordSetError, InitError
 from packaging import version
 from mslib import __version__
-from mslib.utils.auth import save_password_to_keyring
-from mslib.utils.migration.config_before_eight import read_config_file as read_config_file_before_eight
-from mslib.utils.migration.config_before_eight import config_loader as config_loader_before_eight
-from mslib.utils.config import modify_config_file
-from mslib.utils.config import read_config_file, config_loader
-from mslib.utils.constants import MSUI_SETTINGS
+from mslib.msui.utils.auth import save_password_to_keyring
+from mslib.msui.utils.migration.config_before_eight import read_config_file as read_config_file_before_eight
+from mslib.msui.utils.migration.config_before_eight import config_loader as config_loader_before_eight
+from mslib.msui.utils.config import modify_config_file
+from mslib.msui.utils.config import read_config_file, config_loader
+from mslib.msui.utils.constants import MSUI_SETTINGS
 
 
 class JsonConversion:

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.utils.airdata
+    mslib.msui.utils.airdata
     ~~~~~~~~~~~~~~~~
 
     Functions for getting and downloading airspaces and airports.
@@ -36,8 +36,8 @@ import logging
 import time
 
 import defusedxml.ElementTree as etree
-from mslib.utils.constants import MSUI_CONFIG_PATH
-from mslib.utils.qt import plain_text_as_html
+from mslib.msui.utils.constants import MSUI_CONFIG_PATH
+from mslib.msui.utils.qt import plain_text_as_html
 
 AIPDIR = Path(MSUI_CONFIG_PATH) / "downloads" / "aip"
 AIPDIR.mkdir(parents=True, exist_ok=True)

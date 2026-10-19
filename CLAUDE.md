@@ -41,7 +41,7 @@ Single package `mslib` with four main subpackages:
 - **msui** — PyQt5 desktop GUI (`msui` entrypoint). Main window: `mslib.msui.msui_mainwindow`.
 - **mscolab** — Flask collaborative server (`mscolab` entrypoint). Server: `mslib.mscolab.server`. DB models: `mslib.mscolab.models`.
 - **mswms** — WMS geospatial service (`mswms` entrypoint). Driver: `mslib.mswms.mss_plot_driver`.
-- **utils** — Shared utilities (config, auth, coordinate handling, netCDF tools).
+- **utils** — Shared utilities (coordinates, units, time, netCDF tools, the servers' basic auth); the client's config, keyring and Qt helpers are in `mslib/msui/utils/`.
 
 CLI entrypoints (pixi env): `msui`, `mscolab`, `mswms`, `msidp`, `mssautoplot`, `mss`.
 

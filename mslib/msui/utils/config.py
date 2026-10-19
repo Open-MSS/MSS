@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.utils.migration.config_before_nine
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    mslib.msui.utils.config
+    ~~~~~~~~~~~~~~~~
 
-    Collection of functions all around config handling before version 9.0.0
+    Collection of functions all around config handling.
 
     This file is part of MSS.
 
@@ -25,19 +25,16 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
-import sys
 from PyQt5 import QtCore
 
 import copy
 import json
 import logging
-from pathlib import Path
 import os
-import tempfile
+from pathlib import Path
 
 from mslib.utils import FatalUserError
-from mslib.utils import constants
+from mslib.msui.utils import constants
 from mslib.support.qt_json_view.datatypes import match_type, UrlType, StrType
 
 
@@ -59,14 +56,11 @@ class MSUIDefaultConfig:
     Do not change any value for good reasons.
     Your values can be set in your personal msui_settings.json file
     """
-    # this skips the verification of the user token on each mscolab request
-    mscolab_skip_verify_user_token = True
-
-    # Default for general filepicker. Pick "default", "qt", or "fs"
+    # Default for general filepicker. Pick "default", "qt"
     filepicker_default = "default"
 
-    # dir where msui output files are stored
-    data_dir = "~/mssdata"
+    # dir where msui output files (flight tracks, exported plots) are stored
+    data_dir = str(constants.MSUI_DOCUMENTS_PATH)
 
     # layout of different views, with immutable they can't resized
     layout = {"topview": [963, 702],
@@ -77,18 +71,96 @@ class MSUIDefaultConfig:
 
     # Predefined map regions to be listed in the corresponding topview combobox
     predefined_map_sections = {
-        "01 Europe (cyl)": {"CRS": "EPSG:4326",
-                            "map": {"llcrnrlon": -15.0, "llcrnrlat": 35.0,
-                                    "urcrnrlon": 30.0, "urcrnrlat": 65.0}},
-        "02 Germany (cyl)": {"CRS": "EPSG:4326",
-                             "map": {"llcrnrlon": 5.0, "llcrnrlat": 45.0,
-                                     "urcrnrlon": 15.0, "urcrnrlat": 57.0}},
-        "03 Global (cyl)": {"CRS": "EPSG:4326",
-                            "map": {"llcrnrlon": -180.0, "llcrnrlat": -90.0,
-                                    "urcrnrlon": 180.0, "urcrnrlat": 90.0}},
-        "04 Northern Hemisphere (stereo)": {"CRS": "MSS:stere,0,90,90",
-                                            "map": {"llcrnrlon": -45.0, "llcrnrlat": 0.0,
-                                                    "urcrnrlon": 135.0, "urcrnrlat": 0.0}}
+        "00 global (cyl)": {
+            "CRS": "EPSG:4326",
+            "map": {
+                "llcrnrlon": -180.0,
+                "llcrnrlat": -90.0,
+                "urcrnrlon": 180.0,
+                "urcrnrlat": 90.0
+            }
+        },
+        "01 SADPAP (stereo)": {
+            "CRS": "EPSG:77890290",
+            "map": {
+                "llcrnrlon": -150.0,
+                "llcrnrlat": -45.0,
+                "urcrnrlon": -25.0,
+                "urcrnrlat": -20.0
+            }
+        },
+        "02 SADPAP zoom (stereo)": {
+            "CRS": "EPSG:77890290",
+            "map": {
+                "llcrnrlon": -120.0,
+                "llcrnrlat": -65.0,
+                "urcrnrlon": -45.0,
+                "urcrnrlat": -28.0
+            }
+        },
+        "03 SADPAP (cyl)": {
+            "CRS": "EPSG:4326",
+            "map": {
+                "llcrnrlon": -100.0,
+                "llcrnrlat": -75.0,
+                "urcrnrlon": -30.0,
+                "urcrnrlat": -30.0
+            }
+        },
+        "04 Southern Hemisphere (stereo)": {
+            "CRS": "EPSG:77889270",
+            "map": {
+                "llcrnrlon": 135.0,
+                "llcrnrlat": 0.0,
+                "urcrnrlon": -45.0,
+                "urcrnrlat": 0.0
+            }
+        },
+        "05 EDMO-SAL (cyl)": {
+            "CRS": "EPSG:4326",
+            "map": {
+                "llcrnrlon": -40,
+                "llcrnrlat": 10,
+                "urcrnrlon": 30,
+                "urcrnrlat": 60
+            }
+        },
+        "06 SAL-BA (cyl)": {
+            "CRS": "EPSG:4326",
+            "map": {
+                "llcrnrlon": -80,
+                "llcrnrlat": -40,
+                "urcrnrlon": -10,
+                "urcrnrlat": 30
+            }
+        },
+        "07 Europe (cyl)": {
+            "CRS": "EPSG:4326",
+            "map": {
+                "llcrnrlon": -15.0,
+                "llcrnrlat": 35.0,
+                "urcrnrlon": 30.0,
+                "urcrnrlat": 65.0
+            }
+        },
+        "08 Germany (cyl)": {
+            "CRS": "EPSG:4326",
+            "map": {
+                "llcrnrlon": 5.0,
+                "llcrnrlat": 45.0,
+                "urcrnrlon": 15.0,
+                "urcrnrlat": 57.0
+            }
+        },
+        "09 Northern Hemisphere (stereo)": {
+            "CRS": "MSS:stere,0,90,90",
+            "map": {
+                "llcrnrlon": -45.0,
+                "llcrnrlat": 0.0,
+                "urcrnrlon": 135.0,
+                "urcrnrlat": 0.0
+            }
+        }
     }
 
     # Side View.
@@ -111,8 +183,9 @@ class MSUIDefaultConfig:
     # URLs of default WMS servers.
     default_WMS = [
         "http://localhost:8081/",
-        "http://eumetview.eumetsat.int/geoserver/wms",
-        "https://apps.ecmwf.int/wms/?token=public"
+        "https://view.eumetsat.int/geoserver/wms",
+        "http://eccharts.ecmwf.int/wms/?token=public",
+        "https://neo.gsfc.nasa.gov/wms/wms"
     ]
 
     default_VSEC_WMS = [
@@ -128,24 +201,29 @@ class MSUIDefaultConfig:
         "http://localhost:8083",
     ]
 
-    # mail address to sign in
-    MSCOLAB_mailid = ""
+    # Username used for http auth
+    MSCOLAB_auth_user_name = "mscolab"
 
     # category for MSC operations
     MSCOLAB_category = "default"
+
+    # timeout for MSColab in seconds. First value is for connection, second for reply
+    MSCOLAB_timeout = [2, 10]
+
+    # don't query for archived operations
+    MSCOLAB_skip_archived_operations = False
 
     # list of MSC servers {"http://www.your-mscolab-server.de": "authuser",
     # "http://www.your-wms-server.de": "authuser"}
     MSS_auth = {}
 
     # timeout of Url request
-    WMS_request_timeout = 30
+    WMS_request_timeout = 60
 
     WMS_preload = []
 
     # WMS image cache settings:
-    # this changes on any start of msui, use the msui_settings.json when you want a persistent path
-    wms_cache = os.path.join(tempfile.TemporaryDirectory().name, "msui_wms_cache")
+    wms_cache = str(constants.MSUI_CACHE_PATH / "wms_cache")
 
     # Maximum size of the cache in bytes.
     wms_cache_max_size_bytes = 20 * 1024 * 1024
@@ -197,9 +275,8 @@ class MSUIDefaultConfig:
     # ToDo configurable later
     # mscolab server
     mscolab_server_url = "http://localhost:8083"
-    # ToDo refactor to rename this to data_dir/mss_data_dir
-    # mss dir
-    mss_dir = "~/mss"
+    # local mirror of MSColab operations (git checkouts, local FTML cache)
+    mscolab_local_data_dir = str(constants.MSUI_DATA_PATH)
 
     # list of gravatar email ids to automatically fetch
     gravatar_ids = []
@@ -228,19 +305,23 @@ class MSUIDefaultConfig:
 
     # Dictionary options with fixed key/value pairs
     fixed_dict_options = ["layout", "wms_prefetch", "topview", "sideview", "linearview"]
+    # List options with fixed length
+    fixed_list_options = ["MSCOLAB_timeout", ]
+    # List options whose string entries take any string, e.g. a flight track path
+    free_string_list_options = ["automated_plotting_flights", ]
 
     # Fixed key/value pair options
     key_value_options = [
-        'mscolab_skip_verify_user_token',
         'filepicker_default',
-        'mss_dir',
+        'mscolab_local_data_dir',
         'data_dir',
         'num_labels',
         'num_interpolation_points',
         'new_flighttrack_flightlevel',
-        'MSCOLAB_mailid',
         'MSCOLAB_category',
+        'MSCOLAB_skip_archived_operations',
         'mscolab_server_url',
+        'MSCOLAB_auth_user_name',
         'wms_cache',
         'wms_cache_max_size_bytes',
         'wms_cache_max_age_seconds',
@@ -284,43 +365,47 @@ class MSUIDefaultConfig:
         "new_flighttrack_template": ["new-location"],
         "gravatar_ids": ["example@email.com"],
         "WMS_preload": ["https://wms-preload-url.com"],
+        "MSCOLAB_timeout": [0, 0],
         "automated_plotting_flights": [["", "", "", "", "", ""]],
         "automated_plotting_hsecs": [["http://www.your-wms-server.de", "", "", ""]],
         "automated_plotting_vsecs": [["http://www.your-wms-server.de", "", "", ""]],
-        "automated_plotting_lsecs": [["http://www.your-wms-server.de", "", ""]]
+        "automated_plotting_lsecs": [["http://www.your-wms-server.de", "", "", "pressure"]]
     }
 
     config_descriptions = {
-        "filepicker_default": "Documentation Required",
-        "data_dir": "Documentation Required",
-        "predefined_map_sections": "Documentation Required",
-        "num_interpolation_points": "Documentation Required",
-        "num_labels": "Documentation Required",
-        "default_WMS": "Documentation Required",
-        "default_VSEC_WMS": "Documentation Required",
-        "default_LSEC_WMS": "Documentation Required",
-        "default_MSCOLAB": "Documentation Required",
-        "MSS_auth": "Documentation Required",
-        "MSCOLAB_mailid": "Documentation Required",
-        "WMS_request_timeout": "Documentation Required",
-        "WMS_preload": "Documentation Required",
-        "wms_cache": "Documentation Required",
-        "wms_cache_max_size_bytes": "Documentation Required",
-        "wms_cache_max_age_seconds": "Documentation Required",
-        "wms_prefetch": "Documentation Required",
-        "locations": "Documentation Required",
-        "new_flighttrack_template": "Documentation Required",
-        "new_flighttrack_flightlevel": "Documentation Required",
-        "proxies": "Documentation Required",
-        "mscolab_server_url": "Documentation Required",
-        "mss_dir": "Documentation Required",
-        "gravatar_ids": "Documentation Required",
-        "export_plugins": "Documentation Required",
-        "import_plugins": "Documentation Required",
-        "layout": "Documentation Required",
-        "topview": "Documentation Required",
-        "sideview": "Documentation Required",
-        "linearview": "Documentation Required",
+        "filepicker_default": "Defines the type of file-picker to be used. Can be 'default', 'qt'",
+        "data_dir": "Directory where MSUI output files are stored",
+        "predefined_map_sections": "Dictionary containing predefined map sections with their settings",
+        "num_interpolation_points": "Number of interpolation points used for vertical cross section requests",
+        "num_labels": "Number of x-axis labels in the side view",
+        "default_WMS": "List of the URLs of default WMS servers",
+        "default_VSEC_WMS": "List of the URLs of default Vertical Section WMS servers",
+        "default_LSEC_WMS": "List of the URLs of default Linear Section WMS servers",
+        "default_MSCOLAB": "List of the URLs of default MSColab servers",
+        "MSS_auth": "Dictionary containing credentials for http auth",
+        "MSCOLAB_auth_user_name": "Username used for http auth",
+        "MSCOLAB_timeout": "Tuple specifying timeout for MSColab in seconds. First value is for connection,"
+                           " second for reply",
+        "WMS_request_timeout": "Timeout of WMS Url request",
+        "WMS_preload": "List of WMS URLs to preload",
+        "wms_cache": "Path to WMS image cache directory",
+        "wms_cache_max_size_bytes": "Maximum size of the cache in bytes",
+        "wms_cache_max_age_seconds": "Maximum age of a cached file in seconds",
+        "wms_prefetch": "Dictionary configuring the prefetch behaviour of WMS",
+        "locations": "Dictionary providing geo-coordinates for predefined locations",
+        "new_flighttrack_template": "List of predefined location names used as a flight track template"
+                                    " when creating a new flight track",
+        "new_flighttrack_flightlevel": "Default flight level for waypoints inserted by the flighttrack template",
+        "proxies": "Proxy settings for network requests",
+        "mscolab_server_url": "URL of the MSColab server",
+        "mscolab_local_data_dir": "Directory for the local mirror of MSColab operations",
+        "gravatar_ids": "List of gravatar email ids to automatically fetch",
+        "export_plugins": "Dictionary of export plugins",
+        "import_plugins": "Dictionary of import plugins",
+        "layout": "Dictionary for layout of different views",
+        "topview": "Dictionary to make title, label, and ticklabel sizes for topview configurable",
+        "sideview": "Dictionary to make title, label, and ticklabel sizes for sideview configurable",
+        "linearview": "Dictionary to make title, label, and ticklabel sizes for linearview configurable",
     }
 
 
@@ -332,16 +417,46 @@ for key in [
     "__dict__",
     "__weakref__",
     "fixed_dict_options",
+    "fixed_list_options",
     "dict_option_structure",
     "list_option_structure",
     "key_value_options",
     "config_descriptions",
+    "free_string_list_options",
 ]:
     del default_options[key]
 
 
 # user options as dictionary
 user_options = copy.deepcopy(default_options)
+
+
+# Renamed config keys: {old_name: new_name}. Values from the old key are carried
+# over to the new key the first time an outdated msui_settings.json is read.
+DEPRECATED_KEY_ALIASES = {
+    "mss_dir": "mscolab_local_data_dir",
+}
+
+
+def _migrate_deprecated_keys(json_file_data, path):
+    """
+    Renames deprecated keys found in an already-parsed settings file in place,
+    backing up the original file once before rewriting it.
+    """
+    present = [key for key in DEPRECATED_KEY_ALIASES if key in json_file_data]
+    if not present:
+        return json_file_data
+
+    backup = path.with_suffix(".bak")
+    backup.write_text(path.read_text())
+    for old_key, new_key in DEPRECATED_KEY_ALIASES.items():
+        if old_key in json_file_data:
+            json_file_data.setdefault(new_key, json_file_data[old_key])
+            del json_file_data[old_key]
+            logging.info(
+                "Migrated deprecated config key '%s' to '%s' (backup saved to %s)", old_key, new_key, backup)
+    path.write_text(json.dumps(json_file_data, indent=4))
+    return json_file_data
 
 
 def read_config_file(path=constants.MSUI_SETTINGS):
@@ -368,6 +483,8 @@ def read_config_file(path=constants.MSUI_SETTINGS):
             logging.error("Error while loading json file %s", e)
             error_message = f"Invalid keys detected in config\n{e}"
             raise FatalUserError(error_message)
+        if json_file_data:
+            json_file_data = _migrate_deprecated_keys(json_file_data, path)
     else:
         error_message = f"MSS config File '{path}' not found"
         raise FileNotFoundError(error_message)
@@ -443,7 +560,7 @@ def config_loader(dataset=None, default=False):
         return user_options
 
 
-def save_settings_qsettings(tag, settings, ignore_test=False):
+def save_settings_qsettings(tag, settings):
     """
     Saves a dictionary settings to disk.
 
@@ -453,10 +570,10 @@ def save_settings_qsettings(tag, settings, ignore_test=False):
     """
     assert isinstance(tag, str)
     assert isinstance(settings, dict)
-    if not ignore_test and ("pytest" in sys.modules or "pyautogui" in sys.modules):
-        return settings
+    # ToDo we have to verify if we can all switch to this definition, not having 3 different
+    q_settings = QtCore.QSettings(os.path.join(constants.MSUI_CONFIG_SYSPATH, "msui-core.conf"),
+                                  QtCore.QSettings.IniFormat)
 
-    q_settings = QtCore.QSettings("msui", "msui-core")
     file_path = q_settings.fileName()
     logging.debug("storing settings for %s to %s", tag, file_path)
     try:
@@ -466,7 +583,7 @@ def save_settings_qsettings(tag, settings, ignore_test=False):
     return settings
 
 
-def load_settings_qsettings(tag, default_settings=None, ignore_test=False):
+def load_settings_qsettings(tag, default_settings=None):
     """
     Loads a dictionary of settings from disk. May supply a dictionary of default settings
     to return in case the settings file is not present or damaged. The default_settings one will
@@ -480,11 +597,11 @@ def load_settings_qsettings(tag, default_settings=None, ignore_test=False):
     if default_settings is None:
         default_settings = {}
     assert isinstance(default_settings, dict)
-    if not ignore_test and ("pytest" in sys.modules or "pyautogui" in sys.modules):
-        return default_settings
 
     settings = {}
-    q_settings = QtCore.QSettings("msui", "msui-core")
+
+    q_settings = QtCore.QSettings(os.path.join(constants.MSUI_CONFIG_SYSPATH, "msui-core.conf"),
+                                  QtCore.QSettings.IniFormat)
     file_path = q_settings.fileName()
     logging.debug("loading settings for %s from %s", tag, file_path)
     try:
@@ -507,7 +624,7 @@ def merge_dict(existing_dict, new_dict):
     new_dict -- Dict with new values
     """
     # Check if dictionary options with fixed key/value pairs match data types from default
-    for key in MSUIDefaultConfig.fixed_dict_options:
+    for key in MSUIDefaultConfig.fixed_dict_options + MSUIDefaultConfig.fixed_list_options:
         if key in new_dict:
             existing_dict[key] = compare_data(
                 existing_dict[key], new_dict[key]
@@ -525,6 +642,8 @@ def merge_dict(existing_dict, new_dict):
             for option_key in new_dict[key]:
                 for dos_key_key in dos[key]:
                     data, match = compare_data(dos[key][dos_key_key], new_dict[key][option_key])
+                    if key in MSUIDefaultConfig.fixed_list_options:
+                        match = len(dos[key][dos_key_key]) == len(new_dict[key][option_key])
                     if match:
                         temp_data[option_key] = new_dict[key][option_key]
                         break
@@ -536,14 +655,17 @@ def merge_dict(existing_dict, new_dict):
     for key in los:
         if key in new_dict:
             temp_data = []
-            for i in range(len(new_dict[key])):
-                for los_key_item in los[key]:
-                    data, match = compare_data(los_key_item, new_dict[key][i])
-                    if match:
-                        temp_data.append(data)
-                        break
-            if temp_data != []:
-                existing_dict[key] = temp_data
+            if key not in MSUIDefaultConfig.fixed_list_options:
+                for i in range(len(new_dict[key])):
+                    for los_key_item in los[key]:
+                        data, match = compare_data(los_key_item,
+                                                   new_dict[key][i],
+                                                   any_string=key in MSUIDefaultConfig.free_string_list_options)
+                        if match:
+                            temp_data.append(data)
+                            break
+                if temp_data != []:
+                    existing_dict[key] = temp_data
 
     # Check if options with fixed key/value pair structure match data types from default
     for key in MSUIDefaultConfig.key_value_options:
@@ -564,7 +686,7 @@ def merge_dict(existing_dict, new_dict):
     return existing_dict
 
 
-def compare_data(default, user_data):
+def compare_data(default, user_data, any_string=False):
     """
     Recursively compares two dictionaries based on qt_json_view datatypes
     and returns default or user_data appropriately.
@@ -577,6 +699,8 @@ def compare_data(default, user_data):
     if not isinstance(default, dict) and not isinstance(default, list):
         if isinstance(default, float) and isinstance(user_data, int):
             user_data = float(default)
+        if any_string and isinstance(default, str) and isinstance(user_data, str):
+            return user_data, True
         if isinstance(match_type(default), UrlType) and isinstance(match_type(user_data), StrType):
             return user_data, True
         if isinstance(match_type(default), type(match_type(user_data))):
@@ -590,7 +714,7 @@ def compare_data(default, user_data):
     if isinstance(default, list) and isinstance(user_data, list):
         if len(default) == len(user_data):
             for i in range(len(default)):
-                data[i], match = compare_data(default[i], user_data[i])
+                data[i], match = compare_data(default[i], user_data[i], any_string=any_string)
                 matches.append(match)
         else:
             return default, False
@@ -600,7 +724,7 @@ def compare_data(default, user_data):
         if default.keys() == user_data.keys():
             for key in default:
                 if key in user_data:
-                    data[key], match = compare_data(default[key], user_data[key])
+                    data[key], match = compare_data(default[key], user_data[key], any_string=any_string)
                     matches.append(match)
                 else:
                     matches.append(False)

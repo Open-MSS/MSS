@@ -5,8 +5,8 @@
     ~~~~~~~~~~~~~~~~~~~~
 
     Deprecated compatibility shim: the constants moved to
-    :mod:`mslib.utils.constants` so that mslib.utils does not depend on the
-    GUI package. Import from mslib.utils.constants instead; this module is
+    :mod:`mslib.msui.utils.constants` so that mslib.utils does not depend on the
+    GUI package. Import from mslib.msui.utils.constants instead; this module is
     kept for one release for third-party plugin configurations.
 
     This file is part of MSS.
@@ -30,4 +30,4 @@
     limitations under the License.
 """
 
-from mslib.utils.constants import *  # noqa: F401,F403
+from mslib.msui.utils.constants import *  # noqa: F401,F403

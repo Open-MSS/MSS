@@ -4,7 +4,7 @@
     tests._test_utils.test_airdata
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module provides pytest functions to test mslib.utils.airdata
+    This module provides pytest functions to test mslib.msui.utils.airdata
 
     This file is part of MSS.
 
@@ -27,7 +27,7 @@
 import mock
 from pathlib import Path
 from PyQt5 import QtWidgets
-from mslib.utils.airdata import download_progress, get_airports, \
+from mslib.msui.utils.airdata import download_progress, get_airports, \
     get_available_airspaces, update_airspace, get_airspaces
 from tests.constants import MSUI_CONFIG_PATH
 
@@ -122,7 +122,7 @@ def test_get_airports(mockbox):
 
 @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
 def test_get_downloaded_airports(mockbox):
-    with mock.patch("mslib.utils.airdata.download_progress", _download_progress_airports):
+    with mock.patch("mslib.msui.utils.airdata.download_progress", _download_progress_airports):
         airports = get_airports(force_download=True)
         assert len(airports) > 0
         assert 'continent' in airports[0].keys()
@@ -136,7 +136,7 @@ def test_get_available_airspaces():
 
 @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
 def test_update_airspace(mockbox):
-    with mock.patch("mslib.utils.airdata.download_progress", _download_progress_airspace):
+    with mock.patch("mslib.msui.utils.airdata.download_progress", _download_progress_airspace):
         update_airspace(force_download=True, countries=["bg"])
         example_file = AIPDIR / "bg_asp.xml"
         assert example_file.exists()
@@ -155,7 +155,7 @@ def test_get_airspaces_no_data(mockbox):
     assert airspaces == []
 
 
-@mock.patch("mslib.utils.airdata.download_progress", _download_progress_airspace)
+@mock.patch("mslib.msui.utils.airdata.download_progress", _download_progress_airspace)
 @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
 def test_get_airspaces(mockbox):
     """ We use a test file without the need for downloading to check handling """
@@ -197,7 +197,7 @@ def test_get_airspaces(mockbox):
     ]
 
 
-@mock.patch("mslib.utils.airdata.download_progress", _download_incomplete_airspace)
+@mock.patch("mslib.msui.utils.airdata.download_progress", _download_incomplete_airspace)
 @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
 @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
 def test_get_airspaces_missing_data(mockbox, infobox):

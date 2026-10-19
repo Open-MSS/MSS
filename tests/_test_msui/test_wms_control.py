@@ -35,10 +35,10 @@ import socket
 from xml.sax.saxutils import quoteattr
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.msui import flighttrack as ft
-from mslib.utils.config import config_loader
+from mslib.msui.utils.config import config_loader
 import mslib.msui.wms_control as wc
 from tests.utils import shown_text
-from mslib.utils.service_manager import strip_request_params
+from mslib.msui.utils.service_manager import strip_request_params
 
 WMS_REQUEST_TIMEOUT_MS = (config_loader(dataset="WMS_request_timeout") + 5) * 1000
 

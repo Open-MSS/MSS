@@ -28,9 +28,9 @@ import pytest
 from pathlib import Path
 from packaging import version
 
-from mslib.utils import auth
+from mslib.msui.utils import auth
 from mslib import __version__
-from mslib.utils.constants import MSUI_SETTINGS
+from mslib.msui.utils.constants import MSUI_SETTINGS
 from tests.utils import create_msui_settings_file
 
 
@@ -44,7 +44,7 @@ class TestMigration:
         It adds the new attributes and stores passwords in the keyring
         """
         if version.parse(__version__) >= version.parse('8.0.0') and version.parse(__version__) < version.parse('9.0.0'):
-            from mslib.utils.migration.update_json_file_to_version_eight import JsonConversion
+            from mslib.msui.utils.migration.update_json_file_to_version_eight import JsonConversion
             # old attributes
             wms_def = '"http://www.your-server.de/forecasts": ["youruser", "yourpassword"]'
             msc_def = '"http://www.your-mscolab-server.de": ["youruser", "yourpassword"]'
@@ -61,8 +61,8 @@ class TestMigration:
             # store old configuration
             create_msui_settings_file(data)
 
-            from mslib.utils.migration.config_before_eight import read_config_file as read_config_file_before_eight
-            from mslib.utils.migration.config_before_eight import config_loader as config_loader_before_eight
+            from mslib.msui.utils.migration.config_before_eight import read_config_file as read_config_file_before_eight
+            from mslib.msui.utils.migration.config_before_eight import config_loader as config_loader_before_eight
             read_config_file_before_eight()
 
             wms_login = {'http://www.your-server.de/forecasts': ['youruser', 'yourpassword']}
@@ -81,7 +81,7 @@ class TestMigration:
             assert bak_file.exists()
 
             # using current configuration
-            from mslib.utils.config import read_config_file, config_loader
+            from mslib.msui.utils.config import read_config_file, config_loader
             read_config_file()
             # converted WMS_login and MSC_login to MSS_auth attribute
             http_auth = config_loader(dataset="MSS_auth")
@@ -109,7 +109,7 @@ class TestMigration:
         """
         if version.parse(__version__) >= version.parse('9.0.0') and\
                 version.parse(__version__) < version.parse('10.0.0'):
-            from mslib.utils.migration.update_json_file_to_version_nine import JsonConversion
+            from mslib.msui.utils.migration.update_json_file_to_version_nine import JsonConversion
             # old attributes
             mailid = 'something@something.org'
             auth = '"https://www.your-mscolab-server.de": "youruser"'
@@ -127,8 +127,8 @@ class TestMigration:
             # store old configuration
             create_msui_settings_file(data)
 
-            from mslib.utils.migration.config_before_nine import read_config_file as read_config_file_before_nine
-            from mslib.utils.migration.config_before_nine import config_loader as config_loader_before_nine
+            from mslib.msui.utils.migration.config_before_nine import read_config_file as read_config_file_before_nine
+            from mslib.msui.utils.migration.config_before_nine import config_loader as config_loader_before_nine
             read_config_file_before_nine()
 
             result = dict()
@@ -147,7 +147,7 @@ class TestMigration:
             assert bak_file.exists()
 
             # using current configuration
-            from mslib.utils.config import read_config_file, config_loader
+            from mslib.msui.utils.config import read_config_file, config_loader
             read_config_file()
             # added MSCOLAB_mailid to the url based on default_MSCOLAB
             mss_auth = config_loader(dataset="MSS_auth")

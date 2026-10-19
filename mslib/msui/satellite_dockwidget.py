@@ -32,10 +32,10 @@ from pathlib import Path
 from datetime import datetime, timedelta
 import numpy as np
 
-from mslib.utils.qt import get_open_filename, plain_text_as_html
+from mslib.msui.utils.qt import get_open_filename, plain_text_as_html
 from mslib.msui.qt5 import ui_satellite_dockwidget as ui
 from PyQt5 import QtWidgets
-from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
+from mslib.msui.utils.config import save_settings_qsettings, load_settings_qsettings
 
 
 def read_nasa_satellite_prediction(fname):

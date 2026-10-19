@@ -29,7 +29,7 @@ from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view
                              find_and_click_picture, move_and_setup_layerchooser, get_region,
                              select_listelement)
 from tutorials.utils.platform_keys import platform_keys
-from mslib.utils.config import load_settings_qsettings
+from mslib.msui.utils.config import load_settings_qsettings
 
 CTRL, ENTER, WIN, ALT = platform_keys()
 

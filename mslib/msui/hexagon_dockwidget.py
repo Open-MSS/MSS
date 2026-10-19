@@ -31,8 +31,8 @@ from PyQt5 import QtWidgets
 from mslib.msui.qt5 import ui_hexagon_dockwidget as ui
 from mslib.msui import flighttrack as ft
 from mslib.utils.coordinate import rotate_point
-from mslib.utils.config import config_loader
-from mslib.utils.qt import plain_text_as_html
+from mslib.msui.utils.config import config_loader
+from mslib.msui.utils.qt import plain_text_as_html
 
 
 class HexagonException(Exception):

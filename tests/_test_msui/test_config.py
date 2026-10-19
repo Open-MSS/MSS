@@ -4,7 +4,7 @@
     tests._test_utils.test_config
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module provides pytest functions to test mslib.utils.config
+    This module provides pytest functions to test mslib.msui.utils.config
 
     This file is part of MSS.
 
@@ -25,16 +25,16 @@
     limitations under the License.
 """
 import logging
-import mslib.utils.config as config
+import mslib.msui.utils.config as config
 
 import pytest
 from pathlib import Path
 
 from mslib import utils
-from mslib.utils import constants
-from mslib.utils.config import MSUIDefaultConfig as mss_default
-from mslib.utils.config import config_loader, read_config_file, modify_config_file
-from mslib.utils.config import merge_dict
+from mslib.msui.utils import constants
+from mslib.msui.utils.config import MSUIDefaultConfig as mss_default
+from mslib.msui.utils.config import config_loader, read_config_file, modify_config_file
+from mslib.msui.utils.config import merge_dict
 from tests.constants import MSUI_CONFIG_PATH, MSUI_CONFIG_FILE_PATH
 from tests.utils import create_msui_settings_file
 
