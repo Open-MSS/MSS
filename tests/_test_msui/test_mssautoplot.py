@@ -50,9 +50,12 @@ class TestResolveFtmlPath:
     """
     The flight track of an "automated_plotting_flights" entry is stored as path + file name,
     --fpath overrides the directory of that entry.
+
+    resolve_ftml_path follows symlinks, so the expected paths are resolved too: on macOS /home is a symlink
+    to /System/Volumes/Data/home.
     """
     def test_absolute_path_is_kept(self):
-        assert resolve_ftml_path("/home/mss/flights/example.ftml") == Path("/home/mss/flights/example.ftml")
+        assert resolve_ftml_path("/home/mss/flights/example.ftml") == Path("/home/mss/flights/example.ftml").resolve()
 
     def test_bare_filename_relative_to_working_directory(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
@@ -76,18 +79,19 @@ class TestResolveFtmlPath:
         assert resolve_ftml_path("example.ftml", "/data/campaign") == Path("/data/campaign/example.ftml")
 
     def test_empty_fpath_is_ignored(self):
-        assert resolve_ftml_path("/home/mss/flights/example.ftml", "") == Path("/home/mss/flights/example.ftml")
+        assert resolve_ftml_path("/home/mss/flights/example.ftml", "") == \
+            Path("/home/mss/flights/example.ftml").resolve()
 
     def test_directory_anchors_a_relative_name(self, tmp_path, monkeypatch):
         # the directory of the configuration file which named the flight track,
         # not the working directory
         monkeypatch.chdir(tmp_path)
         assert resolve_ftml_path("example.ftml", directory="/home/mss/flights") == \
-            Path("/home/mss/flights/example.ftml")
+            Path("/home/mss/flights/example.ftml").resolve()
 
     def test_directory_does_not_touch_an_absolute_path(self):
         assert resolve_ftml_path("/home/mss/example.ftml", directory="/data/campaign") == \
-            Path("/home/mss/example.ftml")
+            Path("/home/mss/example.ftml").resolve()
 
     def test_fpath_wins_over_directory(self):
         assert resolve_ftml_path("example.ftml", fpath="/data/campaign", directory="/home/mss/flights") == \
