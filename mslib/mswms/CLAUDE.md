@@ -32,9 +32,10 @@ Enforced: `gui-isolation`, `server-isolation`, `servers-without-qt` contracts.
   not import `mslib.msui` for them; change the copies in mswms, mscolab and
   msui together (`tests/test_meta.py` checks it).
 - Configuration comes from a user-supplied `mswms_settings` module (tests
-  generate one in conftest); there is no config_loader here.
+  generate one with `tests/server_setup.py`); there is no config_loader here.
 - `WMSServer.__init__` scans data dirs — test data must exist before import
-  (root conftest guarantees this; don't move that seeding).
+  (`tests/_test_mswms/conftest.py` and the `mswms_app` fixture guarantee this;
+  don't move that seeding).
 - With `ENABLE_BASIC_HTTP_AUTHENTICATION` the `before_request` hook
   `_require_login` in `app/__init__.py` protects every path, also docs,
   gallery and static files. Don't protect single views; new routes are

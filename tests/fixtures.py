@@ -24,84 +24,23 @@
     limitations under the License.
 """
 import copy
-import pytest
-import mock
 import multiprocessing
+import multiprocessing.queues
 import time
-import urllib
-import socketio
-
-from pathlib import Path
-from werkzeug.serving import make_server
-
-from PyQt5 import QtWidgets
+import urllib.parse
 from contextlib import contextmanager
-from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import db
-from mslib.mscolab.server import create_server_app
-from mslib.mscolab.mscolab import handle_db_reset
-from mslib.msui.utils.config import modify_config_file
-from tests.utils import is_url_response_ok
+from pathlib import Path
 
-# mslib.mscolab.server and mslib.mswms.mswms are imported lazily, inside the
-# fixtures that need them (mscolab_session_app/mscolab_session_managers,
-# mswms_app) rather than at module scope here. Both bind their config from
-# mscolab_settings/mswms_settings at import time and mscolab.server also runs
-# a real DB migration, so importing this module must stay cheap and
-# side-effect-free -- tests/_test_msui/conftest.py and root conftest.py rely
-# on tests.fixtures being safely importable regardless of which test
-# directories are in scope.
+import pytest
 
+from tests.server_setup import ensure_mscolab_config, ensure_mswms_testdata
 
-@pytest.fixture
-def fail_if_open_message_boxes_left():
-    # Mock every MessageBox widget in the test suite to avoid unwanted freezes on unhandled error popups etc.
-    with mock.patch("PyQt5.QtWidgets.QMessageBox.question") as q, \
-            mock.patch("PyQt5.QtWidgets.QMessageBox.information") as i, \
-            mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as c, \
-            mock.patch("PyQt5.QtWidgets.QMessageBox.warning") as w:
-        yield
-
-        # Fail a test if there are any Qt message boxes left open at the end
-        if any(box.call_count > 0 for box in [q, i, c, w]):
-            summary = "\n".join([f"PyQt5.QtWidgets.QMessageBox.{box()._extract_mock_name()}: {box.mock_calls[:-1]}"
-                                 for box in [q, i, c, w] if box.call_count > 0])
-            pytest.fail(f"An unhandled message box popped up during your test!\n{summary}")
-
-
-@pytest.fixture
-def msui_configs(tmp_path):
-    modify_config_file({"mscolab_local_data_dir": str(tmp_path)})
-
-
-@pytest.fixture
-def qtbot(qtbot, fail_if_open_message_boxes_left, msui_configs):
-    """Fixture that re-defines the qtbot fixture from pytest-qt with additional checks."""
-    yield qtbot
-    # Drop any matplotlib figures from Gcf BEFORE scheduling Qt deletion, otherwise
-    # matplotlib's atexit Gcf.destroy_all trips over a dead NavigationToolbar2QT at
-    # worker shutdown ("wrapped C/C++ object has been deleted").
-    try:
-        import matplotlib.pyplot as plt
-        plt.close("all")
-    except ImportError:
-        pass
-    # Schedule destruction of any leftover top-level widgets BEFORE the drain wait
-    # below. Tests often only call hide(), which keeps the widget (and any sockets
-    # it owns) alive. deleteLater() queues destruction without firing close events
-    # (close() would trigger "save changes?" dialogs); the subsequent qtbot.wait
-    # gives the Qt event loop time to actually process the deletions.
-    for qobject in set(QtWidgets.QApplication.topLevelWindows() + QtWidgets.QApplication.topLevelWidgets()):
-        try:
-            delete_later = getattr(qobject, "deleteLater", None)
-            if delete_later is not None:
-                delete_later()
-        # Some objects are already deleted; ignore those.
-        except RuntimeError:
-            pass
-    # Drain the Qt event loop so destruction (and any socket disconnects it triggers)
-    # actually completes before the next test starts.
-    qtbot.wait(5000)
+# The server fixtures of all suites. Root conftest.py loads this module for every test session, so it imports
+# nothing but the standard library and pytest at module level: mslib.mscolab, mslib.mswms, socketio and
+# werkzeug are imported inside the fixtures that need them. That keeps importing this module cheap and free of
+# side effects (mslib.mscolab.server and mslib.mswms.mswms bind their configuration at import time), and it lets
+# the suite of every package run with only that package installed. The fixtures of the desktop client
+# (keyring, msui configuration, Qt) are in tests/msui_fixtures.py.
 
 
 @pytest.fixture(scope="session")
@@ -111,6 +50,9 @@ def mscolab_session_app():
     This fixture should not be used in tests. Instead use :func:`mscolab_server_app`,
     which handles per-test cleanup as well.
     """
+    # mslib.mscolab.server binds its SQLAlchemy URI from mscolab_settings at import time
+    ensure_mscolab_config()
+    from mslib.mscolab.server import create_server_app
     return create_server_app()
 
 
@@ -131,13 +73,14 @@ def mscolab_session_app():
 #
 # This issue would also be avoided if the background server process wasn't started with multiprocessing and a fork, but
 # with a real subprocess, which would solve some other issues (e.g. testing on Windows) as well.
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def mscolab_session_server(mscolab_session_app):
     """Session-scoped fixture that provides a running MSColab server.
 
     This fixture should not be used in tests. Instead use :func:`mscolab_server`, which
     handles per-test cleanup as well.
     """
+    import socketio
     with _running_server(mscolab_session_app) as url:
         # Wait until the Flask-SocketIO server is ready for connections
         sio = socketio.Client()
@@ -154,6 +97,7 @@ def reset_mscolab(mscolab_session_app):
     This fixture is not explicitly needed in tests, it is used in the other fixtures to
     do the cleanup actions.
     """
+    from mslib.mscolab.mscolab import handle_db_reset
     with mscolab_session_app.app_context():
         handle_db_reset(verbose=False)
 
@@ -164,6 +108,7 @@ def _isolated_mscolab_settings(tmp_path):
     An app created from these settings has a database and an operations data directory
     of its own, so it shares no state with any other app.
     """
+    from mslib.mscolab.conf import mscolab_settings
     settings = copy.copy(mscolab_settings)
     data_dir = tmp_path / "mscolab"
     settings.DATA_DIR = str(data_dir)
@@ -185,6 +130,9 @@ def mscolab_app(tmp_path):
 
     :returns: A WSGI app instance.
     """
+    # the settings are loaded already: by tests/_test_mscolab/conftest.py, the only suite using this fixture
+    from mslib.mscolab.models import db
+    from mslib.mscolab.server import create_server_app
     settings = _isolated_mscolab_settings(tmp_path)
     Path(settings.DATA_DIR).mkdir(parents=True, exist_ok=True)
     app = create_server_app(settings)
@@ -223,10 +171,10 @@ def mscolab_server_app(mscolab_session_app, reset_mscolab):
 def mscolab_server(mscolab_session_server, reset_mscolab):
     """Fixture that provides a running MSColab server and does cleanup actions.
 
+    The suites of the desktop client extend it, see tests/msui_fixtures.py.
+
     :returns: The URL where the server is running.
     """
-    # Update mscolab URL to avoid "Update Server List" message boxes
-    modify_config_file({"default_MSCOLAB": [mscolab_session_server]})
     return mscolab_session_server
 
 
@@ -235,7 +183,6 @@ def mswms_app():
     """Fixture that provides the MSWMS WSGI app instance."""
     # Must run before mslib.mswms.mswms is imported: it binds its config from
     # mswms_settings (and registers the demo layers) at import time.
-    from tests.server_setup import ensure_mswms_testdata
     ensure_mswms_testdata()
     import mslib.mswms.mswms
 
@@ -259,6 +206,7 @@ def _start_server(host, port_queue, app):
     """
     Starts a werkzeug server and sends the chosen port back to the parent process.
     """
+    from werkzeug.serving import make_server
     srv = make_server(host, 0, app, threaded=True)
     port = srv.server_address[1]
     port_queue.put(port)
@@ -268,6 +216,7 @@ def _start_server(host, port_queue, app):
 @contextmanager
 def _running_server(app):
     """Context manager that starts the app in a werkzeug server and returns its URL."""
+    from tests.utils import is_url_response_ok
     scheme = "http"
     host = "127.0.0.1"
 

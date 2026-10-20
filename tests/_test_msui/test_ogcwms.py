@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    tests._test_utils.test_ogcwms
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_msui.test_ogcwms
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests mslib.msui.utils.ogcwms
 
