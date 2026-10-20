@@ -37,7 +37,7 @@ import click
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem, QMessageBox
 from PyQt5 import QtCore
 
-from mslib.autoplot import main as cli_tool, resolve_ftml_path
+from mslib.autoplot import main as cli_tool, flighttrack_entry, is_operation_entry, resolve_ftml_path
 from mslib.msui.qt5.ui_mss_autoplot import Ui_AutoplotDockWidget
 from mslib.msui.utils import constants as const
 from mslib.msui.utils.qt import get_save_filename, plain_text_as_html
@@ -262,7 +262,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             filename = selected_items[0].text(3)
             section = selected_items[0].text(1)
             vtime = selected_items[0].text(5)
-            if flight != "" and flight == filename:
+            if is_operation_entry(flight, filename):
                 self.update_op_flight_treewidget.emit("operation", flight)
             elif flight != "":
                 self.update_op_flight_treewidget.emit("flight", flight)
@@ -316,19 +316,6 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             parent.refresh_signal_emit.emit()
             self.resize_treewidgets()
 
-    @staticmethod
-    def flighttrack_entry(row):
-        """
-        The flight track file an "automated_plotting_flights" entry names, None when it
-        does not name one.
-
-        An entry of an operation carries the operation name instead of a file, an entry
-        without a flight track carries nothing.
-        """
-        if len(row) > 3 and row[3] and row[3] != row[0]:
-            return row[3]
-        return None
-
     @classmethod
     def resolve_flights_paths(cls, flights, directory):
         """
@@ -344,7 +331,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         resolved = []
         for row in flights:
             row = list(row)
-            entry = cls.flighttrack_entry(row)
+            entry = flighttrack_entry(row)
             if entry is not None:
                 row[3] = str(resolve_ftml_path(entry, directory=directory))
             resolved.append(row)
@@ -364,7 +351,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         """
         sources = {}
         for configured, resolved in zip(configured_flights, resolved_flights):
-            entry = cls.flighttrack_entry(resolved)
+            entry = flighttrack_entry(resolved)
             if entry is not None:
                 sources.setdefault(entry, (config_file, configured[3]))
         return sources
@@ -384,7 +371,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         dialog.
         """
         for row in flights:
-            entry = cls.flighttrack_entry(row)
+            entry = flighttrack_entry(row)
             if entry is not None:
                 path = resolve_ftml_path(entry)
                 if not path.exists():

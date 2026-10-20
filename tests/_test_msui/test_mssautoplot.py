@@ -29,7 +29,35 @@
 import os
 from pathlib import Path
 
-from mslib.autoplot import load_from_ftml, resolve_ftml_path
+import pytest
+
+from mslib.autoplot import (load_from_ftml, resolve_ftml_path, is_operation_entry, flighttrack_file,
+                            flighttrack_entry)
+
+
+class TestEntryKind:
+    """
+    An "automated_plotting_flights" entry names an operation, a flight track file or nothing.
+    """
+    @pytest.mark.parametrize("flight, filename, operation, file", [
+        ("op1", "op1", True, None),
+        ("example", "/home/mss/example.ftml", False, "/home/mss/example.ftml"),
+        ("example", "example.ftml", False, "example.ftml"),
+        ("example", "", False, None),
+        ("", "", False, None),
+        ("example", None, False, None),
+    ])
+    def test_kind(self, flight, filename, operation, file):
+        assert is_operation_entry(flight, filename) is operation
+        assert flighttrack_file(flight, filename) == file
+
+    def test_row(self):
+        assert flighttrack_entry(["example", "01 SADPAP", "", "/home/mss/example.ftml", "", ""]) == \
+            "/home/mss/example.ftml"
+        assert flighttrack_entry(["op1", "01 SADPAP", "", "op1", "", ""]) is None
+
+    def test_short_row_names_no_file(self):
+        assert flighttrack_entry(["example", "01 SADPAP", ""]) is None
 
 
 def test_load_from_ftml():

@@ -71,6 +71,35 @@ TEXT_CONFIG = {
 mpl_logger = configure_mpl_logger()
 
 
+def is_operation_entry(flight, filename):
+    """Whether an "automated_plotting_flights" entry names an MSColab operation.
+
+    An entry of an operation carries the operation name in both the flight and
+    the file column.
+    """
+    return bool(filename) and filename == flight
+
+
+def flighttrack_file(flight, filename):
+    """The flight track file an "automated_plotting_flights" entry names, None when it
+    does not name one.
+
+    The single place which tells a file entry apart: an entry of an operation
+    carries the operation name instead of a file, an entry without a flight track
+    carries nothing.
+    """
+    if not filename or is_operation_entry(flight, filename):
+        return None
+    return filename
+
+
+def flighttrack_entry(row):
+    """flighttrack_file() of a whole "automated_plotting_flights" row."""
+    if len(row) <= 3:
+        return None
+    return flighttrack_file(row[0], row[3])
+
+
 def resolve_ftml_path(filename, fpath=None, directory=None):
     """Resolve the flight track file of an "automated_plotting_flights" entry.
 
@@ -248,9 +277,9 @@ class Plotting:
             self.layout = self.config["layout"]["sideview"]
         if self.__class__.__name__ == "LinearViewPlotting":
             self.layout = self.config["layout"]["linearview"]
-        if filename != "" and filename == flight:
+        if is_operation_entry(flight, filename):
             self.read_operation(flight, msc_url, msc_auth_password, username, password)
-        elif filename != "":
+        elif flighttrack_file(flight, filename) is not None:
             self.read_ftml(filename)
 
     def setup(self):
@@ -294,7 +323,6 @@ class Plotting:
         file_path = resolve_ftml_path(filename, self.fpath)
         if not file_path.exists():
             message = "Filename {} doesn't exist".format(file_path)
-            print(message)
             if self.pdlg is not None:
                 self.pdlg.close()
             raise FileNotFoundError(message)
@@ -346,9 +374,9 @@ class TopViewPlotting(Plotting):
         pass
 
     def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
-        if filename != "" and filename == flight:
+        if is_operation_entry(flight, filename):
             self.update_path_ops(filename)
-        elif filename != "":
+        elif flighttrack_file(flight, filename) is not None:
             try:
                 self.update_path(filename)
             except AttributeError as e:
@@ -462,9 +490,9 @@ class SideViewPlotting(Plotting):
         self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
 
     def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
-        if filename != "" and filename == flight:
+        if is_operation_entry(flight, filename):
             self.update_path_ops(filename)
-        elif filename != "":
+        elif flighttrack_file(flight, filename) is not None:
             try:
                 self.update_path(filename)
             except AttributeError as e:
@@ -553,9 +581,9 @@ class LinearViewPlotting(Plotting):
         self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
 
     def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
-        if filename != "" and filename == flight:
+        if is_operation_entry(flight, filename):
             self.update_path_ops(filename)
-        elif filename != "":
+        elif flighttrack_file(flight, filename) is not None:
             try:
                 self.update_path(filename)
             except AttributeError as e:
