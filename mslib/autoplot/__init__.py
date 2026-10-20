@@ -732,7 +732,9 @@ def main(ctx, cpath, view, ftrack, fpath, itime, vtime, intv, stime, etime, raw)
                 print("View is not available, Plot not created!")
                 return False
         except Exception as e:
-            if "times" in str(e):
+            if isinstance(e, FileNotFoundError):
+                print(str(e))
+            elif "times" in str(e):
                 print("Invalid times and/or levels requested")
             elif "LAYER" in str(e):
                 print(f"Invalid LAYER '{layer}' requested")

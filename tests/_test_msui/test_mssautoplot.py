@@ -31,9 +31,10 @@ import os
 from pathlib import Path
 
 import pytest
+from click.testing import CliRunner
 
 from mslib.autoplot import (load_from_ftml, resolve_ftml_path, is_operation_entry, flighttrack_file,
-                            flighttrack_entry, TopViewPlotting)
+                            flighttrack_entry, TopViewPlotting, main)
 
 
 class TestEntryKind:
@@ -91,6 +92,21 @@ def test_missing_first_flight_track_does_not_stop_the_run(tmp_path):
         view.update_path(str(tmp_path / "gone.ftml"))
     view.update_path(example)
     assert len(view.wps) == 5
+
+
+def test_missing_flight_track_is_reported_as_missing(tmp_path):
+    """
+    A missing flight track is reported as missing, even when its path contains "times".
+    """
+    missing = tmp_path / "times" / "gone.ftml"
+    cfg = tmp_path / "cfg.json"
+    cfg.write_text(json.dumps({
+        "automated_plotting_flights": [["gone", "00 global (cyl)", "", str(missing), "", ""]],
+        "automated_plotting_hsecs": [["http://127.0.0.1:9/", "L", "", ""]]}))
+    result = CliRunner().invoke(main, ["--cpath", str(cfg), "--view", "top"])
+    assert result.exit_code == 0
+    assert "doesn't exist" in result.output
+    assert "Invalid times" not in result.output
 
 
 class TestResolveFtmlPath:
