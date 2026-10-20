@@ -34,7 +34,7 @@ from mslib import utils
 from mslib.msui.utils import constants
 from mslib.msui.utils.config import MSUIDefaultConfig as mss_default
 from mslib.msui.utils.config import config_loader, read_config_file, modify_config_file
-from mslib.msui.utils.config import merge_dict
+from mslib.msui.utils.config import merge_dict, compare_data
 from tests.constants import MSUI_CONFIG_PATH, MSUI_CONFIG_FILE_PATH
 from tests.utils import create_msui_settings_file
 
@@ -331,3 +331,77 @@ class TestMergeDict:
         changed_dict = merge_dict(self.default_dict, users_options_dict)
         assert changed_dict["default_WMS"] == self.default_dict["default_WMS"]
         assert changed_dict["default_VSEC_WMS"] == ["localhost:8081"]
+
+    @pytest.mark.parametrize("users_options_dict, expected_warning", [
+        ({"num_lables": 5}, "'num_lables' is not a known setting and was ignored, did you mean 'num_labels'?"),
+        ({"num_labels": "12"}, "'num_labels': '12' has the wrong type (expected a value like 10) and was ignored"),
+        ({"MSS_auth": "x"}, "'MSS_auth': 'x' is not a dictionary like"),
+        ({"locations": ["EDMO"]}, "'locations': ['EDMO'] is not a dictionary like"),
+        ({"locations": {"EDMO": "x"}}, "locations['EDMO']: 'x' does not have the structure of [0.0, 0.0]"),
+        ({"default_WMS": "http://a.de"}, "'default_WMS': 'http://a.de' is not a list like"),
+        ({"new_flighttrack_template": "EDMO"}, "'new_flighttrack_template': 'EDMO' is not a list like"),
+        ({"default_WMS": ["http://a.de", 5]}, "default_WMS[1]: 5 does not have the structure of"),
+        ({"topview": {"plot_title_size": 12}}, "'topview': {'plot_title_size': 12} does not have the structure of"),
+        ({"topview": {"plot_title_size": 12, "axes_label_size": "x"}},
+         "topview['axes_label_size']: 'x' has the wrong type (expected a value like 10) and was ignored"),
+        ({"MSCOLAB_timeout": [1]}, "'MSCOLAB_timeout': [1] does not have the structure of"),
+    ])
+    def test_ignored_value_is_reported(self, caplog, users_options_dict, expected_warning):
+        """
+        every value merge_dict does not take over is named in a warning, nothing is lost silently
+        """
+        warnings = []
+        with caplog.at_level(logging.WARNING):
+            merge_dict(self.default_dict, users_options_dict, _warnings=warnings)
+        assert len(warnings) == 1
+        assert warnings[0].startswith(expected_warning)
+        assert caplog.messages == warnings
+
+    def test_ignored_entries_keep_the_valid_ones(self):
+        """
+        only the mismatching entry is ignored, valid entries next to it are taken over
+        """
+        users_options_dict = {
+            "default_WMS": ["http://a.de", 5],
+            "locations": {"EDMO": [48.08, 11.28], "Nowhere": "x"},
+            "topview": {"plot_title_size": 12, "axes_label_size": "x"},
+            "layout": {**self.default_dict["layout"], "topview": [1, "x"], "immutable": "no"},
+        }
+        warnings = []
+        changed_dict = merge_dict(self.default_dict, users_options_dict, _warnings=warnings)
+        assert changed_dict["default_WMS"] == ["http://a.de"]
+        assert changed_dict["locations"] == {"EDMO": [48.08, 11.28]}
+        assert changed_dict["topview"] == {"plot_title_size": 12, "axes_label_size": 10}
+        assert changed_dict["layout"]["topview"] == [1, 702]
+        assert changed_dict["layout"]["immutable"] is False
+        assert [warning.split(":")[0] for warning in warnings] == [
+            "layout['topview'][1]", "layout['immutable']", "topview['axes_label_size']",
+            "locations['Nowhere']", "default_WMS[1]"]
+
+    def test_valid_values_give_no_warning(self):
+        users_options_dict = {
+            "num_labels": 12,
+            "locations": {"EDMO": [48.08, 11.28]},
+            "default_WMS": ["http://a.de"],
+            "MSCOLAB_timeout": [1, 2],
+            "import_plugins": {"X": ["x", "mod", "func"]},
+        }
+        warnings = []
+        merge_dict(self.default_dict, users_options_dict, _warnings=warnings)
+        assert warnings == []
+
+    def test_int_for_a_float_is_taken_over(self):
+        assert compare_data(0.0, 5) == (5.0, True)
+        assert compare_data([0.0, 0.0], [48, 11]) == ([48.0, 11.0], True)
+
+    def test_read_config_file_returns_warnings(self, tmp_path):
+        """
+        read_config_file returns the warnings, so the GUI can show them to the user
+        """
+        config_file = tmp_path / "msui_settings.json"
+        config_file.write_text('{"num_labels": "12", "num_lables": 12}')
+        warnings = read_config_file(path=config_file)
+        assert len(warnings) == 2
+        assert config_loader(dataset="num_labels") == mss_default.num_labels
+        config_file.write_text('{"num_labels": 12}')
+        assert read_config_file(path=config_file) == []

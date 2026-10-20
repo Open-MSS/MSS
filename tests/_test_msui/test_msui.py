@@ -33,7 +33,7 @@ import argparse
 import pytest
 from pathlib import Path
 from urllib.request import urlopen
-from PyQt5 import QtCore, QtWidgets, QtTest
+from PyQt5 import QtCore, QtWidgets, QtTest, sip
 from mslib import __version__
 from tests.utils import shown_text
 from tests.constants import ROOT_DIR, MSUI_CONFIG_PATH, MSUI_CONFIG_FILE_PATH
@@ -70,6 +70,44 @@ def test_keep_config_file(qtbot):
     # after closing the window the config file should be the same as before
     _config = MSUI_CONFIG_FILE_PATH.read_text()
     assert _config == config
+
+
+def test_config_warnings_are_shown(qtbot):
+    MSUI_CONFIG_FILE_PATH.write_text('{"num_labels": "12", "default_WMS": "http://a.de"}')
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
+        msui = msui_mw.MSUIMainWindow()
+        qtbot.wait_until(lambda: m.call_count == 1)
+        text = m.call_args[0][2]
+        assert "'num_labels': '12' has the wrong type" in text
+        assert "'default_WMS': 'http://a.de' is not a list" in text
+        assert config_loader(dataset="num_labels") == 10
+
+        MSUI_CONFIG_FILE_PATH.write_text('{"num_lables": 12}')
+        msui.restart_application()
+        assert m.call_count == 2
+        assert "did you mean 'num_labels'?" in m.call_args[0][2]
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+        msui.close()
+
+
+def test_no_config_warnings_for_a_valid_config(qtbot):
+    MSUI_CONFIG_FILE_PATH.write_text('{"num_labels": 12}')
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
+        msui = msui_mw.MSUIMainWindow()
+        qtbot.wait(50)
+        msui.restart_application()
+        assert m.call_count == 0
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+        msui.close()
+
+
+def test_config_warnings_not_shown_for_a_deleted_window(qtbot):
+    MSUI_CONFIG_FILE_PATH.write_text('{"num_labels": "12"}')
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
+        msui = msui_mw.MSUIMainWindow()
+        sip.delete(msui)
+        qtbot.wait(50)
+        assert m.call_count == 0
 
 
 @pytest.mark.skipif(
