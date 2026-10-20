@@ -25,14 +25,15 @@
 """
 import copy
 import multiprocessing
+import multiprocessing.queues
 import time
-import urllib
+import urllib.parse
 from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
 
-from tests.server_setup import ensure_mscolab_config
+from tests.server_setup import ensure_mscolab_config, ensure_mswms_testdata
 
 # The server fixtures of all suites. Root conftest.py loads this module for every test session, so it imports
 # nothing but the standard library and pytest at module level: mslib.mscolab, mslib.mswms, socketio and
@@ -129,7 +130,7 @@ def mscolab_app(tmp_path):
 
     :returns: A WSGI app instance.
     """
-    ensure_mscolab_config()
+    # the settings are loaded already: by tests/_test_mscolab/conftest.py, the only suite using this fixture
     from mslib.mscolab.models import db
     from mslib.mscolab.server import create_server_app
     settings = _isolated_mscolab_settings(tmp_path)
@@ -182,7 +183,6 @@ def mswms_app():
     """Fixture that provides the MSWMS WSGI app instance."""
     # Must run before mslib.mswms.mswms is imported: it binds its config from
     # mswms_settings (and registers the demo layers) at import time.
-    from tests.server_setup import ensure_mswms_testdata
     ensure_mswms_testdata()
     import mslib.mswms.mswms
 

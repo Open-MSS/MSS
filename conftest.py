@@ -42,6 +42,12 @@ logging.getLogger("matplotlib").setLevel(logging.INFO)
 # This import must come first: tests.constants creates the temporary configuration directories and sets
 # MSUI_CONFIG_PATH and XDG_CACHE_HOME before any mslib module reads them.
 import tests.constants  # noqa: E402,F401
+from tests.server_setup import ensure_mscolab_settings  # noqa: E402
+
+# For every session, before any test module is collected: a test module of any suite importing mslib.mscolab
+# then binds the test settings, never the default ones with the developer's real database. Only the standard
+# library is needed for it; the suites using mslib.mscolab load mscolab_auth too (ensure_mscolab_config).
+ensure_mscolab_settings()
 
 
 @pytest.fixture(scope="session", autouse=True)

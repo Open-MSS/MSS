@@ -77,8 +77,9 @@ and `servers-without-qt` contracts in setup.cfg.
 
 `pixi run -e dev test-mscolab`; client-side effects:
 `pixi run -e dev env QT_QPA_PLATFORM=offscreen pytest tests/_test_msui/test_mscolab.py -q`.
-The test server is forked once per session by an autouse fixture in
-`tests/fixtures.py`, only when a collected test needs it. Two app fixtures exist
-there: `mscolab_app` builds a fresh app with an empty database of its own for
+The test server (`mscolab_session_server` in `tests/fixtures.py`, not autouse)
+is forked once per session, first thing and only when a collected test needs it,
+by the autouse hook `_ensure_mscolab_server_if_needed` in the root `conftest.py`.
+Two app fixtures exist in `tests/fixtures.py`: `mscolab_app` builds a fresh app with an empty database of its own for
 every test, `mscolab_server_app` is the shared app the forked server runs — use
 the latter only together with `mscolab_server`.
