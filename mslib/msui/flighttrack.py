@@ -49,11 +49,11 @@ from PyQt5 import QtGui, QtCore, QtWidgets
 from mslib import __version__
 from mslib.utils.units import units
 from mslib.utils.coordinate import path_points, get_distance
-from mslib.utils.find_location import find_location
+from mslib.msui.utils.find_location import find_location
 from mslib.utils import thermolib
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
-from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
-from mslib.utils.qt import variant_to_string, variant_to_float
+from mslib.msui.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
+from mslib.msui.utils.qt import variant_to_string, variant_to_float
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 
 # Constants for identifying the table columns when the WaypointsTableModel is

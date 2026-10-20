@@ -79,16 +79,16 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox
 from PyQt5.QtGui import QPixmap
 
-from mslib.utils.auth import del_password_from_keyring
+from mslib.msui.utils.auth import del_password_from_keyring
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
-from mslib.utils.qt import (get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup,
-                            plain_text_as_html)
+from mslib.msui.utils.qt import (get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup,
+                                 plain_text_as_html)
 from mslib.msui.qt5 import ui_mscolab_help_dialog as msc_help_dialog
 from mslib.msui.qt5 import ui_mscolab_add_operation_dialog as msc_add_operation_ui
 from mslib.msui.qt5 import ui_mscolab_merge_waypoints_dialog as merge_wp_ui
 from mslib.msui.qt5 import ui_mscolab_profile_dialog as ui_profile
-from mslib.utils import constants
-from mslib.utils.config import config_loader
+from mslib.msui.utils import constants
+from mslib.msui.utils.config import config_loader
 
 
 # characters that can't be in a file or directory name on Windows, macOS or Linux, and control characters

@@ -40,7 +40,7 @@ from tests.constants import ROOT_DIR, MSUI_CONFIG_PATH, MSUI_CONFIG_FILE_PATH
 from mslib.msui import msui
 from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
-from mslib.utils.config import read_config_file, config_loader
+from mslib.msui.utils.config import read_config_file, config_loader
 import re
 
 

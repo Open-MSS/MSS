@@ -48,19 +48,19 @@ import mslib
 import mslib.utils
 import mslib.msui
 import mslib.msui.mpl_map
-import mslib.utils.auth
-import mslib.utils.qt
+import mslib.msui.utils.auth
+import mslib.msui.utils.qt
 import mslib.utils.thermolib
-from mslib.utils.config import config_loader, read_config_file
+from mslib.msui.utils.config import config_loader, read_config_file
 from mslib.utils.units import units
 from mslib.msui.wms_control import MSUIWebMapService
-from mslib.utils import constants
+from mslib.msui.utils import constants
 from mslib.msui import viewplotter
 from mslib.msui import mpl_pathinteractor as mpath
 from mslib.msui import flighttrack as ft
-from mslib.utils import config as conf
+from mslib.msui.utils import config as conf
 from mslib.utils.get_projection_params import get_projection_params
-from mslib.utils.auth import get_auth_from_url_and_name
+from mslib.msui.utils.auth import get_auth_from_url_and_name
 from mslib.utils.loggerdef import configure_mpl_logger
 
 
@@ -654,8 +654,8 @@ def main(ctx, cpath, view, ftrack, fpath, itime, vtime, intv, stime, etime, raw)
 
     msc_url = config["mscolab_server_url"]
     try:
-        msc_auth_password = mslib.utils.auth.get_password_from_keyring(service_name=f"MSCOLAB_AUTH_{msc_url}",
-                                                                       username="mscolab")
+        msc_auth_password = mslib.msui.utils.auth.get_password_from_keyring(service_name=f"MSCOLAB_AUTH_{msc_url}",
+                                                                            username="mscolab")
     except KeyError:
         msc_auth_password = None
 
@@ -665,7 +665,7 @@ def main(ctx, cpath, view, ftrack, fpath, itime, vtime, intv, stime, etime, raw)
         msc_username = None
         msc_password = None
     if msc_username is not None:
-        msc_password = mslib.utils.auth.get_password_from_keyring(service_name=msc_url, username=msc_username)
+        msc_password = mslib.msui.utils.auth.get_password_from_keyring(service_name=msc_url, username=msc_username)
 
     # Choose view (top or side)
     if view == "top":

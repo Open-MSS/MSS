@@ -31,7 +31,7 @@
 import functools
 import logging
 
-from mslib.utils.config import config_loader
+from mslib.msui.utils.config import config_loader
 from mslib.utils.get_projection_params import get_projection_params
 from PyQt5 import QtGui, QtWidgets, QtCore
 from mslib.msui.qt5 import ui_topview_window as ui
@@ -47,7 +47,7 @@ from mslib.msui import flighttrack as ft
 from mslib.msui import autoplot_dockwidget as apd
 from mslib.msui.icons import icons
 from mslib.msui.flighttrack import Waypoint
-from mslib.utils.colordialog import CustomColorDialog
+from mslib.msui.utils.colordialog import CustomColorDialog
 
 # Dock window indices.
 WMS = 0

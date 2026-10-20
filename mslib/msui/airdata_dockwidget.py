@@ -27,8 +27,8 @@
 import pycountry
 from mslib.msui.qt5 import ui_airdata_dockwidget as ui
 from PyQt5 import QtWidgets, QtCore
-from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
-from mslib.utils.airdata import get_available_airspaces, update_airspace, get_airports
+from mslib.msui.utils.config import save_settings_qsettings, load_settings_qsettings
+from mslib.msui.utils.airdata import get_available_airspaces, update_airspace, get_airports
 
 
 class AirdataDockwidget(QtWidgets.QWidget, ui.Ui_AirdataDockwidget):

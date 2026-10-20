@@ -31,7 +31,7 @@ import numpy as np
 import pytest
 
 import mslib.utils.coordinate as coordinate
-from mslib.utils.find_location import find_location
+from mslib.msui.utils.find_location import find_location
 from mslib.utils.get_projection_params import get_projection_params
 
 LOGGER = logging.getLogger(__name__)

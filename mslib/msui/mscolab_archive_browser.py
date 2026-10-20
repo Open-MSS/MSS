@@ -28,7 +28,7 @@ import logging
 import requests
 from PyQt5.QtWidgets import QDialog
 from mslib.msui.qt5 import ui_operation_archive as ui_opar
-from mslib.utils.qt import show_popup
+from mslib.msui.utils.qt import show_popup
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.schemas import UpdateOperationRequest, UpdateOperationResponse
 

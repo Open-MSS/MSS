@@ -62,7 +62,7 @@ class Test_TableView:
         In tutorial mode the displayed flight track is silently written to a
         fixed FTML, and the file is rewritten when the model changes.
         """
-        from mslib.utils import constants
+        from mslib.msui.utils import constants
         ftml = os.path.join(constants.MSUI_CONFIG_PATH, "tutorial_flighttrack.ftml")
         if os.path.exists(ftml):
             os.remove(ftml)
@@ -89,7 +89,7 @@ class Test_TableView:
         so the creator calls enable_tutorial_flighttrack_save to write the initial
         FTML and start tracking (mscolab).
         """
-        from mslib.utils import constants
+        from mslib.msui.utils import constants
         ftml = os.path.join(constants.MSUI_CONFIG_PATH, "tutorial_flighttrack.ftml")
         if os.path.exists(ftml):
             os.remove(ftml)

@@ -29,9 +29,9 @@ import logging
 import mslib.msui.wms_control
 from mslib.msui.icons import icons
 from mslib.msui.qt5 import ui_wms_multilayers as ui
-from mslib.utils.colordialog import CustomColorDialog
-from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
-from mslib.utils.qt import plain_text_as_html
+from mslib.msui.utils.colordialog import CustomColorDialog
+from mslib.msui.utils.config import save_settings_qsettings, load_settings_qsettings
+from mslib.msui.utils.qt import plain_text_as_html
 
 
 class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):

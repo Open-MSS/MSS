@@ -35,10 +35,10 @@ from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
 from mslib.utils import thermolib
-from mslib.utils.config import config_loader
+from mslib.msui.utils.config import config_loader
 from mslib.utils.units import units, convert_to
 from mslib.msui import autoplot_dockwidget as apd
-from mslib.utils.colordialog import CustomColorDialog
+from mslib.msui.utils.colordialog import CustomColorDialog
 
 # Dock window indices.
 WMS = 0

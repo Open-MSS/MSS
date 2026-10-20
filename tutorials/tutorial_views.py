@@ -31,7 +31,7 @@ from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view
                              move_and_setup_layerchooser, show_other_widgets, add_waypoints_to_topview,
                              switch_window, close_window)
 from tutorials.utils.platform_keys import platform_keys
-from mslib.utils.config import load_settings_qsettings
+from mslib.msui.utils.config import load_settings_qsettings
 
 CTRL, ENTER, WIN, ALT = platform_keys()
 

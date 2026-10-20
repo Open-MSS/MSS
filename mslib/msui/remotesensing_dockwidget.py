@@ -36,7 +36,7 @@ import skyfield_data
 
 from PyQt5 import QtGui, QtWidgets
 from mslib.msui.qt5 import ui_remotesensing_dockwidget as ui
-from mslib.utils.colordialog import CustomColorDialog
+from mslib.msui.utils.colordialog import CustomColorDialog
 from mslib.utils.time import jsec_to_datetime, datetime_to_jsec
 from mslib.utils.coordinate import get_distance, rotate_point, fix_angle, normalize_longitude
 

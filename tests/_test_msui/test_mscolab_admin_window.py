@@ -37,7 +37,7 @@ from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.schemas import UpdateOperationRequest
 from mslib.mscolab.models import Operation
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
-from mslib.utils.config import modify_config_file
+from mslib.msui.utils.config import modify_config_file
 
 
 class Test_MscolabAdminWindow:

@@ -39,7 +39,7 @@ from mslib.mscolab.api.attachments import normalized_extensions
 from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
-from mslib.utils.config import modify_config_file
+from mslib.msui.utils.config import modify_config_file
 from mslib.mscolab.utils import get_message_dict
 
 

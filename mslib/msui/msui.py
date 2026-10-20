@@ -38,11 +38,11 @@ import sys
 from packaging import version
 from mslib import __version__
 from mslib.msui.msui_mainwindow import MSUIMainWindow
-from mslib.utils import constants
+from mslib.msui.utils import constants
 from mslib.utils import setup_logging
 from mslib.msui.icons import icons
-from mslib.utils.config import read_config_file
-from mslib.utils.qt import plain_text_as_html
+from mslib.msui.utils.config import read_config_file
+from mslib.msui.utils.qt import plain_text_as_html
 from PyQt5 import QtGui, QtCore, QtWidgets
 
 # Add config path to PYTHONPATH so plugins located there may be found
@@ -105,8 +105,8 @@ def main(tutorial_mode=False):
     if tutorial_mode:
         mainwindow.showFullScreen()
     if version.parse(__version__) >= version.parse('9.0.0') and version.parse(__version__) < version.parse('10.0.0'):
-        from mslib.utils.migration.config_before_nine import read_config_file as read_config_file_before_nine
-        from mslib.utils.migration.config_before_nine import config_loader as config_loader_before_nine
+        from mslib.msui.utils.migration.config_before_nine import read_config_file as read_config_file_before_nine
+        from mslib.msui.utils.migration.config_before_nine import config_loader as config_loader_before_nine
         read_config_file_before_nine()
         if config_loader_before_nine(dataset="MSCOLAB_mailid"):
 
@@ -122,7 +122,7 @@ A backup of the old file is stored.
                                                  QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                                                  QtWidgets.QMessageBox.No)
             if ret == QtWidgets.QMessageBox.Yes:
-                from mslib.utils.migration.update_json_file_to_version_nine import JsonConversion
+                from mslib.msui.utils.migration.update_json_file_to_version_nine import JsonConversion
                 if version.parse(__version__) >= version.parse('9.0.0'):
                     new_version = JsonConversion()
                     new_version.change_parameters()

@@ -72,7 +72,7 @@ from owslib.util import ServiceException
 from owslib.etree import ParseError
 from owslib.map import wms111, wms130, common
 from owslib.util import ResponseWrapper, Authentication, strip_bom
-from mslib.utils.config import config_loader
+from mslib.msui.utils.config import config_loader
 
 
 #: The version assumed for servers announcing one MSS does not implement.

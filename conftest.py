@@ -36,9 +36,9 @@ from mslib.utils.loggerdef import configure_mpl_logger
 matplotlib_logger = configure_mpl_logger()
 
 # This import must come first: importing tests.constants sets MSUI_CONFIG_PATH,
-# which mslib.utils.config needs at import time.
+# which mslib.msui.utils.config needs at import time.
 from tests.constants import create_msui_settings_file
-from mslib.utils.config import read_config_file
+from mslib.msui.utils.config import read_config_file
 
 # mslib.mscolab.conf binds its mscolab_settings fallback the first time it is
 # imported, anywhere, and then caches that binding for the rest of the

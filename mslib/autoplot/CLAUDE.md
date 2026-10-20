@@ -17,5 +17,5 @@ Never `mslib.mscolab` or `mslib.mswms` (enforced in setup.cfg).
 
 ## Verify
 
-`pixi run -e dev env QT_QPA_PLATFORM=offscreen pytest tests/_test_utils/test_mssautoplot.py -q`
+`pixi run -e dev env QT_QPA_PLATFORM=offscreen pytest tests/_test_msui/test_mssautoplot.py -q`
 and `mssautoplot --help` inside the dev env.

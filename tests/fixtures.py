@@ -40,7 +40,7 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import db
 from mslib.mscolab.server import create_server_app
 from mslib.mscolab.mscolab import handle_db_reset
-from mslib.utils.config import modify_config_file
+from mslib.msui.utils.config import modify_config_file
 from tests.utils import is_url_response_ok
 
 # mslib.mscolab.server and mslib.mswms.mswms are imported lazily, inside the

@@ -58,7 +58,7 @@ class Test_WaypointsTableModel_CorruptedSettings:
         temp_file.write_text(json.dumps(corrupted_data), encoding="utf-8")
 
         # Temporarily override the settings file location
-        import mslib.utils.config as config_module
+        import mslib.msui.utils.config as config_module
 
         def mock_read_config(tag, default, settings_file=None):
             if tag == "performance":

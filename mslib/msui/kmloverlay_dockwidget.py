@@ -35,11 +35,11 @@ from lxml import etree as et, objectify
 from pathlib import Path
 from matplotlib import patheffects
 
-from mslib.utils.qt import get_open_filenames, get_save_filename, plain_text_as_html
-from mslib.utils.colordialog import CustomColorDialog
+from mslib.msui.utils.qt import get_open_filenames, get_save_filename, plain_text_as_html
+from mslib.msui.utils.colordialog import CustomColorDialog
 from mslib.msui.qt5 import ui_kmloverlay_dockwidget as ui
 from PyQt5 import QtGui, QtWidgets, QtCore
-from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
+from mslib.msui.utils.config import save_settings_qsettings, load_settings_qsettings
 from mslib.utils.coordinate import normalize_longitude
 
 

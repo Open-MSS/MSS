@@ -30,13 +30,13 @@ import logging
 import json
 from pathlib import Path
 
-from mslib.utils.qt import get_open_filename, get_save_filename, show_popup, plain_text_as_html
+from mslib.msui.utils.qt import get_open_filename, get_save_filename, show_popup, plain_text_as_html
 from mslib.msui.qt5 import ui_configuration_editor_window as ui_conf
 from PyQt5 import QtWidgets, QtCore, QtGui
-from mslib.utils.constants import MSUI_SETTINGS
+from mslib.msui.utils.constants import MSUI_SETTINGS
 from mslib.msui.icons import icons
-from mslib.utils.config import MSUIDefaultConfig as mss_default
-from mslib.utils.config import config_loader, dict_raise_on_duplicates_empty, merge_dict
+from mslib.msui.utils.config import MSUIDefaultConfig as mss_default
+from mslib.msui.utils.config import config_loader, dict_raise_on_duplicates_empty, merge_dict
 from mslib.utils.get_projection_params import get_projection_params
 
 from mslib.support.qt_json_view import delegate

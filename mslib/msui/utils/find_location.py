@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.utils.find_location
+    mslib.msui.utils.find_location
     ~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Shows the name of a lat/lon coordinate
@@ -26,7 +26,7 @@
 """
 
 
-from mslib.utils.config import config_loader
+from mslib.msui.utils.config import config_loader
 from mslib.utils.coordinate import get_distance
 
 

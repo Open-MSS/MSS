@@ -32,7 +32,7 @@ from mslib.msui import flighttrack as ft
 import mslib.msui.linearview as tv
 from mslib.msui.msui import MSUIMainWindow
 from mslib.msui.viewplotter import _DEFAULT_SETTINGS_LINEARVIEW
-from mslib.utils.config import config_loader
+from mslib.msui.utils.config import config_loader
 from tests.utils import lsec_xml
 
 WMS_REQUEST_TIMEOUT_MS = (config_loader(dataset="WMS_request_timeout") + 5) * 1000

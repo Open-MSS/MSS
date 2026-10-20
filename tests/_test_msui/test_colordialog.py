@@ -3,7 +3,7 @@
     tests._test_utils.test_colordialog
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Tests for mslib.utils.colordialog.
+    Tests for mslib.msui.utils.colordialog.
 
     This file is part of MSS.
 
@@ -11,7 +11,7 @@
     :license: APACHE-2.0, see LICENSE for details.
 """
 import pytest
-from mslib.utils.colordialog import CustomColorDialog
+from mslib.msui.utils.colordialog import CustomColorDialog
 
 
 @pytest.fixture
@@ -41,7 +41,7 @@ def test_swatch_maps_to_expected_hex(dialog):
 
 def test_marked_swatches_are_captured_in_tutorial_mode(qtbot, tmp_path, monkeypatch):
     """create_tutorial_images() (get_shortcuts in tutorial_mode) writes a PNG per swatch."""
-    from mslib.utils import constants
+    from mslib.msui.utils import constants
     from mslib.msui.msui_mainwindow import MSUI_ShortcutsDialog
     monkeypatch.setattr(constants, "MSUI_CONFIG_PATH", tmp_path)
 

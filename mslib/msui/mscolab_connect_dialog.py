@@ -32,8 +32,8 @@ from urllib.parse import urljoin
 from PyQt5.QtWidgets import QDialog, QMessageBox
 
 from mslib.msui.qt5 import ui_mscolab_connect_dialog as ui_conn
-from mslib.utils.config import config_loader, modify_config_file
-from mslib.utils.auth import get_password_from_keyring, save_password_to_keyring
+from mslib.msui.utils.config import config_loader, modify_config_file
+from mslib.msui.utils.auth import get_password_from_keyring, save_password_to_keyring
 from keyring.errors import NoKeyringError, PasswordSetError, InitError
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.schemas import (

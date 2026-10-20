@@ -17,7 +17,18 @@ Global map: ../../ARCHITECTURE.md
 - `mscolab.py` + `socket_control.py` + `mscolab_*.py` — MSColab client; network
   events arrive as Qt signals emitted by `socket_control.ConnectionManager`
 - `*_dockwidget.py` — per-feature dock widgets
-- `constants.py` — deprecated shim; import `mslib.utils.constants` instead
+- `utils/` — helpers of the client (moved from `mslib/utils`, same module names):
+  `config.py` — `MSUIDefaultConfig` (all config keys as class attributes) +
+  `config_loader(dataset=...)` (THE accessor) + JSON settings file IO +
+  structural validation registries (`dict_option_structure` etc.);
+  `constants.py` — MSUI config/cache paths; `qt.py`, `colordialog.py` — Qt
+  helpers; `auth.py` — keyring-backed credentials (tests mock the keyring);
+  `ogcwms.py` — thin wrapper around the OWSLib WMS classes (version negotiation,
+  capabilities document, all dimensions, proxies; it patches
+  `owslib.map.wms111/wms130.ContentMetadata.__init__`); `service_manager.py`; `airdata.py`,
+  `find_location.py`; `migration/` — converts settings files between major
+  config versions
+- `constants.py` — deprecated shim; import `mslib.msui.utils.constants` instead
 - `ui/` — Qt Designer `.ui` sources; `qt5/` — pyuic5 OUTPUT, never edit
 
 ## May import
@@ -39,18 +50,21 @@ SQLAlchemy; `client-without-server-stack` contract).
   `mslib/mscolab/api/endpoints.py`) are migrated to typed dataclasses in
   `mslib/mscolab/api/schemas.py` instead — build/parse via those, don't
   hand-roll a dict for a route that already has a schema.
-- Config access via `mslib.utils.config.config_loader`; per-widget Qt state
+- Config access via `mslib.msui.utils.config.config_loader`; per-widget Qt state
   via `save_settings_qsettings`/`load_settings_qsettings`.
+- New config keys: add the attribute on `MSUIDefaultConfig` AND, if dict/list
+  shaped, the matching entry in `dict_option_structure`/`list_option_structure`
+  and a line in `config_descriptions`.
 - Message boxes in tests are mocked; an unhandled QMessageBox fails the test.
 - Texts from servers or other users (WMS capabilities and errors, MSColab names,
   exception messages) never reach Qt as rich text: `QLabel.setTextFormat(Qt.PlainText)`,
   `html.escape` inside own HTML, and for tooltips and message boxes
-  `mslib.utils.qt.plain_text_as_html`, `show_popup` or `plain_text_message_box`.
+  `mslib.msui.utils.qt.plain_text_as_html`, `show_popup` or `plain_text_message_box`.
   Qt loads `<img src="file://host/share/x">` from rich text (NTLM leak).
-  `tests/_test_utils/test_qt.py` fails for a message box or tooltip whose text is
+  `tests/_test_msui/test_qt.py` fails for a message box or tooltip whose text is
   not a constant and doesn't go through `plain_text_as_html`.
 - Passwords and tokens go only to their own server: check with
-  `mslib.utils.auth.same_origin` before sending them to a URL a server named.
+  `mslib.msui.utils.auth.same_origin` before sending them to a URL a server named.
 
 ## Verify
 

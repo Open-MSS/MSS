@@ -31,7 +31,7 @@ from PyQt5 import QtCore, QtWidgets
 
 from mslib.utils import FatalUserError
 from mslib.msui import aircraft, constants
-from mslib.utils.qt import get_open_filename, plain_text_as_html
+from mslib.msui.utils.qt import get_open_filename, plain_text_as_html
 from mslib.msui.qt5 import ui_performance_dockwidget as ui_dw
 
 
