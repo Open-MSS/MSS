@@ -32,16 +32,23 @@ from flask_mail import Message
 
 
 def send_email(to, subject, template):
-    if current_app.config['MAIL_DEFAULT_SENDER'] is not None:
-        msg = Message(
-            subject,
-            recipients=[to],
-            html=template,
-            sender=current_app.config['MAIL_DEFAULT_SENDER']
-        )
-        try:
-            current_app.mail.send(msg)
-        except (IOError, AttributeError):
-            logging.error("Can't send email to %s", to)
-    else:
-        logging.debug("setup user verification by email")
+    """
+    Sends an email with the html template to the address to, returns whether the mail server took it
+
+    Only called with MAIL_ENABLED, for which create_app requires MAIL_DEFAULT_SENDER (check_mail_sender).
+    A failed send, e.g. the mail server can't be reached, is logged and returns False, so the caller can
+    tell the user.
+    """
+    msg = Message(
+        subject,
+        recipients=[to],
+        html=template,
+        sender=current_app.config['MAIL_DEFAULT_SENDER']
+    )
+    try:
+        current_app.mail.send(msg)
+    except OSError:
+        # smtplib.SMTPException is an OSError too
+        logging.exception("Can't send email to %s", to)
+        return False
+    return True

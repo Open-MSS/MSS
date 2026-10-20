@@ -1,0 +1,66 @@
+{% extends "theme.html" %} {% block body %}
+  <div class="container">
+    <style>
+        @media (min-width: 1px) {
+          .container {
+            max-width: 90%;
+          }
+        }
+    </style>
+    <div class="col">
+      <br>
+      <h3>Confirming your email address</h3>
+      <p>If you didn't confirm your email address yet, e.g. because the link of the confirmation email has
+        expired or the server sends emails only since your account was created, please enter your email address
+        and click "Send confirmation email". You will receive an email with a new link to confirm your address.
+        Resetting your password confirms your email address too.</p>
+      <div>
+        <form method="post" action="">
+          <div>
+            {% for mesg in get_flashed_messages(category_filter=["category_success"]) %}
+              <div class="alert alert-success">
+                <strong>Success!</strong> {{ mesg }}.
+              </div>
+            {% endfor %}
+
+            {% for mesg in get_flashed_messages(category_filter=["category_info"]) %}
+              <div class="alert alert-info">
+                <strong>Info!</strong> {{mesg}}.
+              </div>
+            {% endfor %}
+
+            {% for mesg in get_flashed_messages(category_filter=["category_danger"]) %}
+              <div class="alert alert-danger">
+                <strong>Failed!</strong> {{mesg}}.
+              </div>
+            {% endfor %}
+
+            {{form.hidden_tag()}}
+          </div>
+          <div id="id-form" class="col-md-6 mb-3">
+            <fieldset>
+              <div >
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label>{{form.email.label}}</label>
+                      <div type="email"  id="inputEmail4" placeholder="Email">
+                        {{form.email(class="form-control", placeholder="Email")}}
+                      </div>
+                      {% if form.email.errors %}
+                        {% for error in form.email.errors %}
+                          <span class="text-danger">{{error}}</span>
+                        {% endfor %}
+                  </div>
+                </div>
+                      {% endif %}
+              </div>
+            </fieldset>
+            <div>
+              {{ form.submit(class="btn btn-primary") }}
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endblock %}

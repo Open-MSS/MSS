@@ -37,6 +37,12 @@ class ResetRequestForm(FlaskForm):
     submit = SubmitField(label='Reset password', validators=[DataRequired()])
 
 
+class ResendConfirmationForm(FlaskForm):
+    """Form for requesting a new email to confirm the email address"""
+    email = StringField(label='Email', validators=[DataRequired(), Email()])
+    submit = SubmitField(label='Send confirmation email', validators=[DataRequired()])
+
+
 class ResetPasswordForm(FlaskForm):
     """Form for setting a new password"""
     password = PasswordField(label='Password', validators=[DataRequired()])

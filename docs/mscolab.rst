@@ -121,11 +121,11 @@ parameters of `flask-mail` ::
         MAIL_USE_TLS = False
         MAIL_USE_SSL = True
 
-        mail authentication
+        # mail authentication
         MAIL_USERNAME = os.environ.get('APP_MAIL_USERNAME')
         MAIL_PASSWORD = os.environ.get('APP_MAIL_PASSWORD')
 
-        # mail accounts
+        # the address the emails are sent from
         MAIL_DEFAULT_SENDER = 'MSS@localhost'
 
 A new user gets an email with an url including a token to become verified on the mscolab server. After the verification
@@ -135,7 +135,15 @@ address and using the token that the system sent along with the email.
 
 The links in these emails are built from :code:`PUBLIC_URL`, not from the address of the request, so they always point
 to your server. The server doesn't start with :code:`MAIL_ENABLED = True` and without a :code:`PUBLIC_URL` with scheme
-and host. If a reverse proxy serves MSColab below a path and removes that path before passing the request on, e.g.
+and host, or without :code:`MAIL_DEFAULT_SENDER`. If an email can't be sent, e.g. because the mail server can't be
+reached, the error is logged: a new registration is undone and the user is asked to try again later, a password reset
+request says that the email could not be sent.
+
+An account whose email address is not confirmed can't log in while :code:`MAIL_ENABLED` is set, e.g. because the
+confirmation link expired (it is valid for one hour) or because the account was created while the server sent no
+emails. On the page :code:`/resend_confirmation` its user gets a new confirmation email, msui links this page after a
+failed login. A password reset confirms the email address as well. So when you switch :code:`MAIL_ENABLED` on for a
+server with existing accounts, every user has to confirm the email address once. If a reverse proxy serves MSColab below a path and removes that path before passing the request on, e.g.
 :code:`https://example.org/mscolab`, use the address with the path as :code:`PUBLIC_URL`. If MSColab itself runs below
 the path (:code:`SCRIPT_NAME`), use only scheme and host. A password reset link can be used once and is valid for one
 day.
