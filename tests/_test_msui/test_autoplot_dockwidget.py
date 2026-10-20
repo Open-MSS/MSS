@@ -55,43 +55,44 @@ class TestFlighttrackFilename:
         assert AutoplotDockWidget.flighttrack_filename(view, "flight1") == "flight1.ftml"
 
 
-class TestResolveFlightsPaths:
+class TestConfigToWrite:
     """
-    A configuration file can name the flight track relative to its own directory,
-    the GUI is started from an arbitrary working directory and has to resolve it.
+    The names of a selected configuration stay as they are, a written configuration gets
+    a relative name rewritten relative to its own directory.
     """
-    def test_bare_filename_next_to_the_config(self, tmp_path):
-        flights = [["flight1", "01 SADPAP (stereo)", "", "example.ftml", "", ""]]
-        assert AutoplotDockWidget.resolve_flights_paths(flights, tmp_path) == [
-            ["flight1", "01 SADPAP (stereo)", "", str(tmp_path.resolve() / "example.ftml"), "", ""]]
+    def test_same_directory_keeps_the_names(self, tmp_path):
+        config = {"automated_plotting_flights": [["flight1", "", "", "example.ftml", "", ""],
+                                                 ["flight2", "", "", os.path.join("flights", "b.ftml"), "", ""]]}
+        assert AutoplotDockWidget.config_to_write(config, tmp_path, tmp_path) == config
 
-    def test_relative_directory(self, tmp_path):
-        flights = [["flight1", "", "", os.path.join("flights", "example.ftml"), "", ""]]
-        assert AutoplotDockWidget.resolve_flights_paths(flights, tmp_path)[0][3] == \
-            str(tmp_path.resolve() / "flights" / "example.ftml")
+    def test_relative_name_follows_the_new_location(self, tmp_path):
+        source, target = tmp_path / "campaign", tmp_path / "saved"
+        config = {"automated_plotting_flights": [["flight1", "", "", os.path.join("flights", "a.ftml"), "", ""]]}
+        written = AutoplotDockWidget.config_to_write(config, source, target)
+        assert written["automated_plotting_flights"][0][3] == os.path.join("..", "campaign", "flights", "a.ftml")
+        # both names lead to the same file
+        assert (target / written["automated_plotting_flights"][0][3]).resolve() == \
+            (source / "flights" / "a.ftml").resolve()
 
-    def test_absolute_path_is_kept(self, tmp_path):
-        flights = [["flight1", "", "", "/home/mss/flights/example.ftml", "", ""]]
-        assert AutoplotDockWidget.resolve_flights_paths(flights, tmp_path)[0][3] == \
-            "/home/mss/flights/example.ftml"
+    def test_absolute_and_home_paths_are_kept(self, tmp_path):
+        absolute = str(tmp_path / "flights" / "a.ftml")
+        home = os.path.join("~", "a.ftml")
+        config = {"automated_plotting_flights": [["flight1", "", "", absolute, "", ""],
+                                                 ["flight2", "", "", home, "", ""]]}
+        written = AutoplotDockWidget.config_to_write(config, tmp_path / "x", tmp_path / "y")
+        assert [row[3] for row in written["automated_plotting_flights"]] == [absolute, home]
 
-    def test_home_is_expanded(self, tmp_path):
-        flights = [["flight1", "", "", os.path.join("~", "example.ftml"), "", ""]]
-        assert AutoplotDockWidget.resolve_flights_paths(flights, tmp_path)[0][3] == \
-            str(Path.home().resolve() / "example.ftml")
+    def test_operations_and_empty_entries_are_kept(self, tmp_path):
+        flights = [["operation1", "", "", "operation1", "", ""], ["", "", "", "", "", ""], []]
+        config = {"automated_plotting_flights": flights}
+        assert AutoplotDockWidget.config_to_write(config, tmp_path / "x", tmp_path / "y") == config
 
-    def test_operation_is_unchanged(self, tmp_path):
-        flights = [["operation1", "01 SADPAP (stereo)", "", "operation1", "", ""]]
-        assert AutoplotDockWidget.resolve_flights_paths(flights, tmp_path) == flights
-
-    def test_entries_without_a_flighttrack(self, tmp_path):
-        flights = [["", "", "", "", "", ""], []]
-        assert AutoplotDockWidget.resolve_flights_paths(flights, tmp_path) == flights
-
-    def test_the_configuration_is_not_modified(self, tmp_path):
-        flights = [["flight1", "", "", "example.ftml", "", ""]]
-        AutoplotDockWidget.resolve_flights_paths(flights, tmp_path)
-        assert flights == [["flight1", "", "", "example.ftml", "", ""]]
+    def test_settings_keep_their_names(self, tmp_path):
+        config = {"automated_plotting_flights": [["flight1", "", "", "example.ftml", "", ""]],
+                  "automated_plotting_hsecs": [["url", "layer", "", ""]]}
+        written = AutoplotDockWidget.config_to_write(config, tmp_path / "x", tmp_path / "y")
+        assert config["automated_plotting_flights"] == [["flight1", "", "", "example.ftml", "", ""]]
+        assert written["automated_plotting_hsecs"] == config["automated_plotting_hsecs"]
 
 
 class TestMissingFlighttrack:
@@ -103,100 +104,67 @@ class TestMissingFlighttrack:
         example = tmp_path / "example.ftml"
         shutil.copy(os.path.join(os.path.dirname(__file__), "..", "data", "example.ftml"), example)
         flights = [["flight1", "", "", str(example), "", ""]]
-        assert AutoplotDockWidget.missing_flighttrack(flights) is None
+        assert AutoplotDockWidget.missing_flighttrack(flights, tmp_path) is None
+
+    def test_relative_name_is_found_next_to_the_configuration(self, tmp_path, monkeypatch):
+        shutil.copy(os.path.join(os.path.dirname(__file__), "..", "data", "example.ftml"), tmp_path)
+        monkeypatch.chdir(Path.home())
+        flights = [["flight1", "", "", "example.ftml", "", ""]]
+        assert AutoplotDockWidget.missing_flighttrack(flights, tmp_path) is None
 
     def test_missing_file(self, tmp_path):
         missing = tmp_path / "example.ftml"
         flights = [["flight1", "", "", str(missing), "", ""]]
-        assert AutoplotDockWidget.missing_flighttrack(flights) == ("flight1", str(missing), missing)
+        assert AutoplotDockWidget.missing_flighttrack(flights, tmp_path) == (
+            "flight1", str(missing), missing.resolve())
 
-    def test_flighttrack_which_was_never_saved(self, tmp_path, monkeypatch):
-        # only the name of the track is stored, it is looked up in the working directory
-        monkeypatch.chdir(tmp_path)
+    def test_flighttrack_which_was_never_saved(self, tmp_path):
+        # only the name of the track is stored, it is looked up next to the configuration
         flights = [["flight1", "", "", "flight1.ftml", "", ""]]
-        assert AutoplotDockWidget.missing_flighttrack(flights) == (
-            "flight1", "flight1.ftml", Path(tmp_path).resolve() / "flight1.ftml")
+        assert AutoplotDockWidget.missing_flighttrack(flights, tmp_path) == (
+            "flight1", "flight1.ftml", tmp_path.resolve() / "flight1.ftml")
 
-    def test_operation_and_empty_entries(self):
+    def test_operation_and_empty_entries(self, tmp_path):
         flights = [["operation1", "", "", "operation1", "", ""], ["", "", "", "", "", ""], []]
-        assert AutoplotDockWidget.missing_flighttrack(flights) is None
+        assert AutoplotDockWidget.missing_flighttrack(flights, tmp_path) is None
 
 
 class TestMissingFlighttrackMessage:
     """
-    The path a lookup fails at is rarely the one the user typed, so the message says
+    The path a lookup fails at is not always the one the user typed, so the message says
     where it comes from.
     """
-    def test_relative_name_of_a_configuration(self):
-        message = AutoplotDockWidget.missing_flighttrack_message(
-            "flight1", "/home/mss/example.ftml", Path("/home/mss/example.ftml"),
-            ("/home/mss/mssautoplot.json", "example.ftml"))
-        assert message == (
-            "The flight track file of 'flight1' does not exist:\n"
-            "/home/mss/example.ftml\n"
-            "\n"
-            "The configuration /home/mss/mssautoplot.json names it 'example.ftml', "
-            "without a directory, so it is looked up next to that file.\n"
-            "Correct it there, or open the flight track in the MSUI, save it and add the row again.")
-
-    def test_path_of_a_configuration(self):
-        message = AutoplotDockWidget.missing_flighttrack_message(
-            "flight1", "/home/mss/flights/example.ftml", Path("/home/mss/flights/example.ftml"),
-            ("/home/mss/mssautoplot.json", "/home/mss/flights/example.ftml"))
-        assert "This path is stored in the configuration /home/mss/mssautoplot.json." in message
-        assert "names it" not in message
-
-    def test_name_without_a_directory(self, tmp_path, monkeypatch):
+    def test_name_without_a_directory(self, tmp_path):
         """
         Such an entry is either a flight track which was never saved, or a
         configuration which names the file without a directory. The entry does not
         tell which of the two, so the message names both remedies and does not
         claim the track was never saved.
         """
-        monkeypatch.chdir(tmp_path)
         message = AutoplotDockWidget.missing_flighttrack_message(
-            "flight1", "flight1.ftml", Path(tmp_path).resolve() / "flight1.ftml")
-        assert "Only the name 'flight1.ftml' is stored, without a directory" in message
-        assert f"working directory {Path(tmp_path).resolve()}" in message
-        assert "Save the flight track in the MSUI and add the row again, or store the name " \
-               "with its directory in the configuration file." in message
+            "flight1", "flight1.ftml", tmp_path / "flight1.ftml", tmp_path)
+        assert message == (
+            "The flight track file of 'flight1' does not exist:\n"
+            f"{tmp_path / 'flight1.ftml'}\n"
+            "\n"
+            "Only the name 'flight1.ftml' is stored, without a directory, so the file is looked up "
+            f"next to the configuration file, in {tmp_path}.\n"
+            "Save the flight track in the MSUI and add the row again, or store the name with its "
+            "directory in the configuration file.")
         assert "never saved" not in message
 
-    def test_file_of_a_row_the_dockwidget_wrote(self):
+    def test_relative_directory(self, tmp_path):
+        entry = os.path.join("flights", "example.ftml")
         message = AutoplotDockWidget.missing_flighttrack_message(
-            "flight1", "/home/mss/flights/example.ftml", Path("/home/mss/flights/example.ftml"))
-        assert "The file was moved or deleted after the row was added." in message
+            "flight1", entry, tmp_path / entry, tmp_path)
+        assert f"The name '{entry}' is relative to the directory of the configuration file, {tmp_path}." \
+            in message
 
-
-class TestFlightsSources:
-    """
-    Which configuration file named a flight track, and how, is kept to explain a file
-    which is not there.
-    """
-    def test_name_and_path_of_the_configuration(self, tmp_path):
-        configured = [["flight1", "", "", "example.ftml", "", ""],
-                      ["flight2", "", "", "/home/mss/other.ftml", "", ""]]
-        resolved = AutoplotDockWidget.resolve_flights_paths(configured, tmp_path)
-        sources = AutoplotDockWidget.flights_sources("/home/mss/mssautoplot.json", configured, resolved)
-        assert sources == {
-            str(tmp_path.resolve() / "example.ftml"): ("/home/mss/mssautoplot.json", "example.ftml"),
-            "/home/mss/other.ftml": ("/home/mss/mssautoplot.json", "/home/mss/other.ftml")}
-
-    def test_entries_without_a_flighttrack_file_are_skipped(self, tmp_path):
-        configured = [["", "", "", "", "", ""], ["operation1", "", "", "operation1", "", ""], []]
-        resolved = AutoplotDockWidget.resolve_flights_paths(configured, tmp_path)
-        assert AutoplotDockWidget.flights_sources("mssautoplot.json", configured, resolved) == {}
-
-    def test_two_entries_of_the_same_file(self, tmp_path):
-        """
-        The first entry wins, both explanations name the same missing file and the same
-        configuration to correct it in.
-        """
-        configured = [["flight1", "", "", "example.ftml", "", ""],
-                      ["flight2", "", "", str(tmp_path / "example.ftml"), "", ""]]
-        resolved = AutoplotDockWidget.resolve_flights_paths(configured, tmp_path)
-        sources = AutoplotDockWidget.flights_sources("mssautoplot.json", configured, resolved)
-        assert sources == {str(tmp_path.resolve() / "example.ftml"): ("mssautoplot.json", "example.ftml")}
+    def test_absolute_path(self, tmp_path):
+        missing = tmp_path / "flights" / "example.ftml"
+        message = AutoplotDockWidget.missing_flighttrack_message("flight1", str(missing), missing, tmp_path)
+        assert "The file was moved or deleted after it was stored." in message
+        assert str(tmp_path) + "." not in message
 
 
 class TestRowToShow:

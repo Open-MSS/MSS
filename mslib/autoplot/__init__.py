@@ -109,8 +109,9 @@ def resolve_ftml_path(filename, fpath=None, directory=None):
     The entry stores the path together with the file name, "~" is expanded. A
     relative name is taken relative to <directory>, the directory of the
     configuration file which named it, and relative to the current working
-    directory without one. <fpath>, the --fpath option of the CLI, replaces the
-    directory of the entry altogether.
+    directory without one. The CLI and the dockwidget always pass <directory>.
+    <fpath>, the --fpath option of the CLI, replaces the directory of the entry
+    altogether.
 
     Returns an absolute Path, which does not need to exist.
     """
@@ -120,6 +121,24 @@ def resolve_ftml_path(filename, fpath=None, directory=None):
     elif directory is not None and not path.is_absolute():
         path = Path(directory) / path
     return path.resolve()
+
+
+def relocate_ftml_path(filename, from_dir, to_dir):
+    """The entry <filename>, relative to <from_dir>, as a configuration file in <to_dir> names it.
+
+    A relative name is taken relative to the directory of its configuration file, see
+    resolve_ftml_path(). A configuration saved in another directory gets the name
+    rewritten relative to that one, so it still finds the same file. An absolute name
+    or one starting with "~" stays as it is. Where no relative path leads from <to_dir>
+    to the file, e.g. another drive on Windows, the name becomes absolute.
+    """
+    if Path(filename).expanduser().is_absolute():
+        return filename
+    path = resolve_ftml_path(filename, directory=from_dir)
+    try:
+        return os.path.relpath(path, Path(to_dir).expanduser().resolve())
+    except ValueError:
+        return str(path)
 
 
 def load_from_ftml(filename):
@@ -256,6 +275,8 @@ class Plotting:
         read_config_file(cpath)
         self.pdlg = pdlg
         self.fpath = fpath
+        # relative flight track entries are relative to the configuration file which names them
+        self.config_dir = Path(cpath).expanduser().resolve().parent
         self.config = config_loader()
         self.num_interpolation_points = self.config["num_interpolation_points"]
         self.num_labels = self.config["num_labels"]
@@ -321,11 +342,14 @@ class Plotting:
         """
         Flight track file of an "automated_plotting_flights" entry, checked for existence.
 
+        A relative entry is looked up next to the configuration file, not in the
+        working directory mssautoplot happens to be started in.
+
         Raises FileNotFoundError when the file is not there. draw() in main() catches it,
         so a missing file skips the plots of that entry only and the run goes on with
         the next one.
         """
-        file_path = resolve_ftml_path(filename, self.fpath)
+        file_path = resolve_ftml_path(filename, self.fpath, directory=self.config_dir)
         if not file_path.exists():
             message = "Filename {} doesn't exist".format(file_path)
             if self.pdlg is not None:

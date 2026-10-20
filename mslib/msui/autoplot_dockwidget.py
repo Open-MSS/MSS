@@ -37,7 +37,8 @@ import click
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem, QMessageBox
 from PyQt5 import QtCore
 
-from mslib.autoplot import main as cli_tool, flighttrack_entry, is_operation_entry, resolve_ftml_path
+from mslib.autoplot import (main as cli_tool, flighttrack_entry, is_operation_entry, relocate_ftml_path,
+                            resolve_ftml_path)
 from mslib.msui.qt5.ui_mss_autoplot import Ui_AutoplotDockWidget
 from mslib.msui.utils import constants as const
 from mslib.msui.utils.qt import get_save_filename, plain_text_as_html
@@ -70,8 +71,6 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.stime = ""
         self.etime = ""
         self.intv = ""
-        # flight track file -> (configuration file it came from, its name in there)
-        self.flighttrack_sources = {}
 
         self.refresh_sig(config_settings)
 
@@ -168,14 +167,14 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 "Cannot download empty treewidget"
             )
             return
-        missing = self.missing_flighttrack(config_settings["automated_plotting_flights"])
+        directory = self.flights_directory()
+        missing = self.missing_flighttrack(config_settings["automated_plotting_flights"], directory)
         if missing is not None:
             flight, entry, path = missing
             QMessageBox.information(
                 self,
                 "WARNING",
-                plain_text_as_html(self.missing_flighttrack_message(flight, entry, path,
-                                                                    self.flighttrack_sources.get(entry)))
+                plain_text_as_html(self.missing_flighttrack_message(flight, entry, path, directory))
             )
             return
         if self.intv == "":
@@ -210,7 +209,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         # Save the config settings to the file
         if config_path:
             with open(config_path, 'w') as file:
-                json.dump(config_settings, file, indent=4)
+                json.dump(self.config_to_write(config_settings, directory, const.MSS_AUTOPLOT.parent), file,
+                          indent=4)
 
         args = {
             'cpath': config_path,
@@ -301,9 +301,9 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             self.cpath = fileName
             with open(fileName, 'r') as file:
                 configure = json.load(file)
-            configured_flights = configure["automated_plotting_flights"]
-            autoplot_flights = self.resolve_flights_paths(configured_flights, Path(fileName).parent)
-            self.flighttrack_sources = self.flights_sources(fileName, configured_flights, autoplot_flights)
+            # the names stay as the file stores them, a relative one is relative to
+            # flights_directory() and rewritten only when a configuration is written
+            autoplot_flights = configure["automated_plotting_flights"]
             autoplot_hsecs = configure["automated_plotting_hsecs"]
             autoplot_vsecs = configure["automated_plotting_vsecs"]
             autoplot_lsecs = configure["automated_plotting_lsecs"]
@@ -316,106 +316,78 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             parent.refresh_signal_emit.emit()
             self.resize_treewidgets()
 
-    @classmethod
-    def resolve_flights_paths(cls, flights, directory):
+    def flights_directory(self):
         """
-        "automated_plotting_flights" entries of a configuration file, with their
-        flight track files resolved against the directory of that file.
+        The directory the relative flight track names of the "automated_plotting_flights"
+        entries are relative to.
 
-        A configuration which the dockwidget did not write can name the flight track
-        without a path, or relative to the directory the configuration lives in. The
-        GUI is started from an arbitrary working directory, so resolving such a name
-        against the configuration file is the only lookup which finds the file.
-        Operations, which carry the operation name instead of a file, stay untouched.
+        That is the directory of the selected configuration file. Without one the rows
+        come from the dockwidget, which stores a saved flight track with its absolute
+        path, and the directory of the configuration a download writes is used.
         """
-        resolved = []
-        for row in flights:
-            row = list(row)
+        return Path(self.cpath).parent if self.cpath else const.MSS_AUTOPLOT.parent
+
+    @staticmethod
+    def config_to_write(config_settings, from_dir, to_dir):
+        """
+        <config_settings> as a configuration file in <to_dir> stores it.
+
+        A relative flight track name is rewritten relative to <to_dir>, so the written
+        configuration finds the same file as the one it was read from, see
+        relocate_ftml_path(). <config_settings> itself keeps its names.
+        """
+        flights = []
+        for row in config_settings["automated_plotting_flights"]:
             entry = flighttrack_entry(row)
             if entry is not None:
-                row[3] = str(resolve_ftml_path(entry, directory=directory))
-            resolved.append(row)
-        return resolved
+                row = list(row)
+                row[3] = relocate_ftml_path(entry, from_dir, to_dir)
+            flights.append(row)
+        return dict(config_settings, automated_plotting_flights=flights)
 
     @classmethod
-    def flights_sources(cls, config_file, configured_flights, resolved_flights):
-        """
-        Where the flight track file of a resolved entry came from: resolved file ->
-        (configuration file, name as that file stores it).
-
-        Only used to explain a file which is not there, see
-        missing_flighttrack_message(). Two entries can name the same file, one with and
-        one without its directory. The first of them wins: both explanations name the
-        same missing file and the same configuration to correct it in, so which of the
-        two names is quoted does not change what the user has to do.
-        """
-        sources = {}
-        for configured, resolved in zip(configured_flights, resolved_flights):
-            entry = flighttrack_entry(resolved)
-            if entry is not None:
-                sources.setdefault(entry, (config_file, configured[3]))
-        return sources
-
-    @classmethod
-    def missing_flighttrack(cls, flights):
+    def missing_flighttrack(cls, flights, directory):
         """
         The first "automated_plotting_flights" entry whose flight track file is not
         there, as a (flight, entry, path) triple, None when all of them are readable.
 
         <entry> is the file as the configuration stores it, <path> the file mssautoplot
-        looks it up at. The entries of a selected configuration file are resolved
-        already, the ones of the configuration loaded at startup and the ones of a
-        flight track which was never saved are not, so the lookup goes through
-        resolve_ftml_path() again, the one place which defines it. Plots cannot be
-        drawn for a missing file, so the download stops before it opens its progress
-        dialog.
+        looks it up at, a relative entry relative to <directory>. Plots cannot be drawn
+        for a missing file, so the download stops before it opens its progress dialog.
         """
         for row in flights:
             entry = flighttrack_entry(row)
             if entry is not None:
-                path = resolve_ftml_path(entry)
+                path = resolve_ftml_path(entry, directory=directory)
                 if not path.exists():
                     return row[0], entry, path
         return None
 
     @staticmethod
-    def missing_flighttrack_message(flight, entry, path, source=None):
+    def missing_flighttrack_message(flight, entry, path, directory):
         """
         Why the flight track file of <flight> is looked up at <path>, and what to do.
 
-        The path a lookup fails at is rarely the path the user typed: a name without a
-        directory is resolved against a working directory the GUI user never chose, and
-        a name from a selected configuration file against the directory of that file.
-        <source>, the (configuration file, name in there) pair of the entry, tells the
-        two apart. It is None for an entry which no selected configuration provided:
-        one the dockwidget wrote from a flight track, or one of the configuration
-        loaded at startup. Which of the two it is cannot be told from the entry, so a
-        name without a directory names both remedies instead of guessing one.
+        The path a lookup fails at is not always the path the user typed: a relative
+        name is resolved against <directory>, the one of the configuration file. A name
+        without a directory is either a flight track which was never saved or a
+        configuration which names the file without one, the entry does not tell which,
+        so the message names both remedies instead of guessing one.
         """
         text = [f"The flight track file of '{flight}' does not exist:", str(path), ""]
-        if source is not None:
-            config_file, name = source
-            if name != entry and Path(name).parent == Path("."):
-                text.append(f"The configuration {config_file} names it '{name}', without a "
-                            "directory, so it is looked up next to that file.")
-            elif name != entry:
-                # A name with a directory changes on resolving too: "~" is expanded, a
-                # relative directory is joined onto the one of the configuration file
-                # and symlinks are followed.
-                text.append(f"The configuration {config_file} names it '{name}', which "
-                            "resolves to this path.")
-            else:
-                text.append(f"This path is stored in the configuration {config_file}.")
-            text.append("Correct it there, or open the flight track in the MSUI, save it "
-                        "and add the row again.")
-        elif Path(entry).parent == Path("."):
+        if Path(entry).expanduser().is_absolute():
+            text.append("The file was moved or deleted after it was stored.")
+            text.append("Open the flight track in the MSUI, save it and add the row again, or "
+                        "correct the path in the configuration file.")
+            return "\n".join(text)
+        if Path(entry).parent == Path("."):
             text.append(f"Only the name '{entry}' is stored, without a directory, so the file "
-                        f"is looked up in the working directory {Path.cwd()}.")
-            text.append("Save the flight track in the MSUI and add the row again, or store the "
-                        "name with its directory in the configuration file.")
+                        f"is looked up next to the configuration file, in {directory}.")
         else:
-            text.append("The file was moved or deleted after the row was added.")
-            text.append("Open the flight track in the MSUI, save it and add the row again.")
+            text.append(f"The name '{entry}' is relative to the directory of the configuration "
+                        f"file, {directory}.")
+        text.append("Save the flight track in the MSUI and add the row again, or store the "
+                    "name with its directory in the configuration file.")
         return "\n".join(text)
 
     @staticmethod
@@ -668,7 +640,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         )
         if file_path:
             with open(file_path, 'w') as file:
-                json.dump(config_settings, file, indent=4)
+                json.dump(self.config_to_write(config_settings, self.flights_directory(), Path(file_path).parent),
+                          file, indent=4)
 
             QMessageBox.information(
                 self,

@@ -33,8 +33,8 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from mslib.autoplot import (load_from_ftml, resolve_ftml_path, is_operation_entry, flighttrack_file,
-                            flighttrack_entry, TopViewPlotting, main)
+from mslib.autoplot import (load_from_ftml, resolve_ftml_path, relocate_ftml_path, is_operation_entry,
+                            flighttrack_file, flighttrack_entry, TopViewPlotting, main)
 
 
 class TestEntryKind:
@@ -107,6 +107,46 @@ def test_missing_flight_track_is_reported_as_missing(tmp_path):
     assert result.exit_code == 0
     assert "doesn't exist" in result.output
     assert "Invalid times" not in result.output
+
+
+def test_relative_flight_track_is_found_next_to_the_configuration(tmp_path, monkeypatch):
+    """
+    mssautoplot looks up a relative entry next to the configuration file, as the dockwidget
+    does, not in the working directory it is started in.
+    """
+    (tmp_path / "cfg" / "flights").mkdir(parents=True)
+    example = os.path.join(os.path.dirname(__file__), "..", "data", "example.ftml")
+    Path(tmp_path / "cfg" / "flights" / "example.ftml").write_text(Path(example).read_text())
+    cfg = tmp_path / "cfg" / "mssautoplot.json"
+    cfg.write_text(json.dumps({"automated_plotting_flights": [
+        ["example", "00 global (cyl)", "", os.path.join("flights", "example.ftml"), "", ""]]}))
+    monkeypatch.chdir(tmp_path)
+    view = TopViewPlotting(str(cfg), None, None, None, None, None)
+    assert len(view.wps) == 5
+
+
+class TestRelocateFtmlPath:
+    """
+    A configuration saved in another directory names a relative flight track relative to
+    its own directory, so it finds the same file.
+    """
+    def test_same_directory(self, tmp_path):
+        assert relocate_ftml_path("example.ftml", tmp_path, tmp_path) == "example.ftml"
+
+    def test_other_directory(self, tmp_path):
+        relocated = relocate_ftml_path(os.path.join("flights", "example.ftml"), tmp_path / "a", tmp_path / "b")
+        assert relocated == os.path.join("..", "a", "flights", "example.ftml")
+
+    def test_subdirectory(self, tmp_path):
+        assert relocate_ftml_path("example.ftml", tmp_path / "a", tmp_path) == os.path.join("a", "example.ftml")
+
+    def test_absolute_path_is_kept(self, tmp_path):
+        absolute = str(tmp_path / "example.ftml")
+        assert relocate_ftml_path(absolute, tmp_path / "a", tmp_path / "b") == absolute
+
+    def test_home_is_kept(self, tmp_path):
+        home = os.path.join("~", "example.ftml")
+        assert relocate_ftml_path(home, tmp_path / "a", tmp_path / "b") == home
 
 
 class TestResolveFtmlPath:
