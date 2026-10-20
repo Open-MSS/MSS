@@ -36,7 +36,7 @@ Setup your
 
  .. literalinclude:: samples/config/msidp/msidp_settings.py.sample
 
-.. _configuration-mscolab:
+.. _generate-sso-keys-mscolab:
 
 2. Generate Keys, Certificates, and backend_saml files
 ------------------------------------------------------
@@ -58,7 +58,7 @@ If everything is correctly set, you can generate keys and certificates simply by
     $ mscolab sso_conf --init_sso_crts
 
 .. note::
-    This process generating keys and certificates for both Identity provider and mscolab server by default, If you need configure with different keys and certificates for the Identity provider, You should manually update the path of `SERVER_CERT` with the path of the generated .crt file for Identity provider, and `SERVER_KEY` with the path of the generated .key file for the Identity provider in the file `MSS/mslib/idp/idp_conf.py`.
+    This process generating keys and certificates for both Identity provider and mscolab server by default, If you need configure with different keys and certificates for the Identity provider, You should manually update the path of `SERVER_CERT` with the path of the generated .crt file for Identity provider, and `SERVER_KEY` with the path of the generated .key file for the Identity provider in the file `MSS/mslib/msidp/idp_conf.py`.
 
 
 3. Enable USE_SAML2

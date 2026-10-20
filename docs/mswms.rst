@@ -70,7 +70,7 @@ e.g.
 
 Detailed server configuration *mswms_settings.py* for this demodata
 
- .. literalinclude:: samples/config/mswms/mswms_settings.py.seed
+ .. literalinclude:: samples/config/mswms/mswms_settings.py.demodata
 
 For setting authentication see *mswms_auth.py*
 
@@ -456,9 +456,15 @@ Waitress is a production-quality pure-Python WSGI server.
 
 Installing
 ~~~~~~~~~~
-It is easy to configure and runs on CPython on Unix and Windows. ::
+It is easy to configure and runs on CPython on Unix and Windows. Install it into the environment of MSS,
+waitress has to import mslib. For a global installed MSS::
 
-   pixi global install waitress
+   pixi global add --environment mss waitress --expose waitress-serve=waitress-serve
+
+for MSS installed in a project, then use waitress-serve in its :code:`pixi shell`::
+
+   cd MSS
+   pixi add waitress
 
 wms.wsgi
 ~~~~~~~~
@@ -473,7 +479,7 @@ with the content ::
     import logging
     logging.basicConfig(stream=sys.stderr)
 
-    from mslib.mswms.wms import app
+    from mslib.mswms.wms import APP as app
 
 
 Running the waitress server
@@ -554,12 +560,13 @@ INSTANCE is a placeholder for your service name::
  │   └── wsgi
  │       ├── auth.wsgi
  │       └── wms.wsgi
- ├── .pixi
- │    ├── .gitignore
- │    └── envs
- │        └── default
- ├── pixi.lock
- └── pixi.toml
+ └── MSS
+     ├── .pixi
+     │    ├── .gitignore
+     │    └── envs
+     │        └── default
+     ├── pixi.lock
+     └── pixi.toml
 
 
 Configuration of wsgi for wms

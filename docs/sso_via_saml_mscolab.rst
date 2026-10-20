@@ -81,7 +81,7 @@ This section provides a guide for implementing MSColab with a single IdP. You ca
 .. note::
 	Sensible defaults of MSColab are opinionated. All these are defined in conf.py and those which you want to change you can add to a mscolab_settings.py in your search path.
 
-Before running the MSColab server, ensure `USE_SAML` is set to `True` in your `mscolab_settings.py`.
+Before running the MSColab server, ensure `USE_SAML2` is set to `True` in your `mscolab_settings.py`.
 
 .. code:: text
 
@@ -104,7 +104,7 @@ In this implementation, as we are enabling only one IdP, there is no need to con
                           'idp_name': 'Testing Identity Provider',  #  this name is used on the Login page to connect to the Provider
                       }
                   },
-          ,]
+          ]
 
 
 .. note::
@@ -141,7 +141,7 @@ Configuration mss_saml2_backend.yaml file
 
 You should create a new attribute using the ``idp_identity_name`` defined in the previous step. Afterward, you will need to create the necessary attributes in the `.yaml` file accordingly. If need, you can also update these attributes using the server
 
-Please refer the yaml file template (`mss_saml2_backend.yaml.samlple`) in the directory of `docs/samples/config/mscolab` to generating your IdP file.
+Please refer the yaml file template (`mss_saml2_backend.yaml.sample`) in the directory of `docs/samples/config/mscolab` to generating your IdP file.
 
 .. code:: text
 
@@ -442,16 +442,16 @@ Configure MSColab server
 ########################
 
 Configuration in MSColab settings for Keycloak
-    This involves Updating your `conf.py` file or `mcolab_settigns.py`, and update your `conf.py` file or `setup_saml2_backend.py`.
+    This involves Updating your `conf.py` file or `mscolab_settings.py`, and update your `conf.py` file or `setup_saml2_backend.py`.
 
-    1. Set USE_SAML = True in your mcolab_settigns.py
+    1. Set USE_SAML2 = True in your mscolab_settings.py
 
         .. code:: text
 
             # enable login by identity provider
             USE_SAML2 = True
 
-    2. Insert Keycloak into list of CONFIGURE_IDP in your setup_saml2_backend.py
+    2. Insert Keycloak into list of CONFIGURED_IDPS in your setup_saml2_backend.py
 
         .. code:: text
 
@@ -464,7 +464,7 @@ Configuration in MSColab settings for Keycloak
                                 'idp_name': 'Keycloak V 13',  #  this name is used on the Login page to connect to the Provider
                             }
                         },
-                ,]
+                ]
 
         .. note::
             Make sure to insert idp_identity_name as above ('key_cloak_v_13'), which used in this example.
@@ -477,68 +477,65 @@ Configuration mss_saml2_backend.yaml file
 
             name: Saml2
             config:
-            entityid_endpoint: true
-            mirror_force_authn: no
-            memorize_idp: no
-            use_memorized_idp_when_force_authn: no
-            send_requester_id: no
-            enable_metadata_reload: no
+              entityid_endpoint: true
+              mirror_force_authn: no
+              memorize_idp: no
+              use_memorized_idp_when_force_authn: no
+              send_requester_id: no
+              enable_metadata_reload: no
 
+              # SP Configuration for key_cloak_v_13
+              key_cloak_v_13:
+                name: "Keycloak Testing IDP"
+                description: "Keycloak 13.0.1"
+                key_file: path/to/key_sp.key # Will be set from the mscolab server
+                cert_file: path/to/crt_sp.crt # Will be set from the mscolab server
+                organization: {display_name: Open-MSS, name: Mission Support System, url: 'https://open-mss.github.io/about/'}
+                contact_person:
+                - {contact_type: technical, email_address: technical@example.com, given_name: Technical}
+                - {contact_type: support, email_address: support@example.com, given_name: Support}
 
-            # SP Configuration for localhost_test_idp
-            key_cloak_v_13:
-            name: "Keycloak Testing IDP"
-            description: "Keycloak 13.0.1"
-            key_file: path/to/key_sp.key # Will be set from the mscolab server
-            cert_file: path/to/crt_sp.crt # Will be set from the mscolab server
-            organization: {display_name: Open-MSS, name: Mission Support System, url: 'https://open-mss.github.io/about/'}
-            contact_person:
-            - {contact_type: technical, email_address: technical@example.com, given_name: Technical}
-            - {contact_type: support, email_address: support@example.com, given_name: Support}
+                metadata:
+                  local: [path/to/idp.xml] # Will be set from the mscolab server
 
-
-            metadata:
-                local: [path/to/idp.xml] # Will be set from the mscolab server
-
-
-            entityid: http://127.0.0.1:8083/metadata_keycloak/
-            accepted_time_diff: 60
-            service:
-                sp:
-                ui_info:
-                    display_name:
-                    - lang: en
-                        text: "Open MSS"
-                    description:
-                    - lang: en
-                        text: "Mission Support System"
-                    information_url:
-                    - lang: en
-                        text: "https://open-mss.github.io/about/"
-                    privacy_statement_url:
-                    - lang: en
-                        text: "https://open-mss.github.io/about/"
-                    keywords:
-                    - lang: en
-                        text: ["MSS"]
-                    - lang: en
-                        text: ["OpenMSS"]
-                    logo:
-                    text: "https://open-mss.github.io/assets/logo.png"
-                    width: "100"
-                    height: "100"
-                authn_requests_signed: true
-                want_response_signed: true
-                want_assertion_signed: true
-                allow_unknown_attributes: true
-                allow_unsolicited: true
-                endpoints:
-                    assertion_consumer_service:
-                    - [http://localhost:8083/keycloak_idp/acs/post, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST']
-                    discovery_response:
-                    - [<base_url>/<name>/disco, 'urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol']
-                name_id_format: 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient'
-                name_id_format_allow_create: true
+                entityid: http://127.0.0.1:8083/metadata_keycloak/
+                accepted_time_diff: 60
+                service:
+                  sp:
+                    ui_info:
+                      display_name:
+                        - lang: en
+                          text: "Open MSS"
+                      description:
+                        - lang: en
+                          text: "Mission Support System"
+                      information_url:
+                        - lang: en
+                          text: "https://open-mss.github.io/about/"
+                      privacy_statement_url:
+                        - lang: en
+                          text: "https://open-mss.github.io/about/"
+                      keywords:
+                        - lang: en
+                          text: ["MSS"]
+                        - lang: en
+                          text: ["OpenMSS"]
+                      logo:
+                        text: "https://open-mss.github.io/assets/logo.png"
+                        width: "100"
+                        height: "100"
+                    authn_requests_signed: true
+                    want_response_signed: true
+                    want_assertion_signed: true
+                    allow_unknown_attributes: true
+                    allow_unsolicited: true
+                    endpoints:
+                      assertion_consumer_service:
+                        - [http://localhost:8083/keycloak_idp/acs/post, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST']
+                      discovery_response:
+                      - [<base_url>/<name>/disco, 'urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol']
+                    name_id_format: 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient'
+                    name_id_format_allow_create: true
 
 
         .. note::

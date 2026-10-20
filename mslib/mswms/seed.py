@@ -936,7 +936,7 @@ import sys
 # stuff you see below, you don't need to do a1) and a2).
 
 # a1) Path of the directory where the MSS code package is located.
-# sys.path.insert(0, '/home/mss/miniconda3/lib/python3.10/site-packages')
+# sys.path.insert(0, '/home/mss/MSS/.pixi/envs/default/lib/python3.11/site-packages')
 
 # a2) Path of the directory where mswms_settings.py is located
 
@@ -960,6 +960,7 @@ import mslib.mswms
 #service_abstract = "Your Abstract"
 #service_contact_person = "Your Name"
 #service_contact_organisation = "Your Organization"
+#service_contact_position = "Your Position"
 #service_address_type = "postal"
 #service_address = "street"
 #service_city = "Your City"
@@ -967,6 +968,7 @@ import mslib.mswms
 #service_post_code = "12345"
 #service_country = "Germany"
 #service_fees = "none"
+#service_email = "you@your-organization.de"
 #service_access_constraints = "This service is intended for research purposes only."
 #IMPRINT = ""
 #GDPR = ""
@@ -1009,7 +1011,7 @@ basemap_use_cache = True
 # visualisation classes, data set). The visualisation classes are
 # defined in mpl_hsec.py and mpl_hsec_styles.py. Add only instances of
 # visualisation products for which data files are available. The data
-# sets must be defined in mss_config.py. The WMS will only offer
+# sets must be defined in data above. The WMS will only offer
 # products registered here.
 #
 # For defining new visualisation styles, we provide documentation and examples on
