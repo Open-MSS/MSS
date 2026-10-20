@@ -505,7 +505,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             constants.MSUI_SETTINGS.parent.mkdir(parents=True, exist_ok=True)
             constants.MSUI_SETTINGS.write_text("{}")
         try:
-            read_config_file()
+            config_warnings = read_config_file()
         except (FileNotFoundError) as ex:
             message = f'\n\nFix the setup of your "MSUI_SETTINGS" configuration.\n{ex}'
             logging.error(message)
@@ -520,6 +520,13 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         except (ImportError, AttributeError) as error:
             logging.debug("AttributeError, ImportError Exception %s", error)
+
+        if config_warnings:
+            # shown once the event loop runs; the timer is a child of the window, so it dies with it
+            popup_timer = QtCore.QTimer(self)
+            popup_timer.setSingleShot(True)
+            popup_timer.timeout.connect(lambda: self.show_config_warnings(config_warnings))
+            popup_timer.start(0)
 
         self.config_editor = None
         self.local_active = True
@@ -1226,8 +1233,22 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.remove_plugins()
         if self.mscolab.token is not None:
             self.mscolab.logout()
-        read_config_file()
+        config_warnings = read_config_file()
+        if config_warnings:
+            self.show_config_warnings(config_warnings)
         self.add_plugins()
+
+    def show_config_warnings(self, config_warnings):
+        """
+        Tells the user which entries of the config file were ignored
+        """
+        show_popup(
+            self, "Config file warnings",
+            f"Some entries of your config file {constants.MSUI_SETTINGS} were ignored, because the setting "
+            "is unknown or the value does not have the expected type or structure. "
+            "All other entries are in use.\n\n" + "\n".join(config_warnings),
+            icon=1,
+        )
 
     def open_config_editor(self):
         """

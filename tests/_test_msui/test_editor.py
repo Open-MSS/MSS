@@ -32,6 +32,23 @@ from mslib.msui import editor
 from tests import constants
 
 
+def test_import_config_reports_ignored_entries(qtbot, tmp_path):
+    import_file = tmp_path / "import.json"
+    import_file.write_text('{"num_labels": "12", "num_interpolation_points": 30}')
+    window = editor.ConfigurationEditorWindow()
+    with mock.patch("mslib.msui.editor.get_open_filename", return_value=str(import_file)), \
+            mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
+        window.import_config()
+    assert m.call_count == 1
+    assert "'num_labels': '12' has the wrong type" in m.call_args[0][2]
+    assert window.statusbar.currentMessage() == "Imported config, 1 entries ignored"
+    data = window.json_model.serialize()
+    assert data["num_interpolation_points"] == 30
+    assert data["num_labels"] == 10
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.No):
+        window.close()
+
+
 @pytest.mark.skip("To be done for new UI")
 class Test_Editor:
     sample_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "msui_settings.json"))

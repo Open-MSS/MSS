@@ -28,6 +28,7 @@
 from PyQt5 import QtCore
 
 import copy
+import difflib
 import json
 import logging
 import os
@@ -490,12 +491,14 @@ def read_config_file(path=constants.MSUI_SETTINGS):
         raise FileNotFoundError(error_message)
 
     global user_options
+    warnings = []
     if json_file_data:
-        user_options = merge_dict(copy.deepcopy(default_options), json_file_data)
+        user_options = merge_dict(copy.deepcopy(default_options), json_file_data, _warnings=warnings)
         logging.debug("Merged default and user settings")
     else:
         user_options = copy.deepcopy(default_options)
         logging.debug("No user settings found, using default settings")
+    return warnings
 
 
 def modify_config_file(data, path=constants.MSUI_SETTINGS):
@@ -614,7 +617,7 @@ def load_settings_qsettings(tag, default_settings=None):
     return default_settings
 
 
-def merge_dict(existing_dict, new_dict):
+def merge_dict(existing_dict, new_dict, _warnings=None):
     """
     Merge two dictionaries by comparing all the options from
     the MSUIDefaultConfig class
@@ -622,13 +625,36 @@ def merge_dict(existing_dict, new_dict):
     Arguments:
     existing_dict -- Dict to merge new_dict into
     new_dict -- Dict with new values
+    _warnings -- optional list; a message for every ignored value is appended to it
     """
+    def _warn(msg):
+        logging.warning(msg)
+        if _warnings is not None:
+            _warnings.append(msg)
+
+    def _example(structure):
+        return next(iter(structure.values())) if isinstance(structure, dict) else structure[0]
+
+    for key in new_dict:
+        if key not in existing_dict:
+            close = difflib.get_close_matches(key, [_key for _key in existing_dict if not _key.startswith("_")], n=1)
+            hint = f", did you mean {close[0]!r}?" if close else ""
+            _warn(f"{key!r} is not a known setting and was ignored{hint}")
+
     # Check if dictionary options with fixed key/value pairs match data types from default
     for key in MSUIDefaultConfig.fixed_dict_options + MSUIDefaultConfig.fixed_list_options:
         if key in new_dict:
-            existing_dict[key] = compare_data(
-                existing_dict[key], new_dict[key]
-            )[0]
+            mismatches = []
+            data, match = compare_data(existing_dict[key], new_dict[key], _mismatches=mismatches)
+            if mismatches == [()]:
+                _warn(f"{key!r}: {new_dict[key]!r} does not have the structure of {existing_dict[key]!r}"
+                      " and was ignored")
+            elif not match:
+                for path in mismatches:
+                    entry = key + "".join(f"[{item!r}]" for item in path)
+                    _warn(f"{entry}: {_get_path(new_dict[key], path)!r} has the wrong type"
+                          f" (expected a value like {_get_path(existing_dict[key], path)!r}) and was ignored")
+            existing_dict[key] = data
 
     # Check if dictionary options with predefined structure match data types from default
     dos = copy.deepcopy(MSUIDefaultConfig.dict_option_structure)
@@ -638,6 +664,10 @@ def merge_dict(existing_dict, new_dict):
     dos["export_plugins"]["plugin-name-a"] = dos["export_plugins"]["plugin-name"][:3]
     for key in dos:
         if key in new_dict:
+            if not isinstance(new_dict[key], dict):
+                _warn(f"{key!r}: {new_dict[key]!r} is not a dictionary like"
+                      f" {MSUIDefaultConfig.dict_option_structure[key]!r} and was ignored")
+                continue
             temp_data = {}
             for option_key in new_dict[key]:
                 for dos_key_key in dos[key]:
@@ -647,6 +677,9 @@ def merge_dict(existing_dict, new_dict):
                     if match:
                         temp_data[option_key] = new_dict[key][option_key]
                         break
+                else:
+                    _warn(f"{key}[{option_key!r}]: {new_dict[key][option_key]!r} does not have the structure of"
+                          f" {_example(dos[key])!r} and was ignored")
             if temp_data != {}:
                 existing_dict[key] = temp_data
 
@@ -656,6 +689,9 @@ def merge_dict(existing_dict, new_dict):
         if key in new_dict:
             temp_data = []
             if key not in MSUIDefaultConfig.fixed_list_options:
+                if not isinstance(new_dict[key], list):
+                    _warn(f"{key!r}: {new_dict[key]!r} is not a list like {los[key]!r} and was ignored")
+                    continue
                 for i in range(len(new_dict[key])):
                     for los_key_item in los[key]:
                         data, match = compare_data(los_key_item,
@@ -664,6 +700,9 @@ def merge_dict(existing_dict, new_dict):
                         if match:
                             temp_data.append(data)
                             break
+                    else:
+                        _warn(f"{key}[{i}]: {new_dict[key][i]!r} does not have the structure of"
+                              f" {_example(los[key])!r} and was ignored")
                 if temp_data != []:
                     existing_dict[key] = temp_data
 
@@ -673,6 +712,9 @@ def merge_dict(existing_dict, new_dict):
             data, match = compare_data(existing_dict[key], new_dict[key])
             if match:
                 existing_dict[key] = data
+            else:
+                _warn(f"{key!r}: {new_dict[key]!r} has the wrong type"
+                      f" (expected a value like {existing_dict[key]!r}) and was ignored")
 
     # add filepicker default to import and export plugins if missing
     for plugin_type in ["import_plugins", "export_plugins"]:
@@ -686,7 +728,13 @@ def merge_dict(existing_dict, new_dict):
     return existing_dict
 
 
-def compare_data(default, user_data, any_string=False):
+def _get_path(data, path):
+    for item in path:
+        data = data[item]
+    return data
+
+
+def compare_data(default, user_data, any_string=False, _mismatches=None, _path=()):
     """
     Recursively compares two dictionaries based on qt_json_view datatypes
     and returns default or user_data appropriately.
@@ -694,11 +742,18 @@ def compare_data(default, user_data, any_string=False):
     Arguments:
     default -- Dict to return if datatype not matching
     user_data -- Dict to return if datatype is matching
+    _mismatches -- optional list; the path (tuple of keys and indices) of every
+                   value of user_data which was replaced by its default is appended to it
     """
+    def _mismatch():
+        if _mismatches is not None:
+            _mismatches.append(_path)
+        return default, False
+
     # If data is neither list not dict type, compare individual type
     if not isinstance(default, dict) and not isinstance(default, list):
         if isinstance(default, float) and isinstance(user_data, int):
-            user_data = float(default)
+            user_data = float(user_data)
         if any_string and isinstance(default, str) and isinstance(user_data, str):
             return user_data, True
         if isinstance(match_type(default), UrlType) and isinstance(match_type(user_data), StrType):
@@ -706,30 +761,27 @@ def compare_data(default, user_data, any_string=False):
         if isinstance(match_type(default), type(match_type(user_data))):
             return user_data, True
         else:
-            return default, False
+            return _mismatch()
 
     data = copy.deepcopy(default)
     matches = []
     # If data is list type, compare all values in list
-    if isinstance(default, list) and isinstance(user_data, list):
-        if len(default) == len(user_data):
-            for i in range(len(default)):
-                data[i], match = compare_data(default[i], user_data[i], any_string=any_string)
-                matches.append(match)
-        else:
-            return default, False
+    if isinstance(default, list):
+        if not isinstance(user_data, list) or len(default) != len(user_data):
+            return _mismatch()
+        for i in range(len(default)):
+            data[i], match = compare_data(default[i], user_data[i], any_string=any_string,
+                                          _mismatches=_mismatches, _path=_path + (i,))
+            matches.append(match)
 
     # If data is dict type, goes through the dict and update
-    elif isinstance(default, dict) and isinstance(user_data, dict):
-        if default.keys() == user_data.keys():
-            for key in default:
-                if key in user_data:
-                    data[key], match = compare_data(default[key], user_data[key], any_string=any_string)
-                    matches.append(match)
-                else:
-                    matches.append(False)
-        else:
-            return default, False
+    else:
+        if not isinstance(user_data, dict) or default.keys() != user_data.keys():
+            return _mismatch()
+        for key in default:
+            data[key], match = compare_data(default[key], user_data[key], any_string=any_string,
+                                            _mismatches=_mismatches, _path=_path + (key,))
+            matches.append(match)
 
     return data, all(matches)
 
