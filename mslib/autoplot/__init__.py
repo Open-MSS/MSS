@@ -352,8 +352,6 @@ class Plotting:
         file_path = resolve_ftml_path(filename, self.fpath, directory=self.config_dir)
         if not file_path.exists():
             message = "Filename {} doesn't exist".format(file_path)
-            if self.pdlg is not None:
-                self.pdlg.close()
             raise FileNotFoundError(message)
         return file_path
 

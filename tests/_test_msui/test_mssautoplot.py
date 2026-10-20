@@ -109,6 +109,27 @@ def test_missing_flight_track_is_reported_as_missing(tmp_path):
     assert "Invalid times" not in result.output
 
 
+def test_missing_flight_track_keeps_the_progress_dialog_open(tmp_path):
+    """
+    The run goes on with the next entry after a missing file, so the progress dialog
+    stays open, main() closes it at the end of the run.
+    """
+    class FakeDialog:
+        closed = False
+
+        def close(self):
+            self.closed = True
+
+    cfg = tmp_path / "cfg.json"
+    cfg.write_text(json.dumps({"automated_plotting_flights": [
+        ["gone", "00 global (cyl)", "", "gone.ftml", "", ""]]}))
+    pdlg = FakeDialog()
+    view = TopViewPlotting(str(cfg), None, None, None, None, pdlg)
+    with pytest.raises(FileNotFoundError):
+        view.update_path("gone.ftml")
+    assert not pdlg.closed
+
+
 def test_relative_flight_track_is_found_next_to_the_configuration(tmp_path, monkeypatch):
     """
     mssautoplot looks up a relative entry next to the configuration file, as the dockwidget
