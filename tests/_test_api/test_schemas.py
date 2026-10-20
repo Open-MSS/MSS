@@ -336,6 +336,18 @@ class Test_UserInfo:
         user = UserInfo(id=1, username="berta", fullname="Berta Test")
         assert UserInfo.from_dict(user.to_dict()) == user
 
+    @pytest.mark.parametrize("data", [
+        {"id": 1, "username": "berta"},
+        {"id": 1, "username": "berta", "fullname": None},
+    ])
+    def test_from_dict_without_fullname(self, data):
+        # servers before 11.0.0 send no fullname; the column is nullable (#3282)
+        assert UserInfo.from_dict(data) == UserInfo(id=1, username="berta", fullname="")
+
+    def test_null_fullname_is_sent_as_empty_string(self):
+        # the server builds UserInfo from a nullable column
+        assert UserInfo(id=1, username="berta", fullname=None).to_dict()["fullname"] == ""
+
 
 class Test_GetUserResponse:
     def test_round_trip(self):
@@ -363,6 +375,10 @@ class Test_LoginResponse:
 
     def test_auth_failure_sentinel(self):
         assert LoginResponse.from_text(AUTH_FAILED_TEXT) is None
+
+    def test_from_text_of_server_before_11(self):
+        response = LoginResponse.from_text('{"token": "abc", "user": {"username": "berta", "id": 1}}')
+        assert response == LoginResponse(token="abc", user=UserInfo(id=1, username="berta", fullname=""))
 
 
 class Test_FetchProfileImageRequest:

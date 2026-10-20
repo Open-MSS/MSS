@@ -86,8 +86,10 @@ class ConnectionManager(QtCore.QObject):
         if token is not None:
             logging.getLogger("engineio.client").addFilter(filter=lambda record: token not in record.getMessage())
         self.sio = socketio.Client(reconnection_attempts=5)
-        # the server refuses a connection with an invalid token
-        self.sio.connect(self.mscolab_server_url, auth={"token": token} if token is not None else None)
+        # the server refuses a connection with an invalid token; the first connection of a session can take
+        # longer than the 1 s python-socketio waits by default for the server to accept it (#3282)
+        self.sio.connect(self.mscolab_server_url, auth={"token": token} if token is not None else None,
+                         wait_timeout=config_loader(dataset="MSCOLAB_timeout")[1])
         logging.debug("Transport Layer: %s", self.sio.transport())
 
         self.sio.on(SocketEvents.FILE_CHANGED, handler=self.handle_file_change)

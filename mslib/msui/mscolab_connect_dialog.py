@@ -322,8 +322,7 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
                 if response.text == "False":
                     # show status indicating about wrong credentials
                     self.set_status("Error", 'Invalid token. Please enter correct token')
-                else:
-                    self.mscolab.after_login(req.email, self.mscolab_server_url, response)
+                elif self.mscolab.after_login(req.email, self.mscolab_server_url, response):
                     self.set_status("Success", 'Succesfully logged into mscolab server')
 
         except requests.exceptions.RequestException as error:
