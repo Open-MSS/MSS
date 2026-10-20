@@ -176,9 +176,14 @@ Create a file called :code:`server.py` having these lines::
 
   app = create_server_app()
 
-Then install gunicorn by pixi::
+Then install gunicorn by pixi into the environment of MSS, gunicorn has to import mslib. For a global installed MSS::
 
-  $ pixi global install gunicorn
+  $ pixi global add --environment mss gunicorn --expose gunicorn=gunicorn
+
+for MSS installed in a project, then use gunicorn in its :code:`pixi shell`::
+
+  $ cd MSS
+  $ pixi add gunicorn
 
 
 and start the server with your secret key (see :code:`SECRET_KEY` above) by::

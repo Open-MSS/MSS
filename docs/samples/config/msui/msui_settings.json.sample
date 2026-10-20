@@ -1,6 +1,6 @@
 
 {
-    "data_dir": "/home/user/Documents/mss",
+    "data_dir": "/home/<user>/Documents/mss",
     "filepicker_default": "default",
 
     "import_plugins": {

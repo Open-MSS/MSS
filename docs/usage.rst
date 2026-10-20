@@ -78,7 +78,8 @@ by the environment variable MSUI_SETTINGS pointing to your msui_settings.json.
 
 .. literalinclude:: samples/config/msui/msui_settings.json.sample
 
-Give paths in this file, e.g. :code:`data_dir`, as absolute paths, a path starting with "~" is not used.
+Give paths in this file, e.g. :code:`data_dir`, as absolute paths and replace :code:`<user>` by your user
+name. msui doesn't expand a path starting with "~" in this file, it uses the default value instead.
 
 File I/O
 ........

@@ -32,6 +32,7 @@ BASE_DIR = os.path.join(os.path.expanduser("~"), 'mss')
 
 DATA_DIR = os.path.join(BASE_DIR, "colabdata")
 
-# dir where mscolab single sign-on process files are stored, it must be the same
-# SSO_DIR as in mscolab_settings.py
+# dir where mscolab single sign-on process files are stored. Set it to the SSO_DIR
+# of your mscolab_settings.py, msidp reads the keys and the metadata that
+# "mscolab sso_conf" writes there.
 SSO_DIR = os.path.join(DATA_DIR, 'datasso')

@@ -9,7 +9,7 @@
 
     This file is part of MSS.
 
-    :copyright: Copyright 2026 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2026 by Reimar Bauer.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,6 +55,12 @@ def test_settings_sample_registers_its_layers(sample, tmp_path, monkeypatch):
     # the chem_plots sample imports mss_chem_plots, which lives next to it
     monkeypatch.syspath_prepend(str(MSWMS_SAMPLES))
     settings = _load_sample(MSWMS_SAMPLES / sample, tmp_path, "sample_mswms_settings")
+    # WMSServer skips a layer of an unknown dataset without a message
+    registered = {dataset
+                  for layers in (settings.register_horizontal_layers, settings.register_vertical_layers)
+                  for _, datasets in layers for dataset in datasets}
+    registered |= {dataset for layer in settings.register_linear_layers for dataset in layer[-1]}
+    assert registered <= set(settings.data)
     monkeypatch.setattr(mslib.mswms.wms, "mswms_settings", settings)
     server = mslib.mswms.wms.WMSServer()
     try:

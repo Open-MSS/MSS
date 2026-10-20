@@ -6,12 +6,12 @@
 
     Configuration module for programs accessing data on the MSS server.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: 2011-2014 Marc Rautenhaus
     :copyright: Copyright 2017 Jens-Uwe Grooss, Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2017-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,7 @@ import sys
 # If you already have set up the PYTHONPATH environment variable for the
 # stuff you see below, you don't need to do a1) and a2).
 
-# a1) Path of the directory where the mss code package is located.
+# a1) Path of the directory where the MSS code package is located.
 # sys.path.insert(0, '/home/mss/MSS/.pixi/envs/default/lib/python3.11/site-packages')
 
 # a2) Path of the directory where mswms_settings.py and mss_chem_plots.py are located
@@ -152,11 +152,11 @@ if mpl_vsec_styles is not None:
 #
 # Registration of linear layers.
 #
-# The same as above, but for 1D sections.
+# The same as above, but for linear sections.
 register_linear_layers = None
 if mpl_lsec_styles is not None:
     register_linear_layers = [
-        # ECMWF standard 1D section styles.
+        # ECMWF standard linear section styles.
         (mpl_lsec_styles.LS_DefaultStyle, "air_temperature", ["ecmwf_EUR_LL015"]),
         (mpl_lsec_styles.LS_DefaultStyle, "divergence_of_wind", ["ecmwf_EUR_LL015"]),
         (mpl_lsec_styles.LS_DefaultStyle, "mole_fraction_of_ozone_in_air", ["ecmwf_EUR_LL015"]),

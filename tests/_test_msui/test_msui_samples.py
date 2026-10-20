@@ -9,7 +9,7 @@
 
     This file is part of MSS.
 
-    :copyright: Copyright 2026 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2026 by Reimar Bauer.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,6 +24,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import ast
+import importlib
 import json
 import pathlib
 
@@ -102,8 +104,13 @@ def test_kml_sample(kml):
     assert len(patch.patches) > 0
 
 
-def test_navaid_plugin_sample(monkeypatch):
-    pytest.importorskip("geomag")
-    monkeypatch.syspath_prepend(str(SAMPLES / "plugins"))
-    import navaid
-    assert callable(navaid.save_to_navaid)
+def test_navaid_plugin_sample():
+    """The plugin needs the addons geomag, geopy and geographiclib, so only its imports of mslib are checked."""
+    tree = ast.parse((SAMPLES / "plugins" / "navaid.py").read_text(encoding="utf-8"))
+    imports = [node for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) and node.module.startswith("mslib")]
+    assert imports != []
+    for node in imports:
+        module = importlib.import_module(node.module)
+        for alias in node.names:
+            assert hasattr(module, alias.name), f"{node.module}.{alias.name}"
+    assert "save_to_navaid" in {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}

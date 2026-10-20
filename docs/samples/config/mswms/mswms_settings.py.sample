@@ -6,11 +6,11 @@
 
     Configuration module for programs accessing data on the MSS server.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: 2011-2014 Marc Rautenhaus
-    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -167,7 +167,7 @@ register_horizontal_layers = [
     # (mpl_hsec_styles.HS_EMAC_TracerStyle_SFC_01, ["emac_GLOBAL_LL1125"]),
 
     # Meteosat products.
-    (mpl_hsec_styles.HS_Meteosat_BT108_01, ["meteosat_EUR_LL05"]),
+    # (mpl_hsec_styles.HS_Meteosat_BT108_01, ["meteosat_EUR_LL05"]),
 
     # MSS-Chem chemistry forecasts
     #

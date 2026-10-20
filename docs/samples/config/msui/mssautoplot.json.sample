@@ -50,7 +50,7 @@
    },
 
    "automated_plotting_flights": [
-      ["example", "07 Europe (cyl)", "", "/home/user/flights/example.ftml", "", "2019-09-01T12:00:00"]
+      ["example", "07 Europe (cyl)", "", "/home/<user>/flights/example.ftml", "", "2019-09-01T12:00:00"]
    ],
    "automated_plotting_hsecs": [
       ["http://www.your-wms-server.de", "ecmwf_EUR_LL015.PLTemp01", "", "850.0"]

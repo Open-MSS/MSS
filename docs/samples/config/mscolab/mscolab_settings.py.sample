@@ -56,7 +56,7 @@ OPERATIONS_DATA = os.path.join(DATA_DIR, 'filedata')
 # SSO by SAML2 is optional
 
 # dir where mscolab single sign-on process files are stored. When you test SSO with
-# the msidp test identity provider, its SSO_DIR in msidp_settings.py must be the same.
+# the msidp test identity provider, set its SSO_DIR in msidp_settings.py to this directory.
 SSO_DIR = os.path.join(DATA_DIR, 'datasso')
 
 # Enable SSL certificate verification during SSO between MSColab and IdP
