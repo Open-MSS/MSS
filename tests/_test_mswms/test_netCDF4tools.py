@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    tests._test_utils.test_netCDF4tools
+    tests._test_mswms.test_netCDF4tools
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests mslib.netCDF4tools

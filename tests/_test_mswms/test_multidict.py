@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    tests._test_utils.test_multidict
+    tests._test_mswms.test_multidict
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests mslib.mss_util

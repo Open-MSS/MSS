@@ -27,7 +27,13 @@
 import pytest
 from mslib.msui.utils.service_manager import WMSServiceManager
 
-from tests.server_setup import ensure_example_ftml, reset_mscolab_config_dir
+from tests.server_setup import ensure_example_ftml, ensure_mscolab_config, reset_mscolab_config_dir
+# the test keyring, the reset of the msui configuration and the Qt helpers
+from tests.msui_fixtures import *  # noqa: F401,F403
+
+# Some test modules import mslib.mscolab at module level (they run against an MSColab server),
+# mslib.mscolab.conf binds mscolab_settings at its first import: write and load the test settings first.
+ensure_mscolab_config()
 
 
 @pytest.fixture(autouse=True)

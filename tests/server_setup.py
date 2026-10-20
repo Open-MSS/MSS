@@ -35,7 +35,6 @@ import os
 import shutil
 import sys
 
-from mslib.mswms.seed import DataFiles
 import tests.constants as constants
 
 
@@ -64,6 +63,8 @@ def ensure_mswms_testdata():
     config from mswms_settings at import time.
     """
     if not constants.MSWMS_SERVER_CONFIG_FILE_PATH.exists():
+        # here, not at module level: the suites of the other packages use this module too
+        from mslib.mswms.seed import DataFiles
         print('\n configure testdata')
         print(constants.MSWMS_DATA_DIR)
         examples = DataFiles(mswms_data_dir=constants.MSWMS_DATA_DIR,
