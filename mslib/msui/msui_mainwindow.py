@@ -57,8 +57,9 @@ from mslib.utils import release_info
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
-# Add config path to PYTHONPATH so plugins located there may be found
-sys.path.append(constants.MSUI_CONFIG_PATH)
+# Add config path to PYTHONPATH so plugins located there may be found,
+# as a str because the import system skips entries of sys.path which are no str
+sys.path.append(constants.MSUI_CONFIG_SYSPATH)
 
 
 def clean_string(string):
@@ -738,7 +739,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             except Exception as ex:
                 logging.error("Error on import: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
-                    self.tr(f"ERROR: Configuration\n\n{plugins}\n\nthrows {type(ex)} error:\n{ex}"))
+                    self, self.tr("file io plugin error import plugins"),
+                    plain_text_as_html(self.tr(f"ERROR: Configuration\n\n{plugins}\n\nthrows {type(ex)} error:\n{ex}")))
                 continue
             try:
                 self.add_plugin_submenu(name, extension, imported_function, picker_type, plugin_type="Import")

@@ -26,6 +26,7 @@
 """
 
 
+import importlib
 import mock
 import os
 import sys
@@ -358,6 +359,27 @@ class Test_MSSSideViewWindow:
             assert os.path.exists(save_file[0])
             os.remove(save_file[0])
 
+    def test_plugin_from_config_dir(self):
+        module_name = "msui_test_config_dir_plugin"
+        plugin_file = MSUI_CONFIG_PATH / f"{module_name}.py"
+        plugin_file.write_text(
+            "from mslib.plugins.io.text import load_from_txt, save_to_txt  # noqa: F401\n")
+        importlib.invalidate_caches()
+        plugins = {"ConfigDirText": ["txt", module_name, "load_from_txt"]}
+        try:
+            with mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=plugins), \
+                    mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critbox:
+                self.window.add_import_plugins("qt")
+                plugins["ConfigDirText"][2] = "save_to_txt"
+                self.window.add_export_plugins("qt")
+            assert critbox.call_count == 0
+            assert "ConfigDirText" in self.window.import_plugins
+            assert "ConfigDirText" in self.window.export_plugins
+        finally:
+            self.window.remove_plugins()
+            sys.modules.pop(module_name, None)
+            plugin_file.unlink()
+
     @mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=export_plugins)
     def test_add_plugins(self, mockopen):
         assert len(self.window.menuImportFlightTrack.actions()) == 3
@@ -379,6 +401,8 @@ class Test_MSSSideViewWindow:
             self.window.add_import_plugins("qt")
             self.window.add_export_plugins("qt")
             assert critbox.call_count == 2
+            # QMessageBox.critical needs parent, title and text
+            assert [len(call.args) for call in critbox.call_args_list] == [3, 3]
 
         self.window.remove_plugins()
         with mock.patch("mslib.msui.ms"

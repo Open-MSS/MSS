@@ -45,9 +45,6 @@ from mslib.msui.utils.config import read_config_file
 from mslib.msui.utils.qt import plain_text_as_html
 from PyQt5 import QtGui, QtCore, QtWidgets
 
-# Add config path to PYTHONPATH so plugins located there may be found
-sys.path.append(constants.MSUI_CONFIG_PATH)
-
 
 def main(tutorial_mode=False):
     """
