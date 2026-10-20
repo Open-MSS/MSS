@@ -26,13 +26,14 @@
 """
 
 
+import json
 import os
 from pathlib import Path
 
 import pytest
 
 from mslib.autoplot import (load_from_ftml, resolve_ftml_path, is_operation_entry, flighttrack_file,
-                            flighttrack_entry)
+                            flighttrack_entry, TopViewPlotting)
 
 
 class TestEntryKind:
@@ -72,6 +73,24 @@ def test_load_from_ftml():
                          (63.74, 1.73, 0.0, 'C', 'Landing')]
     assert len(wp_list) == 5
     assert type(wp_list[0]).__name__ == 'Waypoint'
+
+
+def test_missing_first_flight_track_does_not_stop_the_run(tmp_path):
+    """
+    The first entry is read when the plotter is set up. A missing file there skips only
+    the plots of that entry, the next entry is still drawn.
+    """
+    example = os.path.join(os.path.dirname(__file__), "..", "data", "example.ftml")
+    section = "00 global (cyl)"
+    cfg = tmp_path / "cfg.json"
+    cfg.write_text(json.dumps({"automated_plotting_flights": [
+        ["gone", section, "", str(tmp_path / "gone.ftml"), "", ""],
+        ["example", section, "", example, "", ""]]}))
+    view = TopViewPlotting(str(cfg), None, None, None, None, None)
+    with pytest.raises(FileNotFoundError):
+        view.update_path(str(tmp_path / "gone.ftml"))
+    view.update_path(example)
+    assert len(view.wps) == 5
 
 
 class TestResolveFtmlPath:

@@ -280,7 +280,12 @@ class Plotting:
         if is_operation_entry(flight, filename):
             self.read_operation(flight, msc_url, msc_auth_password, username, password)
         elif flighttrack_file(flight, filename) is not None:
-            self.read_ftml(filename)
+            try:
+                self.read_ftml(filename)
+            except FileNotFoundError as e:
+                # draw() reads every row again and reports the missing file there,
+                # the run goes on with the next row
+                logging.debug(e)
 
     def setup(self):
         pass
