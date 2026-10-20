@@ -144,8 +144,8 @@ class DefaultSettings:
     PUBLIC_URL = None
 
     # shared secret the CLI uses to authenticate against the server's internal
-    # notify endpoint (see SERVER_URL above). Like SECRET_KEY, this is randomized
-    # per process by default, so set it explicitly in your mscolab_settings when the
+    # notify endpoint (see SERVER_URL above). Unlike SECRET_KEY (which has no default and must be set explicitly),
+    # this is randomized per process by default, so set it explicitly in your mscolab_settings when the
     # CLI and the server run as separate process invocations that need to agree on it.
     ADMIN_TOKEN = secrets.token_urlsafe(16)
 
