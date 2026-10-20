@@ -27,6 +27,11 @@
 import os
 import shutil
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
+
+import pytest
+from PyQt5 import QtWidgets
 
 from mslib.msui import flighttrack as ft
 from mslib.msui.autoplot_dockwidget import AutoplotDockWidget
@@ -95,38 +100,95 @@ class TestConfigToWrite:
         assert written["automated_plotting_hsecs"] == config["automated_plotting_hsecs"]
 
 
-class TestMissingFlighttrack:
+def example_ftml(directory):
+    shutil.copy(os.path.join(os.path.dirname(__file__), "..", "data", "example.ftml"), directory)
+    return directory / "example.ftml"
+
+
+class TestMissingFlighttracks:
     """
-    The download button stops on a flight track file which is not there, instead of
-    letting mssautoplot leave through SystemExit.
+    The download button lists every flight track file which is not there.
     """
     def test_all_files_are_there(self, tmp_path):
-        example = tmp_path / "example.ftml"
-        shutil.copy(os.path.join(os.path.dirname(__file__), "..", "data", "example.ftml"), example)
-        flights = [["flight1", "", "", str(example), "", ""]]
-        assert AutoplotDockWidget.missing_flighttrack(flights, tmp_path) is None
+        flights = [["flight1", "", "", str(example_ftml(tmp_path)), "", ""]]
+        assert AutoplotDockWidget.missing_flighttracks(flights, tmp_path) == []
 
     def test_relative_name_is_found_next_to_the_configuration(self, tmp_path, monkeypatch):
-        shutil.copy(os.path.join(os.path.dirname(__file__), "..", "data", "example.ftml"), tmp_path)
+        example_ftml(tmp_path)
         monkeypatch.chdir(Path.home())
         flights = [["flight1", "", "", "example.ftml", "", ""]]
-        assert AutoplotDockWidget.missing_flighttrack(flights, tmp_path) is None
+        assert AutoplotDockWidget.missing_flighttracks(flights, tmp_path) == []
 
     def test_missing_file(self, tmp_path):
         missing = tmp_path / "example.ftml"
         flights = [["flight1", "", "", str(missing), "", ""]]
-        assert AutoplotDockWidget.missing_flighttrack(flights, tmp_path) == (
-            "flight1", str(missing), missing.resolve())
+        assert AutoplotDockWidget.missing_flighttracks(flights, tmp_path) == [
+            ("flight1", str(missing), missing.resolve())]
+
+    def test_every_missing_file_is_listed(self, tmp_path):
+        flights = [["flight1", "", "", "a.ftml", "", ""],
+                   ["flight2", "", "", str(example_ftml(tmp_path)), "", ""],
+                   ["flight3", "", "", "b.ftml", "", ""]]
+        assert [flight for flight, _, _ in AutoplotDockWidget.missing_flighttracks(flights, tmp_path)] == \
+            ["flight1", "flight3"]
 
     def test_flighttrack_which_was_never_saved(self, tmp_path):
         # only the name of the track is stored, it is looked up next to the configuration
         flights = [["flight1", "", "", "flight1.ftml", "", ""]]
-        assert AutoplotDockWidget.missing_flighttrack(flights, tmp_path) == (
-            "flight1", "flight1.ftml", tmp_path.resolve() / "flight1.ftml")
+        assert AutoplotDockWidget.missing_flighttracks(flights, tmp_path) == [
+            ("flight1", "flight1.ftml", tmp_path.resolve() / "flight1.ftml")]
 
     def test_operation_and_empty_entries(self, tmp_path):
         flights = [["operation1", "", "", "operation1", "", ""], ["", "", "", "", "", ""], []]
-        assert AutoplotDockWidget.missing_flighttrack(flights, tmp_path) is None
+        assert AutoplotDockWidget.missing_flighttracks(flights, tmp_path) == []
+
+
+class TestConfirmMissingFlighttracks:
+    """
+    mssautoplot skips a missing flight track and draws the others, so the download asks
+    whether to go on without the missing ones instead of refusing the whole download.
+    """
+    @staticmethod
+    def confirm(flights, directory):
+        # the dockwidget, reduced to what the confirmation uses
+        widget = SimpleNamespace(missing_flighttracks=AutoplotDockWidget.missing_flighttracks,
+                                 missing_flighttrack_message=AutoplotDockWidget.missing_flighttrack_message)
+        return AutoplotDockWidget.confirm_missing_flighttracks(widget, flights, directory)
+
+    def test_nothing_missing_asks_nothing(self, tmp_path):
+        flights = [["flight1", "", "", str(example_ftml(tmp_path)), "", ""]]
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.question") as question, \
+                mock.patch("PyQt5.QtWidgets.QMessageBox.information") as information:
+            assert self.confirm(flights, tmp_path) is True
+        question.assert_not_called()
+        information.assert_not_called()
+
+    @pytest.mark.parametrize("answer, goes_on", [(QtWidgets.QMessageBox.Yes, True),
+                                                 (QtWidgets.QMessageBox.No, False)])
+    def test_some_missing_asks(self, tmp_path, answer, goes_on):
+        flights = [["flight1", "", "", "gone.ftml", "", ""],
+                   ["flight2", "", "", str(example_ftml(tmp_path)), "", ""]]
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=answer) as question:
+            assert self.confirm(flights, tmp_path) is goes_on
+        text = question.call_args[0][2]
+        assert "The flight track file of 'flight1' does not exist" in text
+        assert "flight2" not in text
+        assert text.endswith("Download the plots of the other flight tracks?")
+
+    def test_operation_is_left_to_draw(self, tmp_path):
+        flights = [["flight1", "", "", "gone.ftml", "", ""], ["operation1", "", "", "operation1", "", ""]]
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes) as question:
+            assert self.confirm(flights, tmp_path) is True
+        question.assert_called_once()
+
+    def test_all_missing_stops(self, tmp_path):
+        flights = [["flight1", "", "", "a.ftml", "", ""], ["flight2", "", "", "b.ftml", "", ""]]
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.question") as question, \
+                mock.patch("PyQt5.QtWidgets.QMessageBox.information") as information:
+            assert self.confirm(flights, tmp_path) is False
+        question.assert_not_called()
+        text = information.call_args[0][2]
+        assert "'flight1'" in text and "'flight2'" in text
 
 
 class TestMissingFlighttrackMessage:

@@ -168,14 +168,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             )
             return
         directory = self.flights_directory()
-        missing = self.missing_flighttrack(config_settings["automated_plotting_flights"], directory)
-        if missing is not None:
-            flight, entry, path = missing
-            QMessageBox.information(
-                self,
-                "WARNING",
-                plain_text_as_html(self.missing_flighttrack_message(flight, entry, path, directory))
-            )
+        if not self.confirm_missing_flighttracks(config_settings["automated_plotting_flights"], directory):
             return
         if self.intv == "":
             if self.stime and self.etime:
@@ -346,22 +339,44 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         return dict(config_settings, automated_plotting_flights=flights)
 
     @classmethod
-    def missing_flighttrack(cls, flights, directory):
+    def missing_flighttracks(cls, flights, directory):
         """
-        The first "automated_plotting_flights" entry whose flight track file is not
-        there, as a (flight, entry, path) triple, None when all of them are readable.
+        The "automated_plotting_flights" entries whose flight track file is not there,
+        as a list of (flight, entry, path) triples, empty when all of them are readable.
 
         <entry> is the file as the configuration stores it, <path> the file mssautoplot
-        looks it up at, a relative entry relative to <directory>. Plots cannot be drawn
-        for a missing file, so the download stops before it opens its progress dialog.
+        looks it up at, a relative entry relative to <directory>.
         """
+        missing = []
         for row in flights:
             entry = flighttrack_entry(row)
             if entry is not None:
                 path = resolve_ftml_path(entry, directory=directory)
                 if not path.exists():
-                    return row[0], entry, path
-        return None
+                    missing.append((row[0], entry, path))
+        return missing
+
+    def confirm_missing_flighttracks(self, flights, directory):
+        """
+        Whether the download goes on although flight track files are missing.
+
+        mssautoplot skips the plots of a missing file and draws the others, so the
+        user is asked whether to download those. When no row is left to draw, the
+        download stops with the explanation instead of asking.
+        """
+        missing = self.missing_flighttracks(flights, directory)
+        if not missing:
+            return True
+        text = "\n\n".join(self.missing_flighttrack_message(flight, entry, path, directory)
+                           for flight, entry, path in missing)
+        if len(missing) == len(flights):
+            QMessageBox.information(self, "WARNING", plain_text_as_html(text))
+            return False
+        answer = QMessageBox.question(
+            self, "WARNING",
+            plain_text_as_html(f"{text}\n\nDownload the plots of the other flight tracks?"),
+            QMessageBox.Yes | QMessageBox.No)
+        return answer == QMessageBox.Yes
 
     @staticmethod
     def missing_flighttrack_message(flight, entry, path, directory):
