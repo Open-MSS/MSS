@@ -31,6 +31,7 @@ import sys
 from pathlib import Path
 import requests
 import requests.exceptions
+import socketio
 import mock
 import pytest
 
@@ -143,6 +144,58 @@ class Test_Mscolab_connect_window:
             # test operation listing visibility
             assert self.main_window.listOperationsMSC.model().rowCount() == 1
         qtbot.wait_until(assert_)
+
+    def test_login_to_server_before_11(self, qtbot):
+        # servers before 11.0.0 send no fullname with the user (#3282)
+        real_post = requests.Session.post
+
+        def post_without_fullname(session, url, *args, **kwargs):
+            response = real_post(session, url, *args, **kwargs)
+            if url.endswith(endpoints.TOKEN):
+                data = json.loads(response.text)
+                del data["user"]["fullname"]
+                response._content = json.dumps(data).encode()
+            return response
+
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        with mock.patch.object(requests.Session, "post", autospec=True, side_effect=post_without_fullname):
+            self._login(qtbot, self.userdata[0], self.userdata[2])
+        assert self.main_window.usernameLabel.text() == self.userdata[1]
+        assert self.main_window.mscolab.user["fullname"] == ""
+
+    @pytest.mark.parametrize("text", ["<html>not json</html>", '{"token": "abc"}', "[]"])
+    def test_login_with_unreadable_response(self, qtbot, text):
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self.window.loginEmailLe.setText(self.userdata[0])
+        self.window.loginPasswordLe.setText(self.userdata[2])
+        with mock.patch("requests.Session.post", return_value=mock.Mock(text=text)):
+            QtTest.QTest.mouseClick(self.window.loginBtn, QtCore.Qt.LeftButton)
+        # the connect dialog stays open and tells why
+        assert self.main_window.mscolab.connect_window is self.window
+        assert "Can't read the login response" in self.window.statusLabel.text()
+        assert self.window.loginBtn.isEnabled()
+        assert self.main_window.mscolab.token is None
+        assert self.main_window.connectBtn.isVisible()
+
+    def test_login_with_failing_socket_connection(self, qtbot):
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self.window.loginEmailLe.setText(self.userdata[0])
+        self.window.loginPasswordLe.setText(self.userdata[2])
+        with mock.patch("mslib.msui.socket_control.ConnectionManager",
+                        side_effect=socketio.exceptions.ConnectionError("One or more namespaces failed to connect: ")):
+            QtTest.QTest.mouseClick(self.window.loginBtn, QtCore.Qt.LeftButton)
+        # the connect dialog stays open and tells why, instead of a fatal error
+        assert self.main_window.mscolab.connect_window is self.window
+        assert "Couldn't create a socket connection" in self.window.statusLabel.text()
+        assert self.window.loginBtn.isEnabled()
+        assert self.main_window.mscolab.token is None
+        assert self.main_window.connectBtn.isVisible()
+        # and the next attempt logs in
+        self._login(qtbot, self.userdata[0], self.userdata[2])
+        assert self.main_window.usernameLabel.text() == self.userdata[1]
 
     @pytest.mark.parametrize("mail_enabled", [False, True, None])
     def test_wrong_password_message_follows_mail_setting(self, qtbot, mail_enabled):
