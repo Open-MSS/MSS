@@ -1,164 +1,64 @@
-
 {
-    "view":"topview"
-    "data_dir": "~/Documents/mss",
-    "filepicker_default": "default",
+   "mscolab_server_url": "http://www.your-mscolab-server.de",
 
-    "import_plugins": {
-        "FliteStar": ["fls", "mslib.plugins.io.flitestar", "load_from_flitestar"],
-        "Text": ["txt", "mslib.plugins.io.text", "load_from_txt"]
-    },
+   "layout": {
+      "topview": [963, 702],
+      "sideview": [913, 557],
+      "linearview": [913, 557],
+      "tableview": [1236, 424],
+      "immutable": false
+   },
 
-    "export_plugins": {
-        "Text": ["txt", "mslib.plugins.io.text", "save_to_txt"],
-        "KML": ["kml", "mslib.plugins.io.kml", "save_to_kml"],
-        "GPX": ["gpx", "mslib.plugins.io.gpx", "save_to_gpx"]
-        },
+   "predefined_map_sections": {
+      "00 global (cyl)": {
+         "CRS": "EPSG:4326",
+         "map": {
+            "llcrnrlon": -180.0,
+            "llcrnrlat": -90.0,
+            "urcrnrlon": 180.0,
+            "urcrnrlat": 90.0
+         }
+      },
+      "07 Europe (cyl)": {
+         "CRS": "EPSG:4326",
+         "map": {
+            "llcrnrlon": -15.0,
+            "llcrnrlat": 35.0,
+            "urcrnrlon": 30.0,
+            "urcrnrlat": 65.0
+         }
+      },
+      "09 Northern Hemisphere (stereo)": {
+         "CRS": "MSS:stere,0,90,90",
+         "map": {
+            "llcrnrlon": -45.0,
+            "llcrnrlat": 0.0,
+            "urcrnrlon": 135.0,
+            "urcrnrlat": 0.0
+         }
+      }
+   },
 
-
-    "layout": {
-       "topview": [963, 702],
-       "sideview": [913, 557],
-       "tableview": [1236, 424],
-       "immutable": false
-     },
-
-    "locations": {
-        "EDMO": [48.08, 11.28],
-        "Hannover": [52.37, 9.74],
-        "Hamburg": [53.55, 9.99],
-        "Juelich": [50.92, 6.36],
-        "Leipzig": [51.34, 12.37],
-        "Muenchen": [48.14, 11.57],
-        "Stuttgart": [48.78, 9.18],
-        "Wien": [48.20833, 16.373064],
-        "Zugspitze": [47.42, 10.98],
-        "Kiruna": [67.821, 20.336],
-        "Ny-Alesund": [78.928, 11.986]
-    },
-
-    "predefined_map_sections": {
-        "00 global (cyl)": {
-            "CRS": "EPSG:4326",
-            "map": {
-                "llcrnrlon": -180.0,
-                "llcrnrlat": -90.0,
-                "urcrnrlon": 180.0,
-                "urcrnrlat": 90.0
-            }
-        },
-        "01 SADPAP (stereo)": {
-            "CRS": "EPSG:77890290",
-            "map": {
-                "llcrnrlon": -150.0,
-                "llcrnrlat": -45.0,
-                "urcrnrlon": -25.0,
-                "urcrnrlat": -20.0
-            }
-        },
-        "02 SADPAP zoom (stereo)": {
-            "CRS": "EPSG:77890290",
-            "map": {
-                "llcrnrlon": -120.0,
-                "llcrnrlat": -65.0,
-                "urcrnrlon": -45.0,
-                "urcrnrlat": -28.0
-            }
-        },
-        "03 SADPAP (cyl)": {
-            "CRS": "EPSG:4326",
-            "map": {
-                "llcrnrlon": -100.0,
-                "llcrnrlat": -75.0,
-                "urcrnrlon": -30.0,
-                "urcrnrlat": -30.0
-            }
-        },
-        "04 Southern Hemisphere (stereo)": {
-            "CRS": "EPSG:77889270",
-            "map": {
-                "llcrnrlon": 135.0,
-                "llcrnrlat": 0.0,
-                "urcrnrlon": -45.0,
-                "urcrnrlat": 0.0
-            }
-        },
-        "05 EDMO-SAL (cyl)": {
-            "CRS": "EPSG:4326",
-            "map": {
-                "llcrnrlon": -40,
-                "llcrnrlat": 10,
-                "urcrnrlon": 30,
-                "urcrnrlat": 60
-            }
-        },
-        "06 SAL-BA (cyl)": {
-            "CRS": "EPSG:4326",
-            "map": {
-                "llcrnrlon": -80,
-                "llcrnrlat": -40,
-                "urcrnrlon": -10,
-                "urcrnrlat": 30
-            }
-        },
-        "07 Europe (cyl)": {
-            "CRS": "EPSG:4326",
-            "map": {
-                "llcrnrlon": -15.0,
-                "llcrnrlat": 35.0,
-                "urcrnrlon": 30.0,
-                "urcrnrlat": 65.0
-            }
-        },
-        "08 Germany (cyl)": {
-            "CRS": "EPSG:4326",
-            "map": {
-                "llcrnrlon": 5.0,
-                "llcrnrlat": 45.0,
-                "urcrnrlon": 15.0,
-                "urcrnrlat": 57.0
-            }
-        },
-        "09 Northern Hemisphere (stereo)": {
-            "CRS": "MSS:stere,0,90,90",
-            "map": {
-                "llcrnrlon": -45.0,
-                "llcrnrlat": 0.0,
-                "urcrnrlon": 135.0,
-                "urcrnrlat": 0.0
-            }
-        }
-    },
-
-   "new_flighttrack_template": ["Kiruna", "Ny-Alesund"],
-   "new_flighttrack_flightlevel": 250,
    "num_interpolation_points": 201,
    "num_labels": 10,
 
-   "WMS_request_timeout": 30,
+   "WMS_request_timeout": 60,
 
-   "default_WMS": ["http://www.your-server.de/forecasts"],
-   "default_VSEC_WMS": ["http://www.your-server.de/forecasts"],
-   "default_LSEC_WMS": ["http://www.your-server.de/forecasts"],
-
-   "default_MSCOLAB": ["http://www.your-mscolab-server.de/"],
    "MSS_auth": {
-                  "http://www.your-server.de/forecasts": "authuser",
-                  "http://www.your-mscolab-server.de": "authuser"
-                },
+      "http://www.your-wms-server.de": "authuser",
+      "http://www.your-mscolab-server.de": "authuser"
+   },
 
    "automated_plotting_flights": [
-           ["", "", "", "", "", ""]
+      ["example", "07 Europe (cyl)", "", "/home/user/flights/example.ftml", "", "2019-09-01T12:00:00"]
    ],
    "automated_plotting_hsecs": [
-           ["", "", "", ""]
+      ["http://www.your-wms-server.de", "ecmwf_EUR_LL015.PLTemp01", "", "850.0"]
    ],
    "automated_plotting_vsecs": [
-           ["","", "", ""]
+      ["http://www.your-wms-server.de", "ecmwf_EUR_LL015.VS_HV01", "", ""]
    ],
    "automated_plotting_lsecs": [
-           ["", "", ""]
-   ],
-
-   "MSCOLAB_operations": []
+      ["http://www.your-wms-server.de", "ecmwf_EUR_LL015.LS_HV01", "", "pressure"]
+   ]
 }

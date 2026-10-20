@@ -1,6 +1,6 @@
 
 {
-    "data_dir": "~/Documents/mss",
+    "data_dir": "/home/user/Documents/mss",
     "filepicker_default": "default",
 
     "import_plugins": {
@@ -18,6 +18,7 @@
     "layout": {
        "topview": [963, 702],
        "sideview": [913, 557],
+       "linearview": [913, 557],
        "tableview": [1236, 424],
        "immutable": false
      },
@@ -134,13 +135,13 @@
    "num_interpolation_points": 201,
    "num_labels": 10,
 
-   "WMS_request_timeout": 30,
+   "WMS_request_timeout": 60,
 
    "default_WMS": ["http://www.your-server.de/forecasts"],
    "default_VSEC_WMS": ["http://www.your-server.de/forecasts"],
    "default_LSEC_WMS": ["http://www.your-server.de/forecasts"],
 
-   "default_MSCOLAB": ["http://www.your-mscolab-server.de/"],
+   "default_MSCOLAB": ["http://www.your-mscolab-server.de"],
    "MSS_auth": {
                   "http://www.your-server.de/forecasts": "authuser",
                   "http://www.your-mscolab-server.de": "authuser"

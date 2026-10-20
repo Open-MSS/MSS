@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab.conf.py.example
-    ~~~~~~~~~~~~~~~~~~~~
+    mscolab_settings
+    ~~~~~~~~~~~~~~~~
 
     config for mscolab.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
     :copyright: Copyright 2019-2026 by the MSS team, see AUTHORS.
@@ -55,7 +55,8 @@ OPERATIONS_DATA = os.path.join(DATA_DIR, 'filedata')
 
 # SSO by SAML2 is optional
 
-# dir where mscolab single sign-on process files are stored
+# dir where mscolab single sign-on process files are stored. When you test SSO with
+# the msidp test identity provider, its SSO_DIR in msidp_settings.py must be the same.
 SSO_DIR = os.path.join(DATA_DIR, 'datasso')
 
 # Enable SSL certificate verification during SSO between MSColab and IdP
@@ -74,17 +75,39 @@ MAX_UPLOAD_SIZE = 2 * 1024 * 1024
 # and pass it to the server in the environment variable MSCOLAB_SECRET_KEY, which wins
 # over this file, or set it here:
 # SECRET_KEY = '<your key>'
-# The server does not start without a key, with a key shorter than 32 characters or with
-# fewer than 10 different characters. All processes of the server (e.g. gunicorn workers)
+# The server does not start without a key, with a key shorter than 32 characters, with
+# fewer than 10 different characters or with whitespace at its start or end. All processes of the server (e.g. gunicorn workers)
 # and the mscolab command line tool must use the same key.
 
 # Lifetime of a login token in seconds, by default 10 days. A password reset and
 # "Log out everywhere" in msui make all earlier tokens of a user invalid.
 # EXPIRATION = 864000
 
+# Verification of new users by email, see the documentation of MSColab for the
+# mail settings (MAIL_SERVER, MAIL_PORT, MAIL_USERNAME, ...) of flask-mail.
+# MAIL_ENABLED = False
+
 # With MAIL_ENABLED = True: the address users reach the server under. Links in emails
 # (confirmation, password reset) are built from it; the server doesn't start without it.
 # PUBLIC_URL = "https://mscolab.example.org"
+
+# With MAIL_ENABLED = True: the address the emails are sent from; the server doesn't
+# start without it.
+# MAIL_DEFAULT_SENDER = "mscolab@example.org"
+
+# Address of the running server, the mscolab command line tool notifies it about its
+# changes, e.g. deleted users, through this address.
+# SERVER_URL = "http://127.0.0.1:8087"
+
+# Secret the mscolab command line tool authenticates with at the server, when it
+# notifies it. By default each process gets a random one, so set the same one for the
+# server and the command line tool, at least 16 characters, e.g. created with
+#     python -c "import secrets; print(secrets.token_urlsafe(32))"
+# ADMIN_TOKEN = '<your token>'
+
+# Markdown files with the imprint and the privacy policy (GDPR) of your server
+# IMPRINT = "/path/to/imprint.md"
+# GDPR = "/path/to/gdpr.md"
 
 # looks for a given category for an operation ending with GROUP_POSTFIX
 # e.g. category = Tex will look for TexGroup
@@ -111,9 +134,3 @@ DIRECT_LOGIN = True
 
 # enable login by identity provider
 USE_SAML2 = False
-
-# looks for a given category forn a operation ending with GROUP_POSTFIX
-# e.g. category = Tex will look for TexGroup
-# all users in that Group are set to the operations of that category
-# having the roles in the TexGroup
-GROUP_POSTFIX = "Group"

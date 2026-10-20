@@ -1,12 +1,12 @@
-NAVAID Plugin for exporting and importing flight path data
-..........................................................
+NAVAID Plugin for exporting flight path data
+............................................
 
 .. _navaid:
 
 The communication of the flight path data (e.g. with the aircraft
-authorities) is always individual. For this reason, import and of
+authorities) is always individual. For this reason, the export of
 these data can be done using different pre-defined templates.
-Alternative plugins could be placed into the settings directory.
+Alternative plugins could be placed into a directory of your PYTHONPATH.
 
 Details
 ~~~~~~~
@@ -22,14 +22,14 @@ table containing a column of the so-determined waypoint names. For locations
 outside the given set of NAVAID points , e.g. over the oceans, the naming
 convention switches to coordinate based name like xxyyNwwwzzW for
 latitude xx°yy'N and longitude www°zz'W. This is done if the closest NAVAID
-waypoint is more than 500 nm.
+waypoint is more than 250 nm away.
 
 Installation
 ~~~~~~~~~~~~
 
-1. Copy :download:`navaid.py </samples/plugins/navaid.py>` to a PYTHONPATH directory e.g. .config/mss
+1. Copy :download:`navaid.py </samples/plugins/navaid.py>` to a directory of your PYTHONPATH
 
-1. Save the NAVAID waypoint from https://adds-faa.opendata.arcgis.com/search?collection=Dataset select "Pending NAVAID System" and Download as CSV to your local directory `.config/mss/plugins/NAVAID_System.csv`
+1. Save the NAVAID waypoint from https://adds-faa.opendata.arcgis.com/search?collection=Dataset select "Pending NAVAID System" and Download as CSV to your local directory `~/.config/msui/plugins/NAVAID_System.csv`
 
 
 1. Add additional modules
@@ -40,8 +40,13 @@ Installation
 
 
 
-   when you have installed MSS in a Project::
+   when you have installed MSS in a Project, use its addons environment::
 
        cd MSS
-       pixi shell
-       pixi add geomag geopy geographiclib
+       pixi shell -e addons
+
+1. Enable the export in your msui_settings.json::
+
+       "export_plugins": {
+           "NAVAID": ["txt", "navaid", "save_to_navaid"]
+       }

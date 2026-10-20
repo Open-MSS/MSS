@@ -36,13 +36,13 @@ import sys
 # If you already have set up the PYTHONPATH environment variable for the
 # stuff you see below, you don't need to do a1) and a2).
 
-# a1) Path of the directory where the mss code package is located.
-# sys.path.insert(0, '/home/mss/miniconda3/envs/instance/lib/python3.X/site-packages')
+# a1) Path of the directory where the MSS code package is located.
+# sys.path.insert(0, '/home/mss/MSS/.pixi/envs/default/lib/python3.11/site-packages')
 
 # a2) Path of the directory where mswms_settings.py is located
-MSSCONFIGPATH = os.path.abspath(os.path.normpath(os.path.dirname(sys.argv[0])))
-sys.path.insert(0, MSSCONFIGPATH)
-os.chdir(MSSCONFIGPATH)
+# MSSCONFIGPATH = os.path.abspath(os.path.normpath(os.path.dirname(sys.argv[0])))
+# sys.path.insert(0, MSSCONFIGPATH)
+# os.chdir(MSSCONFIGPATH)
 
 import mslib.mswms.dataaccess
 from mslib.mswms import mpl_hsec_styles
@@ -71,14 +71,15 @@ datapath = {
 
 # Objects that let the user query the filename in which a particular
 # variable can be found. Objects are instances of subclasses of NWPDataAccess,
-# which provides the methods fc_filename() and full_fc_path().
+# which provides the methods get_filename() and get_datapath(). The second
+# argument of DefaultDataAccess is the domain id, a part of the file names.
 
 data = {
     "ecmwf_NH_LL05": mslib.mswms.dataaccess.DefaultDataAccess(datapath["ecmwf"], "NH_LL05"),
-    #    "ecmwf_EUR_LL015": mslib.mswms.dataaccess.DefaultDataAccess(datapath["ecmwf"], "EUR_LL015"),
+    "ecmwf_EUR_LL015": mslib.mswms.dataaccess.DefaultDataAccess(datapath["ecmwf"], "EUR_LL015"),
     #    "meteosat_EUR_LL05": mslib.mswms.dataaccess.DefaultDataAccess(datapath["meteosat"], "EUR_LL05"),
-    #    "emac_GLOBAL_LL1125": mslib.mswms.dataaccess.DefaultDataAccess(datapath["emac"]),
-    #    "CAMSglb": mslib.mswms.dataaccess.DefaultDataAccess(datapath["camsglobal"]),
+    #    "emac_GLOBAL_LL1125": mslib.mswms.dataaccess.DefaultDataAccess(datapath["emac"], "GLOBAL_LL1125"),
+    #    "CAMSglb": mslib.mswms.dataaccess.DefaultDataAccess(datapath["camsglobal"], "CAMSglb"),
 
 }
 
@@ -117,8 +118,9 @@ basemap_cache_size = 20
 # so that a single request cannot use up the memory of the server.
 # 'max_image_width' and 'max_image_height' limit the image size in pixels (msui
 # requests the size of the plot on screen), 'max_layers' the number of LAYERS in
-# one request, each layer can be requested once per style. 'max_section_points' limits the number of interpolation points and
-# labels of vertical and linear sections (msui option 'num_interpolation_points'),
+# one request, each layer can be requested once per style. 'max_section_points'
+# limits the number of interpolation points and labels of vertical and linear
+# sections (msui option 'num_interpolation_points'),
 # 'max_path_waypoints' the number of waypoints in PATH.
 max_image_width = 4096
 max_image_height = 4096
@@ -134,7 +136,7 @@ max_path_waypoints = 1000
 # visualisation classes, data set). The visualisation classes are
 # defined in mpl_hsec.py and mpl_hsec_styles.py. Add only instances of
 # visualisation products for which data files are available. The data
-# sets must be defined in mss_config.py. The WMS will only offer
+# sets must be defined in data above. The WMS will only offer
 # products registered here.
 
 register_horizontal_layers = [
@@ -169,6 +171,11 @@ register_horizontal_layers = [
 
     # MSS-Chem chemistry forecasts
     #
+    # The MSS-Chem plot styles are not part of MSS. The sample module
+    # mss_chem_plots.py, shown with the user defined plots in the
+    # documentation, provides them, put it next to this file and
+    # "import mss_chem_plots".
+    #
     # The MSS-Chem project (http://mss-chem.rtfd.io) provides an easy way to
     # download and prepare chemical weather forecasts from a range of different
     # CTMs.  The plot style classes are called `HS_MSSChemStyle_XL_YYY_zzzzz`
@@ -197,7 +204,7 @@ register_horizontal_layers = [
     # section of model-level ("ML") mass fractions ("mfrac") of nitrogen dioxide
     # ("NO2"):
 
-    # (mpl_hsec_styles.HS_MSSChemStyle_ML_NO2_mfrac, ["CAMSglb"]),
+    # (mss_chem_plots.HS_MSSChemStyle_ML_NO2_mfrac, ["CAMSglb"]),
 ]
 
 
@@ -222,7 +229,7 @@ register_vertical_layers = [
     # (mpl_vsec_styles.VS_EMACEyja_Style_01, ["emac_GLOBAL_LL1125"]),
 
     # MSS-Chem chemistry forecasts
-    # (mpl_vsec_styles.VS_MSSChemStyle_ML_NO2_mfrac, ["CAMSglb"]),
+    # (mss_chem_plots.VS_MSSChemStyle_ML_NO2_mfrac, ["CAMSglb"]),
 ]
 
 
@@ -230,12 +237,12 @@ register_vertical_layers = [
 # Registration of linear layers.
 #
 
-# The same as above, but for 1D sections.
+# The same as above, but for linear sections.
 
 register_linear_layers = None
 if mpl_lsec_styles is not None:
     register_linear_layers = [
-        # ECMWF standard 1D section styles.
+        # ECMWF standard linear section styles.
         (mpl_lsec_styles.LS_DefaultStyle, "air_temperature", ["ecmwf_EUR_LL015"]),
         (mpl_lsec_styles.LS_DefaultStyle, "divergence_of_wind", ["ecmwf_EUR_LL015"]),
         (mpl_lsec_styles.LS_DefaultStyle, "mole_fraction_of_ozone_in_air", ["ecmwf_EUR_LL015"]),
@@ -255,8 +262,6 @@ if mpl_lsec_styles is not None:
 #
 # Server settings.                                ###
 #
-
-use_threadpool = False
 
 # xml_template directory is a sub directory of mswms
 
@@ -280,38 +285,39 @@ service_email = "mail@example.com"
 service_fees = "none"
 service_access_constraints = "This service is intended for research purposes only."
 
+# Markdown files with the imprint and the privacy policy (GDPR) of your server,
+# shown on its documentation pages
+# IMPRINT = "/home/mss/INSTANCE/config/imprint.md"
+# GDPR = "/home/mss/INSTANCE/config/gdpr.md"
+
 
 #
-# EPSG Code Definitions for Matplotlib basemap               ###
+# EPSG codes                                                 ###
 #
 
-# In this section you can define how EPSG codes are interpreted in
-# terms of Matplotlib basemap parameters. If you require a new EPSG
-# code, define it here.
-
-# Table to translate EPSG codes to Matplotlib basemap projection parameters.
-# Extend this table to add further EPSG codes.
-# Also see: http://external.opengeospatial.org/twiki_public/bin/view/
-#                  MetOceanDWG/MetCoordinateReferenceSystemDefinition
+# The keys of this table are the EPSG codes the horizontal layers offer in
+# their capabilities. MSS itself translates a code to the projection
+# parameters (mslib.utils.get_projection_params), it supports 4258, 4326,
+# 3031, 3412, 3411, 3413, 3575, 3995, 3395, 3857, 4839, 31467 and 31468.
+# The values are not used and kept for the sake of the old format.
+# The MSS specific codes EPSG:777llLLL (north polar stereographic, lat_0=ll,
+# lon_0=LLL) and EPSG:778llLLL (south polar stereographic, lat_0=-ll,
+# lon_0=LLL) are deprecated, msui uses "MSS:stere,lon_0,lat_0,lat_ts" instead.
 epsg_to_mpl_basemap_table = {
     # EPSG:4326, the standard cylindrical lat/lon projection.
     4326: {"projection": "cyl"},
 
-    # Non-standard EPSG codes, specifically defined for MSS pruposes.
-    # EPSG:777llLLL, north polar stereographic projections with lat_0=ll and
-    # lon_0=LLL.
+    # Deprecated MSS specific codes, north polar stereographic projections.
     77790000: {"projection": "stere", "lat_0": 90., "lon_0": 0.},
     77790010: {"projection": "stere", "lat_0": 90., "lon_0": 10.},
     77790015: {"projection": "stere", "lat_0": 90., "lon_0": 15.},
     77790340: {"projection": "stere", "lat_0": 90., "lon_0": -20.},
-    77790105: {"projection": "stere", "lat_0": 90., "lon_0": -105.},
+    77790105: {"projection": "stere", "lat_0": 90., "lon_0": 105.},
 
-    77890000: {"projection": "spstere", "lat_0": 90., "lon_0": 0.},
-    77890010: {"projection": "spstere", "lat_0": 90., "lon_0": 10.},
-    77890015: {"projection": "spstere", "lat_0": 90., "lon_0": 15.},
-    77890340: {"projection": "spstere", "lat_0": 90., "lon_0": -20.},
-    77890105: {"projection": "spstere", "lat_0": 90., "lon_0": -105.}
-
-    # Feel free to add other projections, e.g. a south polar projection
-    # EPSG:778llLLL.
+    # Deprecated MSS specific codes, south polar stereographic projections.
+    77890000: {"projection": "stere", "lat_0": -90., "lon_0": 0.},
+    77890010: {"projection": "stere", "lat_0": -90., "lon_0": 10.},
+    77890015: {"projection": "stere", "lat_0": -90., "lon_0": 15.},
+    77890340: {"projection": "stere", "lat_0": -90., "lon_0": -20.},
+    77890105: {"projection": "stere", "lat_0": -90., "lon_0": 105.},
 }

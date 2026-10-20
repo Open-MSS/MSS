@@ -117,7 +117,7 @@ parameters of `flask-mail` ::
 
         # mail settings
         MAIL_SERVER = 'localhost'
-        MAIL_PORT = 25
+        MAIL_PORT = 465
         MAIL_USE_TLS = False
         MAIL_USE_SSL = True
 
@@ -184,9 +184,13 @@ Then install gunicorn by pixi::
 and start the server with your secret key (see :code:`SECRET_KEY` above) by::
 
   $ export MSCOLAB_SECRET_KEY='<your key>'
-  $ gunicorn -b 0.0.0.0:8087 server:app
+  $ gunicorn -b 127.0.0.1:8087 -w 1 --threads 100 server:app
 
-For further options read `<https://flask.palletsoperations.com/en/1.1.x/deploying/wsgi-standalone/#gunicorn>`_
+The socket.io server of MSColab runs in threads, so use one worker process with many threads. Bind it to 127.0.0.1
+when a proxy on the same host serves it to the network.
+
+For further options read `<https://flask.palletsprojects.com/en/stable/deploying/gunicorn/>`_ and
+`<https://flask-socketio.readthedocs.io/en/latest/deployment.html#gunicorn-web-server>`_
 
 If you want to use nginx to proxy this gunicorn server have a look on the example
 :download:`mss_proxy.conf <samples/nginx/sites-available/mss_proxy.conf>`.
@@ -201,11 +205,6 @@ directly to the server, e.g. :code:`http://127.0.0.1:8087`, and refuse the endpo
   location = /internal_notify {
     return 404;
   }
-
-.. tip:: update gunicorn
-
-  You may need to build gunicorn on your own until the new release > 20.1.0:
-  https://github.com/benoitc/gunicorn/pull/2581#issuecomment-1154008037
 
 Backup Data Base
 ................

@@ -68,7 +68,7 @@ Mission Support User Interface (command: **msui**). Among others, define
 
 If you don't have a msui_settings.json then default configuration is in place.
 
-Store this msui_settings.json in a path, e.g. "$HOME/.config/mss"
+Store this msui_settings.json in a path, e.g. "$HOME/.config/msui"
 
 The file could be loaded by the File Configuration dialog or
 by the environment variable MSUI_SETTINGS pointing to your msui_settings.json.
@@ -77,6 +77,8 @@ by the environment variable MSUI_SETTINGS pointing to your msui_settings.json.
 
 
 .. literalinclude:: samples/config/msui/msui_settings.json.sample
+
+Give paths in this file, e.g. :code:`data_dir`, as absolute paths, a path starting with "~" is not used.
 
 File I/O
 ........
@@ -99,10 +101,6 @@ Additionally, different systems implement power-saving measures with varying lev
 MSColab Login and WWW-authentication
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 You can setup which accounts are used to login into MSColab and used for authenticate to the webservers.
-
-.. tip::
-  When you use an old configuration having WMS_login, MSC_login, MSCOLAB_password defined on start
-  of msui you get a hint that we can update your msui_settings.json file. We keep your old attributes in a bak file.
 
 A dictionary by Server-Url and username provide the username for logging into our services
 (by http-auth request for WMS).
@@ -202,8 +200,8 @@ A basic configuration looks like the following file:
 .. literalinclude:: samples/config/msui/performance_simple.json.sample
 
 This example file assumes a constant speed of 400 nm/h and a constant fuel consumption of
-2900 lbs/h irrespective of flight level changes. The aircraft weight and available fuel are
-also given, but these may also be adjusted in the GUI after loading.
+2900 lbs/h irrespective of flight level changes. The take-off weight and the empty
+weight of the aircraft are also given, but these may also be adjusted in the GUI after loading.
 
 The columns of the cruise table are aircraft weight (lbs), aircraft altitude (feet),
 speed (nm/h), and fuel consumption (lbs/h). MSS bilinearily interpolates in aircraft
@@ -283,7 +281,7 @@ Example KML Files are located at :
 * Displays Area in South America (*Points, LineStrings, Polygons*) :download:`docs/samples/kml/features.kml <samples/kml/features.kml>`
 * Displays the World Map (*MultiPolygon*) :download:`docs/samples/kml/World_Map.kml <samples/kml/World_Map.kml>`
 * Displays Square Fractal plot in North America (*Polygon Rings*) :download:`docs/samples/kml/polygon_inner.kml <samples/kml/polygon_inner.kml>`
-* Displays Fork like pattern in Ireland (*MultiLineStrings*) :download:`docs/samples/kml/Multilinestrings.kml <samples/kml/Multilinestrings.kml>`
+* Displays parallel lines in south-west Scotland (*MultiLineStrings*) :download:`docs/samples/kml/Multilinestrings.kml <samples/kml/Multilinestrings.kml>`
 * Displays Geometry Collection in Adelaide, Australia  :download:`docs/samples/kml/geometry_collection.kml <samples/kml/geometry_collection.kml>`
 
 

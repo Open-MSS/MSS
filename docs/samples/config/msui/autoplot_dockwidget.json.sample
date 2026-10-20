@@ -1,6 +1,6 @@
 {
     "filepicker_default": "default",
-    "data_dir": "~/Documents/mss",
+    "data_dir": "/home/user/Documents/mss",
     "layout": {
         "topview": [
             963,
@@ -140,9 +140,9 @@
         "https://forecast.fz-juelich.de/campaigns2019": "username",
         "http://localhost:8083": "emailid"
     },
-    "WMS_request_timeout": 30,
+    "WMS_request_timeout": 60,
     "WMS_preload": [],
-    "wms_cache": "wms cache path",
+    "wms_cache": "/home/user/.cache/msui/wms_cache",
     "wms_cache_max_size_bytes": 20971520,
     "wms_cache_max_age_seconds": 432000,
     "wms_prefetch": {
@@ -232,7 +232,7 @@
     "new_flighttrack_flightlevel": 0,
     "proxies": {},
     "mscolab_server_url": "http://localhost:8083",
-    "mscolab_local_data_dir": "~/.local/share/msui/mss",
+    "mscolab_local_data_dir": "/home/user/.local/share/msui",
     "gravatar_ids": [],
     "export_plugins": {},
     "import_plugins": {},
@@ -253,7 +253,7 @@
             "ST16",
             "00 global (cyl)",
             "",
-            "ST16.ftml",
+            "/home/user/Documents/mss/ST16.ftml",
             "",
             "2019-07-01T12:00:00Z"
         ],

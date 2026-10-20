@@ -70,7 +70,7 @@ e.g.
 
 Detailed server configuration *mswms_settings.py* for this demodata
 
- .. literalinclude:: samples/config/mswms/mswms_settings.py.seed
+ .. literalinclude:: samples/config/mswms/mswms_settings.py.demodata
 
 For setting authentication see *mswms_auth.py*
 
@@ -473,7 +473,7 @@ with the content ::
     import logging
     logging.basicConfig(stream=sys.stderr)
 
-    from mslib.mswms.wms import app
+    from mslib.mswms.wms import APP as app
 
 
 Running the waitress server
@@ -554,12 +554,13 @@ INSTANCE is a placeholder for your service name::
  │   └── wsgi
  │       ├── auth.wsgi
  │       └── wms.wsgi
- ├── .pixi
- │    ├── .gitignore
- │    └── envs
- │        └── default
- ├── pixi.lock
- └── pixi.toml
+ └── MSS
+     ├── .pixi
+     │    ├── .gitignore
+     │    └── envs
+     │        └── default
+     ├── pixi.lock
+     └── pixi.toml
 
 
 Configuration of wsgi for wms
