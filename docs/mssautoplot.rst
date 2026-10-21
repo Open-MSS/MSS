@@ -55,9 +55,10 @@ For downloading plots of multiple flight tracks, specify the flight track and it
            ["flight2", "section2, "vertical2", "filename2", "init_time2", "time2"]]
 
 The filename is stored together with its path, e.g. "/home/mss/flights/flight1.ftml"
-or "~/flights/flight1.ftml". Only then the flight track is found independent of the
-directory mssautoplot is called in. A bare file name without a path is looked up in
-the current working directory.
+or "~/flights/flight1.ftml". A relative name such as "flight1.ftml" or
+"flights/flight1.ftml" is looked up relative to the directory of the configuration
+file given by ``--cpath``, independent of the directory mssautoplot is called in.
+Such a configuration can be moved or shared together with its flight tracks.
 
 3. ``mssautoplot --cpath mssautoplot.json --stime="2019-09-01T00:00:00" --etime="2019-09-02T00:00:00" --intv=6``
 
