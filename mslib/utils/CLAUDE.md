@@ -10,7 +10,8 @@ Global map: ../../ARCHITECTURE.md
 
 - `coordinate.py`, `units.py`, `time.py`, `thermolib.py` — pure functions; the
   safest modules to edit; keep them dependency-free
-- `netCDF4tools.py` — NetCDF read helpers; `get_projection_params.py`
+- `netCDF4tools.py` — xarray-based NetCDF read helpers (variable identification
+  by CF standard name, `open_mfdataset_commondims()`); `get_projection_params.py`
 - `basic_auth.py` — password check of the basic HTTP auth of mswms, mscolab and
   `auth.wsgi` (argon2, deprecated MD5); `python -m mslib.utils.basic_auth` prints a hash
 - `file_exists.py`, `get_content.py` — docs pages of the servers;
