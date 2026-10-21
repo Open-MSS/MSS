@@ -34,7 +34,7 @@ import pytest
 from click.testing import CliRunner
 
 from mslib.autoplot import (load_from_ftml, resolve_ftml_path, relocate_ftml_path, is_operation_entry,
-                            flighttrack_file, flighttrack_entry, TopViewPlotting, main)
+                            flighttrack_file, flighttrack_entry, TopViewPlotting, main, download_summary)
 
 
 class TestEntryKind:
@@ -220,3 +220,24 @@ class TestResolveFtmlPath:
         assert resolve_ftml_path("example.ftml", fpath=str(tmp_path / "campaign"),
                                  directory=str(tmp_path / "flights")) == \
             Path(tmp_path).resolve() / "campaign" / "example.ftml"
+
+
+class TestDownloadSummary:
+    """
+    The dialog at the end of a download sums up the whole run, not its last plot.
+    """
+    def test_all_drawn(self):
+        assert download_summary(3, 0) == ("SUCCESS", "Plots downloaded successfully.")
+
+    def test_nothing_drawn(self):
+        assert download_summary(0, 2, ["Filename x doesn't exist"]) == \
+            ("FAILURE", "Plots could not be downloaded.\n\nFilename x doesn't exist")
+
+    def test_nothing_to_draw(self):
+        assert download_summary(0, 0)[0] == "FAILURE"
+
+    @pytest.mark.parametrize("results", [[False, True], [True, False]])
+    def test_missing_track_first_or_last(self, results):
+        title, text = download_summary(results.count(True), results.count(False), ["gone"])
+        assert title == "WARNING"
+        assert text.startswith("1 of 2 plots downloaded, 1 failed.")

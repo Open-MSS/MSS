@@ -141,6 +141,24 @@ def relocate_ftml_path(filename, from_dir, to_dir):
         return str(path)
 
 
+def download_summary(succeeded, failed, reasons=()):
+    """Title and text of the dialog which ends a download from the GUI.
+
+    The dialog sums up the whole run, not its last plot: a run which skipped a
+    missing flight track but drew the others says so. The reasons are printed
+    while drawing, the GUI has no console to read them in, so the text repeats them.
+    """
+    if succeeded == 0:
+        title, text = "FAILURE", "Plots could not be downloaded."
+    elif failed == 0:
+        return "SUCCESS", "Plots downloaded successfully."
+    else:
+        title, text = "WARNING", f"{succeeded} of {succeeded + failed} plots downloaded, {failed} failed."
+    if reasons:
+        text = "\n".join([text, ""] + list(reasons))
+    return title, text
+
+
 def load_from_ftml(filename):
     """Load a flight track from an XML file at <filename>.
     """
@@ -739,6 +757,14 @@ def main(ctx, cpath, view, ftrack, fpath, itime, vtime, intv, stime, etime, raw)
     if ctx.obj is not None:
         pdlg.setValue(2)
 
+        # why plots could not be drawn, in the order the reasons showed up and without
+        # repeating one for every section and time step
+    reasons = {}
+
+    def failed(reason):
+        print(reason)
+        reasons[reason] = None
+
     def draw(no_of_plots):
         try:
             if view == "top":
@@ -751,33 +777,33 @@ def main(ctx, cpath, view, ftrack, fpath, itime, vtime, intv, stime, etime, raw)
                 linear_view.draw(flight, section, vertical, filename, init_time, time,
                                  url, layer, style, elevation, no_of_plots)
             else:
-                print("View is not available, Plot not created!")
+                failed("View is not available, Plot not created!")
                 return False
         except Exception as e:
             if isinstance(e, FileNotFoundError):
-                print(str(e))
+                failed(str(e))
             elif "times" in str(e):
-                print("Invalid times and/or levels requested")
+                failed("Invalid times and/or levels requested")
             elif "LAYER" in str(e):
-                print(f"Invalid LAYER '{layer}' requested")
+                failed(f"Invalid LAYER '{layer}' requested")
             elif "404 Client Error" in str(e) or "NOT FOUND for url" in str(e):
-                print("Invalid STYLE and/or URL requested")
+                failed("Invalid STYLE and/or URL requested")
             else:
-                print(str(e))
+                failed(str(e))
         else:
             print("Plot downloaded!")
             return True
         return False
     if ctx.obj is not None:
         pdlg.setValue(4)
-    flag = False
+    results = []
     for flight, section, vertical, filename, init_time, time in config["automated_plotting_flights"]:
         if ctx.obj is not None:
             pdlg.setValue(8)
         for url, layer, style, elevation in config[sec]:
             if vtime == "" and stime == "":
                 no_of_plots = 1
-                flag = draw(no_of_plots)
+                results.append(draw(no_of_plots))
             elif intv == 0:
                 if itime != "":
                     init_time = datetime.strptime(itime, "%Y-%m-%dT%H:%M:%S")
@@ -785,7 +811,7 @@ def main(ctx, cpath, view, ftrack, fpath, itime, vtime, intv, stime, etime, raw)
                 if ftrack != "":
                     flight = ftrack
                 no_of_plots = 1
-                flag = draw(no_of_plots)
+                results.append(draw(no_of_plots))
             elif intv > 0:
                 if itime != "":
                     init_time = datetime.strptime(itime, "%Y-%m-%dT%H:%M:%S")
@@ -798,7 +824,7 @@ def main(ctx, cpath, view, ftrack, fpath, itime, vtime, intv, stime, etime, raw)
                     if ftrack != "":
                         flight = ftrack
                     no_of_plots = i
-                    flag = draw(no_of_plots)
+                    results.append(draw(no_of_plots))
                     time = time + timedelta(hours=intv)
                     i += 1
             else:
@@ -806,18 +832,8 @@ def main(ctx, cpath, view, ftrack, fpath, itime, vtime, intv, stime, etime, raw)
     if ctx.obj is not None:
         pdlg.setValue(10)
         pdlg.close()
-        if flag:
-            QMessageBox.information(
-                ctx.obj,  # The parent widget (use `None` if no parent)
-                "SUCCESS",  # Title of the message box
-                "Plots downloaded successfully."  # Message text
-            )
-        else:
-            QMessageBox.information(
-                ctx.obj,  # The parent widget (use `None` if no parent)
-                "FAILURE",  # Title of the message box
-                "Plots couldnot be downloaded."  # Message text
-            )
+        title, text = download_summary(results.count(True), results.count(False), reasons)
+        QMessageBox.information(ctx.obj, title, mslib.msui.utils.qt.plain_text_as_html(text))
 
 
 if __name__ == '__main__':
