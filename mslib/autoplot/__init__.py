@@ -757,8 +757,8 @@ def main(ctx, cpath, view, ftrack, fpath, itime, vtime, intv, stime, etime, raw)
     if ctx.obj is not None:
         pdlg.setValue(2)
 
-        # why plots could not be drawn, in the order the reasons showed up and without
-        # repeating one for every section and time step
+    # why plots could not be drawn, in the order the reasons showed up and without
+    # repeating one for every section and time step
     reasons = {}
 
     def failed(reason):
