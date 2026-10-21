@@ -175,8 +175,9 @@ class TestResolveFtmlPath:
     The flight track of an "automated_plotting_flights" entry is stored as path + file name,
     --fpath overrides the directory of that entry.
     """
-    def test_absolute_path_is_kept(self):
-        assert resolve_ftml_path("/home/mss/flights/example.ftml") == Path("/home/mss/flights/example.ftml")
+    def test_absolute_path_is_kept(self, tmp_path):
+        absolute = tmp_path / "flights" / "example.ftml"
+        assert resolve_ftml_path(str(absolute)) == absolute.resolve()
 
     def test_bare_filename_relative_to_working_directory(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
@@ -191,28 +192,31 @@ class TestResolveFtmlPath:
         resolved = resolve_ftml_path(os.path.join("~", "example.ftml"))
         assert resolved == Path.home().resolve() / "example.ftml"
 
-    def test_fpath_overrides_directory(self):
-        assert resolve_ftml_path("/home/mss/flights/example.ftml", "/data/campaign") == \
-            Path("/data/campaign/example.ftml")
+    def test_fpath_overrides_directory(self, tmp_path):
+        assert resolve_ftml_path(str(tmp_path / "flights" / "example.ftml"), str(tmp_path / "campaign")) == \
+            Path(tmp_path).resolve() / "campaign" / "example.ftml"
 
     def test_fpath_overrides_bare_filename(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        assert resolve_ftml_path("example.ftml", "/data/campaign") == Path("/data/campaign/example.ftml")
+        assert resolve_ftml_path("example.ftml", str(tmp_path / "campaign")) == \
+            Path(tmp_path).resolve() / "campaign" / "example.ftml"
 
-    def test_empty_fpath_is_ignored(self):
-        assert resolve_ftml_path("/home/mss/flights/example.ftml", "") == Path("/home/mss/flights/example.ftml")
+    def test_empty_fpath_is_ignored(self, tmp_path):
+        absolute = tmp_path / "flights" / "example.ftml"
+        assert resolve_ftml_path(str(absolute), "") == absolute.resolve()
 
     def test_directory_anchors_a_relative_name(self, tmp_path, monkeypatch):
         # the directory of the configuration file which named the flight track,
         # not the working directory
         monkeypatch.chdir(tmp_path)
-        assert resolve_ftml_path("example.ftml", directory="/home/mss/flights") == \
-            Path("/home/mss/flights/example.ftml")
+        assert resolve_ftml_path("example.ftml", directory=str(tmp_path / "flights")) == \
+            Path(tmp_path).resolve() / "flights" / "example.ftml"
 
-    def test_directory_does_not_touch_an_absolute_path(self):
-        assert resolve_ftml_path("/home/mss/example.ftml", directory="/data/campaign") == \
-            Path("/home/mss/example.ftml")
+    def test_directory_does_not_touch_an_absolute_path(self, tmp_path):
+        absolute = tmp_path / "flights" / "example.ftml"
+        assert resolve_ftml_path(str(absolute), directory=str(tmp_path / "campaign")) == absolute.resolve()
 
-    def test_fpath_wins_over_directory(self):
-        assert resolve_ftml_path("example.ftml", fpath="/data/campaign", directory="/home/mss/flights") == \
-            Path("/data/campaign/example.ftml")
+    def test_fpath_wins_over_directory(self, tmp_path):
+        assert resolve_ftml_path("example.ftml", fpath=str(tmp_path / "campaign"),
+                                 directory=str(tmp_path / "flights")) == \
+            Path(tmp_path).resolve() / "campaign" / "example.ftml"
