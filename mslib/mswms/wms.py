@@ -584,24 +584,32 @@ class WMSServer:
         for dataset in registry:
             for layer in registry[dataset].values():
                 if layer.uses_inittime_dimension() and len(layer.get_init_times()) == 0:
-                    logging.error("Layer '%s' of dataset '%s' is not offered: the dataset has no init times, "
-                                  "none of its data files could be read (see the log of the data scan)",
-                                  layer.name, dataset)
+                    logging.error("Layer '%s' of dataset '%s' is not offered: the data scan found no data file "
+                                  "of the dataset, none matches its domain id or none could be read "
+                                  "(see the log of the data scan)", layer.name, dataset)
                     continue
                 if layer.uses_validtime_dimension() and len(layer.get_all_valid_times()) == 0:
-                    missing = layer.get_missing_datafields()
-                    if missing:
-                        reason = "the data has no " + ", ".join(
-                            f"'{varname}' ({vartype})" for vartype, varname in missing)
-                    else:
-                        reason = "its data fields have no valid time in common"
-                    logging.error("Layer '%s' of dataset '%s' is not offered: %s. It needs %s",
-                                  layer.name, dataset, reason,
-                                  ", ".join(f"'{varname}' ({vartype})"
-                                            for vartype, varname, _ in layer.required_datafields))
+                    logging.error("Layer '%s' of dataset '%s' is not offered: %s",
+                                  layer.name, dataset, WMSServer._why_no_valid_times(layer))
                     continue
                 layers.append((dataset, layer))
         return layers
+
+    @staticmethod
+    def _why_no_valid_times(layer):
+        """the reason for an empty get_all_valid_times() of <layer>, as far as the layer can tell"""
+        # layers of plugins don't need to derive from Abstract2DSectionStyle
+        field_times = getattr(layer, "get_datafield_valid_times", dict)()
+        if not field_times:
+            return "it has no valid times"
+        names = {field: f"'{field[1]}' ({field[0]})" for field in field_times}
+        missing = [names[field] for field, times in field_times.items() if not times]
+        if missing:
+            return (f"the data scan found no {', '.join(missing)}, see the log of the data scan for skipped "
+                    f"files and variables. The layer needs {', '.join(names.values())}")
+        ranges = [f"{names[field]} {times[0]:%Y-%m-%dT%H:%M} to {times[-1]:%Y-%m-%dT%H:%M}"
+                  for field, times in field_times.items()]
+        return f"its data fields have no valid time in common: {', '.join(ranges)}"
 
     def get_capabilities(self, query, server_url=None):
         # ToDo find a more elegant method to do the same

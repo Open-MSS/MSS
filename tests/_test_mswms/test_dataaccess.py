@@ -26,11 +26,13 @@
     limitations under the License.
 """
 
+import logging
 import os
 import shutil
 from datetime import datetime
 
 import mock
+import netCDF4
 import pytest
 
 from mslib.mswms.dataaccess import (
@@ -344,3 +346,57 @@ class Test_DefaultDataAccessNoInit:
     def test_get_init_times(self):
         all_init_times = self.dut.get_init_times()
         assert all_init_times == [None]
+
+
+PL_FILE = "20121017_12_ecmwf_forecast.PRESSURE_LEVELS.EUR_LL015.036.pl.nc"
+
+
+def _copy_as(filename, target, file_format):
+    """a copy of a generated test data file in <file_format>, the place for changes to its content"""
+    with netCDF4.Dataset(os.path.join(MSWMS_DATA_DIR, filename)) as source, \
+            netCDF4.Dataset(target, "w", format=file_format) as copy:
+        copy.setncatts(source.__dict__)
+        for name, dimension in source.dimensions.items():
+            copy.createDimension(name, None if dimension.isunlimited() else len(dimension))
+        for name, variable in source.variables.items():
+            new = copy.createVariable(name, variable.datatype, variable.dimensions)
+            new.setncatts({key: variable.getncattr(key) for key in variable.ncattrs() if key != "_FillValue"})
+            new[:] = variable[:]
+
+
+class Test_DataScanReasons:
+    """the data scan tells why data is left out, GetCapabilities refers to its log (#1640)"""
+
+    def test_netcdf4_file_is_skipped(self, tmp_path, caplog):
+        _copy_as(PL_FILE, tmp_path / PL_FILE, "NETCDF4")
+        dut = DefaultDataAccess(str(tmp_path), "EUR_LL015")
+        with caplog.at_level(logging.ERROR):
+            dut.setup()
+        assert dut.get_all_valid_times("divergence_of_wind", "pl") == []
+        assert f"nccopy -k nc4c {PL_FILE}" in caplog.text
+
+    def test_netcdf4_classic_file_is_read(self, tmp_path):
+        _copy_as(PL_FILE, tmp_path / PL_FILE, "NETCDF4_CLASSIC")
+        dut = DefaultDataAccess(str(tmp_path), "EUR_LL015")
+        dut.setup()
+        assert len(dut.get_all_valid_times("divergence_of_wind", "pl")) > 0
+
+    def test_field_of_another_type_is_logged(self, tmp_path, caplog):
+        _copy_as(PL_FILE, tmp_path / PL_FILE, "NETCDF4_CLASSIC")
+        with netCDF4.Dataset(tmp_path / PL_FILE, "a") as dataset:
+            time, lat, lon = (name for name in dataset.variables["divergence_of_wind"].dimensions
+                              if name != "isobaric")
+            surface = dataset.createVariable("sp", "f4", (time, lat, lon))
+            surface.standard_name = "surface_air_pressure"
+            surface.units = "Pa"
+        dut = DefaultDataAccess(str(tmp_path), "EUR_LL015")
+        with caplog.at_level(logging.WARNING):
+            dut.setup()
+        assert dut.get_all_valid_times("surface_air_pressure", "sfc") == []
+        assert f"Skipping variable 'sp' in file '{PL_FILE}'" in caplog.text
+
+    def test_no_file_of_the_domain(self, tmp_path, caplog):
+        _copy_datafile(SFC_FILE, str(tmp_path))
+        with caplog.at_level(logging.ERROR):
+            DefaultDataAccess(str(tmp_path), "EUR_LL15").setup()
+        assert "has the domain id 'EUR_LL15' in its name" in caplog.text
