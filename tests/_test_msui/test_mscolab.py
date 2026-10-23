@@ -714,6 +714,25 @@ class Test_Mscolab:
         wpdata_server = self.window.mscolab.waypoints_model.waypoint_data(0)
         assert wpdata_local.lat != wpdata_server.lat
 
+    def test_work_locally_shows_the_operation_name(self, qtbot):
+        # the local copy is stored as mscolab_operation.ftml, the views show the operation name (#2508)
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        operation_name = self.window.mscolab.active_operation_name
+        self.window.actionTopView.trigger()
+        topview = self.window.get_active_views()[0]
+        self.window.workLocallyCheckbox.setChecked(True)
+        assert self.window.mscolab.waypoints_model.name == operation_name
+        assert operation_name in topview.windowTitle()
+        # a change is saved to the local copy
+        self.window.mscolab.waypoints_model.invert_direction()
+        assert self.window.mscolab.waypoints_model.name == operation_name
+        self.window.mscolab.reload_view_windows()
+        assert operation_name in topview.windowTitle()
+        assert "mscolab_operation" not in topview.windowTitle()
+
     @pytest.mark.parametrize("operation_name, directory", [
         ("..", "__"), ("../../outside", ".._.._outside"), ("absolute", None), ("a\\b:c", "a_b_c"), ("con", "con_")])
     def test_work_locally_stays_in_data_dir(self, qtbot, operation_name, directory):

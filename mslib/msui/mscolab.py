@@ -1086,8 +1086,20 @@ class MSUIMscolab(QtCore.QObject):
         with open(ftml_file, "w") as f:
             f.write(server_data)
 
+    def save_local_copy(self):
+        """
+        Saves the waypoints to the local copy of the active operation.
+
+        save_to_ftml names the flight track after the file, mscolab_operation; the views show the name of the
+        operation instead, as when working online.
+        """
+        self.waypoints_model.save_to_ftml(self.local_ftml_file)
+        self.waypoints_model.name = self.active_operation_name
+
     def reload_local_wp(self):
         self.waypoints_model = ft.WaypointsTableModel(filename=self.local_ftml_file, data_dir=self.data_dir)
+        # named after the file, mscolab_operation, otherwise
+        self.waypoints_model.name = self.active_operation_name
         self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
         self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         self.reload_view_windows()
@@ -1131,7 +1143,7 @@ class MSUIMscolab(QtCore.QObject):
             if xml_content is not None:
                 self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
                 self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
-                self.waypoints_model.save_to_ftml(self.local_ftml_file)
+                self.save_local_copy()
                 self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
                 self.reload_view_windows()
                 show_popup(self.ui, "Success", "New Waypoints Fetched To Local File!", icon=1)
@@ -1150,7 +1162,7 @@ class MSUIMscolab(QtCore.QObject):
                 self.conn.save_file(self.active_op_id, xml_content, comment=comment)
                 self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
                 self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
-                self.waypoints_model.save_to_ftml(self.local_ftml_file)
+                self.save_local_copy()
                 self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
                 self.reload_view_windows()
                 show_popup(self.ui, "Success", "New Waypoints Saved To Server!", icon=1)
@@ -1620,7 +1632,7 @@ class MSUIMscolab(QtCore.QObject):
     def handle_waypoints_changed(self, _1=None, _2=None, _3=None, version_name=None):
         logging.debug("handle_waypoints_changed")
         if self.ui.workLocallyCheckbox.isChecked():
-            self.waypoints_model.save_to_ftml(self.local_ftml_file)
+            self.save_local_copy()
         else:
             xml_content = self.waypoints_model.get_xml_content()
             # one change emits dataChanged twice, e.g. from setData and from update_distances; a reloaded flight
