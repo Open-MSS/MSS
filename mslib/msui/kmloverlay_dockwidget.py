@@ -199,30 +199,58 @@ class KMLPatch:
             "linewidth": float(width) if width is not None else linewidth
         }
         logging.debug("color before %s", result["color"])
-        if len(result["color"]) == 7 and result["color"][0] == "#":
-            result["color"] = [(int(result["color"][i:i + 2], 16) / 255.) for i in range(1, 8, 2)]
-        elif len(result["color"]) == 8:
-            result["color"] = [(int(result["color"][i:i + 2], 16) / 255.) for i in range(0, 8, 2)][::-1]
-        else:
+        try:
+            if len(result["color"]) == 7 and result["color"][0] == "#":
+                result["color"] = [(int(result["color"][i:i + 2], 16) / 255.) for i in range(1, 8, 2)]
+            elif len(result["color"]) == 8:
+                result["color"] = [(int(result["color"][i:i + 2], 16) / 255.) for i in range(0, 8, 2)][::-1]
+            else:
+                result["color"] = color
+        except ValueError:
+            logging.warning("Ignoring the KML color '%s', it is no hexadecimal color", result["color"])
             result["color"] = color
         logging.debug("color after %s", result["color"])
         return result
 
-    def parse_styles(self, kml_doc):
-        # exterior_style : <Style> OUTSIDE placemarks
-        # interior_style : within <Style>
-        for exterior_style in kml_doc.styles:
+    def parse_shared_style(self, exterior_style):
+        """the LineStyle and PolyStyle of a <Style> outside placemarks"""
+        result = {}
+        for style in exterior_style.styles:
+            if isinstance(style, styles.LineStyle):
+                result["LineStyle"] = self.get_style_params(style)
+            elif isinstance(style, styles.PolyStyle):
+                result["PolyStyle"] = self.get_style_params(style)
+        return result
+
+    def parse_styles(self, container, style_maps=None):
+        """
+        Collects the styles with an id of <container> and of the folders and documents in it into self.styles.
+
+        A <StyleMap>, as Google Earth writes them, gets the style of its "normal" pair.
+        """
+        outermost = style_maps is None
+        if outermost:
+            style_maps = {}
+        for exterior_style in getattr(container, "styles", []):
+            name = exterior_style.id
+            if not name:
+                continue
             if isinstance(exterior_style, styles.Style):
-                name = exterior_style.id
-                if name is None:
-                    continue
-                self.styles[name] = {}
-                interior_style = exterior_style.styles
-                for style in interior_style:
-                    if isinstance(style, styles.LineStyle):
-                        self.styles[name]["LineStyle"] = self.get_style_params(style)
-                    elif isinstance(style, styles.PolyStyle):
-                        self.styles[name]["PolyStyle"] = self.get_style_params(style)
+                self.styles[name] = self.parse_shared_style(exterior_style)
+            elif isinstance(exterior_style, styles.StyleMap):
+                for pair in exterior_style.pairs:
+                    if getattr(pair.key, "value", pair.key) == "normal":
+                        style_maps[name] = pair.style
+        for feature in getattr(container, "features", []):
+            if isinstance(feature, (kml.Folder, kml.Document)):
+                self.parse_styles(feature, style_maps)
+        if outermost:
+            # after all styles are known, a StyleMap may come before the style it names
+            for name, normal in style_maps.items():
+                if isinstance(normal, styles.Style):
+                    self.styles[name] = self.parse_shared_style(normal)
+                elif getattr(normal, "url", None) and normal.url.startswith("#"):
+                    self.styles[name] = self.styles.get(normal.url[1:], {})
 
     def parse_local_styles(self, placemark, default_styles):
         # exterior_style : <Style> INSIDE placemarks
@@ -250,8 +278,7 @@ class KMLPatch:
         self.styles = {}
         if hasattr(self.kml, 'features') and len(self.kml.features) > 0:
             kml_doc = list(self.kml.features)  # All kml files are enclosed in a single root < > and </ >
-            kml_style = kml_doc[0]
-            self.parse_styles(kml_style)
+            self.parse_styles(self.kml)
             self.parse_placemarks(kml_doc)
             self.map.ax.figure.canvas.draw()
 
