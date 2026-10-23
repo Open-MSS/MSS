@@ -39,6 +39,14 @@ class Testseed:
         _files = [f for f in constants.MSWMS_DATA_DIR.iterdir() if f.is_file()]
         assert len(_files) == 23
 
+    def test_data_creation_with_str_paths(self, tmp_path):
+        examples = seed.DataFiles(mswms_data_dir=str(tmp_path / "data"), mswms_server_config_dir=str(tmp_path))
+        (tmp_path / "data").mkdir()
+        examples.create_server_config(detailed_information=True)
+        examples.create_data()
+        assert (tmp_path / "mswms_settings.py").exists()
+        assert len(list((tmp_path / "data").iterdir())) == 23
+
     def test_get_profile(self):
         mean, std = seed.get_profile("air_pressure", [1000, 10000, 50000], "air_temperature")
         assert np.allclose(mean, [223., 212., 255.])

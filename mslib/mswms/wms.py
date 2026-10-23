@@ -573,6 +573,36 @@ class WMSServer:
         template = templates['service_exception.pt' if version == "1.1.1" else "service_exception130.pt"]
         return template(code=code, text=text).encode("utf-8"), "text/xml"
 
+    @staticmethod
+    def _offered_layers(registry):
+        """
+        The (dataset, layer) pairs of a layer registry which the data can serve.
+
+        The others are left out of the capabilities, the log tells why.
+        """
+        layers = []
+        for dataset in registry:
+            for layer in registry[dataset].values():
+                if layer.uses_inittime_dimension() and len(layer.get_init_times()) == 0:
+                    logging.error("Layer '%s' of dataset '%s' is not offered: the dataset has no init times, "
+                                  "none of its data files could be read (see the log of the data scan)",
+                                  layer.name, dataset)
+                    continue
+                if layer.uses_validtime_dimension() and len(layer.get_all_valid_times()) == 0:
+                    missing = layer.get_missing_datafields()
+                    if missing:
+                        reason = "the data has no " + ", ".join(
+                            f"'{varname}' ({vartype})" for vartype, varname in missing)
+                    else:
+                        reason = "its data fields have no valid time in common"
+                    logging.error("Layer '%s' of dataset '%s' is not offered: %s. It needs %s",
+                                  layer.name, dataset, reason,
+                                  ", ".join(f"'{varname}' ({vartype})"
+                                            for vartype, varname, _ in layer.required_datafields))
+                    continue
+                layers.append((dataset, layer))
+        return layers
+
     def get_capabilities(self, query, server_url=None):
         # ToDo find a more elegant method to do the same
         # Preferable we don't want a separate data_access module to be configured
@@ -599,41 +629,9 @@ class WMSServer:
         template = templates['get_capabilities130.pt' if version == "1.3.0" else 'get_capabilities.pt']
         logging.debug("server-url '%s'", server_url)
 
-        # Horizontal Layers
-        hsec_layers = []
-        for dataset in self.hsec_layer_registry:
-            for layer in self.hsec_layer_registry[dataset].values():
-                if layer.uses_inittime_dimension() and len(layer.get_init_times()) == 0:
-                    logging.error("layer %s/%s has no init times!", layer, dataset)
-                    continue
-                if layer.uses_validtime_dimension() and len(layer.get_all_valid_times()) == 0:
-                    logging.error("layer %s/%s has no valid times!", layer, dataset)
-                    continue
-                hsec_layers.append((dataset, layer))
-
-        # Vertical Layers
-        vsec_layers = []
-        for dataset in self.vsec_layer_registry:
-            for layer in self.vsec_layer_registry[dataset].values():
-                if layer.uses_inittime_dimension() and len(layer.get_init_times()) == 0:
-                    logging.error("layer %s/%s has no init times!", layer, dataset)
-                    continue
-                if layer.uses_validtime_dimension() and len(layer.get_all_valid_times()) == 0:
-                    logging.error("layer %s/%s has no valid times!", layer, dataset)
-                    continue
-                vsec_layers.append((dataset, layer))
-
-        # Linear Layers
-        lsec_layers = []
-        for dataset in self.lsec_layer_registry:
-            for layer in self.lsec_layer_registry[dataset].values():
-                if layer.uses_inittime_dimension() and len(layer.get_init_times()) == 0:
-                    logging.error("layer %s/%s has no init times!", layer, dataset)
-                    continue
-                if layer.uses_validtime_dimension() and len(layer.get_all_valid_times()) == 0:
-                    logging.error("layer %s/%s has no valid times!", layer, dataset)
-                    continue
-                lsec_layers.append((dataset, layer))
+        hsec_layers = self._offered_layers(self.hsec_layer_registry)
+        vsec_layers = self._offered_layers(self.vsec_layer_registry)
+        lsec_layers = self._offered_layers(self.lsec_layer_registry)
 
         return_data = template(hsec_layers=hsec_layers, vsec_layers=vsec_layers, lsec_layers=lsec_layers,
                                server_url=server_url,

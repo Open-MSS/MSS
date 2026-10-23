@@ -25,6 +25,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import logging
 import os
 from shutil import move
 
@@ -589,3 +590,31 @@ on macOS 14).
         assert os.path.exists(os.path.join(docsdir, "code"))
         assert os.path.exists(os.path.join(docsdir, "plots.html"))
         mslib.mswms.gallery_builder.plot_htmls = {}
+
+
+def _without_valid_times(layer, gone):
+    """the driver of <layer> as if the data had no valid times for the standard names in <gone>"""
+    all_valid_times = layer.driver.get_all_valid_times
+    return mock.patch.object(
+        layer.driver, "get_all_valid_times",
+        side_effect=lambda variable, vartype: [] if variable in gone else all_valid_times(variable, vartype))
+
+
+def test_get_capabilities_names_missing_datafields(mswms_app, caplog):
+    layer = mslib.mswms.wms.server.hsec_layer_registry["ecmwf_EUR_LL015"]["PLDiv01"]
+    with _without_valid_times(layer, {"divergence_of_wind"}), caplog.at_level(logging.ERROR):
+        result = mswms_app.test_client().get("/?request=GetCapabilities&service=WMS&version=1.1.1")
+    assert result.status_code == 200
+    assert b"<Name>PLDiv01</Name>" not in result.data
+    # the layer by its name and what is missing, not "<... object at 0x...> has no valid times"
+    assert ("Layer 'PLDiv01' of dataset 'ecmwf_EUR_LL015' is not offered: the data has no "
+            "'divergence_of_wind' (pl). It needs 'divergence_of_wind' (pl), 'geopotential_height' (pl)"
+            in caplog.messages)
+
+
+def test_get_capabilities_datafields_without_common_valid_time(caplog):
+    layer = mslib.mswms.wms.server.hsec_layer_registry["ecmwf_EUR_LL015"]["PLDiv01"]
+    with mock.patch.object(layer, "get_all_valid_times", return_value=[]), caplog.at_level(logging.ERROR):
+        assert mslib.mswms.wms.WMSServer._offered_layers({"ecmwf_EUR_LL015": {"PLDiv01": layer}}) == []
+    assert "is not offered: its data fields have no valid time in common" in caplog.text
+    assert layer.get_missing_datafields() == []

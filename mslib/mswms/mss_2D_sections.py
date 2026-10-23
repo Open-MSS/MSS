@@ -127,6 +127,18 @@ class Abstract2DSectionStyle(metaclass=ABCMeta):
         else:
             return []
 
+    def get_missing_datafields(self):
+        """
+        Returns the required data fields, as (vartype, standard name), which have no valid time in the data.
+
+        A single one of them leaves get_all_valid_times() empty.
+        """
+        if self.uses_validtime_dimension() and self.driver is not None:
+            return [(vartype, varname) for vartype, varname, _ in self.required_datafields
+                    if len(self.driver.get_all_valid_times(varname, vartype)) == 0]
+        else:
+            return []
+
     def uses_elevation_dimension(self):
         """
         Returns whether this layer uses the WMS elevation dimension. If False,
