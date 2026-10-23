@@ -67,44 +67,52 @@ def read_nasa_satellite_prediction(fname):
 
     # "result" will store the individual overpass segments.
     result = []
-    segment = {"utc": [], "satpos": [], "heading": [],
-               "swath_left": [], "swath_right": []}
+    segment = _new_segment()
 
     # Define a time difference that specifies when to start a new segment.
     # If the time between to subsequent points in the file is larger than
     # this time, a new segment will be started.
     seg_diff_time = timedelta(minutes=10)
 
-    # Loop over data lines. Either append point to current segment or start
-    # new segment. Before storing segments to the "result" list, convert
-    # to masked arrays.
+    # Loop over data lines. A point after a gap starts a new segment, the
+    # finished one is stored in "result" as masked arrays.
     for line in satlines[2:]:
         values = line.split()
+        if not values:
+            continue
         time = date + (datetime.strptime(values[0], "%H:%M:%S") - basedate)
 
-        if len(segment["utc"]) == 0 or (time - segment["utc"][-1]) < seg_diff_time:
-            segment["utc"].append(time)
-            segment["satpos"].append([-1. * float(values[2]), float(values[1])])
-            segment["heading"].append(float(values[3]))
-            if len(values) == 8:
-                segment["swath_left"].append([-1. * float(values[5]), float(values[4])])
-                segment["swath_right"].append([-1. * float(values[7]), float(values[6])])
-            else:
-                # TODO 20100504: workaround for instruments without swath
-                segment["swath_left"].append([-1. * float(values[2]), float(values[1])])
-                segment["swath_right"].append([-1. * float(values[2]), float(values[1])])
+        if len(segment["utc"]) > 0 and (time - segment["utc"][-1]) >= seg_diff_time:
+            result.append(_finish_segment(segment))
+            segment = _new_segment()
 
+        segment["utc"].append(time)
+        segment["satpos"].append([-1. * float(values[2]), float(values[1])])
+        segment["heading"].append(float(values[3]))
+        if len(values) == 8:
+            segment["swath_left"].append([-1. * float(values[5]), float(values[4])])
+            segment["swath_right"].append([-1. * float(values[7]), float(values[6])])
         else:
-            segment["utc"] = np.array(segment["utc"])
-            segment["satpos"] = np.ma.masked_equal(segment["satpos"], -999.)
-            segment["heading"] = np.ma.masked_equal(segment["heading"], -999.)
-            segment["swath_left"] = np.ma.masked_equal(segment["swath_left"], -999.)
-            segment["swath_right"] = np.ma.masked_equal(segment["swath_right"], -999.)
-            result.append(segment)
-            segment = {"utc": [], "satpos": [], "heading": [],
-                       "swath_left": [], "swath_right": []}
+            # TODO 20100504: workaround for instruments without swath
+            segment["swath_left"].append([-1. * float(values[2]), float(values[1])])
+            segment["swath_right"].append([-1. * float(values[2]), float(values[1])])
 
+    if len(segment["utc"]) > 0:
+        result.append(_finish_segment(segment))
     return result
+
+
+def _new_segment():
+    return {"utc": [], "satpos": [], "heading": [], "swath_left": [], "swath_right": []}
+
+
+def _finish_segment(segment):
+    """the lists of <segment> as arrays, missing values (-999) masked"""
+    return {"utc": np.array(segment["utc"]),
+            "satpos": np.ma.masked_equal(segment["satpos"], -999.),
+            "heading": np.ma.masked_equal(segment["heading"], -999.),
+            "swath_left": np.ma.masked_equal(segment["swath_left"], -999.),
+            "swath_right": np.ma.masked_equal(segment["swath_right"], -999.)}
 
 
 class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
