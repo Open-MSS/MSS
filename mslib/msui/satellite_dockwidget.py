@@ -62,49 +62,73 @@ def read_nasa_satellite_prediction(fname):
     satlines = Path(fname).read_text().splitlines()
 
     # Determine the date from the first line.
+    if not satlines or not satlines[0].split():
+        raise ValueError(f"'{fname}' has no date in its first line")
     date = datetime.strptime(satlines[0].split()[0], "%Y/%m/%d")
     basedate = datetime.strptime("", "")
 
     # "result" will store the individual overpass segments.
     result = []
-    segment = {"utc": [], "satpos": [], "heading": [],
-               "swath_left": [], "swath_right": []}
+    segment = _new_segment()
 
     # Define a time difference that specifies when to start a new segment.
     # If the time between to subsequent points in the file is larger than
     # this time, a new segment will be started.
     seg_diff_time = timedelta(minutes=10)
 
-    # Loop over data lines. Either append point to current segment or start
-    # new segment. Before storing segments to the "result" list, convert
-    # to masked arrays.
-    for line in satlines[2:]:
+    # Loop over data lines. A point after a gap starts a new segment, the
+    # finished one is stored in "result" as masked arrays.
+    for number, line in enumerate(satlines[2:], start=3):
         values = line.split()
+        if not values:
+            continue
+        if len(values) < 4:
+            raise ValueError(f"line {number} of '{fname}' has {len(values)} instead of at least 4 columns: "
+                             f"'{line.strip()}'")
         time = date + (datetime.strptime(values[0], "%H:%M:%S") - basedate)
 
-        if len(segment["utc"]) == 0 or (time - segment["utc"][-1]) < seg_diff_time:
-            segment["utc"].append(time)
-            segment["satpos"].append([-1. * float(values[2]), float(values[1])])
-            segment["heading"].append(float(values[3]))
-            if len(values) == 8:
-                segment["swath_left"].append([-1. * float(values[5]), float(values[4])])
-                segment["swath_right"].append([-1. * float(values[7]), float(values[6])])
-            else:
-                # TODO 20100504: workaround for instruments without swath
-                segment["swath_left"].append([-1. * float(values[2]), float(values[1])])
-                segment["swath_right"].append([-1. * float(values[2]), float(values[1])])
+        if len(segment["utc"]) > 0 and (time - segment["utc"][-1]) >= seg_diff_time:
+            _store_segment(result, segment)
+            segment = _new_segment()
 
+        segment["utc"].append(time)
+        segment["satpos"].append([-1. * float(values[2]), float(values[1])])
+        segment["heading"].append(float(values[3]))
+        if len(values) == 8:
+            segment["swath_left"].append([-1. * float(values[5]), float(values[4])])
+            segment["swath_right"].append([-1. * float(values[7]), float(values[6])])
         else:
-            segment["utc"] = np.array(segment["utc"])
-            segment["satpos"] = np.ma.masked_equal(segment["satpos"], -999.)
-            segment["heading"] = np.ma.masked_equal(segment["heading"], -999.)
-            segment["swath_left"] = np.ma.masked_equal(segment["swath_left"], -999.)
-            segment["swath_right"] = np.ma.masked_equal(segment["swath_right"], -999.)
-            result.append(segment)
-            segment = {"utc": [], "satpos": [], "heading": [],
-                       "swath_left": [], "swath_right": []}
+            # TODO 20100504: workaround for instruments without swath
+            segment["swath_left"].append([-1. * float(values[2]), float(values[1])])
+            segment["swath_right"].append([-1. * float(values[2]), float(values[1])])
 
+    if len(segment["utc"]) > 0:
+        _store_segment(result, segment)
     return result
+
+
+def _new_segment():
+    return {"utc": [], "satpos": [], "heading": [], "swath_left": [], "swath_right": []}
+
+
+def _store_segment(result, segment):
+    """appends <segment> to <result> as masked arrays, unless it has no position to draw"""
+    finished = _finish_segment(segment)
+    # the top view draws the track from the first valid position and the swath from the first valid left edge
+    if len(np.ma.compress_rows(finished["satpos"])) == 0 or len(np.ma.compress_rows(finished["swath_left"])) == 0:
+        logging.warning("Skipping the satellite overpass %s to %s, it has no valid position",
+                        finished["utc"][0], finished["utc"][-1])
+        return
+    result.append(finished)
+
+
+def _finish_segment(segment):
+    """the lists of <segment> as arrays, missing values (-999) masked"""
+    return {"utc": np.array(segment["utc"]),
+            "satpos": np.ma.masked_equal(segment["satpos"], -999.),
+            "heading": np.ma.masked_equal(segment["heading"], -999.),
+            "swath_left": np.ma.masked_equal(segment["swath_left"], -999.),
+            "swath_right": np.ma.masked_equal(segment["swath_right"], -999.)}
 
 
 class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
