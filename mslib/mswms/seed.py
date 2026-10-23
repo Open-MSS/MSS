@@ -994,11 +994,6 @@ data = {{
 }}
 
 
-epsg_to_mpl_basemap_table = {{
-    # EPSG:4326, the standard cylindrical lat/lon projection.
-    4326: {{"projection": "cyl"}}
-}}
-
 basemap_use_cache = True
 
 #
@@ -1071,8 +1066,8 @@ if mpl_lsec_styles is not None:
             simple_server_config = '''"""
 simple server config for demodata
 """
-from mslib.mswms.seed import (data, epsg_to_mpl_basemap_table,
-                                  register_horizontal_layers, register_vertical_layers, register_linear_layers)
+from mslib.mswms.seed import (data, register_horizontal_layers, register_vertical_layers,
+                                  register_linear_layers)
 '''
 
         mswms_server_config_file = self.server_config_dir / self.server_config_file

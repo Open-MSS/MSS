@@ -220,8 +220,10 @@ standard_name. A new method should be able to deal with any CF conforming file
 following a couple of simple additional requirements.
 
 Per configuration you could register horizontal (*register_horizontal_layers*)
-or vertical layers (*register_vertical_layers*), give a basemap table for EPSG
-mapping (*epsg_to_mpl_basemap_table*) and at all how to access the data.
+or vertical layers (*register_vertical_layers*) and at all how to access the data.
+The optional *epsg_to_mpl_basemap_table* adds EPSG codes to the coordinate reference
+systems the server announces for its horizontal layers; only its keys are used. The
+projection of a code comes from MSS itself, codes it doesn't know are rejected by GetMap.
 
 A few notes:
 
