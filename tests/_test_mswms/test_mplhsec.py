@@ -27,6 +27,9 @@
 """
 
 import importlib
+import types
+
+import mock
 
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
 from tests import constants
@@ -43,3 +46,14 @@ class TestMPLBasemapHorizontalSectionStyle:
         example = MPLBasemapHorizontalSectionStyle()
         assert sorted(example.supported_crs()) == \
             sorted(["EPSG:3031", "EPSG:3995", "EPSG:3857", "EPSG:4326", "MSS:stere"])
+
+    def test_supported_crs_without_epsg_table(self):
+        # epsg_to_mpl_basemap_table is optional in mswms_settings.py, see #3275
+        with mock.patch("mslib.mswms.mpl_hsec.mswms_settings", types.SimpleNamespace()):
+            assert MPLBasemapHorizontalSectionStyle().supported_crs() == \
+                sorted(["EPSG:3031", "EPSG:3995", "EPSG:3857", "EPSG:4326", "MSS:stere"])
+
+    def test_supported_crs_with_extra_epsg_codes(self):
+        settings = types.SimpleNamespace(epsg_to_mpl_basemap_table={77790010: {"projection": "stere"}})
+        with mock.patch("mslib.mswms.mpl_hsec.mswms_settings", settings):
+            assert "EPSG:77790010" in MPLBasemapHorizontalSectionStyle().supported_crs()
