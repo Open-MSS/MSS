@@ -140,13 +140,14 @@ class KMLPatch:
 
     def parse_geometries(self, placemark):
         name = placemark.name
-        style = {}
-        styleurl = placemark.style_url
-        if styleurl is not None and len(str(styleurl)) > 0 and str(styleurl)[0] == "#":
-            # Remove # at beginning of style marking a locally defined style.
+        shared_style = {}
+        # fastkml >= 1: a StyleUrl object, the reference is in its url
+        styleurl = getattr(placemark.style_url, "url", None)
+        if styleurl is not None and styleurl.startswith("#"):
+            # Remove # at beginning of style marking a style defined in this file.
             # general urls for styles are not supported
-            styleurl = str(styleurl)[1:]
-            style = self.parse_local_styles(placemark, self.styles.get(styleurl, {}))
+            shared_style = self.styles.get(styleurl[1:], {})
+        style = self.parse_local_styles(placemark, shared_style)
         if hasattr(placemark, "geometry"):
             if isinstance(placemark.geometry, pggeo.Point):
                 self.add_point(placemark, style, name)
@@ -191,9 +192,11 @@ class KMLPatch:
             color = self.color
         if linewidth is None:
             linewidth = self.linewidth
+        # fastkml >= 1 has None for an element missing in the file
+        width = getattr(style, "width", None)
         result = {
-            "color": str(getattr(style, "color", "")),
-            "linewidth": float(getattr(style, "width", linewidth))
+            "color": str(getattr(style, "color", None) or ""),
+            "linewidth": float(width) if width is not None else linewidth
         }
         logging.debug("color before %s", result["color"])
         if len(result["color"]) == 7 and result["color"][0] == "#":
@@ -227,8 +230,9 @@ class KMLPatch:
         logging.debug("styles before %s", default_styles)
         local_styles = copy.deepcopy(default_styles)
         for exterior_style in placemark.styles:
-            interior_style = exterior_style.styles()
-            for style in interior_style:
+            if not isinstance(exterior_style, styles.Style):
+                continue
+            for style in exterior_style.styles:
                 for supported, supported_type in (('LineStyle', LineStyle), ('PolyStyle', PolyStyle)):
                     if isinstance(style, supported_type) and supported in local_styles:
                         local_styles[supported] = self.get_style_params(
