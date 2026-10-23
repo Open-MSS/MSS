@@ -40,7 +40,9 @@ class TestMPLBasemapHorizontalSectionStyle:
         self.mswms_settings = importlib.import_module("mswms_settings", constants.MSWMS_SERVER_CONFIG_FILE_PATH)
 
     def test_supported_epsg_codes(self):
-        assert list(self.mswms_settings.epsg_to_mpl_basemap_table.keys()) == [4326]
+        # the server of the tests runs without the optional table, see #3275
+        assert not hasattr(self.mswms_settings, "epsg_to_mpl_basemap_table")
+        assert MPLBasemapHorizontalSectionStyle().supported_epsg_codes() == []
 
     def test_supported_crs(self):
         example = MPLBasemapHorizontalSectionStyle()
