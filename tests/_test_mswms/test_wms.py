@@ -25,6 +25,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import datetime
+import logging
 import os
 from shutil import move
 
@@ -589,3 +591,47 @@ on macOS 14).
         assert os.path.exists(os.path.join(docsdir, "code"))
         assert os.path.exists(os.path.join(docsdir, "plots.html"))
         mslib.mswms.gallery_builder.plot_htmls = {}
+
+
+def _with_valid_times(layer, valid_times):
+    """the driver of <layer> as if the data had the valid times of <valid_times> for these standard names"""
+    all_valid_times = layer.driver.get_all_valid_times
+    return mock.patch.object(
+        layer.driver, "get_all_valid_times",
+        side_effect=lambda variable, vartype: valid_times.get(variable, all_valid_times(variable, vartype)))
+
+
+def test_get_capabilities_names_missing_datafields(mswms_app, caplog):
+    layer = mslib.mswms.wms.server.hsec_layer_registry["ecmwf_EUR_LL015"]["PLDiv01"]
+    with _with_valid_times(layer, {"divergence_of_wind": []}), caplog.at_level(logging.ERROR):
+        result = mswms_app.test_client().get("/?request=GetCapabilities&service=WMS&version=1.1.1")
+    assert result.status_code == 200
+    assert b"<Name>PLDiv01</Name>" not in result.data
+    # the layer by its name and what is missing, not "<... object at 0x...> has no valid times"
+    assert ("Layer 'PLDiv01' of dataset 'ecmwf_EUR_LL015' is not offered: the data scan found no "
+            "'divergence_of_wind' (pl), see the log of the data scan for skipped files and variables. "
+            "The layer needs 'divergence_of_wind' (pl), 'geopotential_height' (pl)" in caplog.messages)
+
+
+def test_get_capabilities_names_the_valid_times_of_each_datafield(caplog):
+    layer = mslib.mswms.wms.server.hsec_layer_registry["ecmwf_EUR_LL015"]["PLDiv01"]
+    day = [datetime.datetime(2012, 10, 17, hour) for hour in (12, 18)]
+    night = [datetime.datetime(2012, 10, 18, hour) for hour in (0, 6)]
+    with _with_valid_times(layer, {"divergence_of_wind": day, "geopotential_height": night}), \
+            caplog.at_level(logging.ERROR):
+        assert mslib.mswms.wms.WMSServer._offered_layers({"ecmwf_EUR_LL015": {"PLDiv01": layer}}) == []
+    assert ("Layer 'PLDiv01' of dataset 'ecmwf_EUR_LL015' is not offered: its data fields have no valid time "
+            "in common: 'divergence_of_wind' (pl) 2012-10-17T12:00 to 2012-10-17T18:00, "
+            "'geopotential_height' (pl) 2012-10-18T00:00 to 2012-10-18T06:00" in caplog.messages)
+
+
+def test_get_capabilities_leaves_out_a_layer_of_another_kind(caplog):
+    # a plugin layer doesn't need to derive from Abstract2DSectionStyle
+    layer = mock.Mock(spec=["name", "uses_inittime_dimension", "get_init_times", "uses_validtime_dimension",
+                            "get_all_valid_times"], **{
+        "uses_inittime_dimension.return_value": False, "uses_validtime_dimension.return_value": True,
+        "get_all_valid_times.return_value": []})
+    layer.name = "Plugin01"
+    with caplog.at_level(logging.ERROR):
+        assert mslib.mswms.wms.WMSServer._offered_layers({"plugins": {"Plugin01": layer}}) == []
+    assert "Layer 'Plugin01' of dataset 'plugins' is not offered: it has no valid times" in caplog.messages
