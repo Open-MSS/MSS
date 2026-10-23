@@ -69,6 +69,32 @@ def test_read_nasa_satellite_prediction_segments(tmp_path):
     assert first["heading"].mask.tolist() == [True, False]
 
 
+def test_read_nasa_satellite_prediction_skips_overpass_without_position(tmp_path):
+    prediction = tmp_path / "prediction.txt"
+    prediction.write_text("""2017/01/27 Orbital Tracks
+   GMT      SUBLAT    SUBLON  HEADING
+00:00:00   33.3741  -31.5336  -999.00
+00:00:20   32.1739  -31.2049   192.88
+01:00:00  -999.0000  -999.0000   -999.00
+02:00:00   10.0000   20.0000   190.00
+""")
+    segments = sd.read_nasa_satellite_prediction(prediction)
+    assert [segment["utc"][0].hour for segment in segments] == [0, 2]
+
+
+@pytest.mark.parametrize("content, message", [
+    ("", "has no date in its first line"),
+    ("\n", "has no date in its first line"),
+    ("2017/01/27 Orbital Tracks\n   GMT\n00:00:00   33.3741  -31.5336  -999.00\n00:00:20   32.17\n",
+     "line 4 of '.*' has 2 instead of at least 4 columns: '00:00:20   32.17'"),
+])
+def test_read_nasa_satellite_prediction_broken_file(tmp_path, content, message):
+    prediction = tmp_path / "prediction.txt"
+    prediction.write_text(content)
+    with pytest.raises(ValueError, match=message):
+        sd.read_nasa_satellite_prediction(prediction)
+
+
 class Test_SatelliteDockWidget:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot):
@@ -99,3 +125,13 @@ class Test_SatelliteDockWidget:
             'Satellite Overpass Tool',
             "ERROR:\n<class 'IsADirectoryError'>\n[Errno 21] Is a directory: '.'"
         )
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.critical")
+    def test_load_broken_file(self, mockbox, tmp_path):
+        prediction = tmp_path / "prediction.txt"
+        prediction.write_text("2017/01/27 Orbital Tracks\n   GMT\n00:00:00   33.3741\n")
+        self.window.leFile.setText(str(prediction))
+        QtTest.QTest.mouseClick(self.window.btLoadFile, QtCore.Qt.LeftButton)
+        assert self.window.cbSatelliteOverpasses.count() == 0
+        mockbox.assert_called_once()
+        assert "line 3" in mockbox.call_args.args[2]

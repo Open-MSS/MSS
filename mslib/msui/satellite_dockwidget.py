@@ -62,6 +62,8 @@ def read_nasa_satellite_prediction(fname):
     satlines = Path(fname).read_text().splitlines()
 
     # Determine the date from the first line.
+    if not satlines or not satlines[0].split():
+        raise ValueError(f"'{fname}' has no date in its first line")
     date = datetime.strptime(satlines[0].split()[0], "%Y/%m/%d")
     basedate = datetime.strptime("", "")
 
@@ -76,14 +78,17 @@ def read_nasa_satellite_prediction(fname):
 
     # Loop over data lines. A point after a gap starts a new segment, the
     # finished one is stored in "result" as masked arrays.
-    for line in satlines[2:]:
+    for number, line in enumerate(satlines[2:], start=3):
         values = line.split()
         if not values:
             continue
+        if len(values) < 4:
+            raise ValueError(f"line {number} of '{fname}' has {len(values)} instead of at least 4 columns: "
+                             f"'{line.strip()}'")
         time = date + (datetime.strptime(values[0], "%H:%M:%S") - basedate)
 
         if len(segment["utc"]) > 0 and (time - segment["utc"][-1]) >= seg_diff_time:
-            result.append(_finish_segment(segment))
+            _store_segment(result, segment)
             segment = _new_segment()
 
         segment["utc"].append(time)
@@ -98,12 +103,23 @@ def read_nasa_satellite_prediction(fname):
             segment["swath_right"].append([-1. * float(values[2]), float(values[1])])
 
     if len(segment["utc"]) > 0:
-        result.append(_finish_segment(segment))
+        _store_segment(result, segment)
     return result
 
 
 def _new_segment():
     return {"utc": [], "satpos": [], "heading": [], "swath_left": [], "swath_right": []}
+
+
+def _store_segment(result, segment):
+    """appends <segment> to <result> as masked arrays, unless it has no position to draw"""
+    finished = _finish_segment(segment)
+    # the top view draws the track from the first valid position and the swath from the first valid left edge
+    if len(np.ma.compress_rows(finished["satpos"])) == 0 or len(np.ma.compress_rows(finished["swath_left"])) == 0:
+        logging.warning("Skipping the satellite overpass %s to %s, it has no valid position",
+                        finished["utc"][0], finished["utc"][-1])
+        return
+    result.append(finished)
 
 
 def _finish_segment(segment):
