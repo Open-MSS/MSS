@@ -714,6 +714,43 @@ class Test_Mscolab:
         wpdata_server = self.window.mscolab.waypoints_model.waypoint_data(0)
         assert wpdata_local.lat != wpdata_server.lat
 
+    def test_work_locally_shows_the_operation_name(self, qtbot):
+        # the local copy is named after the operation, the views show its name, not the file's (#2508)
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        operation_name = self.window.mscolab.active_operation_name
+        self.window.actionTopView.trigger()
+        topview = self.window.get_active_views()[0]
+        self.window.workLocallyCheckbox.setChecked(True)
+        assert self.window.mscolab.waypoints_model.name == operation_name
+        assert operation_name in topview.windowTitle()
+        # a change is saved to the local copy
+        self.window.mscolab.waypoints_model.invert_direction()
+        assert self.window.mscolab.waypoints_model.name == operation_name
+        self.window.mscolab.reload_view_windows()
+        assert operation_name in topview.windowTitle()
+        assert "mscolab_operation" not in topview.windowTitle()
+
+    def test_work_locally_renames_the_local_copy_of_older_msui(self, qtbot):
+        # msui before 12.0.0 stored every local copy as mscolab_operation.ftml
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        operation_name = self.window.mscolab.active_operation_name
+        local_dir = self.window.mscolab.local_operation_dir()
+        local_dir.mkdir(parents=True, exist_ok=True)
+        old_copy = WaypointsTableModel(xml_content=self.window.mscolab.waypoints_model.get_xml_content())
+        old_copy.invert_direction()
+        old_copy.save_to_ftml(str(local_dir / "mscolab_operation.ftml"))
+        self.window.workLocallyCheckbox.setChecked(True)
+        assert Path(self.window.mscolab.local_ftml_file) == local_dir / f"{operation_name}.ftml"
+        assert not (local_dir / "mscolab_operation.ftml").exists()
+        # the local changes are kept
+        assert self.window.mscolab.waypoints_model.waypoint_data(0).lat == old_copy.waypoint_data(0).lat
+
     @pytest.mark.parametrize("operation_name, directory", [
         ("..", "__"), ("../../outside", ".._.._outside"), ("absolute", None), ("a\\b:c", "a_b_c"), ("con", "con_")])
     def test_work_locally_stays_in_data_dir(self, qtbot, operation_name, directory):
@@ -727,16 +764,16 @@ class Test_Mscolab:
         self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
         self._activate_operation_at_index(0)
         local_data_dir = Path(self.window.mscolab.data_dir) / "local_colabdata"
-        files_before = {path for path in Path(ROOT_DIR).rglob("mscolab_operation.ftml")
+        files_before = {path for path in Path(ROOT_DIR).rglob("*.ftml")
                         if not path.is_relative_to(local_data_dir)}
         self.window.mscolab.active_operation_name = operation_name
         self.window.workLocallyCheckbox.setChecked(True)
         # unsafe characters are replaced, the local copy stays in the data directory
         assert self.window.workLocallyCheckbox.isChecked()
         assert Path(self.window.mscolab.local_ftml_file) == (
-            local_data_dir / self.userdata[1] / directory / "mscolab_operation.ftml")
+            local_data_dir / self.userdata[1] / directory / f"{directory}.ftml")
         assert Path(self.window.mscolab.local_ftml_file).is_file()
-        assert {path for path in Path(ROOT_DIR).rglob("mscolab_operation.ftml")
+        assert {path for path in Path(ROOT_DIR).rglob("*.ftml")
                 if not path.is_relative_to(local_data_dir)} == files_before
 
     @pytest.mark.skipif(sys.platform.startswith("win"), reason="symbolic links need privileges on Windows")

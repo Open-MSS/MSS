@@ -1052,8 +1052,7 @@ class MSUIMscolab(QtCore.QObject):
                 return
             if self.version_window is not None:
                 self.version_window.close()
-            self.create_local_operation_file(local_dir)
-            self.local_ftml_file = str(local_dir / "mscolab_operation.ftml")
+            self.local_ftml_file = str(self.create_local_operation_file(local_dir))
             self.ui.workingStatusLabel.setText(
                 self.ui.tr(
                     "Working Asynchronously.\nYour changes are only available to you. "
@@ -1075,16 +1074,27 @@ class MSUIMscolab(QtCore.QObject):
         self.reload_view_windows()
 
     def create_local_operation_file(self, local_dir):
-        ftml_file = local_dir / "mscolab_operation.ftml"
+        """
+        The local copy of the active operation in <local_dir>, created from the server's flight track if missing
 
+        The file is named after the operation, like its directory, so the flight track gets the operation's name
+        when it is loaded or saved. Local copies of msui before 12.0.0 are named mscolab_operation.ftml, they are
+        renamed.
+        """
+        ftml_file = local_dir / f"{local_dir.name}.ftml"
         if ftml_file.exists():
-            return
+            return ftml_file
+        old_ftml_file = local_dir / "mscolab_operation.ftml"
+        if old_ftml_file.exists():
+            old_ftml_file.rename(ftml_file)
+            return ftml_file
 
         local_dir.mkdir(parents=True, exist_ok=True)
         server_data = self.waypoints_model.get_xml_content()
 
         with open(ftml_file, "w") as f:
             f.write(server_data)
+        return ftml_file
 
     def reload_local_wp(self):
         self.waypoints_model = ft.WaypointsTableModel(filename=self.local_ftml_file, data_dir=self.data_dir)
