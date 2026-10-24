@@ -239,3 +239,26 @@ class Test_CliNotify:
                 environ_overrides={"REMOTE_ADDR": "203.0.113.5"},
             )
         assert response.status_code == 401
+
+    def test_delete_creator_notifies_the_new_creator(self):
+        # the watcher is an admin of the operation, it becomes the creator when the creator is deleted
+        with self.app.app_context():
+            assert add_user_to_operation(path="cli_notify_op", access_level="creator", emailid=self.userdata[0])
+            watcher_id = get_user(self.watcherdata[0]).id
+        op_id = self.op_id
+        sio = self._connect()
+        updated, messages = [], []
+        sio.on(SocketEvents.UPDATE_PERMISSION, handler=lambda data: updated.append(json.loads(data)))
+        sio.on(SocketEvents.CHAT_MESSAGE_CLIENT, handler=lambda data: messages.append(json.loads(data)))
+        try:
+            with self.app.app_context():
+                assert delete_user(self.userdata[0])
+            self._wait_for(updated)
+            self._wait_for(messages)
+            assert updated == [{"op_id": op_id, "u_id": watcher_id, "access_level": "creator"}]
+            assert len(messages) == 1
+            assert messages[0]["op_id"] == op_id and messages[0]["u_id"] == watcher_id
+            assert messages[0]["text"] == f"[service message] **{self.userdata[1]}** deleted the account, " \
+                                          f"**{self.watcherdata[1]}** is the creator of the operation now."
+        finally:
+            sio.disconnect()

@@ -133,8 +133,8 @@ MAIL_DEFAULT_SENDER = 'MSS@localhost'
 MAIL_ENABLED = False
 
 # a PostgreSQL database of this test process with MSCOLAB_TEST_POSTGRES_URL, see tests/database.py
-from tests.database import database_uri
-SQLALCHEMY_DATABASE_URI = database_uri(urljoin(DATA_DIR, 'mscolab.db'), prefix="server")
+from tests.database import server_database_uri
+SQLALCHEMY_DATABASE_URI = server_database_uri(urljoin(DATA_DIR, 'mscolab.db'))
 
 # enable SQLALCHEMY_ECHO
 SQLALCHEMY_ECHO = False

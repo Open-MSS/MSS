@@ -10,8 +10,8 @@
         MSCOLAB_TEST_POSTGRES_URL=postgresql://postgres:postgres@localhost:5432 pixi run -e dev test-mscolab
 
     The production servers run on PostgreSQL, which behaves differently from SQLite, e.g. it
-    enforces foreign keys and locks tables for schema changes. Every test app and every test
-    process gets a database of its own, which is dropped again at the end.
+    locks tables for schema changes and checks foreign keys per statement. Every test app and
+    every test process gets a database of its own, which is dropped again at the end.
 
     This file is part of MSS.
 
@@ -30,19 +30,28 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import logging
 import os
 import uuid
 
-POSTGRES_URL = os.environ.get("MSCOLAB_TEST_POSTGRES_URL", "").rstrip("/")
+POSTGRES_URL = os.environ.get("MSCOLAB_TEST_POSTGRES_URL", "")
 
 # databases created by this process, dropped by drop_databases()
 _created = []
+# the database of the test server of this process, see server_database_uri()
+_server_database_uri = None
+
+
+def _url(database):
+    """the URL of MSCOLAB_TEST_POSTGRES_URL with another database, its options (e.g. sslmode) are kept"""
+    import sqlalchemy
+    return sqlalchemy.engine.make_url(POSTGRES_URL).set(database=database)
 
 
 def _server_engine():
     import sqlalchemy
     # CREATE and DROP DATABASE can't run in a transaction
-    return sqlalchemy.create_engine(f"{POSTGRES_URL}/postgres", isolation_level="AUTOCOMMIT")
+    return sqlalchemy.create_engine(_url("postgres"), isolation_level="AUTOCOMMIT")
 
 
 def database_uri(sqlite_file, prefix="mscolab"):
@@ -65,15 +74,30 @@ def database_uri(sqlite_file, prefix="mscolab"):
     finally:
         engine.dispose()
     _created.append(name)
-    return f"{POSTGRES_URL}/{name}"
+    return _url(name).render_as_string(hide_password=False)
+
+
+def server_database_uri(sqlite_file):
+    """
+    database_uri() of the test server of this process, the same on every call
+
+    The generated mscolab_settings.py is executed again before every test, the server keeps
+    the database of its first execution.
+    """
+    global _server_database_uri
+    if _server_database_uri is None:
+        _server_database_uri = database_uri(sqlite_file, prefix="server")
+    return _server_database_uri
 
 
 def drop_database(uri):
     """drops a PostgreSQL database of database_uri(), also when connections to it are still open"""
-    name = uri.rsplit("/", 1)[-1]
-    if not POSTGRES_URL or name not in _created:
+    if not POSTGRES_URL:
         return
     import sqlalchemy
+    name = sqlalchemy.engine.make_url(uri).database
+    if name not in _created:
+        return
     engine = _server_engine()
     try:
         with engine.connect() as connection:
@@ -84,6 +108,9 @@ def drop_database(uri):
 
 
 def drop_databases():
-    """drops the PostgreSQL databases this process created and didn't drop yet"""
+    """drops the PostgreSQL databases this process created and didn't drop yet, an error is only logged"""
     for name in list(_created):
-        drop_database(f"{POSTGRES_URL}/{name}")
+        try:
+            drop_database(_url(name).render_as_string(hide_password=False))
+        except Exception as ex:  # the end of the test session must not fail because of it
+            logging.error("Could not drop the test database %s: %s", name, ex)

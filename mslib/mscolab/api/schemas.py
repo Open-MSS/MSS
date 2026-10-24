@@ -1175,8 +1175,8 @@ class ChatMessageInfo:
     """
 
     id: int  # noqa: A003
-    u_id: int
-    username: str
+    u_id: Optional[int]  # None for a message of a deleted user
+    username: Optional[str]  # None for a message of a deleted user
     text: str
     message_type: int
     reply_id: Optional[int]

@@ -107,9 +107,13 @@ def delete_user(email):
         logging.info("User: %s deleted from db", email)
         u_id = user.id
         op_ids = [permission.op_id for permission in user.permissions]
-        user.unlink_messages_and_changes()
+        handovers = user.prepare_deletion()
         db.session.delete(user)
         db.session.commit()
+        # an admin became the creator of the operations of the user
+        for op_id, creator_id, message in handovers:
+            notify_socket_event(SocketEvents.UPDATE_PERMISSION, u_id=creator_id, op_id=op_id)
+            notify_socket_event(SocketEvents.CHAT_MESSAGE_CLIENT, message_id=message.id)
         for op_id in op_ids:
             notify_socket_event(SocketEvents.REVOKE_PERMISSION, u_id=u_id, op_id=op_id)
             notify_socket_event(SocketEvents.OPERATION_PERMISSIONS_UPDATED, u_id=u_id, op_id=op_id)

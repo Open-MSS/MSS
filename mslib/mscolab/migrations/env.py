@@ -30,6 +30,8 @@ from flask import current_app
 
 from alembic import context
 
+from mslib.mscolab.migrations.schema_repair import sqlite_foreign_keys_off
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -96,7 +98,7 @@ def run_migrations_online():
 
     connectable = current_app.extensions['migrate'].db.engine
 
-    with connectable.connect() as connection:
+    with connectable.connect() as connection, sqlite_foreign_keys_off(connection) as foreign_keys:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
@@ -104,8 +106,12 @@ def run_migrations_online():
             **current_app.extensions['migrate'].configure_args
         )
 
+        revision = context.get_context().get_current_revision()
         with context.begin_transaction():
             context.run_migrations()
+        # a migration must not leave rows referring to missing rows; rows of older versions that already did, in a
+        # database at the latest revision, are repaired by app.repair_schema after this
+        foreign_keys.check = context.get_context().get_current_revision() != revision
 
 
 if context.is_offline_mode():

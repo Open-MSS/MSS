@@ -256,6 +256,19 @@ class FileManager:
         """
         return self.auth_type(u_id, op_id) in WRITE_ACCESS_LEVELS and not self.is_archived(op_id)
 
+    def delete_user(self, user):
+        """
+        Deletes user; its operations go to an admin, its messages and changes stay, see User.prepare_deletion
+
+        Returns the hand-overs of User.prepare_deletion for the socket events.
+        """
+        if user.profile_image_path:
+            self.delete_user_profile_image(user.profile_image_path)
+        handovers = user.prepare_deletion()
+        db.session.delete(user)
+        db.session.commit()
+        return handovers
+
     def modify_user(self, user, attribute=None, value=None, action=None):
         if action == "create":
             user_query = User.query.filter_by(emailid=str(user.emailid)).first()
@@ -267,12 +280,7 @@ class FileManager:
         elif action == "delete":
             user_query = User.query.filter_by(id=user.id).first()
             if user_query is not None:
-                # Delete profile image if it exists
-                if user.profile_image_path:
-                    self.delete_user_profile_image(user.profile_image_path)
-                user.unlink_messages_and_changes()
-                db.session.delete(user)
-                db.session.commit()
+                self.delete_user(user)
             user_query = User.query.filter_by(id=user.id).first()
             # on delete we return successful deleted
             if user_query is None:

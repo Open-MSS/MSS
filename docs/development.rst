@@ -252,7 +252,8 @@ MSColab tests on PostgreSQL
 ...........................
 
 The MSColab tests use SQLite databases. Production servers often run on PostgreSQL, which behaves
-differently, e.g. it enforces foreign keys and locks tables for schema changes. To run the tests on a
+differently, e.g. it locks tables for schema changes and checks foreign keys per statement (MSColab
+enforces foreign keys on SQLite too). To run the tests on a
 PostgreSQL server, name it in :code:`MSCOLAB_TEST_POSTGRES_URL`; every test app and test process gets a
 database of its own there, which is dropped again afterwards. The user needs the right to create
 databases::
@@ -267,7 +268,8 @@ without changing the project::
     pixi exec --spec postgresql -- pg_ctl -D /tmp/mss-pg -l /tmp/mss-pg.log start
 
 With :code:`PGOPTIONS="-c lock_timeout=60s"` a statement waiting for a lock fails with a traceback
-instead of hanging. The CI runs these tests on PostgreSQL in the job :code:`test-mscolab-postgres`.
+instead of hanging. The CI runs these tests, and the msui tests that drive an MSColab server
+(:code:`tests/_test_msui/test_mscolab*.py`), on PostgreSQL in the job :code:`test-mscolab-postgres`.
 
 
 Verify Code Style

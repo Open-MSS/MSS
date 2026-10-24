@@ -63,13 +63,16 @@ jobs:
         cache: true
         environments: dev
     - name: Run the MSColab tests on PostgreSQL
+      # the server tests, and the msui tests that drive a real MSColab server
       timeout-minutes: 30
       env:
         # every test app and test process gets a database of its own on this server, see tests/database.py
         MSCOLAB_TEST_POSTGRES_URL: postgresql://postgres:postgres@localhost:5432
         # a statement waiting for a lock fails after a minute instead of hanging until the job's timeout
         PGOPTIONS: -c lock_timeout=60s
-      run: pixi run -e dev env QT_QPA_PLATFORM=offscreen pytest -v -n logical --durations=20 tests/_test_mscolab
+      run: >-
+        pixi run -e dev env QT_QPA_PLATFORM=offscreen pytest -v -n logical --durations=20
+        tests/_test_mscolab tests/_test_msui/test_mscolab*.py
 
   finish:
     needs: test
