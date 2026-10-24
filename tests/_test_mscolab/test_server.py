@@ -51,7 +51,7 @@ from mslib.mscolab.models import db, User, Operation
 from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX
 
 from mslib.mscolab.file_manager import FileManager
-from mslib.mscolab.seed import add_user, get_user, add_user_to_operation
+from mslib.mscolab.seed import add_user, get_user, add_user_to_operation, delete_user
 from tests.utils import XML_CONTENT1, XML_CONTENT2
 from mslib.mscolab.seed import XML_CONTENT_INIT
 
@@ -195,6 +195,46 @@ class Test_Server:
             assert response.status_code == 200
             assert response.get_json()["success"] is True
             assert not os.path.exists(full_image_path)
+
+    @pytest.mark.parametrize("deletion", ["delete_own_account", "cli"])
+    def test_delete_user_keeps_messages_and_changes(self, mscolab_managers, deletion):
+        # on PostgreSQL the deletion failed with HTTP 500, the messages and changes still referred to the user
+        _, cm, fm = mscolab_managers
+        otherdata = 'other@example.org', 'other', 'other-password', 'Other User'
+        assert add_user(*self.userdata)
+        assert add_user(*otherdata)
+        other = get_user(otherdata[0])
+        assert fm.create_operation("kept", "description", other, content=XML_CONTENT_INIT)
+        op_id = Operation.query.filter_by(path="kept").first().id
+        assert add_user_to_operation(path="kept", access_level="collaborator", emailid=self.userdata[0])
+        cm.add_message(get_user(self.userdata[0]), "a message", op_id)
+        assert fm.save_file(op_id, XML_CONTENT1, get_user(self.userdata[0]))
+        if deletion == "delete_own_account":
+            with self.app.test_client() as test_client:
+                response = test_client.post('/delete_own_account', data={"token": self._get_token(test_client)})
+            assert response.status_code == 200
+        else:
+            assert delete_user(self.userdata[0])
+        assert get_user(self.userdata[0]) is None
+        # kept for the other members, without the user
+        assert [(message["u_id"], message["username"], message["text"]) for message in cm.get_messages(op_id)] == \
+            [(None, None, "a message")]
+        assert [change["username"] for change in fm.get_all_changes(op_id, other)] == [None]
+
+    def test_creator_of_operation_after_the_creator_was_deleted(self):
+        assert add_user(*self.userdata)
+        memberdata = 'member@example.org', 'member', 'member-password', 'Member'
+        assert add_user(*memberdata)
+        assert self.fm.create_operation("orphaned", "description", get_user(self.userdata[0]),
+                                        content=XML_CONTENT_INIT)
+        op_id = Operation.query.filter_by(path="orphaned").first().id
+        assert add_user_to_operation(path="orphaned", access_level="collaborator", emailid=memberdata[0])
+        assert delete_user(self.userdata[0])
+        with self.app.test_client() as test_client:
+            token = self._get_token(test_client, memberdata)
+            response = test_client.get('/creator_of_operation', query_string={"token": token, "op_id": op_id})
+        assert response.status_code == 200
+        assert response.get_json() == {"success": True, "username": None}
 
     def test_upload_endpoints_exist(self):
         # the upload limit applies to these endpoints by name, a renamed view would get the larger limit

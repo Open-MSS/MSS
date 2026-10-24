@@ -36,7 +36,7 @@ from flask import current_app
 
 from mslib.mscolab.cli_notify import USER_DELETED, notify_socket_event
 from mslib.mscolab.api.events import SocketEvents
-from mslib.mscolab.models import User, db, Permission, Operation
+from mslib.mscolab.models import Change, Message, Operation, Permission, User, db
 from mslib.mscolab.utils import is_valid_operation_path
 
 
@@ -107,6 +107,7 @@ def delete_user(email):
         logging.info("User: %s deleted from db", email)
         u_id = user.id
         op_ids = [permission.op_id for permission in user.permissions]
+        user.unlink_messages_and_changes()
         db.session.delete(user)
         db.session.commit()
         for op_id in op_ids:
@@ -181,6 +182,10 @@ def delete_operation(operation_name):
     operation = Operation.query.filter_by(path=operation_name).first()
     if operation:
         op_id = operation.id
+        # the rows referring to the operation first, PostgreSQL enforces the foreign keys
+        Permission.query.filter_by(op_id=op_id).delete()
+        Change.query.filter_by(op_id=op_id).delete()
+        Message.query.filter_by(op_id=op_id).delete()
         db.session.delete(operation)
         db.session.commit()
         notify_socket_event(SocketEvents.OPERATION_DELETED, op_id=op_id)

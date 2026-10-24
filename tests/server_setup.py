@@ -132,7 +132,9 @@ MAIL_DEFAULT_SENDER = 'MSS@localhost'
 # enable verification by Mail
 MAIL_ENABLED = False
 
-SQLALCHEMY_DATABASE_URI = 'sqlite:///' + urljoin(DATA_DIR, 'mscolab.db')
+# a PostgreSQL database of this test process with MSCOLAB_TEST_POSTGRES_URL, see tests/database.py
+from tests.database import database_uri
+SQLALCHEMY_DATABASE_URI = database_uri(urljoin(DATA_DIR, 'mscolab.db'), prefix="server")
 
 # enable SQLALCHEMY_ECHO
 SQLALCHEMY_ECHO = False

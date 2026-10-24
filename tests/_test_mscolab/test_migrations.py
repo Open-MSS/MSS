@@ -43,6 +43,9 @@ def test_migrations(mscolab_app):
     with mscolab_app.app_context():
         # Seed the database and try to downgrade to each previous revision and then upgrade to the latest again
         mslib.mscolab.mscolab.handle_db_seed()
+        # the migrations run on a connection of their own, on PostgreSQL the read locks of an open transaction
+        # of the session would block their schema changes
+        db.session.commit()
         backward_steps = 1
         all_revisions_tested = False
         while not all_revisions_tested:
@@ -120,6 +123,7 @@ def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
             # TODO: Maybe add more asserts? Basically anything could break with future migrations though, if the schema
             # is fundamentally changed. Having an id as the first column is already an assumption that might not always
             # hold (but should be reliable enough).
+            db.session.commit()
             flask_migrate.downgrade(directory=migrations_path, revision=revision)
             metadata = sqlalchemy.MetaData()
             metadata.reflect(bind=db.engine)
@@ -131,6 +135,7 @@ def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
             assert expected_data == actual_data_after_downgrade
 
             # Try to add a new user after the migration
+            db.session.commit()
             flask_migrate.upgrade(directory=migrations_path)
             assert mslib.mscolab.seed.add_user('test123@test456', 'test123', 'test456', 'User test789')
     finally:

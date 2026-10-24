@@ -805,7 +805,7 @@ class ChangeInfo:
     id: int  # noqa: A003
     comment: Optional[str]
     version_name: Optional[str]
-    username: str
+    username: Optional[str]  # None for a change of a deleted user
     created_at: str
 
     def to_dict(self):

@@ -162,6 +162,16 @@ class User(db.Model):
         """
         self.token_nonce = secrets.token_hex(16)
 
+    def unlink_messages_and_changes(self):
+        """
+        Keeps the chat messages and flight track changes of the user in their operations, without the user
+
+        To call before the user is deleted: they would otherwise refer to a user that doesn't exist, which
+        PostgreSQL refuses. They are shown as from a deleted user then. The caller commits the session.
+        """
+        Message.query.filter_by(u_id=self.id).update({Message.u_id: None}, synchronize_session=False)
+        Change.query.filter_by(u_id=self.id).update({Change.u_id: None}, synchronize_session=False)
+
     def reset_password(self, password_hash, password):
         """
         Sets password and revokes all login tokens, if the password hash is still password_hash; returns whether

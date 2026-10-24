@@ -766,7 +766,8 @@ class MessageItem(QtWidgets.QWidget):
             container_layout.addStretch()
             container_layout.addWidget(self.textArea)
         else:
-            username_label = QtWidgets.QLabel(f"{self.username}")
+            # the server sends no username for a message of a deleted user
+            username_label = QtWidgets.QLabel(self.username if self.username is not None else "deleted user")
             username_label.setTextFormat(QtCore.Qt.PlainText)
             username_label.setContentsMargins(5, 5, 5, 0)
             time_label = self.set_time_label()
@@ -832,7 +833,8 @@ class MessageItem(QtWidgets.QWidget):
     def add_message_reply(self, reply):
         if self.replyArea is None:
             self.insert_reply_area()
-        reply_username_label = QtWidgets.QLabel(f'{reply["username"]}:')
+        reply_username = reply["username"] if reply["username"] is not None else "deleted user"
+        reply_username_label = QtWidgets.QLabel(f'{reply_username}:')
         reply_username_label.setTextFormat(QtCore.Qt.PlainText)
         label_font = QtGui.QFont()
         label_font.setBold(True)

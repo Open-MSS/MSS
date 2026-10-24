@@ -248,6 +248,27 @@ you can e.g. set a higher verbosity using :code:`-v`,
 leave out the :code:`-n` option to run the tests sequentially instead of in parallel,
 or select a specific subset of tests to run using the :code:`-k` option.
 
+MSColab tests on PostgreSQL
+...........................
+
+The MSColab tests use SQLite databases. Production servers often run on PostgreSQL, which behaves
+differently, e.g. it enforces foreign keys and locks tables for schema changes. To run the tests on a
+PostgreSQL server, name it in :code:`MSCOLAB_TEST_POSTGRES_URL`; every test app and test process gets a
+database of its own there, which is dropped again afterwards. The user needs the right to create
+databases::
+
+    MSCOLAB_TEST_POSTGRES_URL=postgresql://postgres:postgres@localhost:5432 pixi run -e dev test-mscolab
+
+A PostgreSQL server for this can e.g. be started with docker
+(:code:`docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:17`) or from conda-forge
+without changing the project::
+
+    pixi exec --spec postgresql -- initdb -D /tmp/mss-pg -U postgres --auth=trust -E UTF8 --locale=C
+    pixi exec --spec postgresql -- pg_ctl -D /tmp/mss-pg -l /tmp/mss-pg.log start
+
+With :code:`PGOPTIONS="-c lock_timeout=60s"` a statement waiting for a lock fails with a traceback
+instead of hanging. The CI runs these tests on PostgreSQL in the job :code:`test-mscolab-postgres`.
+
 
 Verify Code Style
 .................

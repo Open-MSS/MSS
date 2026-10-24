@@ -19,6 +19,7 @@ pixi run -e dev codespell       # spelling
 pixi run -e dev test-fast       # api + plugins + utils + meta; no servers, fastest signal
 pixi run -e dev test-msui       # GUI suite (offscreen Qt)
 pixi run -e dev test-mscolab    # collaboration-server suite
+MSCOLAB_TEST_POSTGRES_URL=postgresql://postgres:postgres@localhost:5432 pixi run -e dev test-mscolab  # same on PostgreSQL (tests/database.py)
 pixi run -e dev test-mswms      # WMS-server suite
 pixi run -e dev test            # full suite (~13 min)
 
