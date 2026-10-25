@@ -232,34 +232,10 @@ your database MSColab will abort. Please follow the documentation for a manual d
             logging.warning("Skipped %s rows of the old database that referred to a deleted user or operation",
                             skipped)
         with target_engine.connect() as target_connection:
-            if target_engine.name == "postgresql":
-                # Fix the databases auto-increment sequences, if it is a PostgreSQL database
-                # For reference, see: https://wiki.postgresql.org/wiki/Fixing_Sequences
-                logging.info("Using a PostgreSQL database, will fix up sequences")
-                cur = target_connection.execute(sqlalchemy.text(r"""
-SELECT
-    'SELECT SETVAL(' ||
-    quote_literal(quote_ident(sequence_namespace.nspname) || '.' || quote_ident(class_sequence.relname)) ||
-    ', COALESCE(MAX(' ||quote_ident(pg_attribute.attname)|| '), 1) ) FROM ' ||
-    quote_ident(table_namespace.nspname)|| '.'||quote_ident(class_table.relname)|| ';'
-FROM pg_depend
-    INNER JOIN pg_class AS class_sequence
-        ON class_sequence.oid = pg_depend.objid
-            AND class_sequence.relkind = 'S'
-    INNER JOIN pg_class AS class_table
-        ON class_table.oid = pg_depend.refobjid
-    INNER JOIN pg_attribute
-        ON pg_attribute.attrelid = class_table.oid
-            AND pg_depend.refobjsubid = pg_attribute.attnum
-    INNER JOIN pg_namespace as table_namespace
-        ON table_namespace.oid = class_table.relnamespace
-    INNER JOIN pg_namespace AS sequence_namespace
-        ON sequence_namespace.oid = class_sequence.relnamespace
-ORDER BY sequence_namespace.nspname, class_sequence.relname;
-"""))
-                for stmt, in cur.all():
-                    target_connection.execute(sqlalchemy.text(stmt))
-                target_connection.commit()
+            # the rows were copied with their ids
+            from mslib.mscolab.migrations.schema_repair import fix_postgresql_sequences
+            fix_postgresql_sequences(target_connection)
+            target_connection.commit()
         logging.info("Data migration finished")
         # Dispose the temporary copy engine so it doesn't hold SQLite
         # connections across subsequent initialise_db() iterations.
@@ -283,7 +259,8 @@ def repair_schema():
     """
     from alembic.migration import MigrationContext
     from alembic.operations import Operations
-    from mslib.mscolab.migrations.schema_repair import (add_token_nonce, has_autoincrement_user_ids, has_column,
+    from mslib.mscolab.migrations.schema_repair import (add_fullname, add_token_nonce, fix_postgresql_sequences,
+                                                        has_autoincrement_user_ids, has_column,
                                                         remove_dangling_references, sqlite_foreign_keys_off,
                                                         use_autoincrement_user_ids)
     from mslib.mscolab.models import db
@@ -293,6 +270,10 @@ def repair_schema():
         if MigrationContext.configure(conn).get_current_revision() is None:
             # an empty database, the upgrade creates everything
             return
+        if not has_column(conn, "users", "fullname"):
+            logging.warning("The database misses users.fullname: it was created by MSColab 10.x, whose migration "
+                            "lacked it. Adding it now.")
+            add_fullname(Operations(MigrationContext.configure(conn)), conn)
         if not has_column(conn, "users", "token_nonce"):
             logging.warning("The database misses users.token_nonce, it ran an earlier development state of the "
                             "12.0.0 migration. Adding it now; every user has to log in again.")
@@ -300,6 +281,8 @@ def repair_schema():
         removed = remove_dangling_references(conn)
         if removed:
             logging.warning("Repaired %s rows of the database that referred to a deleted user or operation.", removed)
+        # e.g. a database seeded before the seed fixed them
+        fix_postgresql_sequences(conn)
         if not has_autoincrement_user_ids(conn):
             logging.warning("The database reuses the ids of deleted users, it ran an earlier development state of "
                             "the 12.0.0 migration. Changing that now.")

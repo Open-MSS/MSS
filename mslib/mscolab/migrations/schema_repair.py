@@ -145,3 +145,40 @@ def use_autoincrement_user_ids(op, conn):
         with op.batch_alter_table('users', schema=None, recreate='always',
                                   table_kwargs={'sqlite_autoincrement': True}):
             pass
+
+
+def add_fullname(op, conn):
+    """
+    Adds users.fullname, if it is missing
+
+    11.0.0 added it to the migration of 10.0.0 after that was released, so a database created by 10.x and upgraded
+    later misses it. op is an alembic Operations object for conn.
+    """
+    if not has_column(conn, 'users', 'fullname'):
+        with op.batch_alter_table('users', schema=None) as batch_op:
+            batch_op.add_column(sa.Column('fullname', sa.String(length=255), nullable=True))
+
+
+def fix_postgresql_sequences(conn):
+    """
+    Moves the id sequences of a PostgreSQL database behind the highest id of their table, never back
+
+    Rows inserted with explicit ids, by the seed or the copy of an older database, leave a sequence behind, so the
+    next new row would get an id that exists. Never back: ids of deleted rows are not handed out again. Other
+    databases are left as they are.
+    """
+    if conn.dialect.name != "postgresql":
+        return
+    for table in sa.inspect(conn).get_table_names():
+        if "id" not in {column["name"] for column in sa.inspect(conn).get_columns(table)}:
+            continue
+        sequence = conn.execute(sa.text("SELECT pg_get_serial_sequence(:table, 'id')"), {"table": table}).scalar()
+        if sequence is None:
+            continue
+        highest = conn.execute(sa.text(f'SELECT MAX(id) FROM "{table}"')).scalar()
+        if highest is None:
+            # an empty table, a sequence not used yet would otherwise start at 2
+            continue
+        # sequence is the quoted, schema qualified name from the catalog
+        conn.execute(sa.text(f"SELECT setval(:sequence, GREATEST(:highest, (SELECT last_value FROM {sequence})))"),
+                     {"sequence": sequence, "highest": highest})

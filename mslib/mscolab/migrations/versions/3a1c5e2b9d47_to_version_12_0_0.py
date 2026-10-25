@@ -10,8 +10,8 @@ import logging
 import sqlalchemy as sa
 from alembic import op
 
-from mslib.mscolab.migrations.schema_repair import (add_token_nonce, has_column, remove_dangling_references,
-                                                    use_autoincrement_user_ids)
+from mslib.mscolab.migrations.schema_repair import (add_fullname, add_token_nonce, has_column,
+                                                    remove_dangling_references, use_autoincrement_user_ids)
 
 
 # revision identifiers, used by Alembic.
@@ -26,6 +26,9 @@ _ACCESS_LEVEL_RANK = {"creator": 3, "admin": 2, "collaborator": 1, "viewer": 0}
 
 
 def upgrade():
+    # 11.0.0 added users.fullname to the migration of 10.0.0 after its release, databases of 10.x miss it
+    add_fullname(op, op.get_bind())
+
     # rows of deleted users and operations, they would break the foreign keys now checked on SQLite too
     removed = remove_dangling_references(op.get_bind())
     if removed:

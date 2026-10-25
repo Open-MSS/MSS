@@ -37,6 +37,7 @@ from flask import current_app
 from mslib.mscolab.cli_notify import USER_DELETED, notify_socket_event
 from mslib.mscolab.api.events import SocketEvents
 from mslib.mscolab.models import Change, Message, Operation, Permission, User, db
+from mslib.mscolab.migrations.schema_repair import fix_postgresql_sequences
 from mslib.mscolab.utils import is_valid_operation_path
 
 
@@ -413,6 +414,9 @@ def seed_data():
     for perm in permissions:
         db_perm = Permission(perm['u_id'], perm['op_id'], perm['access_level'])
         db.session.add(db_perm)
+    db.session.commit()
+    # the users and operations got explicit ids, PostgreSQL would hand them out again
+    fix_postgresql_sequences(db.session.connection())
     db.session.commit()
 
     file_paths = ['one', 'two', 'three', 'four', 'Admin_Test', 'test_mscolab']

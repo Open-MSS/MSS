@@ -354,3 +354,73 @@ def test_migrate_from_repairs_rows_of_deleted_users_and_operations(mscolab_app, 
             _assert_repaired(ids)
     finally:
         mscolab_app.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'] = None
+
+
+def _drop_users_column(column):
+    from alembic.migration import MigrationContext
+    from alembic.operations import Operations
+    from mslib.mscolab.migrations.schema_repair import sqlite_foreign_keys_off
+    db.session.remove()
+    with db.engine.connect() as conn, sqlite_foreign_keys_off(conn), conn.begin():
+        with Operations(MigrationContext.configure(conn)).batch_alter_table('users') as batch_op:
+            batch_op.drop_column(column)
+    db.session.remove()
+
+
+def test_upgrade_of_a_database_of_10_x_without_fullname(mscolab_app):
+    """the migration of 10.0.0 as 10.x released it had no users.fullname, 11.0.0 added it there later"""
+    migrations_path = mslib.mscolab.migrations.__path__[0]
+    with mscolab_app.app_context():
+        mslib.mscolab.mscolab.handle_db_seed()
+        db.session.commit()
+        flask_migrate.downgrade(directory=migrations_path, revision="922e4d9c94e2")
+        _drop_users_column("fullname")
+        assert "fullname" not in _columns_of_users()
+        flask_migrate.upgrade(directory=migrations_path)
+        assert "fullname" in _columns_of_users()
+        # the users can be read and log in
+        user = mslib.mscolab.seed.get_user("a@notexisting.org")
+        assert mslib.mscolab.models.User.verify_auth_token(user.generate_auth_token()).id == user.id
+
+
+def test_repair_of_a_database_upgraded_from_10_x_without_fullname(mscolab_app):
+    """e.g. a server of 10.x upgraded to 11.0.0 and then to a development state of 12.0.0"""
+    with mscolab_app.app_context():
+        mslib.mscolab.mscolab.handle_db_seed()
+        _drop_users_column("fullname")
+        with mock.patch("mslib.mscolab.app.logging.warning") as warning:
+            initialise_db()
+        assert any("users.fullname" in call.args[0] for call in warning.call_args_list)
+        assert "fullname" in _columns_of_users()
+
+
+def test_new_rows_after_the_seed(mscolab_app, mscolab_managers):
+    # the seed sets the ids of its users and operations; on PostgreSQL the next new row got one of them
+    _, _, fm = mscolab_managers
+    with mscolab_app.app_context():
+        mslib.mscolab.mscolab.handle_db_seed()
+        assert fm.create_operation("after_seed", "description", mslib.mscolab.seed.get_user("a@notexisting.org"),
+                                   content=mslib.mscolab.seed.XML_CONTENT_INIT)
+        assert mslib.mscolab.seed.add_user("after_seed@example.org", "after_seed", "a-password", "After Seed")
+
+
+def test_server_start_moves_lagging_sequences_forward_only(mscolab_app, mscolab_managers):
+    _, _, fm = mscolab_managers
+    with mscolab_app.app_context():
+        mslib.mscolab.mscolab.handle_db_seed()
+        if db.engine.dialect.name == "postgresql":
+            # a database seeded by an earlier state of the seed
+            for table in ("users", "operations"):
+                db.session.execute(sqlalchemy.text(f"SELECT setval(pg_get_serial_sequence('{table}', 'id'), 1)"))
+            db.session.commit()
+        initialise_db()
+        assert fm.create_operation("after_repair", "description", mslib.mscolab.seed.get_user("a@notexisting.org"),
+                                   content=mslib.mscolab.seed.XML_CONTENT_INIT)
+        # the user with the highest id is deleted, the next start must not hand its id out again
+        assert mslib.mscolab.seed.add_user("highest@example.org", "highest", "a-password", "Highest")
+        deleted_id = mslib.mscolab.seed.get_user("highest@example.org").id
+        assert deleted_id == db.session.execute(sqlalchemy.text("SELECT MAX(id) FROM users")).scalar()
+        assert mslib.mscolab.seed.delete_user("highest@example.org")
+        initialise_db()
+        assert mslib.mscolab.seed.add_user("new@example.org", "new", "a-password", "New")
+        assert mslib.mscolab.seed.get_user("new@example.org").id > deleted_id
