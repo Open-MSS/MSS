@@ -200,7 +200,8 @@ your database MSColab will abort. Please follow the documentation for a manual d
         # current_app.config['SQLALCHEMY_DATABASE_URI'], which may be a relative SQLite
         # path that Flask-SQLAlchemy expands via instance_path — plain
         # sqlalchemy.create_engine would resolve it against CWD instead.
-        target_engine = sqlalchemy.create_engine(str(db.engine.url))
+        # the URL object, str() of it masks the password as ***
+        target_engine = sqlalchemy.create_engine(db.engine.url)
         target_metadata = sqlalchemy.MetaData()
         target_metadata.reflect(bind=target_engine)
         # the ids copied per table: older versions left rows behind that refer to a deleted user or operation, the

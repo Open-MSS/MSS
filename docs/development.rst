@@ -264,8 +264,13 @@ A PostgreSQL server for this can e.g. be started with docker
 (:code:`docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:17`) or from conda-forge
 without changing the project::
 
-    pixi exec --spec postgresql -- initdb -D /tmp/mss-pg -U postgres --auth=trust -E UTF8 --locale=C
+    echo postgres > /tmp/mss-pg-password
+    pixi exec --spec postgresql -- initdb -D /tmp/mss-pg -U postgres --auth=scram-sha-256 \
+        --pwfile=/tmp/mss-pg-password -E UTF8 --locale=C
     pixi exec --spec postgresql -- pg_ctl -D /tmp/mss-pg -l /tmp/mss-pg.log start
+
+Use a password, as the CI does: with :code:`--auth=trust` any password is accepted, which hides code
+that loses the password of the database URL on the way.
 
 With :code:`PGOPTIONS="-c lock_timeout=60s"` a statement waiting for a lock fails with a traceback
 instead of hanging. The CI runs these tests, and the msui tests that drive an MSColab server
