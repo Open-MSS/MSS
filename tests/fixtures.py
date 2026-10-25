@@ -41,6 +41,7 @@ from mslib.mscolab.models import db
 from mslib.mscolab.server import create_server_app
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.msui.utils.config import modify_config_file
+from tests.database import database_uri, drop_database
 from tests.utils import is_url_response_ok
 
 # mslib.mscolab.server and mslib.mswms.mswms are imported lazily, inside the
@@ -170,7 +171,7 @@ def _isolated_mscolab_settings(tmp_path):
     settings.OPERATIONS_DATA = str(data_dir / "filedata")
     settings.UPLOAD_FOLDER = str(data_dir / "filedata" / "uploads")
     settings.SSO_DIR = str(data_dir / "datasso")
-    settings.SQLALCHEMY_DATABASE_URI = "sqlite:///" + str(data_dir / "mscolab.db")
+    settings.SQLALCHEMY_DATABASE_URI = database_uri(data_dir / "mscolab.db", prefix="app")
     return settings
 
 
@@ -193,6 +194,7 @@ def mscolab_app(tmp_path):
     # until the app is garbage collected.
     with app.app_context():
         db.engine.dispose()
+    drop_database(settings.SQLALCHEMY_DATABASE_URI)
 
 
 @pytest.fixture
@@ -259,6 +261,12 @@ def _start_server(host, port_queue, app):
     """
     Starts a werkzeug server and sends the chosen port back to the parent process.
     """
+    if "sqlalchemy" in app.extensions:
+        # The forked process inherited the connection pool of the parent: both would use the same database
+        # connections, and the parent closing them, e.g. in handle_db_reset, breaks them for the server.
+        # close=False leaves them to the parent, see "Using Connection Pools with Multiprocessing or os.fork()".
+        with app.app_context():
+            db.engine.dispose(close=False)
     srv = make_server(host, 0, app, threaded=True)
     port = srv.server_address[1]
     port_queue.put(port)

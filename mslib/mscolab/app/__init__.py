@@ -92,6 +92,20 @@ mail = Mail()
 migrate = Migrate(render_as_batch=True, user_module_prefix="cu.")
 
 
+@sqlalchemy.event.listens_for(sqlalchemy.engine.Engine, "connect")
+def _enforce_sqlite_foreign_keys(dbapi_connection, connection_record):
+    """
+    SQLite enforces foreign keys only when asked for, per connection; PostgreSQL always does
+
+    So a row that refers to a missing row fails on SQLite too, not only on a PostgreSQL production server. The
+    migrations switch it off, see migrations/env.py.
+    """
+    if type(dbapi_connection).__module__.startswith("sqlite3"):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
+
 def _xstatic(name):
     mod_names = [
         'jquery', 'bootstrap',
@@ -114,6 +128,24 @@ def create_files():
     Path(current_app.config['OPERATIONS_DATA']).mkdir(parents=True, exist_ok=True)
     Path(current_app.config['UPLOAD_FOLDER']).mkdir(parents=True, exist_ok=True)
     Path(current_app.config['SSO_DIR']).mkdir(parents=True, exist_ok=True)
+
+
+def _repair_references(table, values, references, copied_ids):
+    """
+    Repairs the row values of table that refer to a row not copied, returns False if the row is to be skipped
+
+    The rules of migrations.schema_repair.remove_dangling_references: messages and changes of a deleted user stay
+    without the user, a reply to a removed message stays without it, other rows of a deleted user or operation go.
+    """
+    for column, referred_table in references.items():
+        value = values.get(column)
+        if value is None or value in copied_ids.get(referred_table, ()):
+            continue
+        if (table, column) in (("messages", "u_id"), ("changes", "u_id"), ("messages", "reply_id")):
+            values[column] = None
+        else:
+            return False
+    return True
 
 
 def initialise_db():
@@ -168,51 +200,43 @@ your database MSColab will abort. Please follow the documentation for a manual d
         # current_app.config['SQLALCHEMY_DATABASE_URI'], which may be a relative SQLite
         # path that Flask-SQLAlchemy expands via instance_path — plain
         # sqlalchemy.create_engine would resolve it against CWD instead.
-        target_engine = sqlalchemy.create_engine(str(db.engine.url))
+        # the URL object, str() of it masks the password as ***
+        target_engine = sqlalchemy.create_engine(db.engine.url)
         target_metadata = sqlalchemy.MetaData()
         target_metadata.reflect(bind=target_engine)
+        # the ids copied per table: older versions left rows behind that refer to a deleted user or operation, the
+        # target enforces the foreign keys
+        copied_ids = {}
+        skipped = 0
         with source_engine.connect() as src_connection, target_engine.connect() as target_connection:
             for table in source_metadata.sorted_tables:
                 if table.name == "alembic_version":
                     # Do not migrate the alembic_version table!
                     continue
                 logging.debug("Copying table %s", table.name)
-                stmt = target_metadata.tables[table.name].insert()
-                for row in src_connection.execute(table.select()):
+                target_table = target_metadata.tables[table.name]
+                stmt = target_table.insert()
+                references = {fk.parent.name: fk.column.table.name for fk in target_table.foreign_keys}
+                copied_ids[table.name] = set()
+                for row in src_connection.execute(table.select().order_by(*table.primary_key.columns)):
                     logging.debug("Copying row %s", row)
-                    row = tuple(
-                        r.replace(tzinfo=datetime.timezone.utc) if isinstance(r, datetime.datetime) else r for r in row
-                    )
-                    target_connection.execute(stmt.values(row))
+                    values = {
+                        name: value.replace(tzinfo=datetime.timezone.utc) if isinstance(value, datetime.datetime)
+                        else value for name, value in row._mapping.items()}
+                    if not _repair_references(table.name, values, references, copied_ids):
+                        skipped += 1
+                        continue
+                    target_connection.execute(stmt.values(**values))
+                    copied_ids[table.name].add(values.get("id"))
             target_connection.commit()
-            if target_engine.name == "postgresql":
-                # Fix the databases auto-increment sequences, if it is a PostgreSQL database
-                # For reference, see: https://wiki.postgresql.org/wiki/Fixing_Sequences
-                logging.info("Using a PostgreSQL database, will fix up sequences")
-                cur = target_connection.execute(sqlalchemy.text(r"""
-SELECT
-    'SELECT SETVAL(' ||
-    quote_literal(quote_ident(sequence_namespace.nspname) || '.' || quote_ident(class_sequence.relname)) ||
-    ', COALESCE(MAX(' ||quote_ident(pg_attribute.attname)|| '), 1) ) FROM ' ||
-    quote_ident(table_namespace.nspname)|| '.'||quote_ident(class_table.relname)|| ';'
-FROM pg_depend
-    INNER JOIN pg_class AS class_sequence
-        ON class_sequence.oid = pg_depend.objid
-            AND class_sequence.relkind = 'S'
-    INNER JOIN pg_class AS class_table
-        ON class_table.oid = pg_depend.refobjid
-    INNER JOIN pg_attribute
-        ON pg_attribute.attrelid = class_table.oid
-            AND pg_depend.refobjsubid = pg_attribute.attnum
-    INNER JOIN pg_namespace as table_namespace
-        ON table_namespace.oid = class_table.relnamespace
-    INNER JOIN pg_namespace AS sequence_namespace
-        ON sequence_namespace.oid = class_sequence.relnamespace
-ORDER BY sequence_namespace.nspname, class_sequence.relname;
-"""))
-                for stmt, in cur.all():
-                    target_connection.execute(sqlalchemy.text(stmt))
-                target_connection.commit()
+        if skipped:
+            logging.warning("Skipped %s rows of the old database that referred to a deleted user or operation",
+                            skipped)
+        with target_engine.connect() as target_connection:
+            # the rows were copied with their ids
+            from mslib.mscolab.migrations.schema_repair import fix_postgresql_sequences
+            fix_postgresql_sequences(target_connection)
+            target_connection.commit()
         logging.info("Data migration finished")
         # Dispose the temporary copy engine so it doesn't hold SQLite
         # connections across subsequent initialise_db() iterations.
@@ -236,17 +260,34 @@ def repair_schema():
     """
     from alembic.migration import MigrationContext
     from alembic.operations import Operations
-    from mslib.mscolab.migrations.schema_repair import add_token_nonce, has_column
+    from mslib.mscolab.migrations.schema_repair import (add_fullname, add_token_nonce, fix_postgresql_sequences,
+                                                        has_autoincrement_user_ids, has_column,
+                                                        remove_dangling_references, sqlite_foreign_keys_off,
+                                                        use_autoincrement_user_ids)
     from mslib.mscolab.models import db
 
-    with db.engine.begin() as conn:
+    # the repairs recreate tables on SQLite, like the migrations
+    with db.engine.connect() as conn, sqlite_foreign_keys_off(conn), conn.begin():
         if MigrationContext.configure(conn).get_current_revision() is None:
             # an empty database, the upgrade creates everything
             return
+        if not has_column(conn, "users", "fullname"):
+            logging.warning("The database misses users.fullname: it was created by MSColab 10.x, whose migration "
+                            "lacked it. Adding it now.")
+            add_fullname(Operations(MigrationContext.configure(conn)), conn)
         if not has_column(conn, "users", "token_nonce"):
             logging.warning("The database misses users.token_nonce, it ran an earlier development state of the "
                             "12.0.0 migration. Adding it now; every user has to log in again.")
             add_token_nonce(Operations(MigrationContext.configure(conn)), conn)
+        removed = remove_dangling_references(conn)
+        if removed:
+            logging.warning("Repaired %s rows of the database that referred to a deleted user or operation.", removed)
+        # e.g. a database seeded before the seed fixed them
+        fix_postgresql_sequences(conn)
+        if not has_autoincrement_user_ids(conn):
+            logging.warning("The database reuses the ids of deleted users, it ran an earlier development state of "
+                            "the 12.0.0 migration. Changing that now.")
+            use_autoincrement_user_ids(Operations(MigrationContext.configure(conn)), conn)
 
 
 # endpoints of uploads, a request to them is limited to MAX_UPLOAD_SIZE instead of MAX_CONTENT_LENGTH

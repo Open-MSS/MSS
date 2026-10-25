@@ -36,7 +36,8 @@ from flask import current_app
 
 from mslib.mscolab.cli_notify import USER_DELETED, notify_socket_event
 from mslib.mscolab.api.events import SocketEvents
-from mslib.mscolab.models import User, db, Permission, Operation
+from mslib.mscolab.models import Change, Message, Operation, Permission, User, db
+from mslib.mscolab.migrations.schema_repair import fix_postgresql_sequences
 from mslib.mscolab.utils import is_valid_operation_path
 
 
@@ -107,8 +108,13 @@ def delete_user(email):
         logging.info("User: %s deleted from db", email)
         u_id = user.id
         op_ids = [permission.op_id for permission in user.permissions]
+        handovers = user.prepare_deletion()
         db.session.delete(user)
         db.session.commit()
+        # an admin became the creator of the operations of the user
+        for op_id, creator_id, message in handovers:
+            notify_socket_event(SocketEvents.UPDATE_PERMISSION, u_id=creator_id, op_id=op_id)
+            notify_socket_event(SocketEvents.CHAT_MESSAGE_CLIENT, message_id=message.id)
         for op_id in op_ids:
             notify_socket_event(SocketEvents.REVOKE_PERMISSION, u_id=u_id, op_id=op_id)
             notify_socket_event(SocketEvents.OPERATION_PERMISSIONS_UPDATED, u_id=u_id, op_id=op_id)
@@ -181,6 +187,10 @@ def delete_operation(operation_name):
     operation = Operation.query.filter_by(path=operation_name).first()
     if operation:
         op_id = operation.id
+        # the rows referring to the operation first, PostgreSQL enforces the foreign keys
+        Permission.query.filter_by(op_id=op_id).delete()
+        Change.query.filter_by(op_id=op_id).delete()
+        Message.query.filter_by(op_id=op_id).delete()
         db.session.delete(operation)
         db.session.commit()
         notify_socket_event(SocketEvents.OPERATION_DELETED, op_id=op_id)
@@ -404,6 +414,9 @@ def seed_data():
     for perm in permissions:
         db_perm = Permission(perm['u_id'], perm['op_id'], perm['access_level'])
         db.session.add(db_perm)
+    db.session.commit()
+    # the users and operations got explicit ids, PostgreSQL would hand them out again
+    fix_postgresql_sequences(db.session.connection())
     db.session.commit()
 
     file_paths = ['one', 'two', 'three', 'four', 'Admin_Test', 'test_mscolab']

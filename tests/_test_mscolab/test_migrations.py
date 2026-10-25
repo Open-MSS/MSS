@@ -43,6 +43,9 @@ def test_migrations(mscolab_app):
     with mscolab_app.app_context():
         # Seed the database and try to downgrade to each previous revision and then upgrade to the latest again
         mslib.mscolab.mscolab.handle_db_seed()
+        # the migrations run on a connection of their own, on PostgreSQL the read locks of an open transaction
+        # of the session would block their schema changes
+        db.session.commit()
         backward_steps = 1
         all_revisions_tested = False
         while not all_revisions_tested:
@@ -120,6 +123,7 @@ def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
             # TODO: Maybe add more asserts? Basically anything could break with future migrations though, if the schema
             # is fundamentally changed. Having an id as the first column is already an assumption that might not always
             # hold (but should be reliable enough).
+            db.session.commit()
             flask_migrate.downgrade(directory=migrations_path, revision=revision)
             metadata = sqlalchemy.MetaData()
             metadata.reflect(bind=db.engine)
@@ -131,6 +135,7 @@ def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
             assert expected_data == actual_data_after_downgrade
 
             # Try to add a new user after the migration
+            db.session.commit()
             flask_migrate.upgrade(directory=migrations_path)
             assert mslib.mscolab.seed.add_user('test123@test456', 'test123', 'test456', 'User test789')
     finally:
@@ -186,7 +191,10 @@ def _remove_token_nonce():
     # the state of a development database that ran the 12.0.0 migration before token_nonce was added to it
     from alembic.migration import MigrationContext
     from alembic.operations import Operations
-    with db.engine.begin() as conn:
+    from mslib.mscolab.migrations.schema_repair import sqlite_foreign_keys_off
+    db.session.remove()
+    # the batch mode recreates the table on SQLite, like a migration
+    with db.engine.connect() as conn, sqlite_foreign_keys_off(conn), conn.begin():
         with Operations(MigrationContext.configure(conn)).batch_alter_table('users') as batch_op:
             batch_op.drop_column('token_nonce')
     db.session.remove()
@@ -224,3 +232,195 @@ def test_repair_of_database_without_token_nonce(mscolab_app):
         with mock.patch("mslib.mscolab.app.logging.warning") as warning:
             initialise_db()
         warning.assert_not_called()
+
+
+_DELETED = 999999  # the id of a user and of an operation deleted by an older version
+
+
+def _insert_dangling_rows():
+    """
+    Rows as older versions left them behind, referring to a deleted user or operation; returns their ids
+
+    The foreign keys have to be bypassed for this: on SQLite they are switched off, on PostgreSQL its triggers.
+    """
+    db.session.remove()
+    with db.engine.connect() as conn:
+        sqlite = conn.dialect.name == "sqlite"
+        conn.exec_driver_sql("PRAGMA foreign_keys=OFF" if sqlite else "SET session_replication_role = replica")
+        conn.commit()
+        op_id = conn.execute(sqlalchemy.text("SELECT id FROM operations ORDER BY id")).scalar()
+        u_id = conn.execute(sqlalchemy.text("SELECT id FROM users ORDER BY id")).scalar()
+
+        def insert(statement, **values):
+            return conn.execute(sqlalchemy.text(statement + " RETURNING id"), values).scalar()
+
+        message = "INSERT INTO messages (op_id, u_id, text, message_type, reply_id) " \
+                  "VALUES (:op_id, :u_id, :text, 'TEXT', :reply_id)"
+        change = "INSERT INTO changes (op_id, u_id, commit_hash) VALUES (:op_id, :u_id, 'abc')"
+        permission = "INSERT INTO permissions (op_id, u_id, access_level) VALUES (:op_id, :u_id, 'collaborator')"
+        ids = {
+            "message_of_deleted_user": insert(message, op_id=op_id, u_id=_DELETED, text="kept", reply_id=None),
+            "change_of_deleted_user": insert(change, op_id=op_id, u_id=_DELETED),
+        }
+        ids["message_of_deleted_operation"] = insert(message, op_id=_DELETED, u_id=u_id, text="gone", reply_id=None)
+        ids["reply_to_removed_message"] = insert(message, op_id=op_id, u_id=u_id, text="reply",
+                                                 reply_id=ids["message_of_deleted_operation"])
+        ids["change_of_deleted_operation"] = insert(change, op_id=_DELETED, u_id=u_id)
+        ids["reply_to_missing_message"] = insert(message, op_id=op_id, u_id=u_id, text="reply", reply_id=_DELETED)
+        ids["permission_of_deleted_user"] = insert(permission, op_id=op_id, u_id=_DELETED)
+        ids["permission_of_deleted_operation"] = insert(permission, op_id=_DELETED, u_id=u_id)
+        conn.commit()
+        conn.exec_driver_sql("PRAGMA foreign_keys=ON" if sqlite else "SET session_replication_role = origin")
+        conn.commit()
+    return ids
+
+
+def _assert_repaired(ids):
+    def row(statement, row_id):
+        return db.session.execute(sqlalchemy.text(statement), {"id": row_id}).first()
+
+    message = "SELECT u_id, reply_id FROM messages WHERE id = :id"
+    # the messages and changes of a deleted user stay, without the user
+    assert row(message, ids["message_of_deleted_user"]) == (None, None)
+    assert row("SELECT u_id FROM changes WHERE id = :id", ids["change_of_deleted_user"]) == (None,)
+    # the rows of a deleted operation and the permissions of a deleted user go
+    assert row(message, ids["message_of_deleted_operation"]) is None
+    assert row("SELECT id FROM changes WHERE id = :id", ids["change_of_deleted_operation"]) is None
+    for permission in ("permission_of_deleted_user", "permission_of_deleted_operation"):
+        assert row("SELECT id FROM permissions WHERE id = :id", ids[permission]) is None
+    # a reply to a removed or missing message stays, as a message of its own
+    assert row(message, ids["reply_to_removed_message"])[1] is None
+    assert row(message, ids["reply_to_missing_message"])[1] is None
+
+
+def test_upgrade_repairs_rows_of_deleted_users_and_operations(mscolab_app):
+    migrations_path = mslib.mscolab.migrations.__path__[0]
+    with mscolab_app.app_context():
+        mslib.mscolab.mscolab.handle_db_seed()
+        db.session.commit()
+        flask_migrate.downgrade(directory=migrations_path, revision="922e4d9c94e2")
+        ids = _insert_dangling_rows()
+        flask_migrate.upgrade(directory=migrations_path)
+        _assert_repaired(ids)
+
+
+def test_server_start_repairs_rows_of_deleted_users_and_operations(mscolab_app):
+    """a development database that ran the 12.0.0 migration before the repair was added to it"""
+    with mscolab_app.app_context():
+        mslib.mscolab.mscolab.handle_db_seed()
+        ids = _insert_dangling_rows()
+        with mock.patch("mslib.mscolab.app.logging.warning") as warning:
+            initialise_db()
+        assert "referred to a deleted user or operation" in warning.call_args.args[0]
+        _assert_repaired(ids)
+
+
+def test_ids_of_deleted_users_are_not_reused(mscolab_app):
+    # SQLite gave a new user the id of the deleted user with the highest id, a socket or token of that one could
+    # then belong to the new one
+    with mscolab_app.app_context():
+        assert mslib.mscolab.seed.add_user("first@example.org", "first", "first-password", "First")
+        assert mslib.mscolab.seed.add_user("last@example.org", "last", "last-password", "Last")
+        deleted_id = mslib.mscolab.seed.get_user("last@example.org").id
+        assert mslib.mscolab.seed.delete_user("last@example.org")
+        assert mslib.mscolab.seed.add_user("new@example.org", "new", "new-password", "New")
+        assert mslib.mscolab.seed.get_user("new@example.org").id > deleted_id
+
+
+def test_migrate_from_repairs_rows_of_deleted_users_and_operations(mscolab_app, tmp_path):
+    """The copy of an old database with SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM, the target enforces foreign keys"""
+    migrations_path = mslib.mscolab.migrations.__path__[0]
+    source_settings = copy.copy(mscolab_settings)
+    source_settings.SQLALCHEMY_DATABASE_URI = "sqlite:///" + str(tmp_path.absolute() / "mscolab.db")
+    app = create_app(source_settings)
+    with app.app_context():
+        mslib.mscolab.mscolab.handle_db_seed()
+        db.session.commit()
+        flask_migrate.downgrade(directory=migrations_path, revision="c171019fe3ee")
+        ids = _insert_dangling_rows()
+        db.session.execute(sqlalchemy.text("UPDATE alembic_version SET version_num = 'e62d08ce88a4'"))
+        db.session.commit()
+        db.session.remove()
+        db.engine.dispose()
+    try:
+        mscolab_app.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'] = source_settings.SQLALCHEMY_DATABASE_URI
+        with mscolab_app.app_context():
+            db.drop_all()
+            db.session.execute(sqlalchemy.text("DROP TABLE alembic_version"))
+            db.session.commit()
+            with mock.patch("mslib.mscolab.app.logging.warning") as warning:
+                initialise_db()
+            assert any("referred to a deleted user or operation" in call.args[0] for call in warning.call_args_list)
+            _assert_repaired(ids)
+    finally:
+        mscolab_app.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'] = None
+
+
+def _drop_users_column(column):
+    from alembic.migration import MigrationContext
+    from alembic.operations import Operations
+    from mslib.mscolab.migrations.schema_repair import sqlite_foreign_keys_off
+    db.session.remove()
+    with db.engine.connect() as conn, sqlite_foreign_keys_off(conn), conn.begin():
+        with Operations(MigrationContext.configure(conn)).batch_alter_table('users') as batch_op:
+            batch_op.drop_column(column)
+    db.session.remove()
+
+
+def test_upgrade_of_a_database_of_10_x_without_fullname(mscolab_app):
+    """the migration of 10.0.0 as 10.x released it had no users.fullname, 11.0.0 added it there later"""
+    migrations_path = mslib.mscolab.migrations.__path__[0]
+    with mscolab_app.app_context():
+        mslib.mscolab.mscolab.handle_db_seed()
+        db.session.commit()
+        flask_migrate.downgrade(directory=migrations_path, revision="922e4d9c94e2")
+        _drop_users_column("fullname")
+        assert "fullname" not in _columns_of_users()
+        flask_migrate.upgrade(directory=migrations_path)
+        assert "fullname" in _columns_of_users()
+        # the users can be read and log in
+        user = mslib.mscolab.seed.get_user("a@notexisting.org")
+        assert mslib.mscolab.models.User.verify_auth_token(user.generate_auth_token()).id == user.id
+
+
+def test_repair_of_a_database_upgraded_from_10_x_without_fullname(mscolab_app):
+    """e.g. a server of 10.x upgraded to 11.0.0 and then to a development state of 12.0.0"""
+    with mscolab_app.app_context():
+        mslib.mscolab.mscolab.handle_db_seed()
+        _drop_users_column("fullname")
+        with mock.patch("mslib.mscolab.app.logging.warning") as warning:
+            initialise_db()
+        assert any("users.fullname" in call.args[0] for call in warning.call_args_list)
+        assert "fullname" in _columns_of_users()
+
+
+def test_new_rows_after_the_seed(mscolab_app, mscolab_managers):
+    # the seed sets the ids of its users and operations; on PostgreSQL the next new row got one of them
+    _, _, fm = mscolab_managers
+    with mscolab_app.app_context():
+        mslib.mscolab.mscolab.handle_db_seed()
+        assert fm.create_operation("after_seed", "description", mslib.mscolab.seed.get_user("a@notexisting.org"),
+                                   content=mslib.mscolab.seed.XML_CONTENT_INIT)
+        assert mslib.mscolab.seed.add_user("after_seed@example.org", "after_seed", "a-password", "After Seed")
+
+
+def test_server_start_moves_lagging_sequences_forward_only(mscolab_app, mscolab_managers):
+    _, _, fm = mscolab_managers
+    with mscolab_app.app_context():
+        mslib.mscolab.mscolab.handle_db_seed()
+        if db.engine.dialect.name == "postgresql":
+            # a database seeded by an earlier state of the seed
+            for table in ("users", "operations"):
+                db.session.execute(sqlalchemy.text(f"SELECT setval(pg_get_serial_sequence('{table}', 'id'), 1)"))
+            db.session.commit()
+        initialise_db()
+        assert fm.create_operation("after_repair", "description", mslib.mscolab.seed.get_user("a@notexisting.org"),
+                                   content=mslib.mscolab.seed.XML_CONTENT_INIT)
+        # the user with the highest id is deleted, the next start must not hand its id out again
+        assert mslib.mscolab.seed.add_user("highest@example.org", "highest", "a-password", "Highest")
+        deleted_id = mslib.mscolab.seed.get_user("highest@example.org").id
+        assert deleted_id == db.session.execute(sqlalchemy.text("SELECT MAX(id) FROM users")).scalar()
+        assert mslib.mscolab.seed.delete_user("highest@example.org")
+        initialise_db()
+        assert mslib.mscolab.seed.add_user("new@example.org", "new", "a-password", "New")
+        assert mslib.mscolab.seed.get_user("new@example.org").id > deleted_id

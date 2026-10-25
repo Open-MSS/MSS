@@ -65,7 +65,8 @@ def get_message_dict(message):
     return {
         "id": message.id,
         "u_id": message.u_id,
-        "username": message.user.username,
+        # None for a message of a deleted user
+        "username": message.user.username if message.user is not None else None,
         "text": message.text,
         "message_type": message.message_type,
         "reply_id": message.reply_id,

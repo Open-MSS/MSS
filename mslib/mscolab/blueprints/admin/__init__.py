@@ -55,6 +55,8 @@ _NOTIFY_HANDLERS = {
     SocketEvents.REVOKE_PERMISSION: ("emit_revoke_permission", ("u_id", "op_id")),
     SocketEvents.OPERATION_PERMISSIONS_UPDATED: ("emit_operation_permissions_updated", ("u_id", "op_id")),
     SocketEvents.NEW_PERMISSION: ("emit_new_permission", ("u_id", "op_id")),
+    SocketEvents.UPDATE_PERMISSION: ("emit_update_permission", ("u_id", "op_id")),
+    SocketEvents.CHAT_MESSAGE_CLIENT: ("emit_chat_message_by_id", ("message_id",)),
     SocketEvents.OPERATION_DELETED: ("emit_operation_delete", ("op_id",)),
     SocketEvents.UPDATE_OPERATION_LIST: ("emit_operation_list_update", ()),
     USER_DELETED: ("forget_user", ("u_id",)),

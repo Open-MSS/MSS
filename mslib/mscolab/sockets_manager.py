@@ -34,7 +34,7 @@ from flask_socketio import SocketIO, join_room
 from mslib.mscolab.chat_manager import ChatManager, MAX_MESSAGE_TEXT_LENGTH
 from mslib.mscolab.api.events import SocketEvents
 from mslib.mscolab.file_manager import FileManager
-from mslib.mscolab.models import MessageType, Permission, User
+from mslib.mscolab.models import Message, MessageType, Permission, User
 from mslib.mscolab.utils import get_message_dict
 from mslib.mscolab.utils import get_user_id
 
@@ -418,6 +418,12 @@ class SocketsManager:
         """
         event = SocketEvents.CHAT_MESSAGE_REPLY_CLIENT if reply else SocketEvents.CHAT_MESSAGE_CLIENT
         self._emit_to_operation(event, message.op_id, json.dumps(get_message_dict(message) | {"op_id": message.op_id}))
+
+    def emit_chat_message_by_id(self, message_id):
+        """emit_chat_message of a stored message, e.g. a system message of the CLI"""
+        message = Message.query.filter_by(id=message_id).first()
+        if message is not None:
+            self.emit_chat_message(message)
 
     def emit_file_change(self, op_id):
         self._emit_to_operation(SocketEvents.FILE_CHANGED, op_id, json.dumps({"op_id": op_id}))

@@ -47,11 +47,11 @@ from mslib.utils.basic_auth import BasicAuthSettingError
 from mslib.mscolab.auth import register_user, check_login
 from mslib.mscolab.api.message_type import MessageType
 from mslib.mscolab.conf import DefaultSettings, mscolab_settings
-from mslib.mscolab.models import db, User, Operation
+from mslib.mscolab.models import db, Operation, Permission, User
 from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX
 
 from mslib.mscolab.file_manager import FileManager
-from mslib.mscolab.seed import add_user, get_user, add_user_to_operation
+from mslib.mscolab.seed import add_user, get_user, add_user_to_operation, delete_user
 from tests.utils import XML_CONTENT1, XML_CONTENT2
 from mslib.mscolab.seed import XML_CONTENT_INIT
 
@@ -195,6 +195,97 @@ class Test_Server:
             assert response.status_code == 200
             assert response.get_json()["success"] is True
             assert not os.path.exists(full_image_path)
+
+    @pytest.mark.parametrize("deletion", ["delete_own_account", "cli"])
+    def test_delete_user_keeps_messages_and_changes(self, mscolab_managers, deletion):
+        # on PostgreSQL the deletion failed with HTTP 500, the messages and changes still referred to the user
+        _, cm, fm = mscolab_managers
+        otherdata = 'other@example.org', 'other', 'other-password', 'Other User'
+        assert add_user(*self.userdata)
+        assert add_user(*otherdata)
+        other = get_user(otherdata[0])
+        assert fm.create_operation("kept", "description", other, content=XML_CONTENT_INIT)
+        op_id = Operation.query.filter_by(path="kept").first().id
+        assert add_user_to_operation(path="kept", access_level="collaborator", emailid=self.userdata[0])
+        cm.add_message(get_user(self.userdata[0]), "a message", op_id)
+        assert fm.save_file(op_id, XML_CONTENT1, get_user(self.userdata[0]))
+        if deletion == "delete_own_account":
+            with self.app.test_client() as test_client:
+                response = test_client.post('/delete_own_account', data={"token": self._get_token(test_client)})
+            assert response.status_code == 200
+        else:
+            assert delete_user(self.userdata[0])
+        assert get_user(self.userdata[0]) is None
+        # kept for the other members, without the user
+        assert [(message["u_id"], message["username"], message["text"]) for message in cm.get_messages(op_id)] == \
+            [(None, None, "a message")]
+        assert [change["username"] for change in fm.get_all_changes(op_id, other)] == [None]
+
+    def test_creator_of_operation_after_the_creator_was_deleted(self):
+        assert add_user(*self.userdata)
+        memberdata = 'member@example.org', 'member', 'member-password', 'Member'
+        assert add_user(*memberdata)
+        assert self.fm.create_operation("orphaned", "description", get_user(self.userdata[0]),
+                                        content=XML_CONTENT_INIT)
+        op_id = Operation.query.filter_by(path="orphaned").first().id
+        assert add_user_to_operation(path="orphaned", access_level="collaborator", emailid=memberdata[0])
+        assert delete_user(self.userdata[0])
+        with self.app.test_client() as test_client:
+            token = self._get_token(test_client, memberdata)
+            response = test_client.get('/creator_of_operation', query_string={"token": token, "op_id": op_id})
+        assert response.status_code == 200
+        assert response.get_json() == {"success": True, "username": None}
+
+    def test_delete_creator_hands_the_operation_to_an_admin(self, mscolab_managers):
+        _, cm, fm = mscolab_managers
+        members = [('collab@example.org', 'collab', 'collab-password', 'Collaborator', 'collaborator'),
+                   ('admin1@example.org', 'admin1', 'admin1-password', 'First Admin', 'admin'),
+                   ('admin2@example.org', 'admin2', 'admin2-password', 'Second Admin', 'admin')]
+        assert add_user(*self.userdata)
+        assert fm.create_operation("handed_over", "description", get_user(self.userdata[0]),
+                                   content=XML_CONTENT_INIT)
+        op_id = Operation.query.filter_by(path="handed_over").first().id
+        for *userdata, access_level in members:
+            assert add_user(*userdata)
+            assert add_user_to_operation(path="handed_over", access_level=access_level, emailid=userdata[0])
+        sm = self.sockio.sm
+        with self.app.test_client() as test_client, \
+                mock.patch.object(sm, "emit_update_permission") as update_permission, \
+                mock.patch.object(sm, "emit_chat_message") as chat_message:
+            response = test_client.post('/delete_own_account', data={"token": self._get_token(test_client)})
+        assert response.status_code == 200
+        # the admin who is a member longest becomes the creator
+        admin1, admin2 = get_user(members[1][0]), get_user(members[2][0])
+        levels = {permission.u_id: permission.access_level
+                  for permission in Permission.query.filter_by(op_id=op_id).all()}
+        assert levels == {get_user(members[0][0]).id: "collaborator", admin1.id: "creator", admin2.id: "admin"}
+        assert self.fm.fetch_operation_creator(op_id, admin2.id) == "admin1"
+        # the chat tells so, the members connected get it and the new access level at once
+        system_message = cm.get_messages(op_id)[-1]
+        assert system_message["message_type"] == MessageType.SYSTEM_MESSAGE
+        assert system_message["u_id"] == admin1.id
+        assert system_message["text"] == \
+            f"[service message] **{self.userdata[1]}** deleted the account, **admin1** is the creator of the " \
+            f"operation now."
+        update_permission.assert_called_once_with(admin1.id, op_id, access_level="creator")
+        assert chat_message.call_args.args[0].id == system_message["id"]
+
+    def test_delete_creator_of_an_operation_without_admin(self, mscolab_managers):
+        _, cm, fm = mscolab_managers
+        assert add_user(*self.userdata)
+        memberdata = 'member@example.org', 'member', 'member-password', 'Member'
+        assert add_user(*memberdata)
+        assert fm.create_operation("no_admin", "description", get_user(self.userdata[0]), content=XML_CONTENT_INIT)
+        op_id = Operation.query.filter_by(path="no_admin").first().id
+        assert add_user_to_operation(path="no_admin", access_level="collaborator", emailid=memberdata[0])
+        with self.app.test_client() as test_client:
+            response = test_client.post('/delete_own_account', data={"token": self._get_token(test_client)})
+        assert response.status_code == 200
+        # a collaborator doesn't become the creator, the operation keeps none
+        assert Permission.query.filter_by(op_id=op_id, access_level="creator").first() is None
+        assert Permission.query.filter_by(op_id=op_id, u_id=get_user(memberdata[0]).id).first().access_level == \
+            "collaborator"
+        assert [message["text"] for message in cm.get_messages(op_id)] == []
 
     def test_upload_endpoints_exist(self):
         # the upload limit applies to these endpoints by name, a renamed view would get the larger limit
