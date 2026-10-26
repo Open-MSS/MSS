@@ -95,19 +95,44 @@ class Test_Socket_Manager:
         sio = self._connect()
         assert len(sio.eio_sid) > 5
 
-    def test_join_creator_to_operatiom(self):
-        sio = self._connect()
-        operation = self._new_operation('new_operation', "example description")
-        with self.app.app_context():
-            assert self.fm.get_file(int(operation.id), self.user) is False
-        json_config = {"token": self.token,
-                       "op_id": operation.id}
+    def _operation_created_after_connect(self, emailid=None):
+        """
+        An operation created after the sockets connected, so they are not in its room yet; with emailid that user
+        is its creator. The seed doesn't reach the sockets, there is no server running for its notification.
+        """
+        operation = self._new_operation("new_operation", "example description")
+        if emailid is not None:
+            with self.app.app_context():
+                assert add_user_to_operation(path=operation.path, access_level="creator", emailid=emailid)
+        return operation
 
-        sio.emit('add-user-to-operation', json_config)
-        perms = Permission(self.user.id, operation.id, "creator")
-        assert perms.op_id == operation.id
-        assert perms.u_id == self.user.id
-        assert perms.access_level == "creator"
+    def test_join_creator_to_operation(self):
+        # msui sends add-user-to-operation after it created an operation, the socket joins its room then
+        sio = self._connect(self.token)
+        operation = self._operation_created_after_connect(self.userdata[0])
+        self.sm.emit_file_change(operation.id)
+        assert self._events(sio, SocketEvents.FILE_CHANGED) == []
+        sio.emit(SocketEvents.ADD_USER_TO_OPERATION, {"token": self.token, "op_id": operation.id})
+        self.sm.emit_file_change(operation.id)
+        assert [event["args"][0] for event in self._events(sio, SocketEvents.FILE_CHANGED)] == \
+            [json.dumps({"op_id": operation.id})]
+
+    def test_join_operation_needs_membership(self):
+        # the event doesn't make anyone a member, a socket of a user without permission stays outside
+        sio = self._connect(self._another_token())
+        operation = self._operation_created_after_connect(self.userdata[0])
+        sio.emit(SocketEvents.ADD_USER_TO_OPERATION, {"token": self._another_token(), "op_id": operation.id})
+        self.sm.emit_file_change(operation.id)
+        assert self._events(sio) == []
+        with self.app.app_context():
+            assert Permission.query.filter_by(u_id=self.anotheruser.id, op_id=operation.id).first() is None
+
+    def test_join_operation_with_invalid_token(self):
+        sio = self._connect(self.token)
+        operation = self._operation_created_after_connect(self.userdata[0])
+        sio.emit(SocketEvents.ADD_USER_TO_OPERATION, {"token": "not-a-token", "op_id": operation.id})
+        self.sm.emit_file_change(operation.id)
+        assert self._events(sio) == []
 
     def test_active_user_tracking_and_emissions_on_operation_selection(self):
         """
