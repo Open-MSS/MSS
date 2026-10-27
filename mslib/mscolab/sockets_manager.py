@@ -26,13 +26,13 @@
 """
 import json
 import logging
-import re
 from flask import request
 import flask_socketio
 from flask_socketio import SocketIO, join_room
 
 from mslib.mscolab.chat_manager import ChatManager, MAX_MESSAGE_TEXT_LENGTH
 from mslib.mscolab.api.events import SocketEvents
+from mslib.mscolab.api.schemas import InvalidRequest, int_field
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.models import MessageType, Permission, User
 from mslib.mscolab.utils import get_message_dict
@@ -41,16 +41,14 @@ from mslib.mscolab.utils import get_user_id
 
 def _as_id(value):
     """
-    Returns a client-supplied id as int, or None when it is not an int or a string of digits.
-    Floats and bools are rejected rather than silently mapped onto another id.
+    Returns a client-supplied id as int, or None when it is not one, by the rule of the REST requests
+    (api.schemas.int_field): an int or a string of digits in the 32 bit range of the id columns. Floats and bools
+    are rejected rather than silently mapped onto another id.
     """
-    if isinstance(value, bool):
+    try:
+        return int_field(value, "id")
+    except InvalidRequest:
         return None
-    if isinstance(value, int):
-        return value
-    if isinstance(value, str) and re.fullmatch(r"-?[0-9]+", value.strip()):
-        return int(value)
-    return None
 
 
 def _valid_message_text(text):
@@ -184,11 +182,15 @@ class SocketsManager:
             - token: authentication token
             - op_id: operation id
         """
-        token = json_config['token']
-        user = User.verify_auth_token(token)
+        if not isinstance(json_config, dict):
+            return
+        op_id = _as_id(json_config.get('op_id'))
+        if op_id is None:
+            logging.debug("add-user-to-operation without a valid op_id rejected")
+            return
+        user = User.verify_auth_token(json_config.get('token'))
         if user is None:
             return
-        op_id = json_config['op_id']
         if not self.fm.is_member(user.id, op_id) or not self._bind_socket(user):
             return
         join_room(self._room(op_id))

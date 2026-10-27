@@ -33,7 +33,7 @@ from mslib.mscolab.api.events import SocketEvents
 from mslib.mscolab.chat_manager import MAX_MESSAGE_TEXT_LENGTH
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation, get_operation, \
     XML_CONTENT_INIT
-from mslib.mscolab.models import db, Change, Operation, Permission, User, Message, MessageType
+from mslib.mscolab.models import db, Change, Operation, Permission, Message, MessageType
 from tests.utils import XML_CONTENT1
 
 IMAGE_FILE = os.path.join(os.path.dirname(__file__), "..", "data", "mss-logo-16x16.png")
@@ -92,22 +92,27 @@ class Test_Socket_Manager:
         return operation
 
     def test_handle_connect(self):
-        sio = self._connect()
-        assert len(sio.eio_sid) > 5
+        # without a token, as older clients connect, the socket is accepted but belongs to no user yet
+        assert self._connect().is_connected()
+        assert self.sm.sockets == []
+        # with a token the server registers the socket for its user
+        assert self._connect(self.token).is_connected()
+        assert [socket["u_id"] for socket in self.sm.sockets] == [self.user.id]
 
-    def _operation_created_after_connect(self, emailid=None):
+    def _operation_created_after_connect(self, creator_emailid):
         """
-        An operation created after the sockets connected, so they are not in its room yet; with emailid that user
-        is its creator. The seed doesn't reach the sockets, there is no server running for its notification.
+        An operation created after the sockets connected, with creator_emailid as its creator; the sockets are not
+        in its room yet: the seed notifies the server at SERVER_URL, not the SocketsManager of this test app.
         """
         operation = self._new_operation("new_operation", "example description")
-        if emailid is not None:
-            with self.app.app_context():
-                assert add_user_to_operation(path=operation.path, access_level="creator", emailid=emailid)
+        with self.app.app_context():
+            assert add_user_to_operation(path=operation.path, access_level="creator", emailid=creator_emailid)
         return operation
 
     def test_join_creator_to_operation(self):
-        # msui sends add-user-to-operation after it created an operation, the socket joins its room then
+        # msui sends add-user-to-operation after it created an operation. The create_operation route joins the
+        # rooms itself by now (sync_rooms), with this event the socket of a member joins the room of an operation
+        # it is not in yet, e.g. on an older server
         sio = self._connect(self.token)
         operation = self._operation_created_after_connect(self.userdata[0])
         self.sm.emit_file_change(operation.id)
@@ -117,20 +122,26 @@ class Test_Socket_Manager:
         assert [event["args"][0] for event in self._events(sio, SocketEvents.FILE_CHANGED)] == \
             [json.dumps({"op_id": operation.id})]
 
-    def test_join_operation_needs_membership(self):
-        # the event doesn't make anyone a member, a socket of a user without permission stays outside
-        sio = self._connect(self._another_token())
-        operation = self._operation_created_after_connect(self.userdata[0])
-        sio.emit(SocketEvents.ADD_USER_TO_OPERATION, {"token": self._another_token(), "op_id": operation.id})
-        self.sm.emit_file_change(operation.id)
-        assert self._events(sio) == []
-        with self.app.app_context():
-            assert Permission.query.filter_by(u_id=self.anotheruser.id, op_id=operation.id).first() is None
-
     def test_join_operation_with_invalid_token(self):
         sio = self._connect(self.token)
         operation = self._operation_created_after_connect(self.userdata[0])
         sio.emit(SocketEvents.ADD_USER_TO_OPERATION, {"token": "not-a-token", "op_id": operation.id})
+        self.sm.emit_file_change(operation.id)
+        assert self._events(sio) == []
+
+    @pytest.mark.parametrize("payload", [
+        "not a dict", {}, {"op_id": "{op_id}"}, {"token": "{token}"}, {"token": "{token}", "op_id": "abc"},
+        {"token": "{token}", "op_id": 1.0}, {"token": "{token}", "op_id": True},
+        {"token": "{token}", "op_id": 2 ** 40}, {"token": "{token}", "op_id": None}])
+    def test_join_operation_with_malformed_payload(self, payload):
+        # refused quietly, as by the other handlers. Without a token or op_id, or without a dict, the handler raised
+        # before; an op_id that is no id of the REST rule matched no permission before too and stays refused
+        sio = self._connect(self.token)
+        operation = self._operation_created_after_connect(self.userdata[0])
+        if isinstance(payload, dict):
+            payload = {key: self.token if value == "{token}" else operation.id if value == "{op_id}" else value
+                       for key, value in payload.items()}
+        sio.emit(SocketEvents.ADD_USER_TO_OPERATION, payload)
         self.sm.emit_file_change(operation.id)
         assert self._events(sio) == []
 
@@ -233,7 +244,12 @@ class Test_Socket_Manager:
         assert self._events(sio) == []
 
     def test_join_operation_room_requires_membership(self):
-        # M8: add-user-to-operation and operation-selected only work for members of the operation
+        # M8: add-user-to-operation and operation-selected only work for members of the operation, also for a
+        # member of another operation; neither makes anyone a member
+        other = self._new_operation("other_operation", "the outsider is a member of this one")
+        with self.app.app_context():
+            assert add_user_to_operation(path=other.path, access_level="collaborator",
+                                         emailid=self.anotheruserdata[0])
         another_token = self._another_token()
         outsider = self._connect(another_token)
         outsider.emit("add-user-to-operation", {"token": another_token, "op_id": self.operation.id})
@@ -242,6 +258,8 @@ class Test_Socket_Manager:
         member = self._connect(self.token)
         self._send(member, "not for outsiders")
         assert self._events(outsider) == []
+        with self.app.app_context():
+            assert Permission.query.filter_by(u_id=self.anotheruser.id, op_id=self.operation.id).first() is None
 
     def test_new_permission_joins_and_revoke_leaves_room(self):
         outsider = self._connect(self._another_token())
@@ -394,13 +412,6 @@ class Test_Socket_Manager:
         assert len(received) == 1
         assert json.loads(received[0]["args"][0])["op_id"] == self.operation.id
 
-    @pytest.mark.skip(reason="unknown how to verify")
-    def test_handle_start_event(self):
-        sio = self._connect()
-        json_config = {"token": self.token}
-        assert User.verify_auth_token(self.token) is not False
-        sio.emit('start', json_config)
-
     def test_send_message(self):
         sio = self._connect()
         sio.emit('start', {'token': self.token})
@@ -441,17 +452,17 @@ class Test_Socket_Manager:
             })
 
         with self.app.app_context():
-            messages = self.cm.get_messages(1)
+            messages = self.cm.get_messages(self.operation.id)
             assert messages[0]["text"] == "message from 1"
             assert len(messages) == 2
             assert messages[0]["u_id"] == self.user.id
             timestamp = datetime.datetime(1970, 1, 1,
                                           tzinfo=datetime.timezone.utc).isoformat()
-            messages = self.cm.get_messages(1, timestamp)
+            messages = self.cm.get_messages(self.operation.id, timestamp)
             assert len(messages) == 2
             assert messages[0]["u_id"] == self.user.id
             timestamp = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
-            messages = self.cm.get_messages(1, timestamp)
+            messages = self.cm.get_messages(self.operation.id, timestamp)
             assert len(messages) == 0
 
     def test_get_messages_api(self):
