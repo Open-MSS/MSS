@@ -300,9 +300,7 @@ class Plotting:
         self.num_labels = self.config["num_labels"]
         self.tick_index_step = self.num_interpolation_points // self.num_labels
         self.bbox = None
-        flight = self.config["automated_plotting_flights"][0][0]
         section = self.config["automated_plotting_flights"][0][1]
-        filename = self.config["automated_plotting_flights"][0][3]
         if self.__class__.__name__ == "TopViewPlotting":
             try:
                 self.params = get_projection_params(self.config["predefined_map_sections"][section]["CRS"].lower())
@@ -316,42 +314,26 @@ class Plotting:
             self.layout = self.config["layout"]["sideview"]
         if self.__class__.__name__ == "LinearViewPlotting":
             self.layout = self.config["layout"]["linearview"]
-        if is_operation_entry(flight, filename):
-            self.read_operation(flight, msc_url, msc_auth_password, username, password)
-        elif flighttrack_file(flight, filename) is not None:
-            try:
-                self.read_ftml(filename)
-            except FileNotFoundError as e:
-                # draw() reads every row again and reports the missing file there,
-                # the run goes on with the next row
-                logging.debug(e)
 
     def setup(self):
         pass
 
-    def update_path(self, filename=None):
-        """
-        Update the path by reading the FTML data from the given filename
-         and redrawing the path based on the updated waypoints model data.
-
-        Parameters:
-        :filename: The name of the file to read FTML data from.
-
-        Returns:
-        None
-        """
-        # plot path and label
-        if filename != "":
-            self.read_ftml(filename)
-        self.fig.canvas.draw()
-        self.plotter.update_from_waypoints(self.wp_model_data)
-        self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
-
-    def update_path_ops(self, filename=None):
-        self.setup()
-        # plot path and label
-        if filename != "":
+    def load_row(self, flight, filename):
+        """Reads the flight track of an "automated_plotting_flights" row, the single place
+        which tells a file row from an operation row."""
+        if is_operation_entry(flight, filename):
             self.read_operation(filename, self.url, self.msc_auth, self.username, self.password)
+        elif flighttrack_file(flight, filename) is not None:
+            self.read_ftml(filename)
+        else:
+            return False
+        self.setup()  # after reading, so it works on this row's track
+        return True
+
+    def redraw_flighttrack(self):
+        """
+        Redraw the path and its labels from the flight track load_row() read.
+        """
         self.fig.canvas.draw()
         self.plotter.update_from_waypoints(self.wp_model_data)
         self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
@@ -385,9 +367,11 @@ class Plotting:
                                                                   connection="greatcircle")
 
     def read_operation(self, op_name, msc_url, msc_auth_password, username, password):
-        self.wps, self.wp_model_data = load_from_operation(op_name, msc_url=msc_url,
-                                                           msc_auth_password=msc_auth_password, username=username,
-                                                           password=password)
+        operation = load_from_operation(op_name, msc_url=msc_url, msc_auth_password=msc_auth_password,
+                                        username=username, password=password)
+        if operation is None:
+            raise ConnectionError(f"Operation '{op_name}' could not be loaded from {msc_url}")
+        self.wps, self.wp_model_data = operation
         self.wp_lats, self.wp_lons, self.wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
         self.wp_press = [mslib.utils.thermolib.flightlevel2pressure(wp[2] * units.hft).to("Pa").m for wp in self.wps]
         self.path = [(wp[0], wp[1], datetime.now()) for wp in self.wps]
@@ -419,15 +403,8 @@ class TopViewPlotting(Plotting):
         pass
 
     def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
-        if is_operation_entry(flight, filename):
-            self.update_path_ops(filename)
-        elif flighttrack_file(flight, filename) is not None:
-            try:
-                self.update_path(filename)
-            except AttributeError as e:
-                logging.debug(e)
-                raise SystemExit("No FLIGHT Selected")
-
+        if self.load_row(flight, filename):
+            self.redraw_flighttrack()
         width, height = self.myfig.get_plot_size_in_px()
         self.bbox = self.params['basemap']
         if not init_time:
@@ -499,33 +476,11 @@ class SideViewPlotting(Plotting):
         times_visible = False
         self.myfig.redraw_xaxis(self.lats, self.lons, times, times_visible)
 
-    def update_path(self, filename=None):
+    def redraw_flighttrack(self):
         """
-        Update the path by reading the FTML data from the given filename
-         and redrawing the path based on the updated waypoints model data.
-
-        Parameters:
-        :filename: The name of the file to read FTML data from.
-
-        Returns:
-        None
+        Redraw the path, its labels and the vertical lines of the waypoints from the
+        flight track load_row() read.
         """
-        # plot path and label
-        if filename != "":
-            self.read_ftml(filename)
-        self.fig.canvas.draw()
-        self.plotter.update_from_waypoints(self.wp_model_data)
-        indices = list(zip(self.intermediate_indexes, self.wp_press))
-        self.plotter.redraw_path(vertices=indices,
-                                 waypoints_model_data=self.wp_model_data)
-        highlight = [[wp[0], wp[1]] for wp in self.wps]
-        self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
-
-    def update_path_ops(self, filename=None):
-        self.setup()
-        # plot path and label
-        if filename != "":
-            self.read_operation(filename, self.url, self.msc_auth, self.username, self.password)
         self.fig.canvas.draw()
         self.plotter.update_from_waypoints(self.wp_model_data)
         indices = list(zip(self.intermediate_indexes, self.wp_press))
@@ -535,14 +490,8 @@ class SideViewPlotting(Plotting):
         self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
 
     def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
-        if is_operation_entry(flight, filename):
-            self.update_path_ops(filename)
-        elif flighttrack_file(flight, filename) is not None:
-            try:
-                self.update_path(filename)
-            except AttributeError as e:
-                logging.debug(e)
-                raise SystemExit("No FLIGHT Selected")
+        if self.load_row(flight, filename):
+            self.redraw_flighttrack()
         width, height = self.myfig.get_plot_size_in_px()
         p_bot, p_top = [float(x) * 100 for x in vertical.split(",")]
         self.bbox = tuple([x for x in (self.num_interpolation_points,
@@ -608,32 +557,16 @@ class LinearViewPlotting(Plotting):
         self.myfig.set_settings(settings_dict)
         self.myfig.setup_linear_view()
 
-    def update_path(self, filename=None):
-        self.setup()
-        if filename != "":
-            self.read_ftml(filename)
-
-        highlight = [[wp[0], wp[1]] for wp in self.wps]
-        self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
-
-    def update_path_ops(self, filename=None):
-        self.setup()
-        # plot path and la
-        # plot path and label
-        if filename != "":
-            self.read_operation(filename, self.url, self.msc_auth, self.username, self.password)
+    def redraw_flighttrack(self):
+        """
+        Redraw the vertical lines of the waypoints from the flight track load_row() read.
+        """
         highlight = [[wp[0], wp[1]] for wp in self.wps]
         self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
 
     def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
-        if is_operation_entry(flight, filename):
-            self.update_path_ops(filename)
-        elif flighttrack_file(flight, filename) is not None:
-            try:
-                self.update_path(filename)
-            except AttributeError as e:
-                logging.debug(e)
-                raise SystemExit("No FLIGHT Selected")
+        if self.load_row(flight, filename):
+            self.redraw_flighttrack()
         width, height = self.myfig.get_plot_size_in_px()
         self.bbox = (self.num_interpolation_points,)
 

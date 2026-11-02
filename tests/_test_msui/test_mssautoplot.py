@@ -34,7 +34,8 @@ import pytest
 from click.testing import CliRunner
 
 from mslib.autoplot import (load_from_ftml, resolve_ftml_path, relocate_ftml_path, is_operation_entry,
-                            flighttrack_file, flighttrack_entry, TopViewPlotting, main, download_summary)
+                            flighttrack_file, flighttrack_entry, TopViewPlotting, SideViewPlotting, main,
+                            download_summary)
 
 
 class TestEntryKind:
@@ -78,8 +79,8 @@ def test_load_from_ftml():
 
 def test_missing_first_flight_track_does_not_stop_the_run(tmp_path):
     """
-    The first entry is read when the plotter is set up. A missing file there skips only
-    the plots of that entry, the next entry is still drawn.
+    Setting up the plotter reads no entry, every entry is read when it is drawn. A missing
+    file in the first entry skips only the plots of that entry, the next entry is still drawn.
     """
     example = os.path.join(os.path.dirname(__file__), "..", "data", "example.ftml")
     section = "00 global (cyl)"
@@ -89,9 +90,55 @@ def test_missing_first_flight_track_does_not_stop_the_run(tmp_path):
         ["example", section, "", example, "", ""]]}))
     view = TopViewPlotting(str(cfg), None, None, None, None, None)
     with pytest.raises(FileNotFoundError):
-        view.update_path(str(tmp_path / "gone.ftml"))
-    view.update_path(example)
+        view.load_row("gone", str(tmp_path / "gone.ftml"))
+    assert view.load_row("example", example)
+    view.redraw_flighttrack()
     assert len(view.wps) == 5
+
+
+def test_side_view_draws_a_flight_track_file(tmp_path):
+    """
+    The side view sets up its waypoint indexes from the flight track it has just read,
+    also for a file entry and after a missing first file.
+    """
+    example = os.path.join(os.path.dirname(__file__), "..", "data", "example.ftml")
+    cfg = tmp_path / "cfg.json"
+    cfg.write_text(json.dumps({"automated_plotting_flights": [
+        ["gone", "", "", str(tmp_path / "gone.ftml"), "", ""],
+        ["example", "", "", example, "", ""]]}))
+    view = SideViewPlotting(str(cfg), None, None, None, None, None)
+    with pytest.raises(FileNotFoundError):
+        view.load_row("gone", str(tmp_path / "gone.ftml"))
+    assert view.load_row("example", example)
+    view.redraw_flighttrack()
+    assert len(view.intermediate_indexes) == len(view.wps) == 5
+
+
+def test_row_without_flight_track_reads_nothing(tmp_path):
+    cfg = tmp_path / "cfg.json"
+    cfg.write_text(json.dumps({"automated_plotting_flights": [["", "00 global (cyl)", "", "", "", ""]]}))
+    view = TopViewPlotting(str(cfg), None, None, None, None, None)
+    assert not view.load_row("", "")
+    assert not hasattr(view, "wps")
+
+
+def test_failing_operation_is_reported(tmp_path, monkeypatch):
+    """
+    An operation which can't be loaded is fetched once and raises an error draw() in
+    main() reports, instead of a TypeError.
+    """
+    calls = []
+
+    def no_operation(*args, **kwargs):
+        calls.append(args)
+
+    monkeypatch.setattr("mslib.autoplot.load_from_operation", no_operation)
+    cfg = tmp_path / "cfg.json"
+    cfg.write_text(json.dumps({"automated_plotting_flights": [["op", "00 global (cyl)", "", "op", "", ""]]}))
+    view = TopViewPlotting(str(cfg), "http://127.0.0.1:9/", None, None, None, None)
+    with pytest.raises(ConnectionError, match="Operation 'op' could not be loaded"):
+        view.load_row("op", "op")
+    assert len(calls) == 1
 
 
 def test_missing_flight_track_is_reported_as_missing(tmp_path):
@@ -126,7 +173,7 @@ def test_missing_flight_track_keeps_the_progress_dialog_open(tmp_path):
     pdlg = FakeDialog()
     view = TopViewPlotting(str(cfg), None, None, None, None, pdlg)
     with pytest.raises(FileNotFoundError):
-        view.update_path("gone.ftml")
+        view.load_row("gone", "gone.ftml")
     assert not pdlg.closed
 
 
@@ -143,6 +190,7 @@ def test_relative_flight_track_is_found_next_to_the_configuration(tmp_path, monk
         ["example", "00 global (cyl)", "", os.path.join("flights", "example.ftml"), "", ""]]}))
     monkeypatch.chdir(tmp_path)
     view = TopViewPlotting(str(cfg), None, None, None, None, None)
+    assert view.load_row("example", os.path.join("flights", "example.ftml"))
     assert len(view.wps) == 5
 
 
