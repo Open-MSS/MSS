@@ -167,6 +167,14 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 "Cannot download empty treewidget"
             )
             return
+        # an empty flights treewidget is [] or the default [[]] of the configuration
+        if not any(config_settings["automated_plotting_flights"]):
+            QMessageBox.information(
+                self,
+                "WARNING",
+                "Cannot download without a row in the flights treewidget"
+            )
+            return
         if self.intv == "":
             if self.stime and self.etime:
                 QMessageBox.information(

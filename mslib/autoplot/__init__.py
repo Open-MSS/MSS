@@ -674,6 +674,9 @@ def main(ctx, cpath, view, ftrack, fpath, itime, vtime, intv, stime, etime, raw)
 
     conf.read_config_file(path=cpath)
     config = conf.config_loader()
+    # an empty or missing list of flights is loaded as the default [[]]
+    if not any(config["automated_plotting_flights"]):
+        raise SystemExit("No flight in \"automated_plotting_flights\" of the configuration, nothing to plot")
 
     # flight_name = config["automated_plotting_flights"][0][0]
     # file = config["automated_plotting_flights"][0][3]

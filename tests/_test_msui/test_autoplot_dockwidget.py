@@ -248,6 +248,15 @@ class TestDownload:
             AutoplotDockWidget.confirm_missing_flighttracks(widget, *args, **kwargs)
         return widget
 
+    @pytest.mark.parametrize("flights", [[], [[]]])
+    def test_empty_flights_treewidget_stops(self, tmp_path, flights):
+        config = {"automated_plotting_flights": flights, "automated_plotting_hsecs": [["url", "layer", "", ""]]}
+        with mock.patch("mslib.msui.autoplot_dockwidget.cli_tool") as cli_tool, \
+                mock.patch("PyQt5.QtWidgets.QMessageBox.information") as information:
+            AutoplotDockWidget.download_plots_cli(self.dockwidget(), config)
+        assert information.call_args[0][2] == "Cannot download without a row in the flights treewidget"
+        cli_tool.assert_not_called()
+
     def test_time_step_is_checked_before_missing_files(self, tmp_path):
         widget = self.dockwidget()
         widget.stime, widget.etime = "2019-09-01T00:00:00Z", "2019-09-02T00:00:00Z"

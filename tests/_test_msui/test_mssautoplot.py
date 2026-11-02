@@ -192,6 +192,20 @@ def test_wms_http_error_is_reported_as_invalid_style_or_url(tmp_path, monkeypatc
     assert "Invalid STYLE and/or URL requested" in result.output
 
 
+@pytest.mark.parametrize("flights", [{"automated_plotting_flights": []}, {}])
+def test_empty_flights_stop_with_a_message(tmp_path, flights):
+    """
+    An empty or missing list of flights, both loaded as the default [[]], stops the run
+    with a message instead of an IndexError.
+    """
+    cfg = tmp_path / "cfg.json"
+    cfg.write_text(json.dumps(dict(flights, automated_plotting_hsecs=[["http://127.0.0.1:9/", "L", "", ""]])))
+    result = CliRunner().invoke(main, ["--cpath", str(cfg), "--view", "top"])
+    assert result.exit_code != 0
+    assert "nothing to plot" in result.output
+    assert not isinstance(result.exception, IndexError)
+
+
 def test_missing_flight_track_keeps_the_progress_dialog_open(tmp_path):
     """
     The run goes on with the next entry after a missing file, so the progress dialog
