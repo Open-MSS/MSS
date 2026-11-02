@@ -228,6 +228,34 @@ class TestMissingFlighttrackMessage:
         assert "The file was moved or deleted after it was stored." in message
         assert str(tmp_path) + "." not in message
 
+    @pytest.mark.parametrize("entry", ["flight1.ftml", os.path.join("flights", "flight1.ftml")])
+    def test_relative_name_without_a_selected_configuration(self, tmp_path, entry):
+        """
+        Without a selected configuration file the user never chose a directory, the
+        message names the one of the configuration the download writes.
+        """
+        message = AutoplotDockWidget.missing_flighttrack_message(
+            "flight1", entry, tmp_path / entry, tmp_path, selected=False)
+        assert f"{tmp_path}, the directory of the configuration the download writes, " \
+            "as no configuration file is selected." in message
+        assert "next to the configuration file" not in message
+        assert "relative to the directory of the configuration file" not in message
+        assert "in the configuration file" not in message
+
+    def test_absolute_path_without_a_selected_configuration(self, tmp_path):
+        missing = tmp_path / "flights" / "example.ftml"
+        message = AutoplotDockWidget.missing_flighttrack_message(
+            "flight1", str(missing), missing, tmp_path, selected=False)
+        assert message.endswith("Open the flight track in the MSUI, save it and add the row again.")
+
+    def test_confirmation_passes_on_whether_a_configuration_is_selected(self, tmp_path):
+        widget = SimpleNamespace(missing_flighttracks=AutoplotDockWidget.missing_flighttracks,
+                                 missing_flighttrack_message=AutoplotDockWidget.missing_flighttrack_message)
+        flights = [["flight1", "", "", "gone.ftml", "", ""]]
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as information:
+            AutoplotDockWidget.confirm_missing_flighttracks(widget, flights, tmp_path, selected=False)
+        assert "no configuration file is selected" in information.call_args[0][2]
+
 
 class TestDownload:
     """

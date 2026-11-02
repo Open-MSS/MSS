@@ -184,7 +184,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 )
                 return
         directory = self.flights_directory()
-        if not self.confirm_missing_flighttracks(config_settings["automated_plotting_flights"], directory):
+        if not self.confirm_missing_flighttracks(config_settings["automated_plotting_flights"], directory,
+                                                 selected=bool(self.cpath)):
             return
 
         view = "top"
@@ -364,18 +365,19 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                     missing.append((row[0], entry, path))
         return missing
 
-    def confirm_missing_flighttracks(self, flights, directory):
+    def confirm_missing_flighttracks(self, flights, directory, selected=True):
         """
         Whether the download goes on although flight track files are missing.
 
         mssautoplot skips the plots of a missing file and draws the others, so the
         user is asked whether to download those. When no row is left to draw, the
-        download stops with the explanation instead of asking.
+        download stops with the explanation instead of asking. <selected> tells
+        whether a configuration file is selected, see missing_flighttrack_message().
         """
         missing = self.missing_flighttracks(flights, directory)
         if not missing:
             return True
-        text = "\n\n".join(self.missing_flighttrack_message(flight, entry, path, directory)
+        text = "\n\n".join(self.missing_flighttrack_message(flight, entry, path, directory, selected)
                            for flight, entry, path in missing)
         if len(missing) == len(flights):
             QMessageBox.information(self, "WARNING", plain_text_as_html(text))
@@ -387,7 +389,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         return answer == QMessageBox.Yes
 
     @staticmethod
-    def missing_flighttrack_message(flight, entry, path, directory):
+    def missing_flighttrack_message(flight, entry, path, directory, selected=True):
         """
         Why the flight track file of <flight> is looked up at <path>, and what to do.
 
@@ -396,12 +398,25 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         without a directory is either a flight track which was never saved or a
         configuration which names the file without one, the entry does not tell which,
         so the message names both remedies instead of guessing one.
+
+        Without a <selected> configuration file the user never chose a directory,
+        <directory> is the one of the configuration the download writes.
         """
         text = [f"The flight track file of '{flight}' does not exist:", str(path), ""]
         if Path(entry).expanduser().is_absolute():
             text.append("The file was moved or deleted after it was stored.")
-            text.append("Open the flight track in the MSUI, save it and add the row again, or "
-                        "correct the path in the configuration file.")
+            text.append("Open the flight track in the MSUI, save it and add the row again"
+                        + (", or correct the path in the configuration file." if selected else "."))
+            return "\n".join(text)
+        if not selected:
+            where = (f"{directory}, the directory of the configuration the download writes, "
+                     "as no configuration file is selected")
+            if Path(entry).parent == Path("."):
+                text.append(f"Only the name '{entry}' is stored, without a directory, so the file "
+                            f"is looked up in {where}.")
+            else:
+                text.append(f"The name '{entry}' is relative to {where}.")
+            text.append("Save the flight track in the MSUI and add the row again.")
             return "\n".join(text)
         if Path(entry).parent == Path("."):
             text.append(f"Only the name '{entry}' is stored, without a directory, so the file "
