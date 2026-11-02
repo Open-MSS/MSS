@@ -31,6 +31,7 @@ import os
 from pathlib import Path
 
 import pytest
+import requests
 from click.testing import CliRunner
 
 from mslib.autoplot import (load_from_ftml, resolve_ftml_path, relocate_ftml_path, is_operation_entry,
@@ -154,6 +155,41 @@ def test_missing_flight_track_is_reported_as_missing(tmp_path):
     assert result.exit_code == 0
     assert "doesn't exist" in result.output
     assert "Invalid times" not in result.output
+
+
+def test_unreadable_flight_track_is_reported_as_such(tmp_path):
+    """
+    A flight track which can't be read, here a directory, is reported with its own error,
+    even when its path contains "times".
+    """
+    directory = tmp_path / "times" / "dir.ftml"
+    directory.mkdir(parents=True)
+    cfg = tmp_path / "cfg.json"
+    cfg.write_text(json.dumps({
+        "automated_plotting_flights": [["dir", "00 global (cyl)", "", str(directory), "", ""]],
+        "automated_plotting_hsecs": [["http://127.0.0.1:9/", "L", "", ""]]}))
+    result = CliRunner().invoke(main, ["--cpath", str(cfg), "--view", "top"])
+    assert result.exit_code == 0
+    assert "Invalid times" not in result.output
+    assert str(directory) in result.output
+
+
+def test_wms_http_error_is_reported_as_invalid_style_or_url(tmp_path, monkeypatch):
+    """
+    The errors of requests are OSErrors too, a failing WMS request is still reported
+    as such and not with the raw error of the request.
+    """
+    def not_found(*args, **kwargs):
+        raise requests.exceptions.HTTPError("404 Client Error: NOT FOUND for url: http://127.0.0.1:9/")
+
+    monkeypatch.setattr(TopViewPlotting, "draw", not_found)
+    cfg = tmp_path / "cfg.json"
+    cfg.write_text(json.dumps({
+        "automated_plotting_flights": [["", "00 global (cyl)", "", "", "", ""]],
+        "automated_plotting_hsecs": [["http://127.0.0.1:9/", "L", "", ""]]}))
+    result = CliRunner().invoke(main, ["--cpath", str(cfg), "--view", "top"])
+    assert result.exit_code == 0
+    assert "Invalid STYLE and/or URL requested" in result.output
 
 
 def test_missing_flight_track_keeps_the_progress_dialog_open(tmp_path):

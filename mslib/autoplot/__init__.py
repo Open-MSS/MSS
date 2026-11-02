@@ -713,7 +713,7 @@ def main(ctx, cpath, view, ftrack, fpath, itime, vtime, intv, stime, etime, raw)
                 failed("View is not available, Plot not created!")
                 return False
         except Exception as e:
-            if isinstance(e, FileNotFoundError):
+            if isinstance(e, OSError) and not isinstance(e, requests.exceptions.RequestException):
                 failed(str(e))
             elif "times" in str(e):
                 failed("Invalid times and/or levels requested")
