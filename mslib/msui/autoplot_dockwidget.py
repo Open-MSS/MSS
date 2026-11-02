@@ -37,8 +37,8 @@ import click
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem, QMessageBox
 from PyQt5 import QtCore
 
-from mslib.autoplot import (main as cli_tool, flighttrack_entry, is_operation_entry, relocate_ftml_path,
-                            resolve_ftml_path)
+from mslib.autoplot import (main as cli_tool, absolute_path, flighttrack_entry, is_operation_entry,
+                            relocate_ftml_path, resolve_ftml_path)
 from mslib.msui.qt5.ui_mss_autoplot import Ui_AutoplotDockWidget
 from mslib.msui.utils import constants as const
 from mslib.msui.utils.qt import get_save_filename, plain_text_as_html
@@ -418,7 +418,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         filename = parent.waypoints_model.get_filename()
         if not filename:
             return f"{name}.ftml"
-        return str(Path(filename).expanduser().resolve())
+        return str(absolute_path(filename))
 
     @staticmethod
     def filename_to_show(filename):

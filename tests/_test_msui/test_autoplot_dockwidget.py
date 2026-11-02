@@ -123,7 +123,7 @@ class TestMissingFlighttracks:
         missing = tmp_path / "example.ftml"
         flights = [["flight1", "", "", str(missing), "", ""]]
         assert AutoplotDockWidget.missing_flighttracks(flights, tmp_path) == [
-            ("flight1", str(missing), missing.resolve())]
+            ("flight1", str(missing), missing)]
 
     def test_every_missing_file_is_listed(self, tmp_path):
         flights = [["flight1", "", "", "a.ftml", "", ""],
@@ -136,7 +136,7 @@ class TestMissingFlighttracks:
         # only the name of the track is stored, it is looked up next to the configuration
         flights = [["flight1", "", "", "flight1.ftml", "", ""]]
         assert AutoplotDockWidget.missing_flighttracks(flights, tmp_path) == [
-            ("flight1", "flight1.ftml", tmp_path.resolve() / "flight1.ftml")]
+            ("flight1", "flight1.ftml", tmp_path / "flight1.ftml")]
 
     def test_operation_and_empty_entries(self, tmp_path):
         flights = [["operation1", "", "", "operation1", "", ""], ["", "", "", "", "", ""], []]

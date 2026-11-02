@@ -318,6 +318,28 @@ class TestRelocateFtmlPath:
         home = os.path.join("~", "example.ftml")
         assert relocate_ftml_path(home, tmp_path / "a", tmp_path / "b") == home
 
+    def test_same_directory_keeps_a_name_through_a_link(self, tmp_path):
+        data = link_to_store(tmp_path)
+        name = os.path.join(data.name, "x.ftml")
+        assert relocate_ftml_path(name, tmp_path, tmp_path) == name
+        assert relocate_ftml_path(name, tmp_path, os.path.join(tmp_path, "sub", "..")) == name
+
+    def test_other_directory_keeps_the_link(self, tmp_path):
+        data = link_to_store(tmp_path)
+        relocated = relocate_ftml_path(os.path.join(data.name, "x.ftml"), tmp_path, tmp_path / "saved")
+        assert relocated == os.path.join("..", data.name, "x.ftml")
+
+
+def link_to_store(tmp_path):
+    """A directory "data" which is a link to the directory "store"."""
+    (tmp_path / "store").mkdir()
+    data = tmp_path / "data"
+    try:
+        data.symlink_to(tmp_path / "store", target_is_directory=True)
+    except OSError:
+        pytest.skip("symbolic links can't be created here")
+    return data
+
 
 class TestResolveFtmlPath:
     """
@@ -326,49 +348,65 @@ class TestResolveFtmlPath:
     """
     def test_absolute_path_is_kept(self, tmp_path):
         absolute = tmp_path / "flights" / "example.ftml"
-        assert resolve_ftml_path(str(absolute)) == absolute.resolve()
+        assert resolve_ftml_path(str(absolute)) == absolute
 
     def test_bare_filename_relative_to_working_directory(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
-        assert resolve_ftml_path("example.ftml") == Path(tmp_path).resolve() / "example.ftml"
+        assert resolve_ftml_path("example.ftml") == tmp_path / "example.ftml"
 
     def test_relative_path_relative_to_working_directory(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         assert resolve_ftml_path(os.path.join("flights", "example.ftml")) == \
-            Path(tmp_path).resolve() / "flights" / "example.ftml"
+            tmp_path / "flights" / "example.ftml"
 
     def test_user_directory_is_expanded(self):
         resolved = resolve_ftml_path(os.path.join("~", "example.ftml"))
-        assert resolved == Path.home().resolve() / "example.ftml"
+        assert resolved == Path.home() / "example.ftml"
 
     def test_fpath_overrides_directory(self, tmp_path):
         assert resolve_ftml_path(str(tmp_path / "flights" / "example.ftml"), str(tmp_path / "campaign")) == \
-            Path(tmp_path).resolve() / "campaign" / "example.ftml"
+            tmp_path / "campaign" / "example.ftml"
 
     def test_fpath_overrides_bare_filename(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         assert resolve_ftml_path("example.ftml", str(tmp_path / "campaign")) == \
-            Path(tmp_path).resolve() / "campaign" / "example.ftml"
+            tmp_path / "campaign" / "example.ftml"
 
     def test_empty_fpath_is_ignored(self, tmp_path):
         absolute = tmp_path / "flights" / "example.ftml"
-        assert resolve_ftml_path(str(absolute), "") == absolute.resolve()
+        assert resolve_ftml_path(str(absolute), "") == absolute
 
     def test_directory_anchors_a_relative_name(self, tmp_path, monkeypatch):
         # the directory of the configuration file which named the flight track,
         # not the working directory
         monkeypatch.chdir(tmp_path)
         assert resolve_ftml_path("example.ftml", directory=str(tmp_path / "flights")) == \
-            Path(tmp_path).resolve() / "flights" / "example.ftml"
+            tmp_path / "flights" / "example.ftml"
 
     def test_directory_does_not_touch_an_absolute_path(self, tmp_path):
         absolute = tmp_path / "flights" / "example.ftml"
-        assert resolve_ftml_path(str(absolute), directory=str(tmp_path / "campaign")) == absolute.resolve()
+        assert resolve_ftml_path(str(absolute), directory=str(tmp_path / "campaign")) == absolute
 
     def test_fpath_wins_over_directory(self, tmp_path):
         assert resolve_ftml_path("example.ftml", fpath=str(tmp_path / "campaign"),
                                  directory=str(tmp_path / "flights")) == \
-            Path(tmp_path).resolve() / "campaign" / "example.ftml"
+            tmp_path / "campaign" / "example.ftml"
+
+    def test_link_is_kept(self, tmp_path):
+        data = link_to_store(tmp_path)
+        assert resolve_ftml_path(os.path.join(data.name, "x.ftml"), directory=tmp_path) == data / "x.ftml"
+
+    def test_configuration_directory_keeps_its_link(self, tmp_path):
+        """
+        A configuration reached through a link names its flight tracks relative to the
+        link, as the dockwidget does.
+        """
+        data = link_to_store(tmp_path)
+        cfg = tmp_path / "store" / "mssautoplot.json"
+        cfg.write_text(json.dumps({"automated_plotting_flights": [
+            ["flight1", "00 global (cyl)", "", "flight1.ftml", "", ""]]}))
+        view = TopViewPlotting(str(data / "mssautoplot.json"), None, None, None, None, None)
+        assert view.config_dir == data
 
 
 class TestDownloadSummary:

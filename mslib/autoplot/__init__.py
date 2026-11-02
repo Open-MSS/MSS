@@ -100,6 +100,16 @@ def flighttrack_entry(row):
     return flighttrack_file(row[0], row[3])
 
 
+def absolute_path(path):
+    """<path> made absolute and normalized, "~" expanded.
+
+    Symbolic links are kept, unlike Path.resolve(): a configuration which names
+    "data/x.ftml" with "data" a link keeps naming it through the link, so the link
+    can be re-pointed later.
+    """
+    return Path(os.path.normpath(os.path.abspath(Path(path).expanduser())))
+
+
 def resolve_ftml_path(filename, fpath=None, directory=None):
     """Resolve the flight track file of an "automated_plotting_flights" entry.
 
@@ -113,14 +123,14 @@ def resolve_ftml_path(filename, fpath=None, directory=None):
     <fpath>, the --fpath option of the CLI, replaces the directory of the entry
     altogether.
 
-    Returns an absolute Path, which does not need to exist.
+    Returns an absolute Path, which does not need to exist, see absolute_path().
     """
     path = Path(filename).expanduser()
     if fpath:
         path = Path(fpath).expanduser() / path.name
     elif directory is not None and not path.is_absolute():
-        path = Path(directory) / path
-    return path.resolve()
+        path = Path(directory).expanduser() / path
+    return absolute_path(path)
 
 
 def relocate_ftml_path(filename, from_dir, to_dir):
@@ -128,15 +138,19 @@ def relocate_ftml_path(filename, from_dir, to_dir):
 
     A relative name is taken relative to the directory of its configuration file, see
     resolve_ftml_path(). A configuration saved in another directory gets the name
-    rewritten relative to that one, so it still finds the same file. An absolute name
-    or one starting with "~" stays as it is. Where no relative path leads from <to_dir>
-    to the file, e.g. another drive on Windows, the name becomes absolute.
+    rewritten relative to that one, so it still finds the same file. An absolute name,
+    one starting with "~" and one saved back to its own directory stay as they are.
+    Where no relative path leads from <to_dir> to the file, e.g. another drive on
+    Windows, the name becomes absolute.
     """
     if Path(filename).expanduser().is_absolute():
         return filename
+    to_dir = absolute_path(to_dir)
+    if absolute_path(from_dir) == to_dir:
+        return filename
     path = resolve_ftml_path(filename, directory=from_dir)
     try:
-        return os.path.relpath(path, Path(to_dir).expanduser().resolve())
+        return os.path.relpath(path, to_dir)
     except ValueError:
         return str(path)
 
@@ -294,7 +308,7 @@ class Plotting:
         self.pdlg = pdlg
         self.fpath = fpath
         # relative flight track entries are relative to the configuration file which names them
-        self.config_dir = Path(cpath).expanduser().resolve().parent
+        self.config_dir = absolute_path(cpath).parent
         self.config = config_loader()
         self.num_interpolation_points = self.config["num_interpolation_points"]
         self.num_labels = self.config["num_labels"]
