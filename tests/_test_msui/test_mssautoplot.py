@@ -30,9 +30,11 @@ import json
 import os
 from pathlib import Path
 
+import click
 import pytest
 import requests
 from click.testing import CliRunner
+from PyQt5 import QtWidgets
 
 from mslib.autoplot import (load_from_ftml, resolve_ftml_path, relocate_ftml_path, is_operation_entry,
                             flighttrack_file, flighttrack_entry, TopViewPlotting, SideViewPlotting, main,
@@ -204,6 +206,24 @@ def test_empty_flights_stop_with_a_message(tmp_path, flights):
     assert result.exit_code != 0
     assert "nothing to plot" in result.output
     assert not isinstance(result.exception, IndexError)
+
+
+def test_progress_dialog_closes_when_the_run_stops(qtbot, tmp_path):
+    """
+    An error which stops the whole run, here an unknown section, also closes the
+    progress dialog the dockwidget gets from main().
+    """
+    parent = QtWidgets.QWidget()
+    qtbot.addWidget(parent)
+    cfg = tmp_path / "cfg.json"
+    cfg.write_text(json.dumps({"automated_plotting_flights": [["", "no such section", "", "", "", ""]]}))
+    ctx = click.Context(main)
+    ctx.obj = parent
+    with pytest.raises(SystemExit, match="Invalid SECTION"):
+        ctx.invoke(main, cpath=str(cfg), view="top")
+    dialogs = parent.findChildren(QtWidgets.QProgressDialog)
+    assert dialogs
+    assert not any(dialog.isVisible() for dialog in dialogs)
 
 
 def test_missing_flight_track_keeps_the_progress_dialog_open(tmp_path):

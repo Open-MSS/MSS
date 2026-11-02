@@ -30,6 +30,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
+import click
 import pytest
 from PyQt5 import QtWidgets
 
@@ -294,6 +295,21 @@ class TestDownload:
             AutoplotDockWidget.download_plots_cli(widget, config)
         question.assert_not_called()
         assert information.call_args_list == [mock.call(widget, "ERROR", "Please provide a valid time step value")]
+
+    def test_error_of_mssautoplot_is_shown(self, tmp_path, monkeypatch):
+        @click.command()
+        @click.pass_context
+        def failing(ctx, **kwargs):
+            raise ValueError("unreadable configuration")
+
+        for name in ["cpath", "view", "ftrack", "itime", "vtime", "intv", "stime", "etime"]:
+            failing = click.option(f"--{name}")(failing)
+        monkeypatch.setattr("mslib.msui.autoplot_dockwidget.cli_tool", failing)
+        monkeypatch.setattr("mslib.msui.utils.constants.MSS_AUTOPLOT", tmp_path / "mssautoplot.json")
+        config = {"automated_plotting_flights": [["", "00 global (cyl)", "", "", "", ""]]}
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as information:
+            AutoplotDockWidget.download_plots_cli(self.dockwidget(), config)
+        assert "unreadable configuration" in information.call_args[0][2]
 
 
 class TestRowToShow:

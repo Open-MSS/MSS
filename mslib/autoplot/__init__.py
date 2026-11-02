@@ -671,6 +671,9 @@ def main(ctx, cpath, view, ftrack, fpath, itime, vtime, intv, stime, etime, raw)
         pdlg.setWindowFlags(pdlg.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowTitleHint)
 
         pdlg.setValue(0)
+        # the dialog closes also when the run stops with an error, ctx.invoke() of the
+        # dockwidget closes the context of main() in any case
+        ctx.call_on_close(pdlg.close)
 
     conf.read_config_file(path=cpath)
     config = conf.config_loader()

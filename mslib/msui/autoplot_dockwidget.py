@@ -239,6 +239,17 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             )
             ctx.obj = None
             return
+        except Exception as ex:
+            # an error mssautoplot does not report for a single row, e.g. a configuration
+            # it can't read; main() has closed its progress dialog already
+            logging.exception("Plots could not be downloaded")
+            QMessageBox.information(
+                self,
+                "Error",
+                plain_text_as_html(f"Plots could not be downloaded:\n{ex}")
+            )
+            ctx.obj = None
+            return
 
     def autoplotSecsTreeWidget_selected_row(self):
         selected_items = self.autoplotSecsTreeWidget.selectedItems()
