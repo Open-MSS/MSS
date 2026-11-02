@@ -229,6 +229,36 @@ class TestMissingFlighttrackMessage:
         assert str(tmp_path) + "." not in message
 
 
+class TestDownload:
+    """
+    The checks of the download button before it starts mssautoplot, and the errors
+    mssautoplot stops with.
+    """
+    @staticmethod
+    def dockwidget(cpath=""):
+        # the dockwidget, reduced to what the download uses
+        widget = SimpleNamespace(
+            stime="", etime="", intv="", itime="", vtime="", view="Top View", cpath=cpath,
+            autoplotSecsTreeWidget=SimpleNamespace(topLevelItemCount=lambda: 1),
+            missing_flighttracks=AutoplotDockWidget.missing_flighttracks,
+            missing_flighttrack_message=AutoplotDockWidget.missing_flighttrack_message,
+            config_to_write=AutoplotDockWidget.config_to_write)
+        widget.flights_directory = lambda: AutoplotDockWidget.flights_directory(widget)
+        widget.confirm_missing_flighttracks = lambda *args, **kwargs: \
+            AutoplotDockWidget.confirm_missing_flighttracks(widget, *args, **kwargs)
+        return widget
+
+    def test_time_step_is_checked_before_missing_files(self, tmp_path):
+        widget = self.dockwidget()
+        widget.stime, widget.etime = "2019-09-01T00:00:00Z", "2019-09-02T00:00:00Z"
+        config = {"automated_plotting_flights": [["flight1", "", "", "gone.ftml", "", ""]]}
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.question") as question, \
+                mock.patch("PyQt5.QtWidgets.QMessageBox.information") as information:
+            AutoplotDockWidget.download_plots_cli(widget, config)
+        question.assert_not_called()
+        assert information.call_args_list == [mock.call(widget, "ERROR", "Please provide a valid time step value")]
+
+
 class TestRowToShow:
     """
     The tree widget shows the file name alone, the path stays in the configuration.

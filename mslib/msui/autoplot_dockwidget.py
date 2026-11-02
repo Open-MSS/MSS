@@ -167,9 +167,6 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 "Cannot download empty treewidget"
             )
             return
-        directory = self.flights_directory()
-        if not self.confirm_missing_flighttracks(config_settings["automated_plotting_flights"], directory):
-            return
         if self.intv == "":
             if self.stime and self.etime:
                 QMessageBox.information(
@@ -178,6 +175,9 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                     "Please provide a valid time step value"
                 )
                 return
+        directory = self.flights_directory()
+        if not self.confirm_missing_flighttracks(config_settings["automated_plotting_flights"], directory):
+            return
 
         view = "top"
         intv = 0
