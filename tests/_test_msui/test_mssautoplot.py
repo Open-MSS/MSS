@@ -230,6 +230,71 @@ def test_relative_flight_track_is_found_next_to_the_configuration(tmp_path, monk
     assert len(view.wps) == 5
 
 
+def test_relative_flight_track_is_found_in_the_working_directory(tmp_path, monkeypatch):
+    """
+    A relative entry which is not next to the configuration file is still found in the
+    working directory, as before, e.g. "cd ~/flights && mssautoplot --cpath ~/.config/...".
+    """
+    example = os.path.join(os.path.dirname(__file__), "..", "data", "example.ftml")
+    (tmp_path / "config").mkdir()
+    (tmp_path / "flights").mkdir()
+    Path(tmp_path / "flights" / "flight1.ftml").write_text(Path(example).read_text())
+    cfg = tmp_path / "config" / "mssautoplot.json"
+    cfg.write_text(json.dumps({"automated_plotting_flights": [
+        ["flight1", "00 global (cyl)", "", "flight1.ftml", "", ""]]}))
+    monkeypatch.chdir(tmp_path / "flights")
+    view = TopViewPlotting(str(cfg), None, None, None, None, None)
+    assert view.ftml_file("flight1.ftml") == resolve_ftml_path("flight1.ftml")
+    assert view.load_row("flight1", "flight1.ftml")
+    assert len(view.wps) == 5
+
+
+def test_flight_track_next_to_the_configuration_comes_first(tmp_path, monkeypatch):
+    (tmp_path / "config").mkdir()
+    (tmp_path / "flights").mkdir()
+    for directory in ("config", "flights"):
+        Path(tmp_path / directory / "flight1.ftml").write_text("")
+    cfg = tmp_path / "config" / "mssautoplot.json"
+    cfg.write_text(json.dumps({"automated_plotting_flights": [
+        ["flight1", "00 global (cyl)", "", "flight1.ftml", "", ""]]}))
+    monkeypatch.chdir(tmp_path / "flights")
+    view = TopViewPlotting(str(cfg), None, None, None, None, None)
+    assert view.ftml_file("flight1.ftml") == resolve_ftml_path("flight1.ftml", directory=tmp_path / "config")
+
+
+def test_missing_relative_flight_track_names_both_directories(tmp_path, monkeypatch):
+    (tmp_path / "config").mkdir()
+    (tmp_path / "flights").mkdir()
+    cfg = tmp_path / "config" / "mssautoplot.json"
+    cfg.write_text(json.dumps({"automated_plotting_flights": [
+        ["flight1", "00 global (cyl)", "", "flight1.ftml", "", ""]]}))
+    monkeypatch.chdir(tmp_path / "flights")
+    view = TopViewPlotting(str(cfg), None, None, None, None, None)
+    with pytest.raises(FileNotFoundError) as excinfo:
+        view.ftml_file("flight1.ftml")
+    message = str(excinfo.value)
+    assert str(resolve_ftml_path("flight1.ftml", directory=tmp_path / "config")) in message
+    assert str(resolve_ftml_path("flight1.ftml")) in message
+    assert "--fpath" in message
+
+
+def test_fpath_is_not_combined_with_the_working_directory(tmp_path, monkeypatch):
+    """
+    --fpath replaces the directory of the entries, a file in the working directory is
+    not read instead.
+    """
+    (tmp_path / "flights").mkdir()
+    Path(tmp_path / "flights" / "flight1.ftml").write_text("")
+    cfg = tmp_path / "mssautoplot.json"
+    cfg.write_text(json.dumps({"automated_plotting_flights": [
+        ["flight1", "00 global (cyl)", "", "flight1.ftml", "", ""]]}))
+    monkeypatch.chdir(tmp_path / "flights")
+    view = TopViewPlotting(str(cfg), None, None, None, None, None, fpath=str(tmp_path / "elsewhere"))
+    with pytest.raises(FileNotFoundError) as excinfo:
+        view.ftml_file("flight1.ftml")
+    assert "working directory" not in str(excinfo.value)
+
+
 class TestRelocateFtmlPath:
     """
     A configuration saved in another directory names a relative flight track relative to

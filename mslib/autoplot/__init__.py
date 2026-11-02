@@ -342,18 +342,26 @@ class Plotting:
         """
         Flight track file of an "automated_plotting_flights" entry, checked for existence.
 
-        A relative entry is looked up next to the configuration file, not in the
-        working directory mssautoplot happens to be started in.
+        A relative entry is looked up next to the configuration file, as the dockwidget
+        does. When it is not there, it is looked up in the working directory, where
+        mssautoplot looked for it before, so existing batch and cron setups keep working.
 
         Raises FileNotFoundError when the file is not there. draw() in main() catches it,
         so a missing file skips the plots of that entry only and the run goes on with
         the next one.
         """
         file_path = resolve_ftml_path(filename, self.fpath, directory=self.config_dir)
-        if not file_path.exists():
-            message = "Filename {} doesn't exist".format(file_path)
-            raise FileNotFoundError(message)
-        return file_path
+        if file_path.exists():
+            return file_path
+        message = "Filename {} doesn't exist".format(file_path)
+        if not self.fpath and not Path(filename).expanduser().is_absolute():
+            cwd_path = resolve_ftml_path(filename)
+            if cwd_path.exists():
+                return cwd_path
+            if cwd_path != file_path:
+                message += (", nor {} in the working directory. Give the directory of the flight tracks "
+                            "with --fpath, e.g. --fpath \"$PWD\"".format(cwd_path))
+        raise FileNotFoundError(message)
 
     def read_ftml(self, filename):
         self.wps, self.wp_model_data = load_from_ftml(self.ftml_file(filename))
