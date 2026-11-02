@@ -71,6 +71,45 @@ TEXT_CONFIG = {
 mpl_logger = configure_mpl_logger()
 
 
+def is_operation_entry(flight, filename):
+    """Whether an "automated_plotting_flights" entry names an MSColab operation.
+
+    An entry of an operation carries the operation name in both the flight and
+    the file column.
+    """
+    return bool(filename) and filename == flight
+
+
+def flighttrack_file(flight, filename):
+    """The flight track file an "automated_plotting_flights" entry names, None when it
+    does not name one.
+
+    The single place which tells a file entry apart: an entry of an operation
+    carries the operation name instead of a file, an entry without a flight track
+    carries nothing.
+    """
+    if not filename or is_operation_entry(flight, filename):
+        return None
+    return filename
+
+
+def flighttrack_entry(row):
+    """flighttrack_file() of a whole "automated_plotting_flights" row."""
+    if len(row) <= 3:
+        return None
+    return flighttrack_file(row[0], row[3])
+
+
+def absolute_path(path):
+    """<path> made absolute and normalized, "~" expanded.
+
+    Symbolic links are kept, unlike Path.resolve(): a configuration which names
+    "data/x.ftml" with "data" a link keeps naming it through the link, so the link
+    can be re-pointed later.
+    """
+    return Path(os.path.normpath(os.path.abspath(Path(path).expanduser())))
+
+
 def resolve_ftml_path(filename, fpath=None, directory=None):
     """Resolve the flight track file of an "automated_plotting_flights" entry.
 
@@ -80,17 +119,58 @@ def resolve_ftml_path(filename, fpath=None, directory=None):
     The entry stores the path together with the file name, "~" is expanded. A
     relative name is taken relative to <directory>, the directory of the
     configuration file which named it, and relative to the current working
-    directory without one. <fpath>, the --fpath option of the CLI, replaces the
-    directory of the entry altogether.
+    directory without one. The CLI and the dockwidget always pass <directory>.
+    <fpath>, the --fpath option of the CLI, replaces the directory of the entry
+    altogether.
 
-    Returns an absolute Path, which does not need to exist.
+    Returns an absolute Path, which does not need to exist, see absolute_path().
     """
     path = Path(filename).expanduser()
     if fpath:
         path = Path(fpath).expanduser() / path.name
     elif directory is not None and not path.is_absolute():
-        path = Path(directory) / path
-    return path.resolve()
+        path = Path(directory).expanduser() / path
+    return absolute_path(path)
+
+
+def relocate_ftml_path(filename, from_dir, to_dir):
+    """The entry <filename>, relative to <from_dir>, as a configuration file in <to_dir> names it.
+
+    A relative name is taken relative to the directory of its configuration file, see
+    resolve_ftml_path(). A configuration saved in another directory gets the name
+    rewritten relative to that one, so it still finds the same file. An absolute name,
+    one starting with "~" and one saved back to its own directory stay as they are.
+    Where no relative path leads from <to_dir> to the file, e.g. another drive on
+    Windows, the name becomes absolute.
+    """
+    if Path(filename).expanduser().is_absolute():
+        return filename
+    to_dir = absolute_path(to_dir)
+    if absolute_path(from_dir) == to_dir:
+        return filename
+    path = resolve_ftml_path(filename, directory=from_dir)
+    try:
+        return os.path.relpath(path, to_dir)
+    except ValueError:
+        return str(path)
+
+
+def download_summary(succeeded, failed, reasons=()):
+    """Title and text of the dialog which ends a download from the GUI.
+
+    The dialog sums up the whole run, not its last plot: a run which skipped a
+    missing flight track but drew the others says so. The reasons are printed
+    while drawing, the GUI has no console to read them in, so the text repeats them.
+    """
+    if succeeded == 0:
+        title, text = "FAILURE", "Plots could not be downloaded."
+    elif failed == 0:
+        return "SUCCESS", "Plots downloaded successfully."
+    else:
+        title, text = "WARNING", f"{succeeded} of {succeeded + failed} plots downloaded, {failed} failed."
+    if reasons:
+        text = "\n".join([text, ""] + list(reasons))
+    return title, text
 
 
 def load_from_ftml(filename):
@@ -227,14 +307,14 @@ class Plotting:
         read_config_file(cpath)
         self.pdlg = pdlg
         self.fpath = fpath
+        # relative flight track entries are relative to the configuration file which names them
+        self.config_dir = absolute_path(cpath).parent
         self.config = config_loader()
         self.num_interpolation_points = self.config["num_interpolation_points"]
         self.num_labels = self.config["num_labels"]
         self.tick_index_step = self.num_interpolation_points // self.num_labels
         self.bbox = None
-        flight = self.config["automated_plotting_flights"][0][0]
         section = self.config["automated_plotting_flights"][0][1]
-        filename = self.config["automated_plotting_flights"][0][3]
         if self.__class__.__name__ == "TopViewPlotting":
             try:
                 self.params = get_projection_params(self.config["predefined_map_sections"][section]["CRS"].lower())
@@ -248,37 +328,26 @@ class Plotting:
             self.layout = self.config["layout"]["sideview"]
         if self.__class__.__name__ == "LinearViewPlotting":
             self.layout = self.config["layout"]["linearview"]
-        if filename != "" and filename == flight:
-            self.read_operation(flight, msc_url, msc_auth_password, username, password)
-        elif filename != "":
-            self.read_ftml(filename)
 
     def setup(self):
         pass
 
-    def update_path(self, filename=None):
-        """
-        Update the path by reading the FTML data from the given filename
-         and redrawing the path based on the updated waypoints model data.
-
-        Parameters:
-        :filename: The name of the file to read FTML data from.
-
-        Returns:
-        None
-        """
-        # plot path and label
-        if filename != "":
-            self.read_ftml(filename)
-        self.fig.canvas.draw()
-        self.plotter.update_from_waypoints(self.wp_model_data)
-        self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
-
-    def update_path_ops(self, filename=None):
-        self.setup()
-        # plot path and label
-        if filename != "":
+    def load_row(self, flight, filename):
+        """Reads the flight track of an "automated_plotting_flights" row, the single place
+        which tells a file row from an operation row."""
+        if is_operation_entry(flight, filename):
             self.read_operation(filename, self.url, self.msc_auth, self.username, self.password)
+        elif flighttrack_file(flight, filename) is not None:
+            self.read_ftml(filename)
+        else:
+            return False
+        self.setup()  # after reading, so it works on this row's track
+        return True
+
+    def redraw_flighttrack(self):
+        """
+        Redraw the path and its labels from the flight track load_row() read.
+        """
         self.fig.canvas.draw()
         self.plotter.update_from_waypoints(self.wp_model_data)
         self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
@@ -287,18 +356,26 @@ class Plotting:
         """
         Flight track file of an "automated_plotting_flights" entry, checked for existence.
 
+        A relative entry is looked up next to the configuration file, as the dockwidget
+        does. When it is not there, it is looked up in the working directory, where
+        mssautoplot looked for it before, so existing batch and cron setups keep working.
+
         Raises FileNotFoundError when the file is not there. draw() in main() catches it,
         so a missing file skips the plots of that entry only and the run goes on with
         the next one.
         """
-        file_path = resolve_ftml_path(filename, self.fpath)
-        if not file_path.exists():
-            message = "Filename {} doesn't exist".format(file_path)
-            print(message)
-            if self.pdlg is not None:
-                self.pdlg.close()
-            raise FileNotFoundError(message)
-        return file_path
+        file_path = resolve_ftml_path(filename, self.fpath, directory=self.config_dir)
+        if file_path.exists():
+            return file_path
+        message = "Filename {} doesn't exist".format(file_path)
+        if not self.fpath and not Path(filename).expanduser().is_absolute():
+            cwd_path = resolve_ftml_path(filename)
+            if cwd_path.exists():
+                return cwd_path
+            if cwd_path != file_path:
+                message += (", nor {} in the working directory. Give the directory of the flight tracks "
+                            "with --fpath, e.g. --fpath \"$PWD\"".format(cwd_path))
+        raise FileNotFoundError(message)
 
     def read_ftml(self, filename):
         self.wps, self.wp_model_data = load_from_ftml(self.ftml_file(filename))
@@ -312,9 +389,11 @@ class Plotting:
                                                                   connection="greatcircle")
 
     def read_operation(self, op_name, msc_url, msc_auth_password, username, password):
-        self.wps, self.wp_model_data = load_from_operation(op_name, msc_url=msc_url,
-                                                           msc_auth_password=msc_auth_password, username=username,
-                                                           password=password)
+        operation = load_from_operation(op_name, msc_url=msc_url, msc_auth_password=msc_auth_password,
+                                        username=username, password=password)
+        if operation is None:
+            raise ConnectionError(f"Operation '{op_name}' could not be loaded from {msc_url}")
+        self.wps, self.wp_model_data = operation
         self.wp_lats, self.wp_lons, self.wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
         self.wp_press = [mslib.utils.thermolib.flightlevel2pressure(wp[2] * units.hft).to("Pa").m for wp in self.wps]
         self.path = [(wp[0], wp[1], datetime.now()) for wp in self.wps]
@@ -346,15 +425,8 @@ class TopViewPlotting(Plotting):
         pass
 
     def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
-        if filename != "" and filename == flight:
-            self.update_path_ops(filename)
-        elif filename != "":
-            try:
-                self.update_path(filename)
-            except AttributeError as e:
-                logging.debug(e)
-                raise SystemExit("No FLIGHT Selected")
-
+        if self.load_row(flight, filename):
+            self.redraw_flighttrack()
         width, height = self.myfig.get_plot_size_in_px()
         self.bbox = self.params['basemap']
         if not init_time:
@@ -426,33 +498,11 @@ class SideViewPlotting(Plotting):
         times_visible = False
         self.myfig.redraw_xaxis(self.lats, self.lons, times, times_visible)
 
-    def update_path(self, filename=None):
+    def redraw_flighttrack(self):
         """
-        Update the path by reading the FTML data from the given filename
-         and redrawing the path based on the updated waypoints model data.
-
-        Parameters:
-        :filename: The name of the file to read FTML data from.
-
-        Returns:
-        None
+        Redraw the path, its labels and the vertical lines of the waypoints from the
+        flight track load_row() read.
         """
-        # plot path and label
-        if filename != "":
-            self.read_ftml(filename)
-        self.fig.canvas.draw()
-        self.plotter.update_from_waypoints(self.wp_model_data)
-        indices = list(zip(self.intermediate_indexes, self.wp_press))
-        self.plotter.redraw_path(vertices=indices,
-                                 waypoints_model_data=self.wp_model_data)
-        highlight = [[wp[0], wp[1]] for wp in self.wps]
-        self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
-
-    def update_path_ops(self, filename=None):
-        self.setup()
-        # plot path and label
-        if filename != "":
-            self.read_operation(filename, self.url, self.msc_auth, self.username, self.password)
         self.fig.canvas.draw()
         self.plotter.update_from_waypoints(self.wp_model_data)
         indices = list(zip(self.intermediate_indexes, self.wp_press))
@@ -462,14 +512,8 @@ class SideViewPlotting(Plotting):
         self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
 
     def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
-        if filename != "" and filename == flight:
-            self.update_path_ops(filename)
-        elif filename != "":
-            try:
-                self.update_path(filename)
-            except AttributeError as e:
-                logging.debug(e)
-                raise SystemExit("No FLIGHT Selected")
+        if self.load_row(flight, filename):
+            self.redraw_flighttrack()
         width, height = self.myfig.get_plot_size_in_px()
         p_bot, p_top = [float(x) * 100 for x in vertical.split(",")]
         self.bbox = tuple([x for x in (self.num_interpolation_points,
@@ -535,32 +579,16 @@ class LinearViewPlotting(Plotting):
         self.myfig.set_settings(settings_dict)
         self.myfig.setup_linear_view()
 
-    def update_path(self, filename=None):
-        self.setup()
-        if filename != "":
-            self.read_ftml(filename)
-
-        highlight = [[wp[0], wp[1]] for wp in self.wps]
-        self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
-
-    def update_path_ops(self, filename=None):
-        self.setup()
-        # plot path and la
-        # plot path and label
-        if filename != "":
-            self.read_operation(filename, self.url, self.msc_auth, self.username, self.password)
+    def redraw_flighttrack(self):
+        """
+        Redraw the vertical lines of the waypoints from the flight track load_row() read.
+        """
         highlight = [[wp[0], wp[1]] for wp in self.wps]
         self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
 
     def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
-        if filename != "" and filename == flight:
-            self.update_path_ops(filename)
-        elif filename != "":
-            try:
-                self.update_path(filename)
-            except AttributeError as e:
-                logging.debug(e)
-                raise SystemExit("No FLIGHT Selected")
+        if self.load_row(flight, filename):
+            self.redraw_flighttrack()
         width, height = self.myfig.get_plot_size_in_px()
         self.bbox = (self.num_interpolation_points,)
 
@@ -643,9 +671,15 @@ def main(ctx, cpath, view, ftrack, fpath, itime, vtime, intv, stime, etime, raw)
         pdlg.setWindowFlags(pdlg.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowTitleHint)
 
         pdlg.setValue(0)
+        # the dialog closes also when the run stops with an error, ctx.invoke() of the
+        # dockwidget closes the context of main() in any case
+        ctx.call_on_close(pdlg.close)
 
     conf.read_config_file(path=cpath)
     config = conf.config_loader()
+    # an empty or missing list of flights is loaded as the default [[]]
+    if not any(config["automated_plotting_flights"]):
+        raise SystemExit("No flight in \"automated_plotting_flights\" of the configuration, nothing to plot")
 
     # flight_name = config["automated_plotting_flights"][0][0]
     # file = config["automated_plotting_flights"][0][3]
@@ -684,6 +718,14 @@ def main(ctx, cpath, view, ftrack, fpath, itime, vtime, intv, stime, etime, raw)
     if ctx.obj is not None:
         pdlg.setValue(2)
 
+    # why plots could not be drawn, in the order the reasons showed up and without
+    # repeating one for every section and time step
+    reasons = {}
+
+    def failed(reason):
+        print(reason)
+        reasons[reason] = None
+
     def draw(no_of_plots):
         try:
             if view == "top":
@@ -696,31 +738,33 @@ def main(ctx, cpath, view, ftrack, fpath, itime, vtime, intv, stime, etime, raw)
                 linear_view.draw(flight, section, vertical, filename, init_time, time,
                                  url, layer, style, elevation, no_of_plots)
             else:
-                print("View is not available, Plot not created!")
+                failed("View is not available, Plot not created!")
                 return False
         except Exception as e:
-            if "times" in str(e):
-                print("Invalid times and/or levels requested")
+            if isinstance(e, OSError) and not isinstance(e, requests.exceptions.RequestException):
+                failed(str(e))
+            elif "times" in str(e):
+                failed("Invalid times and/or levels requested")
             elif "LAYER" in str(e):
-                print(f"Invalid LAYER '{layer}' requested")
+                failed(f"Invalid LAYER '{layer}' requested")
             elif "404 Client Error" in str(e) or "NOT FOUND for url" in str(e):
-                print("Invalid STYLE and/or URL requested")
+                failed("Invalid STYLE and/or URL requested")
             else:
-                print(str(e))
+                failed(str(e))
         else:
             print("Plot downloaded!")
             return True
         return False
     if ctx.obj is not None:
         pdlg.setValue(4)
-    flag = False
+    results = []
     for flight, section, vertical, filename, init_time, time in config["automated_plotting_flights"]:
         if ctx.obj is not None:
             pdlg.setValue(8)
         for url, layer, style, elevation in config[sec]:
             if vtime == "" and stime == "":
                 no_of_plots = 1
-                flag = draw(no_of_plots)
+                results.append(draw(no_of_plots))
             elif intv == 0:
                 if itime != "":
                     init_time = datetime.strptime(itime, "%Y-%m-%dT%H:%M:%S")
@@ -728,7 +772,7 @@ def main(ctx, cpath, view, ftrack, fpath, itime, vtime, intv, stime, etime, raw)
                 if ftrack != "":
                     flight = ftrack
                 no_of_plots = 1
-                flag = draw(no_of_plots)
+                results.append(draw(no_of_plots))
             elif intv > 0:
                 if itime != "":
                     init_time = datetime.strptime(itime, "%Y-%m-%dT%H:%M:%S")
@@ -741,7 +785,7 @@ def main(ctx, cpath, view, ftrack, fpath, itime, vtime, intv, stime, etime, raw)
                     if ftrack != "":
                         flight = ftrack
                     no_of_plots = i
-                    flag = draw(no_of_plots)
+                    results.append(draw(no_of_plots))
                     time = time + timedelta(hours=intv)
                     i += 1
             else:
@@ -749,18 +793,8 @@ def main(ctx, cpath, view, ftrack, fpath, itime, vtime, intv, stime, etime, raw)
     if ctx.obj is not None:
         pdlg.setValue(10)
         pdlg.close()
-        if flag:
-            QMessageBox.information(
-                ctx.obj,  # The parent widget (use `None` if no parent)
-                "SUCCESS",  # Title of the message box
-                "Plots downloaded successfully."  # Message text
-            )
-        else:
-            QMessageBox.information(
-                ctx.obj,  # The parent widget (use `None` if no parent)
-                "FAILURE",  # Title of the message box
-                "Plots couldnot be downloaded."  # Message text
-            )
+        title, text = download_summary(results.count(True), results.count(False), reasons)
+        QMessageBox.information(ctx.obj, title, mslib.msui.utils.qt.plain_text_as_html(text))
 
 
 if __name__ == '__main__':
