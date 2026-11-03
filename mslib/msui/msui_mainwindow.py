@@ -52,7 +52,7 @@ from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 from mslib.msui.utils.qt import get_open_filenames, get_save_filename, show_popup, plain_text_as_html
 from mslib.msui.utils.config import read_config_file, config_loader
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PyQt5 import QtGui, QtCore, QtWidgets, sip
 from mslib.utils import release_info
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -86,7 +86,6 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
 
     # Class variable to assign a unique ID to each view.
     opened_views = 0
-    open_views = []
 
     def __init__(self, view_window, parent=None, viewsChanged=None, mscolab=False,
                  _type=QtWidgets.QListWidgetItem.UserType):
@@ -102,7 +101,6 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
         self.window = view_window
         self.parent = parent
         self.viewsChanged = viewsChanged
-        QActiveViewsListWidgetItem.open_views.append(view_window)
 
     def view_destroyed(self):
         """Slot that removes this QListWidgetItem from the parent (the
@@ -110,10 +108,6 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
         """
         if self.parent is not None:
             self.parent.takeItem(self.parent.row(self))
-            for index, window in enumerate(QActiveViewsListWidgetItem.open_views):
-                if window.identifier == self.window.identifier:
-                    del QActiveViewsListWidgetItem.open_views[index]
-                    break
         if self.viewsChanged is not None:
             self.viewsChanged.emit()
 
@@ -1203,9 +1197,20 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             view_window.showNormal()
 
     def get_active_views(self):
+        """
+        Returns the view windows that are still open.
+
+        A view that was deleted without announcing it by viewCloses would raise
+        RuntimeError on any access, its entry is dropped from the list instead.
+        """
         active_view_windows = []
-        for i in range(self.listViews.count()):
-            active_view_windows.append(self.listViews.item(i).window)
+        for i in reversed(range(self.listViews.count())):
+            window = self.listViews.item(i).window
+            if sip.isdeleted(window):
+                logging.debug("dropping the entry of a deleted view")
+                self.listViews.takeItem(i)
+            else:
+                active_view_windows.insert(0, window)
         return active_view_windows
 
     def activate_sub_window(self, item):
@@ -1220,8 +1225,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         item.window.activateWindow()
 
     def restart_application(self):
-        while self.listViews.count() > 0:
-            self.listViews.item(0).window.handle_force_close()
+        for window in self.get_active_views():
+            window.handle_force_close()
         self.listViews.clear()
         self.remove_plugins()
         if self.mscolab.token is not None:
