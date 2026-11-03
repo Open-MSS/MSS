@@ -592,6 +592,45 @@ class Test_Mscolab:
         assert tableview.btAddWayPointToFlightTrack.isEnabled()
         assert any(action.text() == "Ins WP" and action.isEnabled() for action in topview.mpl.navbar.actions())
 
+    def test_closed_views_while_switching_operations(self, qtbot):
+        """
+        Switching between operations after views have been closed must only touch the
+        views that are still open, never the closed (deleted) ones, see issue #2899.
+        """
+        with self.app.app_context():
+            assert add_operation("second", "description")
+            assert add_user_to_operation(path="second", emailid=self.userdata[0])
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        for action in (self.window.actionTopView, self.window.actionSideView,
+                       self.window.actionTableView, self.window.actionLinearView):
+            action.trigger()
+        assert len(self.window.get_active_views()) == 4
+
+        topview, sideview = self.window.get_active_views()[:2]
+        topview.handle_force_close()
+        sideview.handle_force_close()
+        # let Qt delete the closed windows (WA_DeleteOnClose)
+        QtWidgets.QApplication.sendPostedEvents(None, QtCore.QEvent.DeferredDelete)
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.get_active_views()) == 2
+
+        for index in (1, 0, 1):
+            self._activate_operation_at_index(index)
+            assert len(self.window.get_active_views()) == 2
+        for window in self.window.get_active_views():
+            assert window.waypoints_model is self.window.mscolab.waypoints_model
+
+        for window in self.window.get_active_views():
+            window.handle_force_close()
+        QtWidgets.QApplication.sendPostedEvents(None, QtCore.QEvent.DeferredDelete)
+        QtWidgets.QApplication.processEvents()
+        assert self.window.get_active_views() == []
+        self._activate_operation_at_index(0)
+        assert self.window.get_active_views() == []
+
     def test_multiple_views_and_multiple_flightpath(self, qtbot):
         """
         checks that we can have multiple topviews with the multiple flightpath dockingwidget
