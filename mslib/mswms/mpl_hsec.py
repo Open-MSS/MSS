@@ -99,7 +99,8 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         pass
 
     def supported_epsg_codes(self):
-        return list(mswms_settings.epsg_to_mpl_basemap_table.keys())
+        # optional in mswms_settings.py, only its keys are used: additional EPSG codes of the capabilities
+        return list(getattr(mswms_settings, "epsg_to_mpl_basemap_table", {}).keys())
 
     def support_epsg_code(self, crs):
         """
