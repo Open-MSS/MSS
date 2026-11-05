@@ -613,7 +613,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         key = "predefined_map_sections"
         source_model = self.json_model
         # set default color
-        color = QtCore.Qt.black
+        color = QtGui.QColor("black")
         self.set_key_color(source_model, key, color)
 
         data = source_model.serialize()
