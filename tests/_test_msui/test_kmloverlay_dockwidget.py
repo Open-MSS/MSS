@@ -232,3 +232,71 @@ class Test_KmlOverlayDockWidget:
         assert filename.endswith('kml')
         clr = [0.6666666, 0.6666666, 0.6666666]
         assert self.window.show_color_icon(filename, clr) is not None
+
+
+STYLED_KML = """<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2"><Document>
+  <Style id="red"><LineStyle><color>ff0000ff</color><width>3</width></LineStyle></Style>
+  <Placemark><name>shared</name><styleUrl>#red</styleUrl>
+    <LineString><coordinates>1,2 3,4</coordinates></LineString></Placemark>
+  <Placemark><name>shared and local</name><styleUrl>#red</styleUrl>
+    <Style><LineStyle><width>5</width></LineStyle></Style>
+    <LineString><coordinates>1,2 3,4</coordinates></LineString></Placemark>
+  <Placemark><name>local</name>
+    <Style><LineStyle><color>ff00ff00</color></LineStyle></Style>
+    <LineString><coordinates>1,2 3,4</coordinates></LineString></Placemark>
+  <Placemark><name>unknown style</name><styleUrl>#blue</styleUrl>
+    <LineString><coordinates>1,2 3,4</coordinates></LineString></Placemark>
+</Document></kml>
+"""
+
+
+def test_kml_styles_are_applied(tmp_path):
+    # with fastkml 1.x the styles were never applied (#3273)
+    styles = _drawn_styles(tmp_path, STYLED_KML)
+    # KML colors are aabbggrr
+    red, green = [1., 0., 0., 1.], [0., 1., 0., 1.]
+    assert styles == [
+        (red, 3.),  # the shared style
+        (red, 5.),  # the local style overrides the width of the shared one
+        (green, 1),  # a local style alone, the width of the dock
+        ((0, 0, 0, 1), 1),  # an unknown style, the color and width of the dock
+    ]
+
+
+def _drawn_styles(tmp_path, content):
+    """color and linewidth of every line the KMLPatch of <content> draws, the dock has black and 1"""
+    kmlfile = tmp_path / "styled.kml"
+    kmlfile.write_text(content)
+    view_map = mock.Mock(side_effect=lambda x, y: (x, y), projection="stere")
+    view_map.plot = mock.Mock(return_value=[mock.Mock()])
+    view_map.gcpoints_path = mock.Mock(side_effect=lambda x, y: (x, y))
+    kd.KMLPatch(view_map, kd.KML.parse(kmlfile, strict=False), color=(0, 0, 0, 1), linewidth=1)
+    return [(call.kwargs["color"], call.kwargs["linewidth"]) for call in view_map.plot.call_args_list]
+
+
+def test_kml_style_map_and_folder_styles(tmp_path):
+    assert _drawn_styles(tmp_path, """<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2"><Document>
+  <!-- as Google Earth writes it, the StyleMap may come before the style it names -->
+  <StyleMap id="map"><Pair><key>normal</key><styleUrl>#red</styleUrl></Pair>
+    <Pair><key>highlight</key><styleUrl>#wide</styleUrl></Pair></StyleMap>
+  <Style id="red"><LineStyle><color>ff0000ff</color><width>3</width></LineStyle></Style>
+  <Style id="wide"><LineStyle><width>9</width></LineStyle></Style>
+  <Placemark><styleUrl>#map</styleUrl><LineString><coordinates>1,2 3,4</coordinates></LineString></Placemark>
+  <Folder>
+    <Style id="folder"><LineStyle><width>7</width></LineStyle></Style>
+    <Placemark><styleUrl>#folder</styleUrl><LineString><coordinates>1,2 3,4</coordinates></LineString></Placemark>
+  </Folder>
+</Document></kml>
+""") == [([1., 0., 0., 1.], 3.), ((0, 0, 0, 1), 7.)]
+
+
+def test_kml_broken_color_falls_back(tmp_path):
+    # the file is still drawn, with the color of the dock
+    assert _drawn_styles(tmp_path, """<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2"><Document>
+  <Placemark><Style><LineStyle><color>zz0000ff</color><width>2</width></LineStyle></Style>
+    <LineString><coordinates>1,2 3,4</coordinates></LineString></Placemark>
+</Document></kml>
+""") == [((0, 0, 0, 1), 2.)]
