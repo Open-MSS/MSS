@@ -573,6 +573,44 @@ class WMSServer:
         template = templates['service_exception.pt' if version == "1.1.1" else "service_exception130.pt"]
         return template(code=code, text=text).encode("utf-8"), "text/xml"
 
+    @staticmethod
+    def _offered_layers(registry):
+        """
+        The (dataset, layer) pairs of a layer registry which the data can serve.
+
+        The others are left out of the capabilities, the log tells why.
+        """
+        layers = []
+        for dataset in registry:
+            for layer in registry[dataset].values():
+                if layer.uses_inittime_dimension() and len(layer.get_init_times()) == 0:
+                    logging.error("Layer '%s' of dataset '%s' is not offered: the data scan found no data file "
+                                  "of the dataset, none matches its domain id or none could be read "
+                                  "(see the log of the data scan)", layer.name, dataset)
+                    continue
+                if layer.uses_validtime_dimension() and len(layer.get_all_valid_times()) == 0:
+                    logging.error("Layer '%s' of dataset '%s' is not offered: %s",
+                                  layer.name, dataset, WMSServer._why_no_valid_times(layer))
+                    continue
+                layers.append((dataset, layer))
+        return layers
+
+    @staticmethod
+    def _why_no_valid_times(layer):
+        """the reason for an empty get_all_valid_times() of <layer>, as far as the layer can tell"""
+        # layers of plugins don't need to derive from Abstract2DSectionStyle
+        field_times = getattr(layer, "get_datafield_valid_times", dict)()
+        if not field_times:
+            return "it has no valid times"
+        names = {field: f"'{field[1]}' ({field[0]})" for field in field_times}
+        missing = [names[field] for field, times in field_times.items() if not times]
+        if missing:
+            return (f"the data scan found no {', '.join(missing)}, see the log of the data scan for skipped "
+                    f"files and variables. The layer needs {', '.join(names.values())}")
+        ranges = [f"{names[field]} {times[0]:%Y-%m-%dT%H:%M} to {times[-1]:%Y-%m-%dT%H:%M}"
+                  for field, times in field_times.items()]
+        return f"its data fields have no valid time in common: {', '.join(ranges)}"
+
     def get_capabilities(self, query, server_url=None):
         # ToDo find a more elegant method to do the same
         # Preferable we don't want a separate data_access module to be configured
@@ -599,41 +637,9 @@ class WMSServer:
         template = templates['get_capabilities130.pt' if version == "1.3.0" else 'get_capabilities.pt']
         logging.debug("server-url '%s'", server_url)
 
-        # Horizontal Layers
-        hsec_layers = []
-        for dataset in self.hsec_layer_registry:
-            for layer in self.hsec_layer_registry[dataset].values():
-                if layer.uses_inittime_dimension() and len(layer.get_init_times()) == 0:
-                    logging.error("layer %s/%s has no init times!", layer, dataset)
-                    continue
-                if layer.uses_validtime_dimension() and len(layer.get_all_valid_times()) == 0:
-                    logging.error("layer %s/%s has no valid times!", layer, dataset)
-                    continue
-                hsec_layers.append((dataset, layer))
-
-        # Vertical Layers
-        vsec_layers = []
-        for dataset in self.vsec_layer_registry:
-            for layer in self.vsec_layer_registry[dataset].values():
-                if layer.uses_inittime_dimension() and len(layer.get_init_times()) == 0:
-                    logging.error("layer %s/%s has no init times!", layer, dataset)
-                    continue
-                if layer.uses_validtime_dimension() and len(layer.get_all_valid_times()) == 0:
-                    logging.error("layer %s/%s has no valid times!", layer, dataset)
-                    continue
-                vsec_layers.append((dataset, layer))
-
-        # Linear Layers
-        lsec_layers = []
-        for dataset in self.lsec_layer_registry:
-            for layer in self.lsec_layer_registry[dataset].values():
-                if layer.uses_inittime_dimension() and len(layer.get_init_times()) == 0:
-                    logging.error("layer %s/%s has no init times!", layer, dataset)
-                    continue
-                if layer.uses_validtime_dimension() and len(layer.get_all_valid_times()) == 0:
-                    logging.error("layer %s/%s has no valid times!", layer, dataset)
-                    continue
-                lsec_layers.append((dataset, layer))
+        hsec_layers = self._offered_layers(self.hsec_layer_registry)
+        vsec_layers = self._offered_layers(self.vsec_layer_registry)
+        lsec_layers = self._offered_layers(self.lsec_layer_registry)
 
         return_data = template(hsec_layers=hsec_layers, vsec_layers=vsec_layers, lsec_layers=lsec_layers,
                                server_url=server_url,

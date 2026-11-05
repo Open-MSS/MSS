@@ -127,6 +127,18 @@ class Abstract2DSectionStyle(metaclass=ABCMeta):
         else:
             return []
 
+    def get_datafield_valid_times(self):
+        """
+        Returns the valid times of each required data field, as {(vartype, standard name): sorted valid times}.
+
+        get_all_valid_times() is their intersection; it tells why that is empty.
+        """
+        if self.uses_validtime_dimension() and self.driver is not None:
+            return {(vartype, varname): sorted(self.driver.get_all_valid_times(varname, vartype))
+                    for vartype, varname, _ in self.required_datafields}
+        else:
+            return {}
+
     def uses_elevation_dimension(self):
         """
         Returns whether this layer uses the WMS elevation dimension. If False,
