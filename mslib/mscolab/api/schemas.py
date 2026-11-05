@@ -469,9 +469,7 @@ class GetUserResponse:
 
 @dataclass
 class LoginRequest:
-    """POST endpoints.TOKEN -- log in (email+password), or complete an IDP
-    login by posting the IDP-issued token as the "password".
-    """
+    """POST endpoints.TOKEN -- log in (email+password)."""
 
     email: str
     password: str
@@ -1096,14 +1094,15 @@ class RegisterResponse:
 
 @dataclass
 class IdpLoginAuthRequest:
-    """POST endpoints.IDP_LOGIN_AUTH -- submit the SAML-issued token to
-    complete an IDP login.
+    """POST endpoints.IDP_LOGIN_AUTH -- exchange the one-time code that the
+    browser shows after a SAML login for a login token.
 
     Unlike every other route migrated so far, the client sends this as a
     real JSON body (`requests.post(url, json=...)`), not form-encoded data,
     and the server reads it via `request.get_json()`, not `request.form` --
     so this is `to_json_data()`/`from_json_data()`, not
-    `to_form_data()`/`from_form()`.
+    `to_form_data()`/`from_form()`. The field is called token for
+    compatibility, it holds the code.
     """
 
     token: str
@@ -1118,21 +1117,22 @@ class IdpLoginAuthRequest:
 
 @dataclass
 class IdpUserInfo:
-    """User info embedded in IdpLoginAuthResponse -- a different shape than
-    UserInfo (username/id/emailid here, vs. username/id/fullname there; no
-    route shares this exact shape with any other migrated so far).
+    """User info embedded in IdpLoginAuthResponse -- UserInfo plus emailid,
+    so that the response is also a LoginResponse for msui's after_login.
     """
 
     username: str
     id: int  # noqa: A003
     emailid: str
+    fullname: str = ""
 
     def to_dict(self):
-        return {"username": self.username, "id": self.id, "emailid": self.emailid}
+        return {"username": self.username, "id": self.id, "emailid": self.emailid, "fullname": self.fullname}
 
     @classmethod
     def from_dict(cls, data):
-        return cls(username=data["username"], id=data["id"], emailid=data["emailid"])
+        return cls(username=data["username"], id=data["id"], emailid=data["emailid"],
+                   fullname=data.get("fullname") or "")
 
 
 @dataclass
@@ -1141,30 +1141,72 @@ class IdpLoginAuthResponse:
 
     The success path returns via a bare json.dumps (text/html Content-Type,
     same pattern as create_operation/get_operation_by_id) with
-    {"success": True, "token": ..., "user": {...}}. Every failure path
-    (invalid/expired token, no matching user, or a malformed request
-    raising TypeError) returns via flask.jsonify (application/json) with
-    just {"success": False} and HTTP 401 -- to_dict() lets the handler keep
-    using jsonify() for that path without silently changing its
-    Content-Type, mirroring DeleteOperationResponse's to_dict()/to_text()
-    split.
+    {"success": True, "token": ..., "user": {...}}; token is the login token,
+    the same as the one of POST endpoints.TOKEN. Every failure path returns
+    via flask.jsonify (application/json) with {"success": False}: HTTP 401
+    for an invalid, expired or used code, HTTP 409 with link_required and
+    the emailid of the account if the SAML identity isn't linked to an
+    account yet and its email belongs to one -- the user logs in to that
+    account and links the identity by POST endpoints.IDP_LINK with the same
+    code. to_dict() lets the handler keep using jsonify() for these paths.
     """
 
     success: bool
     token: Optional[str] = None
     user: Optional[IdpUserInfo] = None
+    link_required: bool = False
+    emailid: Optional[str] = None
 
     def to_text(self):
         return json.dumps({"success": self.success, "token": self.token, "user": self.user.to_dict()})
+
+    def to_dict(self):
+        data = {"success": self.success}
+        if self.link_required:
+            data.update(link_required=True, emailid=self.emailid)
+        return data
+
+    @classmethod
+    def from_text(cls, text):
+        data = json.loads(text)
+        user = IdpUserInfo.from_dict(data["user"]) if data.get("user") else None
+        return cls(success=data["success"], token=data.get("token"), user=user,
+                   link_required=bool(data.get("link_required", False)), emailid=data.get("emailid"))
+
+
+@dataclass
+class IdpLinkRequest:
+    """POST endpoints.IDP_LINK -- link the SAML identity of a one-time code,
+    which endpoints.IDP_LOGIN_AUTH refused with link_required, to the logged
+    in user (token is the login token, as for every other route).
+    """
+
+    token: str
+    code: str
+
+    def to_form_data(self):
+        return {"token": self.token, "code": self.code}
+
+    @classmethod
+    def from_form(cls, form):
+        return cls(token=form.get("token"), code=form.get("code"))
+
+
+@dataclass
+class IdpLinkResponse:
+    """Response body for POST endpoints.IDP_LINK (or the body "False" for an
+    invalid login token, as for every route of verify_user)."""
+
+    success: bool
 
     def to_dict(self):
         return {"success": self.success}
 
     @classmethod
     def from_text(cls, text):
-        data = json.loads(text)
-        user = IdpUserInfo.from_dict(data["user"]) if "user" in data else None
-        return cls(success=data["success"], token=data.get("token"), user=user)
+        if text == AUTH_FAILED_TEXT:
+            return cls(success=False)
+        return cls(success=bool(json.loads(text).get("success")))
 
 
 @dataclass

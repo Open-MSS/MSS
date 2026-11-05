@@ -16,8 +16,14 @@ Global map: ../../ARCHITECTURE.md
   other mslib packages.
 - Changes here usually pair with `mslib/mscolab/blueprints/auth` (SAML routes)
   and docs/sso_via_saml_mscolab.rst.
+- msidp is test-only and says so on start; it still must not log passwords or
+  session ids, take a session id from the URL, or render request data unescaped.
 
 ## Verify
 
-No dedicated test dir; exercised manually per docs/sso_via_saml_mscolab.rst.
-Run `pixi run -e dev lint` and `pixi run -e dev lint-imports`.
+`tests/_test_msidp` (sessions, cookies, logs, error messages; WSGI app with a
+stand-in pysaml2 server). The full SSO flow with MSColab is exercised manually
+per docs/conf_sso_test_msscolab.rst; MSColab's side of it is covered by
+`tests/_test_mscolab/test_saml.py` with an in-process pysaml2 IdP (needs
+`xmlsec1`, skipped without it). Run `pixi run -e dev lint` and
+`pixi run -e dev lint-imports`.

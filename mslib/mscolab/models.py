@@ -77,6 +77,9 @@ class User(db.Model):
     confirmed = db.Column(db.Boolean, nullable=False, default=False)
     confirmed_on = db.Column(AwareDateTime, nullable=True)
     permissions = db.relationship('Permission', cascade='all,delete,delete-orphan', backref='user')
+    idp_identities = db.relationship('IdpIdentity', cascade='all,delete,delete-orphan', backref='user')
+    # the IdP of the first SAML login of the account, 'local' for a registered one; only informative, a SAML login is
+    # accepted by IdpIdentity. Accounts of older versions have no IdpIdentity, see mslib.mscolab.auth.idp_login
     authentication_backend = db.Column(db.String(255), nullable=False, default='local')
     fullname = db.Column(db.String(255), nullable=True)
     # random value in every login token of the user; a new one makes all earlier tokens invalid, see revoke_tokens.
@@ -179,6 +182,61 @@ class User(db.Model):
             self.confirmed_on = datetime.datetime.now(tz=datetime.timezone.utc)
             db.session.commit()
         return updated == 1
+
+
+class IdpIdentity(db.Model):
+    """
+    A SAML identity that may log in as its user: the entity id of the IdP that asserts it, and the subject, the value
+    of the configured identifier attribute or the persistent NameID
+
+    A user can have several, e.g. from different IdPs. An identity belongs to one user.
+    """
+
+    __tablename__ = 'idp_identities'
+    __table_args__ = (db.UniqueConstraint('issuer', 'subject'),)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    u_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    issuer = db.Column(db.String(255), nullable=False)
+    subject = db.Column(db.String(255), nullable=False)
+    created_on = db.Column(AwareDateTime, nullable=False)
+
+    def __init__(self, u_id, issuer, subject):
+        self.u_id = int(u_id)
+        self.issuer = str(issuer)
+        self.subject = str(subject)
+        self.created_on = datetime.datetime.now(tz=datetime.timezone.utc)
+
+    def __repr__(self):
+        return f'<IdpIdentity u_id: {self.u_id}, issuer: {self.issuer}>'
+
+
+class SamlLogin(db.Model):
+    """
+    A SAML login in progress
+
+    Created with the id of the AuthnRequest sent to the IdP. The response of the IdP must answer it, and only once:
+    it adds the identity it asserts and the hash of a one-time code, which msui exchanges for a login token.
+    """
+
+    __tablename__ = 'saml_logins'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    request_id = db.Column(db.String(255), unique=True, nullable=False)
+    idp_identity_name = db.Column(db.String(255), nullable=False)
+    # when the request was sent, and when the response arrived
+    created_on = db.Column(AwareDateTime, nullable=False)
+    code_hash = db.Column(db.String(64), unique=True, nullable=True)
+    issuer = db.Column(db.String(255), nullable=True)
+    subject = db.Column(db.String(255), nullable=True)
+    emailid = db.Column(db.String(255), nullable=True)
+    username = db.Column(db.String(255), nullable=True)
+
+    def __init__(self, request_id, idp_identity_name):
+        self.request_id = str(request_id)
+        self.idp_identity_name = str(idp_identity_name)
+        self.created_on = datetime.datetime.now(tz=datetime.timezone.utc)
+
+    def __repr__(self):
+        return f'<SamlLogin {self.idp_identity_name}>'
 
 
 class Permission(db.Model):

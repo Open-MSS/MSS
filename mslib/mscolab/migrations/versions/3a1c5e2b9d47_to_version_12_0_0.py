@@ -10,7 +10,7 @@ import logging
 import sqlalchemy as sa
 from alembic import op
 
-from mslib.mscolab.migrations.schema_repair import add_token_nonce, has_column
+from mslib.mscolab.migrations.schema_repair import add_saml_tables, add_token_nonce, has_column, has_table
 
 
 # revision identifiers, used by Alembic.
@@ -60,10 +60,18 @@ def upgrade():
     if not has_column(conn, 'users', 'token_nonce'):
         add_token_nonce(op, conn)
 
+    # SAML identities linked to a user, and the SAML logins in progress
+    add_saml_tables(op, conn)
+
 
 def downgrade():
-    # missing in a database that ran an earlier development state of this migration
-    if has_column(op.get_bind(), 'users', 'token_nonce'):
+    # missing, like token_nonce, in a database that ran an earlier development state of this migration
+    conn = op.get_bind()
+    for table in ('saml_logins', 'idp_identities'):
+        if has_table(conn, table):
+            op.drop_table(table)
+
+    if has_column(conn, 'users', 'token_nonce'):
         with op.batch_alter_table('users', schema=None) as batch_op:
             batch_op.drop_column('token_nonce')
 

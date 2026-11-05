@@ -26,20 +26,24 @@
 """
 
 
+import collections.abc
 import datetime
 import functools
 import hashlib
 import hmac
 import logging
+import secrets
 
 import email_validator
 import sqlalchemy
 from flask import current_app, request, abort, g, url_for
 from itsdangerous import URLSafeTimedSerializer, BadSignature
+from saml2.saml import NAMEID_FORMAT_PERSISTENT
 
 from mslib.mscolab.api.schemas import TOKEN_HEADER
+from mslib.mscolab.app import db
 from mslib.mscolab.conf import setup_saml2_backend
-from mslib.mscolab.models import User
+from mslib.mscolab.models import IdpIdentity, SamlLogin, User
 
 
 def optional_auth(f):
@@ -148,8 +152,7 @@ def verify_user_http(func):
 # email confirmation, can't be used for another, e.g. a password reset.
 EMAIL_CONFIRMATION = "email-confirmation"
 PASSWORD_RESET = "password-reset"
-IDP_LOGIN = "idp-login"
-_TOKEN_PURPOSES = (EMAIL_CONFIRMATION, PASSWORD_RESET, IDP_LOGIN)
+_TOKEN_PURPOSES = (EMAIL_CONFIRMATION, PASSWORD_RESET)
 
 
 def _serializer(purpose):
@@ -173,7 +176,7 @@ def confirm_token(token, purpose, expiration=3600):
 
 def generate_confirmation_token(email, purpose):
     """
-    A signed token with email for purpose, one of EMAIL_CONFIRMATION, PASSWORD_RESET and IDP_LOGIN
+    A signed token with email for purpose, one of EMAIL_CONFIRMATION and PASSWORD_RESET
     """
     return _serializer(purpose).dumps(email)
 
@@ -220,40 +223,320 @@ def public_url_for(endpoint, **values):
     return current_app.config['PUBLIC_URL'].rstrip("/") + url_for(endpoint, **values)
 
 
+def find_idp_config(idp_identity_name):
+    """The configured IdP idp_identity_name of setup_saml2_backend.CONFIGURED_IDPS, None if there is none"""
+    for idp_config in setup_saml2_backend.CONFIGURED_IDPS:
+        if idp_config['idp_identity_name'] == idp_identity_name:
+            return idp_config
+    return None
+
+
 def get_idp_entity_id(selected_idp):
     """
     Finds the entity_id from the configured IDPs
     :return: the entity_id of the idp or None
     """
-    for config in setup_saml2_backend.CONFIGURED_IDPS:
-        if selected_idp == config['idp_identity_name']:
-            idps = config['idp_data']['saml2client'].metadata.identity_providers()
-            only_idp = idps[0]
-            entity_id = only_idp
-            return entity_id
-    return None
+    idp_config = find_idp_config(selected_idp)
+    if idp_config is None:
+        return None
+    return idp_config['idp_data']['saml2client'].metadata.identity_providers()[0]
 
 
-def create_or_update_idp_user(email, username, token, authentication_backend):
+# The IdP must answer a SAML login within SAML_REQUEST_LIFETIME seconds, msui must exchange its code within
+# IDP_LOGIN_CODE_LIFETIME seconds after that
+SAML_REQUEST_LIFETIME = 600
+IDP_LOGIN_CODE_LIFETIME = 1200
+# Anyone can start a SAML login, the server keeps at most this many unfinished ones
+MAX_SAML_LOGINS = 1000
+
+
+def _now():
+    return datetime.datetime.now(tz=datetime.timezone.utc)
+
+
+def _saml_requests(idp_identity_name, request_id):
+    # the login request_id sent to the IdP idp_identity_name, if the IdP can still answer it
+    return SamlLogin.query.filter(
+        SamlLogin.request_id == str(request_id),
+        SamlLogin.idp_identity_name == str(idp_identity_name),
+        SamlLogin.code_hash.is_(None),
+        SamlLogin.created_on >= _now() - datetime.timedelta(seconds=SAML_REQUEST_LIFETIME))
+
+
+def remember_saml_request(request_id, idp_identity_name):
     """
-    Creates or updates an idp user in the system based on the provided email,
-     username, token, and authentication backend.
-    :param email: idp users email
-    :param username: idp users username
-    :param token: authentication token
-    :param authentication_backend: authenticated identity providers name
-    :return: bool : query success or not
+    Stores the id of an AuthnRequest sent to the IdP idp_identity_name: only a response to it is accepted, and once
+
+    Returns False and stores nothing if MAX_SAML_LOGINS logins are unfinished, until some of them expire.
     """
-    fm = current_app.extensions['fm']
-    user = User.query.filter_by(emailid=email).first()
-    if not user:
-        # using an IDP for a new account/profile, e-mail is already verified by the IDP
-        confirm_time = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=1)
-        user = User(email, username, password=token, confirmed=True, confirmed_on=confirm_time,
-                    authentication_backend=authentication_backend)
-        result = fm.modify_user(user, action="create")
+    # expired requests and codes
+    SamlLogin.query.filter(sqlalchemy.or_(
+        sqlalchemy.and_(SamlLogin.code_hash.is_(None),
+                        SamlLogin.created_on < _now() - datetime.timedelta(seconds=SAML_REQUEST_LIFETIME)),
+        SamlLogin.created_on < _now() - datetime.timedelta(seconds=IDP_LOGIN_CODE_LIFETIME),
+    )).delete(synchronize_session=False)
+    if SamlLogin.query.count() >= MAX_SAML_LOGINS:
+        db.session.commit()
+        return False
+    db.session.add(SamlLogin(request_id, idp_identity_name))
+    db.session.commit()
+    return True
+
+
+class OutstandingSamlRequests(collections.abc.Mapping):
+    """
+    The AuthnRequests sent to an IdP that it can still answer, as pysaml2 expects them in parse_authn_request_response
+
+    Looked up in the database, a response can arrive at another process of the server than the one that sent the
+    request. pysaml2 refuses a response to a request that isn't one of them, also if the SP configuration has
+    allow_unsolicited; finish_saml_login refuses one without a request.
+    """
+
+    def __init__(self, idp_identity_name):
+        self.idp_identity_name = idp_identity_name
+        # pysaml2 looks up the same request several times
+        self._found = {}
+
+    def __getitem__(self, request_id):
+        if request_id is None:
+            raise KeyError(request_id)
+        if request_id not in self._found:
+            self._found[request_id] = _saml_requests(self.idp_identity_name, request_id).first() is not None
+        if not self._found[request_id]:
+            raise KeyError(request_id)
+        # where the login started, pysaml2 keeps it as came_from; unused
+        return "/"
+
+    def __iter__(self):
+        # pysaml2 only logs the keys
+        return iter(())
+
+    def __len__(self):
+        return 0
+
+    def __bool__(self):
+        # pysaml2 ignores an empty mapping
+        return True
+
+
+def saml_attributes(authn_response):
+    """
+    The attributes of a SAML response as {name: [values]}, by their names in the response and by the friendly names
+    of pysaml2's attribute maps
+    """
+    attributes = {}
+    assertion = getattr(authn_response, "assertion", None)
+    for statement in (assertion.attribute_statement if assertion is not None else []):
+        for attribute in statement.attribute:
+            values = [value.text for value in attribute.attribute_value if value.text]
+            for name in (attribute.name, attribute.friendly_name):
+                if name:
+                    attributes.setdefault(name, values)
+    for name, values in (authn_response.ava or {}).items():
+        attributes[name] = [value for value in values if isinstance(value, str)]
+    return attributes
+
+
+def saml_identity(authn_response, idp_data, attributes):
+    """
+    (issuer, subject) of a SAML response, the identity a user is linked to; None if the response has no persistent
+    identifier
+
+    The issuer is the entity id of the IdP that signed the assertion: the metadata of one configured IdP can hold
+    several, e.g. of a federation. The issuer of the response around it may be unsigned. The subject is the value of
+    the attribute idp_data['user_id_attribute'] in attributes, see saml_attributes, or the NameID if that isn't set
+    and the NameID is persistent. A transient NameID changes with every login, an email address can be given to
+    someone else.
+    """
+    assertion = getattr(authn_response, "assertion", None)
+    issuer = assertion.issuer.text if assertion is not None and assertion.issuer is not None else None
+    attribute = idp_data.get('user_id_attribute')
+    if attribute:
+        values = attributes.get(attribute, [])
+        # of several values none is the identifier
+        subject = values[0] if len(values) == 1 else None
     else:
-        user.authentication_backend = authentication_backend
-        user.hash_password(token)
-        result = fm.modify_user(user, action="update_idp_user")
-    return result
+        name_id = authn_response.name_id
+        subject = name_id.text if name_id is not None and name_id.format == NAMEID_FORMAT_PERSISTENT else None
+    if not issuer or not subject or len(issuer) > 255 or len(subject) > 255:
+        return None
+    return issuer, subject
+
+
+class SamlLoginRefused(Exception):
+    """A SAML login that can't log in, the message tells the user why"""
+
+
+def user_of_email(emailid):
+    """The user of emailid, whatever its case, None if there is none; an exact match comes first"""
+    user = User.query.filter_by(emailid=str(emailid)).first()
+    if user is None:
+        user = User.query.filter(sqlalchemy.func.lower(User.emailid) == str(emailid).lower()).first()
+    return user
+
+
+def _new_saml_username(emailid, username):
+    """
+    The username of a new account for a SAML login: the one that the IdP sent, else the start of the email; raises
+    SamlLoginRefused if register_user would refuse it
+    """
+    username = username or emailid.split("@")[0]
+    if len(username) > 255 or "@" in username:
+        raise SamlLoginRefused(f"The username {username!r} that your identity provider sent can't be used for an "
+                               "account of this server.")
+    if User.query.filter_by(username=username).first() is not None:
+        raise SamlLoginRefused(f"The username {username!r} that your identity provider sent belongs to another "
+                               "account of this server. Ask its administrator for help.")
+    return username
+
+
+def check_saml_login(issuer, subject, emailid, username):
+    """
+    Checks the email and username that the IdP sent with the identity (issuer, subject); returns them as
+    finish_saml_login stores them, raises SamlLoginRefused if the login can't log in
+
+    A linked identity needs neither. Else the email must be valid: it may belong to an existing account, which must
+    be linked, see idp_login. Else a new account is created, its username is checked like by register_user.
+    """
+    if IdpIdentity.query.filter_by(issuer=str(issuer), subject=str(subject)).first() is not None:
+        return None, None
+    if not isinstance(emailid, str) or len(emailid) > 255:
+        raise SamlLoginRefused("Your identity provider sent no valid email address.")
+    try:
+        email_validator.validate_email(emailid, check_deliverability=False)
+    except email_validator.EmailNotValidError:
+        raise SamlLoginRefused("Your identity provider sent no valid email address.")
+    if user_of_email(emailid) is not None:
+        return emailid, None
+    return emailid, _new_saml_username(emailid, username)
+
+
+def _code_hash(code):
+    # the code is random and long, a plain hash is enough to not store it
+    return hashlib.sha256(code.encode("utf-8")).hexdigest()
+
+
+def finish_saml_login(request_id, idp_identity_name, issuer, subject, emailid, username):
+    """
+    Stores the identity that the IdP asserts in its response to the login request_id, with emailid and username
+    checked by check_saml_login; returns a one-time code that msui exchanges for a login token by idp_login, None if
+    the IdP can't answer request_id (any more)
+
+    Only one response per request: a second one, e.g. the first sent again, is refused.
+    """
+    if request_id is None:
+        return None
+    code = secrets.token_urlsafe(32)
+    updated = _saml_requests(idp_identity_name, request_id).update({
+        SamlLogin.code_hash: _code_hash(code),
+        SamlLogin.issuer: str(issuer),
+        SamlLogin.subject: str(subject),
+        SamlLogin.emailid: None if emailid is None else str(emailid),
+        SamlLogin.username: None if username is None else str(username),
+        SamlLogin.created_on: _now(),
+    }, synchronize_session=False)
+    db.session.commit()
+    return code if updated == 1 else None
+
+
+_SamlLoginResult = collections.namedtuple("_SamlLoginResult", "id idp_identity_name issuer subject emailid username")
+
+
+def _saml_login_of_code(code):
+    # the finished SAML login of code, a copy: the row is gone once the code is used
+    if not isinstance(code, str) or not code:
+        return None
+    saml_login = SamlLogin.query.filter(
+        SamlLogin.code_hash == _code_hash(code),
+        SamlLogin.created_on >= _now() - datetime.timedelta(seconds=IDP_LOGIN_CODE_LIFETIME)).first()
+    if saml_login is None:
+        return None
+    return _SamlLoginResult(saml_login.id, saml_login.idp_identity_name, saml_login.issuer, saml_login.subject,
+                            saml_login.emailid, saml_login.username)
+
+
+def _use_saml_login(saml_login, user, link=False, first_identity=False):
+    """
+    Uses up the code of saml_login: stores user, if it is new, and links the identity of saml_login to it, if link
+
+    All in one transaction, so nothing changes if it fails: another request used the code first, linked the identity,
+    or created the account meanwhile; or first_identity and the user has an identity meanwhile. Returns whether it
+    succeeded.
+    """
+    # the checks below read the state of now, not of the reads before
+    db.session.commit()
+    try:
+        if SamlLogin.query.filter_by(id=saml_login.id).delete(synchronize_session=False) != 1:
+            db.session.rollback()
+            return False
+        if user.id is None:
+            db.session.add(user)
+            db.session.flush()
+        elif first_identity:
+            # waits for another request that links an identity to user at the same time
+            User.query.filter_by(id=user.id).with_for_update().one()
+            if IdpIdentity.query.filter_by(u_id=user.id).count() > 0:
+                db.session.rollback()
+                return False
+        if link:
+            db.session.add(IdpIdentity(user.id, saml_login.issuer, saml_login.subject))
+        db.session.commit()
+    except sqlalchemy.exc.IntegrityError:
+        db.session.rollback()
+        return False
+    return True
+
+
+def idp_login(code):
+    """
+    The user that the one-time code of a SAML login logs in
+
+    Returns (user, None) and makes the code invalid. Returns (None, emailid) if the identity isn't linked to a user
+    and its email belongs to an existing account: the user must log in to that account to link it, see
+    link_idp_identity, the code stays valid for that. Returns (None, None) if the code is invalid or expired, or the
+    login can't log in, see check_saml_login.
+
+    A new identity gets a new account. A SAML login never changes the password of an account.
+    """
+    saml_login = _saml_login_of_code(code)
+    if saml_login is None:
+        return None, None
+    identity = IdpIdentity.query.filter_by(issuer=saml_login.issuer, subject=saml_login.subject).first()
+    if identity is not None:
+        user = identity.user
+        return (user, None) if _use_saml_login(saml_login, user) else (None, None)
+    if not saml_login.emailid:
+        logging.warning("The SAML login of %s has no email, can't create an account", saml_login.idp_identity_name)
+        return None, None
+    user = user_of_email(saml_login.emailid)
+    if user is not None:
+        # Accounts of older versions logged in by the email that the IdP sent. One that logged in by this IdP before
+        # and has no identity yet is linked on its first login; any other account must be linked by its owner.
+        if user.authentication_backend != saml_login.idp_identity_name or user.idp_identities:
+            return None, user.emailid
+        linked = _use_saml_login(saml_login, user, link=True, first_identity=True)
+        return (user, None) if linked else (None, None)
+    try:
+        username = _new_saml_username(saml_login.emailid, saml_login.username)
+    except SamlLoginRefused as ex:
+        # an account with the username was created since the IdP answered
+        logging.warning("Refused the SAML login of %s: %s", saml_login.idp_identity_name, ex)
+        return None, None
+    # nobody knows the password, the owner can set one by a password reset
+    user = User(saml_login.emailid, username, password=secrets.token_urlsafe(32), confirmed=True,
+                confirmed_on=_now() + datetime.timedelta(seconds=1),
+                authentication_backend=saml_login.idp_identity_name)
+    return (user, None) if _use_saml_login(saml_login, user, link=True) else (None, None)
+
+
+def link_idp_identity(user, code):
+    """
+    Links the identity of a SAML login to user, if idp_login refused its code because its email is the one of user;
+    returns whether it was linked
+
+    user is logged in, so whoever links knows the password of the account and can log in at the IdP.
+    """
+    saml_login = _saml_login_of_code(code)
+    if saml_login is None or not saml_login.emailid or saml_login.emailid.lower() != user.emailid.lower():
+        return False
+    return _use_saml_login(saml_login, user, link=True)

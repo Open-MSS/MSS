@@ -102,6 +102,7 @@ In this implementation, as we are enabling only one IdP, there is no need to con
                       'idp_identity_name': 'localhost_test_idp',  #  make sure to use underscore for the blanks
                       'idp_data': {
                           'idp_name': 'Testing Identity Provider',  #  this name is used on the Login page to connect to the Provider
+                          'user_id_attribute': 'eduPersonPrincipalName',  #  the attribute that identifies a user
                       }
                   },
           ]
@@ -115,6 +116,12 @@ In this implementation, as we are enabling only one IdP, there is no need to con
     Remember to use underscore for the blanks in your `idp_identity_name`.
 
 	Idp_name refers to the name of the Identity Provider that will be displayed in the MSColab server web interface for end users to select when configuring SSO.
+
+    User_id_attribute is the SAML attribute that identifies a user of this IdP, e.g. ``eduPersonPrincipalName``
+    or ``urn:oasis:names:tc:SAML:attribute:subject-id``. Its value must not change and must never be given to
+    someone else. Without ``user_id_attribute`` the IdP must send a persistent NameID
+    (``urn:oasis:names:tc:SAML:2.0:nameid-format:persistent``). MSColab refuses a login without such an
+    identifier. The email address is no identifier: it can change, and an IdP can assert any address.
 
 
 Establish pysaml2, Saml2Client for the MSColab server
@@ -189,7 +196,7 @@ Please refer the yaml file template (`mss_saml2_backend.yaml.sample`) in the dir
          want_response_signed: true
          want_assertion_signed: true
          allow_unknown_attributes: true
-         allow_unsolicited: true
+         allow_unsolicited: false
          endpoints:
            assertion_consumer_service:
              - [http://localhost:8083/idp2/acs/post, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST']
@@ -221,7 +228,37 @@ While the core purpose of IdPs is to authenticate users and provide information 
 Guide to IDP Configuration
 --------------------------
 
-In the SSO process through the MSColab server, the username is obtained as ``givenName``, and the email address is obtained as ``email``. Therefore, when configuring the IdP, it is necessary to configure it accordingly to ensure the correct return of the givenName attribute and the email address along with the SAML response.
+In the SSO process through the MSColab server, the username is obtained as ``givenName`` (or ``displayName``), and the email address is obtained as ``email`` (or ``mail``). Therefore, when configuring the IdP, it is necessary to configure it accordingly to ensure the correct return of the givenName attribute and the email address along with the SAML response. The IdP must also send the attribute of ``user_id_attribute`` or a persistent NameID, see above.
+
+How a SAML login finds its account
+----------------------------------
+
+MSColab links an account to SAML identities: the entity id of the IdP together with the value of
+``user_id_attribute`` (or the persistent NameID). A login by a linked identity logs in to its account, also when the
+IdP sends another email address than before.
+
+* The first login by an identity that isn't linked yet gets a new account with the email address and the given name
+  that the IdP sends. The given name becomes the username, without one the part of the email address before the ``@``.
+  The browser shows why a login is refused: no valid email address, or a username that contains ``@``, is longer than
+  255 characters or belongs to another account.
+* If an account with that email address exists already, in any upper and lower case, the login is refused until its owner links the identity: msui
+  asks for the password of that account once and links the identity right after the password login. Nobody gets an
+  existing account by an IdP that asserts its email address.
+* Accounts of MSColab before 12.0.0 that logged in by SAML have no linked identity yet. Such an account is linked on
+  its next login, if that login comes from the IdP it logged in by before; any other IdP needs the link by the owner.
+* A SAML login never changes the password of an account. Accounts created by a SAML login have a random password; their
+  owners can set one by a password reset.
+
+The login in msui
+-----------------
+
+After the login at the IdP the browser shows a one-time code. The user enters it in msui, which exchanges it for a
+login token. The code works once and for 20 minutes; the IdP has to answer the login request within 10 minutes. The
+server accepts only responses to login requests it sent, each once, so ``allow_unsolicited`` must be ``false``; a
+login started at the IdP (IdP-initiated) doesn't work. The requests are stored in the database, so every process of
+the server accepts the response. Anyone can start a login, so the server keeps at most 1000 unfinished ones; further
+logins are refused with "503 Service Unavailable" until some of them expire. With ``ENABLE_BASIC_HTTP_AUTHENTICATION``
+msui needs the basic authentication of the server to exchange the code, as for a password login.
 
 
 3. Configuration example through Keycloak 13.0.1
@@ -469,6 +506,10 @@ Configuration in MSColab settings for Keycloak
         .. note::
             Make sure to insert idp_identity_name as above ('key_cloak_v_13'), which used in this example.
 
+            This example has no ``user_id_attribute``: set the Name ID Format of the client in Keycloak to
+            ``persistent`` and ``name_id_format`` in `mss_saml2_backend.yaml` to
+            ``urn:oasis:names:tc:SAML:2.0:nameid-format:persistent``, then the NameID identifies the user.
+
 Configuration mss_saml2_backend.yaml file
 
     Create your mss_saml2_backend.yaml file in your ``SSO_DIR``.
@@ -528,7 +569,7 @@ Configuration mss_saml2_backend.yaml file
                     want_response_signed: true
                     want_assertion_signed: true
                     allow_unknown_attributes: true
-                    allow_unsolicited: true
+                    allow_unsolicited: false
                     endpoints:
                       assertion_consumer_service:
                         - [http://localhost:8083/keycloak_idp/acs/post, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST']
