@@ -72,8 +72,9 @@ class TestResolveFlightsPaths:
 
     def test_absolute_path_is_kept(self, tmp_path):
         flights = [["flight1", "", "", "/home/mss/flights/example.ftml", "", ""]]
+        # resolved like the other paths: on macOS /home is a symlink to /System/Volumes/Data/home
         assert AutoplotDockWidget.resolve_flights_paths(flights, tmp_path)[0][3] == \
-            "/home/mss/flights/example.ftml"
+            str(Path("/home/mss/flights/example.ftml").resolve())
 
     def test_home_is_expanded(self, tmp_path):
         flights = [["flight1", "", "", os.path.join("~", "example.ftml"), "", ""]]
@@ -178,9 +179,10 @@ class TestFlightsSources:
                       ["flight2", "", "", "/home/mss/other.ftml", "", ""]]
         resolved = AutoplotDockWidget.resolve_flights_paths(configured, tmp_path)
         sources = AutoplotDockWidget.flights_sources("/home/mss/mssautoplot.json", configured, resolved)
+        # the keys are resolved paths: on macOS /home is a symlink to /System/Volumes/Data/home
         assert sources == {
             str(tmp_path.resolve() / "example.ftml"): ("/home/mss/mssautoplot.json", "example.ftml"),
-            "/home/mss/other.ftml": ("/home/mss/mssautoplot.json", "/home/mss/other.ftml")}
+            str(Path("/home/mss/other.ftml").resolve()): ("/home/mss/mssautoplot.json", "/home/mss/other.ftml")}
 
     def test_entries_without_a_flighttrack_file_are_skipped(self, tmp_path):
         configured = [["", "", "", "", "", ""], ["operation1", "", "", "operation1", "", ""], []]

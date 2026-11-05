@@ -252,6 +252,10 @@ class DefaultDataAccess(NWPDataAccess):
     def _parse_file(self, filename):
         elevations = {"filename": filename, "levels": [], "units": None}
         with netCDF4.Dataset(os.path.join(self._root_path, filename)) as dataset:
+            if dataset.file_format == "NETCDF4":
+                # MFDatasetCommonDims, which reads the data for GetMap, can't read it
+                raise IOError(f"format NETCDF4 is not supported, convert it to NETCDF4_CLASSIC, e.g. "
+                              f"by 'nccopy -k nc4c {filename} <new file>'")
             time_name, time_var = netCDF4tools.identify_CF_time(dataset)
             init_time = netCDF4tools.num2date(0, time_var.units)
             if not self.uses_inittime_dimension():
@@ -312,6 +316,9 @@ class DefaultDataAccess(NWPDataAccess):
                         standard_names.append(ncvar.standard_name)
                     elif len(ncvar.shape) == 3 and vert_type == "sfc":
                         standard_names.append(ncvar.standard_name)
+                    else:
+                        logging.warning("Skipping variable '%s' in file '%s': dimensions %s don't fit the '%s' "
+                                        "type of the file", ncvarname, filename, ncvar.dimensions, vert_type)
         return {
             "vert_type": vert_type,
             "elevations": elevations,
@@ -350,6 +357,8 @@ class DefaultDataAccess(NWPDataAccess):
             _filename for _filename in sorted(os.listdir(self._root_path)) if self._domain_id in _filename]
         logging.info("Files identified for domain '%s': %s",
                      self._domain_id, self._available_files)
+        if not self._available_files:
+            logging.error("No file in '%s' has the domain id '%s' in its name", self._root_path, self._domain_id)
 
         for filename in list(self._file_cache):
             if filename not in self._available_files:

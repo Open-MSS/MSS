@@ -428,21 +428,27 @@ class DeleteBulkPermissionsResponse:
 
 @dataclass
 class UserInfo:
-    """The logged-in user, as returned by GET endpoints.USER and (with the
-    same three fields) embedded in the response of POST "token" (login,
-    not yet migrated).
+    """The logged-in user, as returned by GET endpoints.USER and embedded
+    in LoginResponse (POST endpoints.TOKEN).
+
+    Servers before 11.0.0 send no "fullname", and the column is nullable,
+    so a missing or null fullname becomes "" on both sides (#3282).
     """
 
     id: int  # noqa: A003
     username: str
     fullname: str
 
+    def __post_init__(self):
+        if self.fullname is None:
+            self.fullname = ""
+
     def to_dict(self):
         return {"id": self.id, "username": self.username, "fullname": self.fullname}
 
     @classmethod
     def from_dict(cls, data):
-        return cls(id=data["id"], username=data["username"], fullname=data["fullname"])
+        return cls(id=data["id"], username=data["username"], fullname=data.get("fullname"))
 
 
 @dataclass

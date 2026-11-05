@@ -31,6 +31,7 @@ import sys
 from pathlib import Path
 import requests
 import requests.exceptions
+import socketio
 import mock
 import pytest
 
@@ -143,6 +144,58 @@ class Test_Mscolab_connect_window:
             # test operation listing visibility
             assert self.main_window.listOperationsMSC.model().rowCount() == 1
         qtbot.wait_until(assert_)
+
+    def test_login_to_server_before_11(self, qtbot):
+        # servers before 11.0.0 send no fullname with the user (#3282)
+        real_post = requests.Session.post
+
+        def post_without_fullname(session, url, *args, **kwargs):
+            response = real_post(session, url, *args, **kwargs)
+            if url.endswith(endpoints.TOKEN):
+                data = json.loads(response.text)
+                del data["user"]["fullname"]
+                response._content = json.dumps(data).encode()
+            return response
+
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        with mock.patch.object(requests.Session, "post", autospec=True, side_effect=post_without_fullname):
+            self._login(qtbot, self.userdata[0], self.userdata[2])
+        assert self.main_window.usernameLabel.text() == self.userdata[1]
+        assert self.main_window.mscolab.user["fullname"] == ""
+
+    @pytest.mark.parametrize("text", ["<html>not json</html>", '{"token": "abc"}', "[]"])
+    def test_login_with_unreadable_response(self, qtbot, text):
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self.window.loginEmailLe.setText(self.userdata[0])
+        self.window.loginPasswordLe.setText(self.userdata[2])
+        with mock.patch("requests.Session.post", return_value=mock.Mock(text=text)):
+            QtTest.QTest.mouseClick(self.window.loginBtn, QtCore.Qt.LeftButton)
+        # the connect dialog stays open and tells why
+        assert self.main_window.mscolab.connect_window is self.window
+        assert "Can't read the login response" in self.window.statusLabel.text()
+        assert self.window.loginBtn.isEnabled()
+        assert self.main_window.mscolab.token is None
+        assert self.main_window.connectBtn.isVisible()
+
+    def test_login_with_failing_socket_connection(self, qtbot):
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self.window.loginEmailLe.setText(self.userdata[0])
+        self.window.loginPasswordLe.setText(self.userdata[2])
+        with mock.patch("mslib.msui.socket_control.ConnectionManager",
+                        side_effect=socketio.exceptions.ConnectionError("One or more namespaces failed to connect: ")):
+            QtTest.QTest.mouseClick(self.window.loginBtn, QtCore.Qt.LeftButton)
+        # the connect dialog stays open and tells why, instead of a fatal error
+        assert self.main_window.mscolab.connect_window is self.window
+        assert "Couldn't create a socket connection" in self.window.statusLabel.text()
+        assert self.window.loginBtn.isEnabled()
+        assert self.main_window.mscolab.token is None
+        assert self.main_window.connectBtn.isVisible()
+        # and the next attempt logs in
+        self._login(qtbot, self.userdata[0], self.userdata[2])
+        assert self.main_window.usernameLabel.text() == self.userdata[1]
 
     @pytest.mark.parametrize("mail_enabled", [False, True, None])
     def test_wrong_password_message_follows_mail_setting(self, qtbot, mail_enabled):
@@ -714,6 +767,43 @@ class Test_Mscolab:
         wpdata_server = self.window.mscolab.waypoints_model.waypoint_data(0)
         assert wpdata_local.lat != wpdata_server.lat
 
+    def test_work_locally_shows_the_operation_name(self, qtbot):
+        # the local copy is named after the operation, the views show its name, not the file's (#2508)
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        operation_name = self.window.mscolab.active_operation_name
+        self.window.actionTopView.trigger()
+        topview = self.window.get_active_views()[0]
+        self.window.workLocallyCheckbox.setChecked(True)
+        assert self.window.mscolab.waypoints_model.name == operation_name
+        assert operation_name in topview.windowTitle()
+        # a change is saved to the local copy
+        self.window.mscolab.waypoints_model.invert_direction()
+        assert self.window.mscolab.waypoints_model.name == operation_name
+        self.window.mscolab.reload_view_windows()
+        assert operation_name in topview.windowTitle()
+        assert "mscolab_operation" not in topview.windowTitle()
+
+    def test_work_locally_renames_the_local_copy_of_older_msui(self, qtbot):
+        # msui before 12.0.0 stored every local copy as mscolab_operation.ftml
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        operation_name = self.window.mscolab.active_operation_name
+        local_dir = self.window.mscolab.local_operation_dir()
+        local_dir.mkdir(parents=True, exist_ok=True)
+        old_copy = WaypointsTableModel(xml_content=self.window.mscolab.waypoints_model.get_xml_content())
+        old_copy.invert_direction()
+        old_copy.save_to_ftml(str(local_dir / "mscolab_operation.ftml"))
+        self.window.workLocallyCheckbox.setChecked(True)
+        assert Path(self.window.mscolab.local_ftml_file) == local_dir / f"{operation_name}.ftml"
+        assert not (local_dir / "mscolab_operation.ftml").exists()
+        # the local changes are kept
+        assert self.window.mscolab.waypoints_model.waypoint_data(0).lat == old_copy.waypoint_data(0).lat
+
     @pytest.mark.parametrize("operation_name, directory", [
         ("..", "__"), ("../../outside", ".._.._outside"), ("absolute", None), ("a\\b:c", "a_b_c"), ("con", "con_")])
     def test_work_locally_stays_in_data_dir(self, qtbot, operation_name, directory):
@@ -727,16 +817,16 @@ class Test_Mscolab:
         self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
         self._activate_operation_at_index(0)
         local_data_dir = Path(self.window.mscolab.data_dir) / "local_colabdata"
-        files_before = {path for path in Path(ROOT_DIR).rglob("mscolab_operation.ftml")
+        files_before = {path for path in Path(ROOT_DIR).rglob("*.ftml")
                         if not path.is_relative_to(local_data_dir)}
         self.window.mscolab.active_operation_name = operation_name
         self.window.workLocallyCheckbox.setChecked(True)
         # unsafe characters are replaced, the local copy stays in the data directory
         assert self.window.workLocallyCheckbox.isChecked()
         assert Path(self.window.mscolab.local_ftml_file) == (
-            local_data_dir / self.userdata[1] / directory / "mscolab_operation.ftml")
+            local_data_dir / self.userdata[1] / directory / f"{directory}.ftml")
         assert Path(self.window.mscolab.local_ftml_file).is_file()
-        assert {path for path in Path(ROOT_DIR).rglob("mscolab_operation.ftml")
+        assert {path for path in Path(ROOT_DIR).rglob("*.ftml")
                 if not path.is_relative_to(local_data_dir)} == files_before
 
     @pytest.mark.skipif(sys.platform.startswith("win"), reason="symbolic links need privileges on Windows")

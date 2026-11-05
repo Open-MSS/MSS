@@ -26,6 +26,7 @@
 """
 
 
+import importlib
 import mock
 import os
 import sys
@@ -33,7 +34,7 @@ import argparse
 import pytest
 from pathlib import Path
 from urllib.request import urlopen
-from PyQt5 import QtCore, QtWidgets, QtTest
+from PyQt5 import QtCore, QtWidgets, QtTest, sip
 from mslib import __version__
 from tests.utils import shown_text
 from tests.constants import ROOT_DIR, MSUI_CONFIG_PATH, MSUI_CONFIG_FILE_PATH
@@ -70,6 +71,44 @@ def test_keep_config_file(qtbot):
     # after closing the window the config file should be the same as before
     _config = MSUI_CONFIG_FILE_PATH.read_text()
     assert _config == config
+
+
+def test_config_warnings_are_shown(qtbot):
+    MSUI_CONFIG_FILE_PATH.write_text('{"num_labels": "12", "default_WMS": "http://a.de"}')
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
+        msui = msui_mw.MSUIMainWindow()
+        qtbot.wait_until(lambda: m.call_count == 1)
+        text = m.call_args[0][2]
+        assert "'num_labels': '12' has the wrong type" in text
+        assert "'default_WMS': 'http://a.de' is not a list" in text
+        assert config_loader(dataset="num_labels") == 10
+
+        MSUI_CONFIG_FILE_PATH.write_text('{"num_lables": 12}')
+        msui.restart_application()
+        assert m.call_count == 2
+        assert "did you mean 'num_labels'?" in m.call_args[0][2]
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+        msui.close()
+
+
+def test_no_config_warnings_for_a_valid_config(qtbot):
+    MSUI_CONFIG_FILE_PATH.write_text('{"num_labels": 12}')
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
+        msui = msui_mw.MSUIMainWindow()
+        qtbot.wait(50)
+        msui.restart_application()
+        assert m.call_count == 0
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+        msui.close()
+
+
+def test_config_warnings_not_shown_for_a_deleted_window(qtbot):
+    MSUI_CONFIG_FILE_PATH.write_text('{"num_labels": "12"}')
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
+        msui = msui_mw.MSUIMainWindow()
+        sip.delete(msui)
+        qtbot.wait(50)
+        assert m.call_count == 0
 
 
 @pytest.mark.skipif(
@@ -358,6 +397,27 @@ class Test_MSSSideViewWindow:
             assert os.path.exists(save_file[0])
             os.remove(save_file[0])
 
+    def test_plugin_from_config_dir(self):
+        module_name = "msui_test_config_dir_plugin"
+        plugin_file = MSUI_CONFIG_PATH / f"{module_name}.py"
+        plugin_file.write_text(
+            "from mslib.plugins.io.text import load_from_txt, save_to_txt  # noqa: F401\n")
+        importlib.invalidate_caches()
+        plugins = {"ConfigDirText": ["txt", module_name, "load_from_txt"]}
+        try:
+            with mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=plugins), \
+                    mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critbox:
+                self.window.add_import_plugins("qt")
+                plugins["ConfigDirText"][2] = "save_to_txt"
+                self.window.add_export_plugins("qt")
+            assert critbox.call_count == 0
+            assert "ConfigDirText" in self.window.import_plugins
+            assert "ConfigDirText" in self.window.export_plugins
+        finally:
+            self.window.remove_plugins()
+            sys.modules.pop(module_name, None)
+            plugin_file.unlink()
+
     @mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=export_plugins)
     def test_add_plugins(self, mockopen):
         assert len(self.window.menuImportFlightTrack.actions()) == 3
@@ -379,6 +439,8 @@ class Test_MSSSideViewWindow:
             self.window.add_import_plugins("qt")
             self.window.add_export_plugins("qt")
             assert critbox.call_count == 2
+            # QMessageBox.critical needs parent, title and text
+            assert [len(call.args) for call in critbox.call_args_list] == [3, 3]
 
         self.window.remove_plugins()
         with mock.patch("mslib.msui.ms"

@@ -87,12 +87,13 @@ This makes a release upgrade.
 
     cd MSS
     pixi shell
-    (MSS) pixi update mss
+    (MSS) pixi upgrade mss
 
 
 Current release info
 ====================
 [![Conda Version](https://img.shields.io/conda/vn/conda-forge/mss.svg)](https://anaconda.org/conda-forge/mss)
+[![Built with VibePod](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/VibePod/vibepod-cli/main/.github/badges/vibepod.json)](https://vibepod.dev)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6572620.svg)](https://doi.org/10.5281/zenodo.6572620)
 [![JuRSE Code Pick](https://img.shields.io/badge/JuRSE_Code_Pick-July_2024-blue)](https://www.fz-juelich.de/en/rse/jurse-community/jurse-code-of-the-month/july-2024)
 [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/mss.svg)](https://anaconda.org/conda-forge/mss)

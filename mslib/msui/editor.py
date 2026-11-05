@@ -564,7 +564,16 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
 
         if json_file_data:
             json_model_data = self.json_model.serialize()
-            options = merge_dict(copy.deepcopy(json_model_data), json_file_data)
+            import_warnings = []
+            options = merge_dict(copy.deepcopy(json_model_data), json_file_data, _warnings=import_warnings)
+            if import_warnings:
+                show_popup(
+                    self, "Config import warnings",
+                    f"Some entries of {file_path} were not imported, because the setting is unknown "
+                    "or the value does not have the expected type or structure. "
+                    "All other entries were imported.\n\n" + "\n".join(import_warnings),
+                    icon=1,
+                )
             if options == json_model_data:
                 self.statusbar.showMessage("No option with new values found")
                 return
@@ -573,7 +582,10 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             self.view.setColumnWidth(0, self.view.width() // 2)
             self.set_noneditable_items(QtCore.QModelIndex())
             self.update_view()
-            self.statusbar.showMessage("Successfully imported config")
+            if import_warnings:
+                self.statusbar.showMessage(f"Imported config, {len(import_warnings)} entries ignored")
+            else:
+                self.statusbar.showMessage("Successfully imported config")
             logging.debug("Imported new config data from file")
         else:
             self.statusbar.showMessage("No data found in the file")

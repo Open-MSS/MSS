@@ -4,12 +4,10 @@
     tests._test_mscolab.conftest
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Directory-scoped test setup for mscolab: resets the mscolab config dir
-    (and the example.ftml copy) before every test in this directory.
-
-    Config generation itself (mscolab_settings/mscolab_auth) is lazy, inside
-    the mscolab_session_app fixture in tests/fixtures.py -- see
-    tests/server_setup.py.
+    Directory-scoped test setup for mscolab: writes and loads the test settings
+    (mscolab_settings/mscolab_auth, see tests/server_setup.py) before the test
+    modules are collected, and resets the mscolab config dir (and the
+    example.ftml copy) before every test in this directory.
 
     This file is part of MSS.
 
@@ -31,7 +29,11 @@
 
 import pytest
 
-from tests.server_setup import ensure_example_ftml, reset_mscolab_config_dir
+from tests.server_setup import ensure_example_ftml, ensure_mscolab_config, reset_mscolab_config_dir
+
+# The test modules import mslib.mscolab at module level, mslib.mscolab.conf binds mscolab_settings at its first
+# import: write and load the test settings before they are collected.
+ensure_mscolab_config()
 
 
 @pytest.fixture(autouse=True)

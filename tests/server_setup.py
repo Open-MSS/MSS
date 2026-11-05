@@ -35,7 +35,6 @@ import os
 import shutil
 import sys
 
-from mslib.mswms.seed import DataFiles
 import tests.constants as constants
 
 
@@ -64,6 +63,8 @@ def ensure_mswms_testdata():
     config from mswms_settings at import time.
     """
     if not constants.MSWMS_SERVER_CONFIG_FILE_PATH.exists():
+        # here, not at module level: the suites of the other packages use this module too
+        from mslib.mswms.seed import DataFiles
         print('\n configure testdata')
         print(constants.MSWMS_DATA_DIR)
         examples = DataFiles(mswms_data_dir=constants.MSWMS_DATA_DIR,
@@ -73,12 +74,13 @@ def ensure_mswms_testdata():
     _load_module("mswms_settings", constants.MSWMS_SERVER_CONFIG_FILE_PATH)
 
 
-def ensure_mscolab_config():
-    """Write mscolab_settings.py/mscolab_auth.py once, then (re-)load them
-    into sys.modules.
+def ensure_mscolab_settings():
+    """Write mscolab_settings.py/mscolab_auth.py once, then (re-)load mscolab_settings into sys.modules.
 
-    Must run before anything imports mslib.mscolab.server, which binds its
-    SQLAlchemy URI from mscolab_settings at import time.
+    mslib.mscolab.conf binds mscolab_settings at its first import, anywhere in the process, and falls back to
+    the default settings (with the developer's real ~/mss/colabdata database) otherwise. mscolab_settings needs
+    only the standard library, so root conftest.py calls this for every session, also in the suites without
+    mslib.utils; mscolab_auth, which imports mslib.utils, is loaded by ensure_mscolab_config.
     """
     if not constants.MSCOLAB_SERVER_CONFIG_FILE_PATH.exists():
         config_string = f'''
@@ -163,6 +165,15 @@ class mscolab_auth:
             MSCOLAB_AUTH_FILE.write_text(config_string)
 
     _load_module("mscolab_settings", constants.MSCOLAB_SERVER_CONFIG_FILE_PATH)
+
+
+def ensure_mscolab_config():
+    """Write mscolab_settings.py/mscolab_auth.py once, then (re-)load both into sys.modules.
+
+    Must run before anything imports mslib.mscolab.server, which binds its
+    SQLAlchemy URI from mscolab_settings at import time.
+    """
+    ensure_mscolab_settings()
     _load_module("mscolab_auth", constants.MSCOLAB_SERVER_CONFIG_DIR / constants.MSCOLAB_AUTH_FILE)
 
 

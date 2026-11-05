@@ -25,76 +25,29 @@
     limitations under the License.
 """
 
+import logging
 import sys
 # Disable pyc files
 sys.dont_write_bytecode = True
 
 import pytest
-import keyring
-from mslib.utils.loggerdef import configure_mpl_logger
 
-matplotlib_logger = configure_mpl_logger()
+# Only what every suite needs is here: each package's suite must run with only that package installed. The
+# fixtures of the desktop client (test keyring, reset of the msui configuration, Qt helpers) are in
+# tests/msui_fixtures.py, loaded by the conftest.py of tests/_test_msui and tests/_test_plugins.
 
-# This import must come first: importing tests.constants sets MSUI_CONFIG_PATH,
-# which mslib.msui.utils.config needs at import time.
-from tests.constants import create_msui_settings_file
-from mslib.msui.utils.config import read_config_file
+# as mslib.utils.loggerdef.configure_mpl_logger does; mslib.utils isn't in every suite's environment
+logging.getLogger("matplotlib").setLevel(logging.INFO)
 
-# mslib.mscolab.conf binds its mscolab_settings fallback the first time it is
-# imported, anywhere, and then caches that binding for the rest of the
-# process -- so this must run before anything imports mslib.mscolab.auth/
-# seed/mscolab/server, including transitively via tests.utils/tests.fixtures
-# below. It's cheap (just (re)writing two small config files); the actual
-# expensive setup (NetCDF demo data, the server fork) stays lazy inside the
-# fixtures that need it -- see tests/server_setup.py.
-from tests.server_setup import ensure_mscolab_config
+# This import must come first: tests.constants creates the temporary configuration directories and sets
+# MSUI_CONFIG_PATH and XDG_CACHE_HOME before any mslib module reads them.
+import tests.constants  # noqa: E402,F401
+from tests.server_setup import ensure_mscolab_settings  # noqa: E402
 
-ensure_mscolab_config()
-
-
-class TestKeyring(keyring.backend.KeyringBackend):
-    """A test keyring which always outputs the same password
-    from Runtime Configuration
-    https://pypi.org/project/keyring/#third-party-backends
-    """
-    priority = 1
-
-    passwords = {}
-
-    def reset(self):
-        self.passwords = {}
-
-    def set_password(self, servicename, username, password):
-        self.passwords[servicename + username] = password
-
-    def get_password(self, servicename, username):
-        return self.passwords.get(servicename + username, "password from TestKeyring")
-
-    def delete_password(self, servicename, username):
-        if servicename + username in self.passwords:
-            del self.passwords[servicename + username]
-
-
-# set the keyring for keyring lib
-keyring.set_keyring(TestKeyring())
-
-
-@pytest.fixture(autouse=True)
-def keyring_reset():
-    keyring.get_keyring().reset()
-
-
-@pytest.fixture(autouse=True)
-def reset_config():
-    """Reset the msui configuration file used in the tests after every test.
-
-    The expensive parts of mswms/mscolab server setup (NetCDF demo data, the
-    server fork) happen lazily, inside the fixtures that need them (see
-    tests/fixtures.py and tests/server_setup.py), so that test-fast doesn't
-    pay for them.
-    """
-    create_msui_settings_file("{}")
-    read_config_file()
+# For every session, before any test module is collected: a test module of any suite importing mslib.mscolab
+# then binds the test settings, never the default ones with the developer's real database. Only the standard
+# library is needed for it; the suites using mslib.mscolab load mscolab_auth too (ensure_mscolab_config).
+ensure_mscolab_settings()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -124,8 +77,7 @@ def _ensure_mswms_server_if_needed(request):
         request.getfixturevalue("mswms_server")
 
 
-# Make fixtures available everywhere. tests.fixtures itself has no
-# mscolab/mswms/Qt side effects at import time (those are lazy, inside the
-# fixtures that need them), so this is safe and cheap regardless of which
-# test directories are in scope.
+# Make the server fixtures available everywhere. tests.fixtures imports nothing but the standard library and
+# pytest at module level (mslib.mscolab, mslib.mswms etc. are imported inside the fixtures that need them),
+# so this is safe and cheap regardless of which test directories are in scope.
 from tests.fixtures import *  # noqa: E402,F401,F403
