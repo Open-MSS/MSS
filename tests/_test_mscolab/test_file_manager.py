@@ -949,6 +949,21 @@ class Test_FileManager:
             assert db.session.get(Operation, operation.id).path == "morningGroup"
             assert get_operation_dir(self.fm.data_dir, "morningGroup").exists()
 
+    def test_import_permissions_into_an_operation_without_creator(self):
+        # its creator deleted the account and it had no admin then; an admin was added later, e.g. by the CLI
+        with self.app.test_client():
+            _, source = self._create_operation_with_users(flight_path="source")
+            _, target = self._create_operation(flight_path="target", user=self.anotheruser)
+            self.fm.add_bulk_permission(target.id, self.anotheruser, [self.user.id], "admin")
+            Permission.query.filter_by(op_id=target.id, access_level="creator").delete()
+            db.session.commit()
+            success, _, _ = self.fm.import_permissions(source.id, target.id, self.user.id)
+            assert success is True
+            levels = {permission.u_id: permission.access_level
+                      for permission in Permission.query.filter_by(op_id=target.id)}
+            assert levels == {self.user.id: "admin", self.vieweruser.id: "viewer",
+                              self.collaboratoruser.id: "collaborator"}
+
     def test_import_permission(self):
         with self.app.test_client():
             flight_path10, operation10 = self._create_operation(flight_path="operation10")

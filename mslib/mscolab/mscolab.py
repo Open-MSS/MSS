@@ -83,7 +83,7 @@ def _is_database_file(path, db_path):
 def handle_db_repair_references():
     """
     Repairs the rows of a development database that refer to a deleted user or operation, see
-    migrations.schema_repair.dangling_references; returns how many rows were changed
+    migrations.schema_repair.DANGLING_REFERENCES; returns how many rows were changed
 
     The 12.0.0 migration does this for every older database. The server start only warns: it deletes rows.
     """

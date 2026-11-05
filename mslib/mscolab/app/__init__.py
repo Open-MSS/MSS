@@ -92,13 +92,13 @@ mail = Mail()
 migrate = Migrate(render_as_batch=True, user_module_prefix="cu.")
 
 
-@sqlalchemy.event.listens_for(sqlalchemy.engine.Engine, "connect")
 def _enforce_sqlite_foreign_keys(dbapi_connection, connection_record):
     """
     SQLite enforces foreign keys only when asked for, per connection; PostgreSQL always does
 
     So a row that refers to a missing row fails on SQLite too, not only on a PostgreSQL production server. The
-    migrations switch it off, see migrations/env.py.
+    migrations switch it off, see migrations/env.py. Listens to the engine of each app only, see create_app: other
+    engines of the process, e.g. of an old database to copy, stay as they are.
     """
     if type(dbapi_connection).__module__.startswith("sqlite3"):
         cursor = dbapi_connection.cursor()
@@ -139,19 +139,17 @@ def _repair_references(table, values, references, copied_ids, repaired):
     of a deleted user or operation go. Adds the id of the row to repaired[(table, column, kept)] for the log.
     """
     from mslib.mscolab.migrations.schema_repair import KEPT_WITHOUT_REFERENCE
-    kept = True
-    for column, referred_table in references.items():
-        value = values.get(column)
-        if value is None or value in copied_ids.get(referred_table, ()):
-            continue
-        if (table, column) in KEPT_WITHOUT_REFERENCE:
-            values[column] = None
-            repaired.setdefault((table, column, True), []).append(values.get("id"))
-        else:
-            repaired.setdefault((table, column, False), []).append(values.get("id"))
-            kept = False
-            break
-    return kept
+    missing = [column for column, referred_table in references.items()
+               if values.get(column) is not None and values[column] not in copied_ids.get(referred_table, ())]
+    skipped_by = [column for column in missing if (table, column) not in KEPT_WITHOUT_REFERENCE]
+    if skipped_by:
+        # logged as skipped only, also if another reference would have been kept without
+        repaired.setdefault((table, skipped_by[0], False), []).append(values.get("id"))
+        return False
+    for column in missing:
+        values[column] = None
+        repaired.setdefault((table, column, True), []).append(values.get("id"))
+    return True
 
 
 def initialise_db():
@@ -208,6 +206,7 @@ your database MSColab will abort. Please follow the documentation for a manual d
         # sqlalchemy.create_engine would resolve it against CWD instead.
         # the URL object, str() of it masks the password as ***
         target_engine = sqlalchemy.create_engine(db.engine.url)
+        sqlalchemy.event.listen(target_engine, "connect", _enforce_sqlite_foreign_keys)
         target_metadata = sqlalchemy.MetaData()
         target_metadata.reflect(bind=target_engine)
         # the ids copied per table: older versions left rows behind that refer to a deleted user or operation, the
@@ -274,10 +273,14 @@ def repair_schema():
                                                         sqlite_foreign_keys_off, use_autoincrement_ids)
     from mslib.mscolab.models import db
 
+    from alembic.script import ScriptDirectory
+
+    head = ScriptDirectory(migrations.__path__[0]).get_current_head()
     # the repairs recreate tables on SQLite, like the migrations
-    with db.engine.connect() as conn, sqlite_foreign_keys_off(conn) as foreign_keys, conn.begin():
-        if MigrationContext.configure(conn).get_current_revision() is None:
-            # an empty database, the upgrade creates everything
+    with db.engine.connect() as conn, sqlite_foreign_keys_off(conn) as foreign_keys:
+        if MigrationContext.configure(conn).get_current_revision() != head:
+            # an empty database, or one the upgrade still has to bring up to the latest revision, e.g. before
+            # `mscolab db` upgrades: a column added now would make the migration that adds it fail
             return
         if not has_column(conn, "users", "fullname"):
             logging.warning("The database misses users.fullname: it was created by MSColab 10.x, whose migration "
@@ -463,6 +466,8 @@ def create_app(config_object=mscolab_settings):
     app.xstatic = _xstatic
 
     db.init_app(app)
+    with app.app_context():
+        sqlalchemy.event.listen(db.engine, "connect", _enforce_sqlite_foreign_keys)
     migrate.init_app(app, db)
     mail.init_app(app)
     # mslib.mscolab.mail.send_email sends its messages via current_app.mail

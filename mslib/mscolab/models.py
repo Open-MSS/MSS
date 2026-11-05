@@ -65,6 +65,15 @@ class AwareDateTime(sqlalchemy.types.TypeDecorator):
         return value
 
 
+def fits_column(column, value):
+    """
+    True if value fits into the String column, e.g. User.username; None fits
+
+    PostgreSQL refuses a longer value with an error, SQLite stored it.
+    """
+    return value is None or len(str(value)) <= column.type.length
+
+
 class User(db.Model):
 
     __tablename__ = 'users'

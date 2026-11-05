@@ -34,6 +34,7 @@ import os
 import runpy
 import secrets
 import sys
+import sqlalchemy
 from pathlib import Path
 
 import mock
@@ -46,6 +47,7 @@ import mslib.mscolab.server
 from mslib.mscolab.app import InsecureSecretError, create_app
 from mslib.utils.basic_auth import BasicAuthSettingError
 from mslib.mscolab.auth import register_user, check_login
+from mslib.mscolab.api.events import SocketEvents
 from mslib.mscolab.api.message_type import MessageType
 from mslib.mscolab.conf import DefaultSettings, mscolab_settings
 from mslib.mscolab.models import db, Change, Message, Operation, Permission, User
@@ -309,11 +311,16 @@ class Test_Server:
         attachments.mkdir(parents=True)
         (attachments / "attachment.txt").write_text("attached")
         if deletion == "delete_own_account":
-            with self.app.test_client() as test_client:
+            with self.app.test_client() as test_client, \
+                    mock.patch.object(self.sockio.sm, "emit_operation_delete") as operation_delete:
                 response = test_client.post('/delete_own_account', data={"token": self._get_token(test_client)})
             assert response.get_json()["success"] is True
+            # other clients of the user close it
+            operation_delete.assert_called_once_with(alone)
         else:
-            assert delete_user(self.userdata[0])
+            with mock.patch("mslib.mscolab.seed.notify_socket_event") as notify:
+                assert delete_user(self.userdata[0])
+            assert mock.call(SocketEvents.OPERATION_DELETED, op_id=alone) in notify.call_args_list
         # nobody could reach it any more
         assert Operation.query.filter_by(path="alone").first() is None
         assert Message.query.filter_by(op_id=alone).count() == 0 and Change.query.filter_by(op_id=alone).count() == 0
@@ -322,6 +329,44 @@ class Test_Server:
         shared = Operation.query.filter_by(path="shared").first()
         assert [permission.access_level for permission in Permission.query.filter_by(op_id=shared.id)] == ["viewer"]
         assert (Path(current_app.config['OPERATIONS_DATA']) / "shared").is_dir()
+
+    def test_profile_image_stays_when_the_deletion_fails(self, mscolab_managers):
+        _, _, fm = mscolab_managers
+        assert add_user(*self.userdata)
+        user = get_user(self.userdata[0])
+        image = Path(current_app.config['UPLOAD_FOLDER']) / "profile" / "image.png"
+        image.parent.mkdir(parents=True, exist_ok=True)
+        image.write_bytes(b"image")
+        user.profile_image_path = "profile/image.png"
+        db.session.commit()
+        with mock.patch.object(db.session, "commit", side_effect=sqlalchemy.exc.OperationalError("", {}, None)):
+            with pytest.raises(sqlalchemy.exc.OperationalError):
+                fm.delete_user(user)
+        db.session.rollback()
+        assert image.exists() and get_user(self.userdata[0]) is not None
+
+    @pytest.mark.parametrize("field", ["email", "username", "fullname"])
+    def test_register_refuses_too_long_values(self, field):
+        values = dict(zip(("email", "username", "password", "fullname"), self.userdata))
+        values[field] = ("x" * 250 + "@example.org") if field == "email" else "x" * 256
+        result = register_user(values["email"], values["password"], values["username"], values["fullname"])
+        # PostgreSQL refused it with an error, HTTP 500
+        assert result["success"] is False
+        assert "at most 255 characters" in result["message"] or "not valid" in result["message"]
+        assert User.query.count() == 0
+
+    def test_operation_refuses_too_long_values(self, mscolab_managers):
+        _, _, fm = mscolab_managers
+        assert add_user(*self.userdata)
+        user = get_user(self.userdata[0])
+        assert fm.create_operation("long", "x" * 256, user, content=XML_CONTENT_INIT) is False
+        assert fm.create_operation("long", "description", user, content=XML_CONTENT_INIT, category="x" * 256) is False
+        assert fm.create_operation("x" * 256, "description", user, content=XML_CONTENT_INIT) is False
+        assert fm.create_operation("long", "description", user, content=XML_CONTENT_INIT)
+        op_id = Operation.query.filter_by(path="long").first().id
+        for attribute in ("description", "category", "path"):
+            assert fm.update_operation(op_id, attribute, "x" * 256, user) is False
+        assert fm.update_operation(op_id, "description", "x" * 255, user) is True
 
     def test_upload_endpoints_exist(self):
         # the upload limit applies to these endpoints by name, a renamed view would get the larger limit

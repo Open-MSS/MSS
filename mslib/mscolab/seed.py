@@ -110,11 +110,14 @@ def delete_user(email):
         u_id = user.id
         op_ids = [permission.op_id for permission in user.permissions]
         # like the deletion by REST, also the profile image goes
-        handovers = FileManager(current_app.config['OPERATIONS_DATA']).delete_user(user)
+        handovers, deleted_op_ids = FileManager(current_app.config['OPERATIONS_DATA']).delete_user(user)
         # an admin became the creator of the operations of the user
         for op_id, creator_id, message in handovers:
             notify_socket_event(SocketEvents.UPDATE_PERMISSION, u_id=creator_id, op_id=op_id)
             notify_socket_event(SocketEvents.CHAT_MESSAGE_CLIENT, message_id=message.id)
+        # deleted with the user, nobody else was a member; other clients of the user close it
+        for op_id in deleted_op_ids:
+            notify_socket_event(SocketEvents.OPERATION_DELETED, op_id=op_id)
         for op_id in op_ids:
             notify_socket_event(SocketEvents.REVOKE_PERMISSION, u_id=u_id, op_id=op_id)
             notify_socket_event(SocketEvents.OPERATION_PERMISSIONS_UPDATED, u_id=u_id, op_id=op_id)

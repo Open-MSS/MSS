@@ -256,7 +256,8 @@ operation was deleted:
 - permissions, chat messages and flight track changes of a deleted operation are deleted;
 - a reply to a deleted chat message stays, as a message of its own.
 
-The log names the ids of every row the migration changes. A later server start changes no rows: if a database
+Operations whose creator was deleted by an earlier version have no creator: the migration makes their admin
+who is a member longest the creator. The log names the ids of every row the migration changes. A later server start changes no rows: if a database
 still has such rows, e.g. one that ran a development state of 12.0.0, the server warns at its start; repair them
 after a backup with ``mscolab db --repair_references``.
 

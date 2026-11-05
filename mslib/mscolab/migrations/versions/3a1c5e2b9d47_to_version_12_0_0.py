@@ -10,7 +10,8 @@ import logging
 import sqlalchemy as sa
 from alembic import op
 
-from mslib.mscolab.migrations.schema_repair import (add_fullname, add_token_nonce, has_column,
+from mslib.mscolab.migrations.schema_repair import (add_fullname, add_token_nonce, batch_alter_table,
+                                                    hand_over_operations_without_creator, has_column,
                                                     remove_dangling_references, use_autoincrement_ids)
 
 
@@ -55,12 +56,9 @@ def upgrade():
         conn.execute(sa.text("DELETE FROM permissions WHERE id IN :ids")
                      .bindparams(sa.bindparam("ids", expanding=True)), {"ids": duplicate_ids})
 
-    # Older versions could also downgrade or remove the creator through a {category}Group operation.
-    # Who created such an operation is not recorded elsewhere, so this can't be repaired automatically.
-    creator_op_ids = {row.op_id for row in keep.values() if row.access_level == "creator"}
-    for (op_id,) in conn.execute(sa.text("SELECT id FROM operations ORDER BY id")).fetchall():
-        if op_id not in creator_op_ids:
-            logging.warning("operation %s has no creator, only a creator can delete it", op_id)
+    # Older versions deleted the creator permission with its user, and could downgrade or remove the creator
+    # through a {category}Group operation: an admin takes over, as when a creator is deleted now
+    hand_over_operations_without_creator(conn)
 
     with op.batch_alter_table('permissions', schema=None) as batch_op:
         batch_op.create_unique_constraint(batch_op.f('uq_permissions_u_id'), ['u_id', 'op_id'])
@@ -77,7 +75,7 @@ def downgrade():
     # AUTOINCREMENT of users and operations on SQLite stays, an earlier version works with it
     # missing in a database that ran an earlier development state of this migration
     if has_column(op.get_bind(), 'users', 'token_nonce'):
-        with op.batch_alter_table('users', schema=None) as batch_op:
+        with batch_alter_table(op, op.get_bind(), 'users') as batch_op:
             batch_op.drop_column('token_nonce')
 
     with op.batch_alter_table('permissions', schema=None) as batch_op:

@@ -31,7 +31,10 @@ Global map: ../../ARCHITECTURE.md
   released version; model changes go into the one migration of the next major release
   (docs/development.rst), currently 3a1c5e2b9d47 for 12.0.0. Development databases already
   stamped with that revision don't run a later added change: make the change idempotent in
-  `migrations/schema_repair.py` and add it to `app.repair_schema()` (server start, `mscolab db`)
+  `migrations/schema_repair.py` and add it to `app.repair_schema()` (server start, `mscolab db`; it acts only
+  on a database at the latest revision). One exception was made: the 9.0.0 migration failed on PostgreSQL for
+  every database with users, so it got a temporary server default (see its comment). On SQLite, rebuild
+  `users`/`operations` only through `schema_repair.batch_alter_table`, which keeps AUTOINCREMENT and its counter
 - `api/schemas.py` + `api/endpoints.py` — the typed client/server contract
   (request/response dataclasses, endpoint-name registry); `api/events.py`
   (`SocketEvents`) + `api/message_type.py` (`MessageType`) — socket

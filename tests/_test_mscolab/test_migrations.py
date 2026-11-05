@@ -195,7 +195,7 @@ def _remove_token_nonce():
     from mslib.mscolab.migrations.schema_repair import sqlite_foreign_keys_off
     db.session.remove()
     # the batch mode recreates the table on SQLite, like a migration
-    with db.engine.connect() as conn, sqlite_foreign_keys_off(conn), conn.begin():
+    with db.engine.connect() as conn, sqlite_foreign_keys_off(conn):
         with Operations(MigrationContext.configure(conn)).batch_alter_table('users') as batch_op:
             batch_op.drop_column('token_nonce')
     db.session.remove()
@@ -270,6 +270,12 @@ def _insert_dangling_rows():
         ids["reply_to_missing_message"] = insert(message, op_id=op_id, u_id=u_id, text="reply", reply_id=_DELETED)
         ids["permission_of_deleted_user"] = insert(permission, op_id=op_id, u_id=_DELETED)
         ids["permission_of_deleted_operation"] = insert(permission, op_id=_DELETED, u_id=u_id)
+        # of a deleted user in a deleted operation: it goes, and is logged once
+        ids["message_of_deleted_user_and_operation"] = insert(message, op_id=_DELETED, u_id=_DELETED, text="gone",
+                                                              reply_id=None)
+        # without operation, the column allows it
+        ids["message_without_operation_of_deleted_user"] = insert(message, op_id=None, u_id=_DELETED, text="kept",
+                                                                  reply_id=None)
         conn.commit()
         conn.exec_driver_sql("PRAGMA foreign_keys=ON" if sqlite else "SET session_replication_role = origin")
         conn.commit()
@@ -286,6 +292,8 @@ def _assert_repaired(ids):
     assert row("SELECT u_id FROM changes WHERE id = :id", ids["change_of_deleted_user"]) == (None,)
     # the rows of a deleted operation and the permissions of a deleted user go
     assert row(message, ids["message_of_deleted_operation"]) is None
+    assert row(message, ids["message_of_deleted_user_and_operation"]) is None
+    assert row(message, ids["message_without_operation_of_deleted_user"]) == (None, None)
     assert row("SELECT id FROM changes WHERE id = :id", ids["change_of_deleted_operation"]) is None
     for permission in ("permission_of_deleted_user", "permission_of_deleted_operation"):
         assert row("SELECT id FROM permissions WHERE id = :id", ids[permission]) is None
@@ -315,7 +323,9 @@ def test_server_start_only_warns_about_rows_of_deleted_users_and_operations(msco
         # a server start deletes no rows
         with mock.patch("mslib.mscolab.app.logging.warning") as warning:
             initialise_db()
-        assert "mscolab db --repair_references" in warning.call_args.args[0]
+        if db.engine.dialect.name == "sqlite":
+            assert "mscolab db --repair_references" in warning.call_args.args[0]
+        # PostgreSQL refuses such rows, the test forced them in; the server start doesn't look for them there
         assert [db.session.execute(sqlalchemy.text(f"SELECT COUNT(*) FROM {table}")).scalar()
                 for table in ("messages", "changes", "permissions")] == counts
         # the repair by the CLI, it logs every row it changes
@@ -363,7 +373,7 @@ def test_server_start_stops_sqlite_reusing_ids_of_operations(mscolab_app):
             pytest.skip("only SQLite reuses ids")
         mslib.mscolab.mscolab.handle_db_seed()
         db.session.remove()
-        with db.engine.connect() as conn, sqlite_foreign_keys_off(conn), conn.begin():
+        with db.engine.connect() as conn, sqlite_foreign_keys_off(conn):
             with Operations(MigrationContext.configure(conn)).batch_alter_table(
                     'operations', recreate='always', table_kwargs={'sqlite_autoincrement': False}):
                 pass
@@ -403,6 +413,10 @@ def test_migrate_from_repairs_rows_of_deleted_users_and_operations(mscolab_app, 
             logged = {row_id for call in warning.call_args_list if "of the old database" in call.args[0]
                       for row_id in call.args[2]}
             assert logged == set(ids.values())
+            # a skipped row is not also logged as copied
+            copied = {row_id for call in warning.call_args_list if call.args[0].startswith("Copied")
+                      for row_id in call.args[2]}
+            assert ids["message_of_deleted_user_and_operation"] not in copied
             _assert_repaired(ids)
     finally:
         mscolab_app.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'] = None
@@ -413,7 +427,7 @@ def _drop_users_column(column):
     from alembic.operations import Operations
     from mslib.mscolab.migrations.schema_repair import sqlite_foreign_keys_off
     db.session.remove()
-    with db.engine.connect() as conn, sqlite_foreign_keys_off(conn), conn.begin():
+    with db.engine.connect() as conn, sqlite_foreign_keys_off(conn):
         with Operations(MigrationContext.configure(conn)).batch_alter_table('users') as batch_op:
             batch_op.drop_column(column)
     db.session.remove()
@@ -476,3 +490,128 @@ def test_server_start_moves_lagging_sequences_forward_only(mscolab_app, mscolab_
         initialise_db()
         assert mslib.mscolab.seed.add_user("new@example.org", "new", "a-password", "New")
         assert mslib.mscolab.seed.get_user("new@example.org").id > deleted_id
+
+
+def test_db_command_before_the_upgrade_changes_nothing(mscolab_app):
+    """`mscolab db` repairs the schema before it upgrades; a column added then would break the migration adding it"""
+    from mslib.mscolab.app import repair_schema
+    migrations_path = mslib.mscolab.migrations.__path__[0]
+    with mscolab_app.app_context():
+        mslib.mscolab.mscolab.handle_db_seed()
+        db.session.commit()
+        flask_migrate.downgrade(directory=migrations_path, revision="c171019fe3ee")
+        assert "fullname" not in _columns_of_users()
+        repair_schema()
+        assert "fullname" not in _columns_of_users()
+        flask_migrate.upgrade(directory=migrations_path)
+        assert "fullname" in _columns_of_users()
+
+
+def test_foreign_key_violation_rolls_the_changes_back(mscolab_app):
+    from mslib.mscolab.migrations.schema_repair import sqlite_foreign_keys_off
+    with mscolab_app.app_context():
+        if db.engine.dialect.name != "sqlite":
+            pytest.skip("PostgreSQL refuses the row itself")
+        mslib.mscolab.mscolab.handle_db_seed()
+        db.session.remove()
+        count = db.session.execute(sqlalchemy.text("SELECT COUNT(*) FROM permissions")).scalar()
+        db.session.remove()
+        with pytest.raises(RuntimeError, match="refer to missing rows"):
+            with db.engine.connect() as conn, sqlite_foreign_keys_off(conn):
+                conn.execute(sqlalchemy.text("INSERT INTO permissions (op_id, u_id, access_level) "
+                                             "VALUES (999999, 999999, 'viewer')"))
+        # nothing was committed
+        assert db.session.execute(sqlalchemy.text("SELECT COUNT(*) FROM permissions")).scalar() == count
+
+
+def test_repair_of_many_rows(mscolab_app):
+    # more rows than SQLite and PostgreSQL take as parameters of one statement
+    from mslib.mscolab.migrations.schema_repair import remove_dangling_references
+    with mscolab_app.app_context():
+        mslib.mscolab.mscolab.handle_db_seed()
+        _insert_dangling_rows()
+        with db.engine.connect() as conn:
+            sqlite = conn.dialect.name == "sqlite"
+            conn.exec_driver_sql("PRAGMA foreign_keys=OFF" if sqlite else "SET session_replication_role = replica")
+            conn.commit()
+            op_id = conn.execute(sqlalchemy.text("SELECT id FROM operations ORDER BY id")).scalar()
+            conn.execute(sqlalchemy.text("INSERT INTO messages (op_id, u_id, text, message_type) "
+                                         "VALUES (:op_id, :u_id, 'many', 'TEXT')"),
+                         [{"op_id": op_id, "u_id": _DELETED}] * 70000)
+            conn.commit()
+            conn.exec_driver_sql("PRAGMA foreign_keys=ON" if sqlite else "SET session_replication_role = origin")
+            conn.commit()
+        with db.engine.begin() as conn, mock.patch("mslib.mscolab.migrations.schema_repair.logging.warning"):
+            assert remove_dangling_references(conn) > 70000
+        assert db.session.execute(sqlalchemy.text(
+            "SELECT COUNT(*) FROM messages WHERE text = 'many' AND u_id IS NULL")).scalar() == 70000
+
+
+def test_rebuilding_users_keeps_autoincrement(mscolab_app):
+    from alembic.migration import MigrationContext
+    from alembic.operations import Operations
+    from mslib.mscolab.migrations.schema_repair import (batch_alter_table, has_autoincrement_ids,
+                                                        sqlite_foreign_keys_off)
+    with mscolab_app.app_context():
+        if db.engine.dialect.name != "sqlite":
+            pytest.skip("only SQLite reuses ids")
+        assert mslib.mscolab.seed.add_user("first@example.org", "first", "first-password", "First")
+        assert mslib.mscolab.seed.add_user("last@example.org", "last", "last-password", "Last")
+        deleted_id = mslib.mscolab.seed.get_user("last@example.org").id
+        assert mslib.mscolab.seed.delete_user("last@example.org")
+        db.session.remove()
+        # as the 12.0.0 downgrade and the repairs of token_nonce do
+        with db.engine.connect() as conn, sqlite_foreign_keys_off(conn):
+            with batch_alter_table(Operations(MigrationContext.configure(conn)), conn, "users",
+                                   recreate="always"):
+                pass
+            assert has_autoincrement_ids(conn, "users")
+        assert mslib.mscolab.seed.add_user("new@example.org", "new", "new-password", "New")
+        assert mslib.mscolab.seed.get_user("new@example.org").id > deleted_id
+
+
+def test_upgrade_hands_over_operations_without_creator(mscolab_app):
+    """before 12.0.0 deleting the creator deleted its permission, the operation kept its admins"""
+    migrations_path = mslib.mscolab.migrations.__path__[0]
+    with mscolab_app.app_context():
+        for email, name in (("creator@example.org", "creator"), ("admin1@example.org", "admin1"),
+                            ("admin2@example.org", "admin2"), ("viewer@example.org", "viewer")):
+            assert mslib.mscolab.seed.add_user(email, name, f"{name}-password", name)
+        for path in ("with_admins", "with_viewer"):
+            assert mslib.mscolab.seed.add_operation(path, path)
+            assert mslib.mscolab.seed.add_user_to_operation(path=path, access_level="creator",
+                                                            emailid="creator@example.org")
+        for email in ("admin1@example.org", "admin2@example.org"):
+            assert mslib.mscolab.seed.add_user_to_operation(path="with_admins", access_level="admin", emailid=email)
+        assert mslib.mscolab.seed.add_user_to_operation(path="with_viewer", access_level="viewer",
+                                                        emailid="viewer@example.org")
+        # the reads of the seed functions hold a transaction, PostgreSQL waits for it to alter a table
+        db.session.remove()
+        flask_migrate.downgrade(directory=migrations_path, revision="922e4d9c94e2")
+        db.session.execute(sqlalchemy.text("DELETE FROM permissions WHERE access_level = 'creator'"))
+        db.session.commit()
+        with mock.patch("mslib.mscolab.migrations.schema_repair.logging.warning") as warning:
+            flask_migrate.upgrade(directory=migrations_path)
+        levels = {(row.path, row.username): row.access_level for row in db.session.execute(sqlalchemy.text(
+            "SELECT operations.path, users.username, permissions.access_level FROM permissions "
+            "JOIN operations ON operations.id = permissions.op_id JOIN users ON users.id = permissions.u_id"))}
+        # the admin who is a member longest
+        assert levels == {("with_admins", "admin1"): "creator", ("with_admins", "admin2"): "admin",
+                          ("with_viewer", "viewer"): "viewer"}
+        messages = [call.args[0] for call in warning.call_args_list]
+        assert any("is its creator now" in message for message in messages)
+        assert any("has no creator and no admin" in message for message in messages)
+
+
+def test_other_sqlite_engines_keep_their_foreign_key_setting(mscolab_app, tmp_path):
+    # the app switches the foreign keys on for its own database only
+    engine = sqlalchemy.create_engine("sqlite:///" + str(tmp_path / "other.db"))
+    try:
+        with engine.connect() as conn:
+            assert conn.exec_driver_sql("PRAGMA foreign_keys").scalar() == 0
+    finally:
+        engine.dispose()
+    with mscolab_app.app_context():
+        if db.engine.dialect.name == "sqlite":
+            with db.engine.connect() as conn:
+                assert conn.exec_driver_sql("PRAGMA foreign_keys").scalar() == 1

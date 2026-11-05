@@ -44,31 +44,55 @@ class _ForeignKeyCheck:
 @contextlib.contextmanager
 def sqlite_foreign_keys_off(connection):
     """
-    Switches the foreign keys of an SQLite connection off for schema changes, checks them afterwards
+    Runs schema changes in one transaction of connection, on SQLite with the foreign keys switched off; commits it
+    only if no row refers to a missing row
 
     The batch mode of alembic recreates tables on SQLite, which needs them off, see
     https://www.sqlite.org/lang_altertable.html#otheralter. The PRAGMA has no effect inside a transaction, so
-    connection must have none open. Rows left referring to missing rows raise a RuntimeError, PostgreSQL would
-    refuse them; setting check of the yielded object to False skips that. Other databases are left as they are.
+    connection must have none open. Rows left referring to missing rows roll everything back and raise a
+    RuntimeError, as PostgreSQL would refuse them; setting check of the yielded object to False skips that check.
+    The transaction is begun here, alembic runs inside it and doesn't commit on its own.
     """
     state = _ForeignKeyCheck()
-    if connection.dialect.name != "sqlite":
-        yield state
-        return
-    connection.exec_driver_sql("PRAGMA foreign_keys=OFF")
-    connection.commit()
-    violations = []
+    sqlite = connection.dialect.name == "sqlite"
+    if sqlite:
+        connection.exec_driver_sql("PRAGMA foreign_keys=OFF")
+        connection.commit()
     try:
-        yield state
-        connection.commit()
-        if state.check:
-            violations = connection.exec_driver_sql("PRAGMA foreign_key_check").fetchall()
+        with connection.begin():
+            yield state
+            # checked inside the transaction: a violation rolls the changes back
+            violations = connection.exec_driver_sql("PRAGMA foreign_key_check").fetchall() \
+                if sqlite and state.check else []
+            if violations:
+                raise RuntimeError("Rows refer to missing rows (table, rowid, referred table, foreign key): "
+                                   f"{violations}")
     finally:
-        connection.rollback()
-        connection.exec_driver_sql("PRAGMA foreign_keys=ON")
-        connection.commit()
-    if violations:
-        raise RuntimeError(f"Rows refer to missing rows (table, rowid, referred table, foreign key): {violations}")
+        if sqlite:
+            connection.exec_driver_sql("PRAGMA foreign_keys=ON")
+            connection.commit()
+
+
+@contextlib.contextmanager
+def batch_alter_table(op, conn, table, **kwargs):
+    """
+    op.batch_alter_table that keeps AUTOINCREMENT of a table of AUTOINCREMENT_TABLES on SQLite
+
+    alembic recreates the table from what SQLAlchemy reflects, and that doesn't include AUTOINCREMENT; the new table
+    also counts on from its highest id, so the ids of deleted rows above it would be handed out again. Both are put
+    back here.
+    """
+    keep = conn.dialect.name == "sqlite" and table in AUTOINCREMENT_TABLES and has_autoincrement_ids(conn, table)
+    sequence = None
+    if keep:
+        kwargs["table_kwargs"] = dict(kwargs.get("table_kwargs", {}), sqlite_autoincrement=True)
+        sequence = conn.execute(sa.text("SELECT seq FROM sqlite_sequence WHERE name = :table"),
+                                {"table": table}).scalar()
+    with op.batch_alter_table(table, schema=None, **kwargs) as batch_op:
+        yield batch_op
+    if sequence is not None:
+        conn.execute(sa.text("UPDATE sqlite_sequence SET seq = :seq WHERE name = :table AND seq < :seq"),
+                     {"seq": sequence, "table": table})
 
 
 def has_column(conn, table, column):
@@ -83,96 +107,104 @@ def add_token_nonce(op, conn):
 
     op is an alembic Operations object for conn.
     """
-    with op.batch_alter_table('users', schema=None) as batch_op:
+    with batch_alter_table(op, conn, 'users') as batch_op:
         batch_op.add_column(sa.Column('token_nonce', sa.String(length=32), nullable=True))
     for (u_id,) in conn.execute(sa.text("SELECT id FROM users")).fetchall():
         conn.execute(sa.text("UPDATE users SET token_nonce = :nonce WHERE id = :id"),
                      {"nonce": secrets.token_hex(16), "id": u_id})
-    with op.batch_alter_table('users', schema=None) as batch_op:
+    with batch_alter_table(op, conn, 'users') as batch_op:
         batch_op.alter_column('token_nonce', existing_type=sa.String(length=32), nullable=False)
 
 
-def _ids(conn, query):
-    return [row.id for row in conn.execute(sa.text(query))]
+_MISSING_USER = "{column} IS NOT NULL AND {column} NOT IN (SELECT id FROM users)"
+_MISSING_OPERATION = "op_id IS NOT NULL AND op_id NOT IN (SELECT id FROM operations)"
 
-
-def _update_ids(conn, statement, ids):
-    if ids:
-        conn.execute(sa.text(statement).bindparams(sa.bindparam("ids", expanding=True)), {"ids": ids})
-    return len(ids)
-
-
-# Of the rows that refer to a deleted row, these (table, column) keep the row without the reference: messages and
-# changes of a deleted user, a reply to a deleted message. Any other such row is removed. The rules of
-# dangling_references, and of the copy of an older database in app.initialise_db.
-KEPT_WITHOUT_REFERENCE = (("messages", "u_id"), ("changes", "u_id"), ("messages", "reply_id"))
-
-# the rows that refer to a deleted user or operation, see dangling_references
-_DANGLING_CONDITIONS = (
-    ("permissions", "u_id NOT IN (SELECT id FROM users) OR op_id NOT IN (SELECT id FROM operations)"),
-    ("messages", "op_id NOT IN (SELECT id FROM operations)"),
-    ("changes", "op_id NOT IN (SELECT id FROM operations)"),
-    ("messages", "u_id IS NOT NULL AND u_id NOT IN (SELECT id FROM users)"),
-    ("changes", "u_id IS NOT NULL AND u_id NOT IN (SELECT id FROM users)"),
-    ("messages", "reply_id IS NOT NULL AND reply_id NOT IN (SELECT id FROM messages)"),
+# The rows that refer to a deleted user or operation, as older versions left them behind, and how they are repaired,
+# in this order: (table, column or None for the whole row, condition, log message). A column is set to NULL, the
+# row stays: messages and changes of a deleted user, a reply to a deleted message. Any other such row is removed.
+# The one place of these rules: the 12.0.0 migration, `mscolab db --repair_references`, the warning of a server start
+# and the copy of an older database in app.initialise_db (KEPT_WITHOUT_REFERENCE) use them.
+DANGLING_REFERENCES = (
+    ("permissions", None, f"({_MISSING_USER.format(column='u_id')}) OR ({_MISSING_OPERATION})",
+     "deleted the permissions %s of deleted users or operations"),
+    # before the answered message goes; PostgreSQL checks the reference per statement. The inner SELECT is a table of
+    # its own: MySQL doesn't update a table selected from in the same statement
+    ("messages", "reply_id",
+     "reply_id IS NOT NULL AND reply_id NOT IN (SELECT id FROM (SELECT id FROM messages WHERE op_id IS NULL "
+     "OR op_id IN (SELECT id FROM operations)) AS kept_messages) "
+     "AND (op_id IS NULL OR op_id IN (SELECT id FROM operations))",
+     "removed the answered message from the replies %s, it is deleted or missing"),
+    ("messages", None, _MISSING_OPERATION, "deleted the chat messages %s of deleted operations"),
+    ("changes", None, _MISSING_OPERATION, "deleted the flight track changes %s of deleted operations"),
+    # the rows of deleted operations are gone already
+    ("messages", "u_id", _MISSING_USER.format(column="u_id"),
+     "kept the chat messages %s of deleted users without their user"),
+    ("changes", "u_id", _MISSING_USER.format(column="u_id"),
+     "kept the flight track changes %s of deleted users without their user"),
 )
+KEPT_WITHOUT_REFERENCE = tuple((table, column) for table, column, _, _ in DANGLING_REFERENCES if column is not None)
 
 
 def has_dangling_references(conn):
-    """True if a row refers to a deleted user or operation, see dangling_references; stops at the first one"""
+    """
+    True if a row refers to a deleted user or operation, see DANGLING_REFERENCES; stops at the first one
+
+    Always False on PostgreSQL, its foreign keys refuse such rows.
+    """
+    if conn.dialect.name == "postgresql":
+        return False
     return any(conn.execute(sa.text(f"SELECT 1 FROM {table} WHERE {condition} LIMIT 1")).first() is not None
-               for table, condition in _DANGLING_CONDITIONS)
-
-
-def dangling_references(conn):
-    """
-    The repairs of the rows that refer to a deleted user or operation, as (log message, row ids, statement)
-
-    Before 12.0.0 a deleted user left its chat messages and flight track changes behind, still referring to it, and
-    a deleted operation could leave its rows behind. SQLite didn't check this, PostgreSQL refuses it. The messages
-    and changes of a deleted user stay, without the user, as when a user is deleted now; the rows of a deleted
-    operation are removed.
-    """
-    missing_user = "u_id IS NOT NULL AND u_id NOT IN (SELECT id FROM users)"
-    missing_operation = "op_id NOT IN (SELECT id FROM operations)"
-    # a reply to a message that goes stays without it; PostgreSQL checks this per statement, so before the message
-    # is deleted (the ids first: MySQL doesn't update a table selected from in the same statement)
-    replies = _ids(conn, "SELECT reply.id FROM messages reply LEFT JOIN messages answered "
-                         "ON reply.reply_id = answered.id WHERE reply.reply_id IS NOT NULL "
-                         "AND (answered.id IS NULL OR answered.op_id NOT IN (SELECT id FROM operations))")
-    repairs = [
-        ("deleted the permissions %s of deleted users or operations",
-         _ids(conn, f"SELECT id FROM permissions WHERE u_id NOT IN (SELECT id FROM users) OR {missing_operation}"),
-         "DELETE FROM permissions WHERE id IN :ids"),
-        ("removed the answered message from the replies %s, it is deleted or missing",
-         replies, "UPDATE messages SET reply_id = NULL WHERE id IN :ids"),
-        ("deleted the chat messages %s of deleted operations",
-         _ids(conn, f"SELECT id FROM messages WHERE {missing_operation}"), "DELETE FROM messages WHERE id IN :ids"),
-        ("deleted the flight track changes %s of deleted operations",
-         _ids(conn, f"SELECT id FROM changes WHERE {missing_operation}"), "DELETE FROM changes WHERE id IN :ids"),
-        ("kept the chat messages %s of deleted users without their user",
-         _ids(conn, f"SELECT id FROM messages WHERE {missing_user} AND NOT ({missing_operation})"),
-         "UPDATE messages SET u_id = NULL WHERE id IN :ids"),
-        ("kept the flight track changes %s of deleted users without their user",
-         _ids(conn, f"SELECT id FROM changes WHERE {missing_user} AND NOT ({missing_operation})"),
-         "UPDATE changes SET u_id = NULL WHERE id IN :ids"),
-    ]
-    return [repair for repair in repairs if repair[1]]
+               for table, _, condition, _ in DANGLING_REFERENCES)
 
 
 def remove_dangling_references(conn):
     """
-    Repairs the rows that refer to a deleted user or operation, see dangling_references; returns how many rows
+    Repairs the rows that refer to a deleted user or operation, see DANGLING_REFERENCES; returns how many rows
     were changed
 
-    It deletes rows, so it runs only in the 12.0.0 migration and by `mscolab db --repair_references`, never on a
-    server start. Logs the ids of every row it changes.
+    Before 12.0.0 a deleted user left its chat messages and flight track changes behind, still referring to it, and
+    a deleted operation could leave its rows behind. SQLite didn't check this, PostgreSQL refuses it. The messages
+    and changes of a deleted user stay, without the user, as when a user is deleted now; the rows of a deleted
+    operation are removed. It deletes rows, so it runs only in the 12.0.0 migration and by
+    `mscolab db --repair_references`, never on a server start. Logs the ids of every row it changes; the statements
+    use the conditions, not the ids, so any number of rows works.
     """
     changed = 0
-    for message, ids, statement in dangling_references(conn):
+    for table, column, condition, message in DANGLING_REFERENCES:
+        ids = [row.id for row in conn.execute(sa.text(f"SELECT id FROM {table} WHERE {condition}"))]
+        if not ids:
+            continue
         logging.warning("Repairing the database: " + message, ids)
-        changed += _update_ids(conn, statement, ids)
+        if column is None:
+            conn.execute(sa.text(f"DELETE FROM {table} WHERE {condition}"))
+        else:
+            conn.execute(sa.text(f"UPDATE {table} SET {column} = NULL WHERE {condition}"))
+        changed += len(ids)
     return changed
+
+
+def hand_over_operations_without_creator(conn):
+    """
+    Makes the admin who is a member longest the creator of each operation without creator, as when a creator is
+    deleted now (User.prepare_deletion); returns the operations that keep none
+
+    Before 12.0.0 deleting a creator deleted the creator permission too, and a {category}Group operation could
+    downgrade or remove the creator. An operation without an admin keeps no creator, one without members stays: a
+    migration doesn't delete operations and their files. Both are logged.
+    """
+    without_creator = []
+    for (op_id,) in conn.execute(sa.text(
+            "SELECT id FROM operations WHERE id NOT IN "
+            "(SELECT op_id FROM permissions WHERE access_level = 'creator' AND op_id IS NOT NULL) ORDER BY id")):
+        admin = conn.execute(sa.text("SELECT id, u_id FROM permissions WHERE op_id = :op_id "
+                                     "AND access_level = 'admin' ORDER BY id LIMIT 1"), {"op_id": op_id}).first()
+        if admin is None:
+            logging.warning("operation %s has no creator and no admin, only a creator can delete it", op_id)
+            without_creator.append(op_id)
+            continue
+        conn.execute(sa.text("UPDATE permissions SET access_level = 'creator' WHERE id = :id"), {"id": admin.id})
+        logging.warning("operation %s had no creator, its admin, the user %s, is its creator now", op_id, admin.u_id)
+    return without_creator
 
 
 # the tables whose ids SQLite must never hand out again: a token or socket of a deleted user, or the attachments of
@@ -214,7 +246,7 @@ def add_fullname(op, conn):
     later misses it. op is an alembic Operations object for conn.
     """
     if not has_column(conn, 'users', 'fullname'):
-        with op.batch_alter_table('users', schema=None) as batch_op:
+        with batch_alter_table(op, conn, 'users') as batch_op:
             batch_op.add_column(sa.Column('fullname', sa.String(length=255), nullable=True))
 
 
@@ -228,8 +260,9 @@ def fix_postgresql_sequences(conn):
     """
     if conn.dialect.name != "postgresql":
         return
-    for table in sa.inspect(conn).get_table_names():
-        if "id" not in {column["name"] for column in sa.inspect(conn).get_columns(table)}:
+    inspector = sa.inspect(conn)
+    for table in inspector.get_table_names():
+        if "id" not in {column["name"] for column in inspector.get_columns(table)}:
             continue
         sequence = conn.execute(sa.text("SELECT pg_get_serial_sequence(:table, 'id')"), {"table": table}).scalar()
         if sequence is None:
@@ -238,6 +271,9 @@ def fix_postgresql_sequences(conn):
         if highest is None:
             # an empty table, a sequence not used yet would otherwise start at 2
             continue
-        # sequence is the quoted, schema qualified name from the catalog
-        conn.execute(sa.text(f"SELECT setval(:sequence, GREATEST(:highest, (SELECT last_value FROM {sequence})))"),
+        # sequence is the quoted, schema qualified name from the catalog. Only a sequence behind is set, in one
+        # statement: the server may insert at the same time, a sequence read before would then be moved back
+        # last_value is the next value as long as the sequence wasn't used
+        conn.execute(sa.text(f"SELECT setval(:sequence, :highest) WHERE :highest > (SELECT CASE WHEN is_called "
+                             f"THEN last_value ELSE last_value - 1 END FROM {sequence})"),
                      {"sequence": sequence, "highest": highest})
