@@ -27,7 +27,8 @@ import mock
 import requests
 
 from mslib.mscolab.api.schemas import TOKEN_HEADER
-from mslib.msui.socket_control import mscolab_get
+from mslib.msui.socket_control import ConnectionManager, mscolab_get
+from mslib.msui.utils.config import modify_config_file
 
 
 def _prepared_request(*args, **kwargs):
@@ -50,3 +51,12 @@ def test_mscolab_get_body_for_servers_up_to_11():
     request = _prepared_request("http://localhost:8083/fetch_profile_image", "secret-token", {"user_id": 1})
     assert request.url == "http://localhost:8083/fetch_profile_image?user_id=1"
     assert request.body == "user_id=1&token=secret-token"
+
+
+def test_connection_manager_waits_reply_timeout_for_the_namespace():
+    # python-socketio waits only 1 s by default, too short for the first connection of a session (#3282)
+    modify_config_file({"MSCOLAB_timeout": [2, 7]})
+    with mock.patch("mslib.msui.socket_control.socketio.Client") as client:
+        ConnectionManager("secret-token", user={"id": 1}, mscolab_server_url="http://localhost:8083")
+    client.return_value.connect.assert_called_once_with(
+        "http://localhost:8083", auth={"token": "secret-token"}, wait_timeout=7)

@@ -302,19 +302,40 @@ class MSUIMscolab(QtCore.QObject):
         self.connect_window.exec_()
 
     def after_login(self, emailid, url, response):
+        """Finish the login with the response of POST endpoints.TOKEN.
+
+        Returns False and keeps the connect dialog open when the response
+        can't be read or the socket connection fails, True otherwise.
+        """
         logging.debug("after login %s %s", emailid, url)
+        # after_login is only ever called once the caller has already checked
+        # response.text != "False" (login succeeded), so parsed is never None.
+        try:
+            parsed = LoginResponse.from_text(response.text)
+        except (KeyError, TypeError, ValueError) as ex:
+            # a server that doesn't answer like the MSColab server this client is made for
+            logging.error("can't read the login response of %s: %s %s", url, type(ex), ex)
+            self._login_failed("Can't read the login response of the MSColab server. "
+                               "It may be incompatible with this version of MSUI.")
+            return False
+        user = parsed.user.to_dict()
+        try:
+            conn = sc.ConnectionManager(parsed.token, user=user, mscolab_server_url=url)
+        except Exception as ex:
+            # the text of ex may come from the server, so it goes only to the log
+            logging.error("can't create a socket connection to %s: %s %s", url, type(ex), ex)
+            self._login_failed("Couldn't create a socket connection to the MSColab server. "
+                               "Try again in a moment. If it keeps failing, the server may be "
+                               "incompatible with this version of MSUI.")
+            return False
         # emailid by direct call
         self.email = emailid
         self.connect_window.done(QDialog.Accepted)
         self.connect_window = None
-        # fill value of mscolab url if found in QSettings storage
-
-        # after_login is only ever called once the caller has already checked
-        # response.text != "False" (login succeeded), so parsed is never None.
-        parsed = LoginResponse.from_text(response.text)
         self.token = parsed.token
-        self.user = parsed.user.to_dict()
+        self.user = user
         self.mscolab_server_url = url
+        self.conn = conn
 
         if config_loader(dataset="MSCOLAB_skip_archived_operations"):
             self.ui.pbOpenOperationArchive.setEnabled(False)
@@ -324,52 +345,51 @@ class MSUIMscolab(QtCore.QObject):
             self.ui.pbOpenOperationArchive.setEnabled(True)
             self.ui.pbOpenOperationArchive.setToolTip("")
 
-        # create socket connection here
-        try:
-            self.conn = sc.ConnectionManager(self.token, user=self.user, mscolab_server_url=self.mscolab_server_url)
-        except Exception as ex:
-            raise MSColabConnectionError("Couldn't create a socket connection. Maybe the MSColab server is too old."
-                                         f"({ex}). New Login required!")
-        else:
-            self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
-            self.conn.signal_reload.connect(self.reload_window)
-            self.conn.signal_file_save_refused.connect(self.handle_file_save_refused)
-            self.conn.signal_new_permission.connect(self.render_new_permission)
-            self.conn.signal_update_permission.connect(self.handle_update_permission)
-            self.conn.signal_revoke_permission.connect(self.handle_revoke_permission)
-            self.conn.signal_operation_deleted.connect(self.handle_operation_deleted)
-            self.conn.signal_active_user_update.connect(self.update_active_user_label)
+        self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
+        self.conn.signal_reload.connect(self.reload_window)
+        self.conn.signal_file_save_refused.connect(self.handle_file_save_refused)
+        self.conn.signal_new_permission.connect(self.render_new_permission)
+        self.conn.signal_update_permission.connect(self.handle_update_permission)
+        self.conn.signal_revoke_permission.connect(self.handle_revoke_permission)
+        self.conn.signal_operation_deleted.connect(self.handle_operation_deleted)
+        self.conn.signal_active_user_update.connect(self.update_active_user_label)
 
-            self.ui.connectBtn.hide()
-            self.ui.openOperationsGb.show()
-            # display connection status
-            transport_layer = self.conn.sio.transport()
-            self.ui.mscStatusLabel.setText(self.ui.tr(
-                f"Status: connected to '{self.mscolab_server_url}' by transport layer '{transport_layer}'"))
-            # display username beside useroptions toolbutton
-            # chosen by the user, must not be interpreted as markup
-            self.ui.usernameLabel.setTextFormat(QtCore.Qt.PlainText)
-            self.ui.usernameLabel.setText(f"{self.user['username']}")
-            self.ui.usernameLabel.show()
-            self.ui.userOptionsTb.show()
-            self.fetch_profile_image()
-            # enable add operation menu action
-            self.ui.actionAddOperation.setEnabled(True)
-            self.ui.actionCopyIntoNewMSColabOperation.setEnabled(True)
+        self.ui.connectBtn.hide()
+        self.ui.openOperationsGb.show()
+        # display connection status
+        transport_layer = self.conn.sio.transport()
+        self.ui.mscStatusLabel.setText(self.ui.tr(
+            f"Status: connected to '{self.mscolab_server_url}' by transport layer '{transport_layer}'"))
+        # display username beside useroptions toolbutton
+        # chosen by the user, must not be interpreted as markup
+        self.ui.usernameLabel.setTextFormat(QtCore.Qt.PlainText)
+        self.ui.usernameLabel.setText(f"{self.user['username']}")
+        self.ui.usernameLabel.show()
+        self.ui.userOptionsTb.show()
+        self.fetch_profile_image()
+        # enable add operation menu action
+        self.ui.actionAddOperation.setEnabled(True)
+        self.ui.actionCopyIntoNewMSColabOperation.setEnabled(True)
 
-            # Populate open operations list
-            ops = self.add_operations_to_ui()
-            # Show category list
-            self.show_categories_to_ui(ops)
+        # Populate open operations list
+        ops = self.add_operations_to_ui()
+        # Show category list
+        self.show_categories_to_ui(ops)
 
-            self.ui.activeOperationDesc.setHidden(False)
-            self.ui.actionChangeCategory.setEnabled(False)
-            self.ui.actionChangeDescription.setEnabled(False)
-            self.ui.actionDeleteOperation.setEnabled(False)
-            self.ui.filterCategoryCb.setEnabled(True)
-            self.ui.actionViewDescription.setEnabled(False)
+        self.ui.activeOperationDesc.setHidden(False)
+        self.ui.actionChangeCategory.setEnabled(False)
+        self.ui.actionChangeDescription.setEnabled(False)
+        self.ui.actionDeleteOperation.setEnabled(False)
+        self.ui.filterCategoryCb.setEnabled(True)
+        self.ui.actionViewDescription.setEnabled(False)
 
-            self.signal_login_mscolab.emit(self.mscolab_server_url, self.token)
+        self.signal_login_mscolab.emit(self.mscolab_server_url, self.token)
+        return True
+
+    def _login_failed(self, msg):
+        """Keep the connect dialog open with msg and let the user try again."""
+        self.connect_window.set_status("Error", msg)
+        self.connect_window.loginBtn.setEnabled(True)
 
     def set_profile_pixmap(self, img_data):
         pixmap = QPixmap()
