@@ -31,7 +31,7 @@ class HS_BrightnessTemperature(mslib.mswms.mpl_hsec_styles.MPLBasemapHorizontalS
 
         clev = np.asarray([-7, -4, -2, -1, -0.5, 0.5, 1.0, 2, 4.0, 7.0])
         ticks = [-4, -2, -1, -0.5, 0.5, 1, 2, 4]
-        cmap = matplotlib.pyplot.cm.Spectral_r
+        cmap = matplotlib.colormaps["Spectral_r"]
         norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
         pv = self.bm.pcolormesh(
             lonmesh, latmesh, self.data[f"brightness_temperature_residual_{self.style}"],
@@ -42,6 +42,6 @@ class HS_BrightnessTemperature(mslib.mswms.mpl_hsec_styles.MPLBasemapHorizontalS
             cbar.set_label("BT")
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                self.ax, width="3%", height="40%", loc=4)
+                self.bm.ax, width="3%", height="40%", loc=4)
             cbar = self.fig.colorbar(pv, cax=axins1, orientation="vertical", ticks=ticks, extend="both")
             axins1.yaxis.set_ticks_position("left")

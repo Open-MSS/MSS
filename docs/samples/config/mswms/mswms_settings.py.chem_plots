@@ -6,12 +6,12 @@
 
     Configuration module for programs accessing data on the MSS server.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: 2011-2014 Marc Rautenhaus
     :copyright: Copyright 2017 Jens-Uwe Grooss, Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2025 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2017-2026 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,10 +37,10 @@ import sys
 # If you already have set up the PYTHONPATH environment variable for the
 # stuff you see below, you don't need to do a1) and a2).
 
-# a1) Path of the directory where the mss code package is located.
-# sys.path.insert(0, '/home/mss/INSTANCE/miniconda3/lib/python3.X/site-packages')
+# a1) Path of the directory where the MSS code package is located.
+# sys.path.insert(0, '/home/mss/MSS/.pixi/envs/default/lib/python3.11/site-packages')
 
-# a2) Path of the directory where mswms_settings.py is located
+# a2) Path of the directory where mswms_settings.py and mss_chem_plots.py are located
 #MSSCONFIGPATH = os.path.abspath(os.path.normpath(os.path.dirname(sys.argv[0])))
 #sys.path.insert(0, MSSCONFIGPATH)
 #os.chdir(MSSCONFIGPATH)
@@ -54,7 +54,9 @@ import mss_chem_plots
 
 
 # Configuration for mswms_settings accessing data on the MSS server.
-# This is the data organisation structure of demodata.
+# This is the data organisation structure of demodata. The demodata contain no
+# chemical species, replace the data set of the MSS-Chem layers below by one of
+# your chemistry transport model data.
 
 
 #service_name = "OGC:WMS"
@@ -62,6 +64,7 @@ import mss_chem_plots
 #service_abstract = "Your Abstract"
 #service_contact_person = "Your Name"
 #service_contact_organisation = "Your Organization"
+#service_contact_position = "Your Position"
 #service_address_type = "postal"
 #service_address = "street"
 #service_city = "Your City"
@@ -69,7 +72,10 @@ import mss_chem_plots
 #service_post_code = "12345"
 #service_country = "Germany"
 #service_fees = "none"
+#service_email = "you@your-organization.de"
 #service_access_constraints = "This service is intended for research purposes only."
+#IMPRINT = ""
+#GDPR = ""
 
 
 #
@@ -109,7 +115,7 @@ basemap_use_cache = True
 # visualisation classes, data set). The visualisation classes are
 # defined in mpl_hsec.py and mpl_hsec_styles.py. Add only instances of
 # visualisation products for which data files are available. The data
-# sets must be defined in mss_config.py. The WMS will only offer
+# sets must be defined in data above. The WMS will only offer
 # products registered here.
 register_horizontal_layers = None
 if mpl_hsec_styles is not None:
@@ -120,7 +126,6 @@ if mpl_hsec_styles is not None:
         (mpl_hsec_styles.HS_RelativeHumidityStyle_PL_01, ["ecmwf_EUR_LL015"]),
         (mpl_hsec_styles.HS_EQPTStyle_PL_01, ["ecmwf_EUR_LL015"]),
         (mpl_hsec_styles.HS_WStyle_PL_01, ["ecmwf_EUR_LL015"]),
-        (mpl_hsec_styles.HS_DivStyle_PL_01, ["ecmwf_EUR_LL015"]),
         (mpl_hsec_styles.HS_DivStyle_PL_01, ["ecmwf_EUR_LL015"]),
         (mss_chem_plots.HS_MSSChemStyle_PL_NH3_nfrac, ["ecmwf_EUR_LL015"]),
     ]
@@ -139,7 +144,7 @@ if mpl_vsec_styles is not None:
         (mpl_vsec_styles.VS_VerticalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_vsec_styles.VS_RelativeHumdityStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_vsec_styles.VS_SpecificHumdityStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_vsec_styles.VS_TemperatureStyle_01, ["ecmwf_EUR_LL015"])
+        (mpl_vsec_styles.VS_TemperatureStyle_01, ["ecmwf_EUR_LL015"]),
         (mss_chem_plots.VS_MSSChemStyle_PL_NH3_nfrac, ["ecmwf_EUR_LL015"]),
     ]
 
@@ -147,11 +152,11 @@ if mpl_vsec_styles is not None:
 #
 # Registration of linear layers.
 #
-# The same as above, but for 1D sections.
+# The same as above, but for linear sections.
 register_linear_layers = None
 if mpl_lsec_styles is not None:
     register_linear_layers = [
-        # ECMWF standard 1D section styles.
+        # ECMWF standard linear section styles.
         (mpl_lsec_styles.LS_DefaultStyle, "air_temperature", ["ecmwf_EUR_LL015"]),
         (mpl_lsec_styles.LS_DefaultStyle, "divergence_of_wind", ["ecmwf_EUR_LL015"]),
         (mpl_lsec_styles.LS_DefaultStyle, "mole_fraction_of_ozone_in_air", ["ecmwf_EUR_LL015"]),

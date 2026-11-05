@@ -8,9 +8,9 @@ from matplotlib import patheffects
 
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
-from mslib.mswms.utils import get_style_parameters, get_cbar_label_format
-from mslib.utils import convert_to
-from mslib import thermolib
+from mslib.mswms.generics import get_style_parameters, get_cbar_label_format
+from mslib.utils import thermolib
+from mslib.utils.units import convert_to, units as ureg
 
 
 MSSChemSpecies = {
@@ -214,9 +214,9 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
             # poor-man's on-the-fly conversion here.
             if 'air_pressure' not in self.data:
                 self.data["air_pressure"] = np.empty_like(self.data[self.dataname])
-                self.data['air_pressure'][:] = thermolib.flightlevel2pressure_a(convert_to(
+                self.data['air_pressure'][:] = thermolib.flightlevel2pressure(convert_to(
                     self.driver.vert_data[::-self.driver.vert_order, np.newaxis],
-                    self.driver.vert_units, "hft"))
+                    self.driver.vert_units, "hft") * ureg.hft).to("Pa").magnitude
 
     def _plot_style(self):
         ax = self.ax
@@ -259,7 +259,7 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(titlestring=self.title)
+        self._latlon_logp_setup()
 
         # Format for colorbar labels
         cbar_format = get_cbar_label_format(self.style, np.median(np.abs(clevs)))
@@ -306,7 +306,7 @@ def make_msschem_vs_class(
         add_contours = []
 
     class fnord(VS_MSSChemStyle):
-        name = f"VS_{entity}_{vert} "
+        name = f"VS_{entity}_{vert}"
         dataname = entity
         units = units
         unit_scale = scale

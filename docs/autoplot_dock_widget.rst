@@ -75,7 +75,7 @@ The **right treewidget** is used to configure the automated plotting flight sect
 
 - For **Top View**, it is `"automated_plotting_hsecs": [["URL", "Layer", "Styles", "Level"]]`.
 - For **Side View**, it is `"automated_plotting_vsecs": [["URL", "Layer", "Styles", "Level"]]`.
-- For **Linear View**, it is `"automated_plotting_lsecs": [["URL", "Layer", "Styles"]]`.
+- For **Linear View**, it is `"automated_plotting_lsecs": [["URL", "Layer", "Styles", "Level"]]`.
 
 Inserting, Updating, and Removing Configuration in the Treewidget
 -----------------------------------------------------------------

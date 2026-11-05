@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.plugins.io.navaid
-    ~~~~~~~~~~~~~~~~~~~~
+    navaid
+    ~~~~~~
 
     plugin for navaid format flight track export
 
@@ -30,7 +30,7 @@ import numpy as np
 import geomag
 from geopy.distance import geodesic
 from geographiclib.geodesic import Geodesic
-from mslib.msui.constants import MSUI_CONFIG_PATH
+from mslib.msui.utils.constants import MSUI_CONFIG_PATH
 
 
 def radial_dme(lat, lon, elev=12., test_date=datetime.date.today(), maxdist=250.):
