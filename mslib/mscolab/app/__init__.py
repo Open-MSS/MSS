@@ -44,6 +44,7 @@ from flask_sqlalchemy import SQLAlchemy
 from mslib.mscolab.api.schemas import InvalidRequest
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab import migrations
+from mslib.mscolab.migrations.schema_repair import KEPT_WITHOUT_REFERENCE
 from mslib.utils import prefix_route, release_info
 from mslib.utils.basic_auth import PasswordCheckBusy, check_basic_auth_setting
 from mslib.utils.file_exists import file_exists
@@ -137,8 +138,9 @@ def _repair_references(table, values, references, copied_ids, repaired):
     The rules of migrations.schema_repair.KEPT_WITHOUT_REFERENCE, as the 12.0.0 migration repairs such rows: messages
     and changes of a deleted user stay without the user, a reply to a removed message stays without it, other rows
     of a deleted user or operation go. Adds the id of the row to repaired[(table, column, kept)] for the log.
+    Per row and not by the SQL of DANGLING_REFERENCES after the copy: a PostgreSQL target refuses such rows already
+    while they are copied.
     """
-    from mslib.mscolab.migrations.schema_repair import KEPT_WITHOUT_REFERENCE
     missing = [column for column, referred_table in references.items()
                if values.get(column) is not None and values[column] not in copied_ids.get(referred_table, ())]
     skipped_by = [column for column in missing if (table, column) not in KEPT_WITHOUT_REFERENCE]
@@ -214,12 +216,14 @@ your database MSColab will abort. Please follow the documentation for a manual d
         copied_ids = {}
         repaired = {}
         with source_engine.connect() as src_connection, target_engine.connect() as target_connection:
-            for table in source_metadata.sorted_tables:
-                if table.name == "alembic_version":
+            # in the order of the foreign keys of the target: an old database may not declare them, a table would
+            # then be copied before the rows it refers to and lose all its references
+            for target_table in target_metadata.sorted_tables:
+                if target_table.name == "alembic_version" or target_table.name not in source_metadata.tables:
                     # Do not migrate the alembic_version table!
                     continue
+                table = source_metadata.tables[target_table.name]
                 logging.debug("Copying table %s", table.name)
-                target_table = target_metadata.tables[table.name]
                 stmt = target_table.insert()
                 references = {fk.parent.name: fk.column.table.name for fk in target_table.foreign_keys}
                 copied_ids[table.name] = set()

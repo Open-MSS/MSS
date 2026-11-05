@@ -615,3 +615,77 @@ def test_other_sqlite_engines_keep_their_foreign_key_setting(mscolab_app, tmp_pa
         if db.engine.dialect.name == "sqlite":
             with db.engine.connect() as conn:
                 assert conn.exec_driver_sql("PRAGMA foreign_keys").scalar() == 1
+
+
+def test_failed_rebuild_leaves_no_temporary_table(mscolab_app):
+    from alembic.migration import MigrationContext
+    from alembic.operations import Operations
+    from mslib.mscolab.migrations.schema_repair import batch_alter_table, sqlite_foreign_keys_off
+    with mscolab_app.app_context():
+        if db.engine.dialect.name != "sqlite":
+            pytest.skip("PostgreSQL refuses the row itself")
+        mslib.mscolab.mscolab.handle_db_seed()
+        db.session.remove()
+        with pytest.raises(RuntimeError, match="refer to missing rows"):
+            with db.engine.connect() as conn, sqlite_foreign_keys_off(conn):
+                conn.execute(sqlalchemy.text("INSERT INTO permissions (op_id, u_id, access_level) "
+                                             "VALUES (999999, 999999, 'viewer')"))
+                with batch_alter_table(Operations(MigrationContext.configure(conn)), conn, "users",
+                                       recreate="always"):
+                    pass
+        tables = sqlalchemy.inspect(db.engine).get_table_names()
+        assert not [table for table in tables if table.startswith("_alembic_tmp_")]
+        # the next rebuild works
+        with db.engine.connect() as conn, sqlite_foreign_keys_off(conn):
+            with batch_alter_table(Operations(MigrationContext.configure(conn)), conn, "users", recreate="always"):
+                pass
+
+
+def test_repair_references_hands_over_operations_without_creator(mscolab_app):
+    with mscolab_app.app_context():
+        assert mslib.mscolab.seed.add_user("admin@example.org", "admin", "admin-password", "Admin")
+        assert mslib.mscolab.seed.add_operation("orphaned", "orphaned")
+        assert mslib.mscolab.seed.add_user_to_operation(path="orphaned", access_level="admin",
+                                                        emailid="admin@example.org")
+        db.session.remove()
+        with mock.patch("mslib.mscolab.migrations.schema_repair.logging.warning"):
+            mslib.mscolab.mscolab.handle_db_repair_references()
+        assert db.session.execute(sqlalchemy.text("SELECT access_level FROM permissions")).scalar() == "creator"
+
+
+def test_cli_refuses_too_long_values(mscolab_app):
+    with mscolab_app.app_context():
+        assert mslib.mscolab.seed.add_user("a@example.org", "a", "a-password", "x" * 256) is False
+        assert mslib.mscolab.seed.add_user("a@example.org", "x" * 256, "a-password", "A") is False
+        assert mslib.mscolab.seed.add_operation("long", "x" * 256) is False
+        assert mslib.mscolab.seed.add_operation("x" * 256, "description") is False
+        assert mslib.mscolab.models.User.query.count() == 0 and Operation.query.count() == 0
+
+
+def test_copy_follows_the_foreign_keys_of_the_target(mscolab_app, tmp_path):
+    """an old database that declares no foreign keys: its tables sort in another order"""
+    source = sqlalchemy.create_engine("sqlite:///" + str(tmp_path / "old.db"))
+    with source.begin() as conn:
+        # tables of 9.x, created in an order that puts permissions first, without foreign keys
+        conn.exec_driver_sql("CREATE TABLE permissions (id INTEGER PRIMARY KEY, op_id INTEGER, u_id INTEGER, "
+                             "access_level VARCHAR(255))")
+        conn.exec_driver_sql("CREATE TABLE users (id INTEGER PRIMARY KEY, username VARCHAR(255), "
+                             "emailid VARCHAR(255), password VARCHAR(255), registered_on DATETIME, "
+                             "confirmed BOOLEAN, confirmed_on DATETIME, authentication_backend VARCHAR(255))")
+        conn.exec_driver_sql("CREATE TABLE operations (id INTEGER PRIMARY KEY, path VARCHAR(255), "
+                             "category VARCHAR(255), description VARCHAR(255), active BOOLEAN, last_used DATETIME)")
+        conn.exec_driver_sql("INSERT INTO users VALUES "
+                             "(1, 'a', 'a@example.org', 'x', '2020-01-01 00:00:00', 1, NULL, 'local')")
+        conn.exec_driver_sql("INSERT INTO operations VALUES (1, 'op', 'default', 'op', 1, NULL)")
+        conn.exec_driver_sql("INSERT INTO permissions VALUES (1, 1, 1, 'creator')")
+    source.dispose()
+    try:
+        mscolab_app.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'] = "sqlite:///" + str(tmp_path / "old.db")
+        with mscolab_app.app_context():
+            db.drop_all()
+            db.session.execute(sqlalchemy.text("DROP TABLE alembic_version"))
+            db.session.commit()
+            initialise_db()
+            assert db.session.execute(sqlalchemy.text("SELECT op_id, u_id FROM permissions")).all() == [(1, 1)]
+    finally:
+        mscolab_app.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'] = None

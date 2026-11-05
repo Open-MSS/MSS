@@ -87,11 +87,14 @@ def handle_db_repair_references():
 
     The 12.0.0 migration does this for every older database. The server start only warns: it deletes rows.
     """
-    from mslib.mscolab.migrations.schema_repair import remove_dangling_references
+    from mslib.mscolab.migrations.schema_repair import (hand_over_operations_without_creator,
+                                                        remove_dangling_references)
     from mslib.mscolab.models import db
     db.session.remove()
     with db.engine.begin() as conn:
         changed = remove_dangling_references(conn)
+        # as the migration: e.g. creators deleted with their permissions by an earlier development state
+        hand_over_operations_without_creator(conn)
     print(f"Repaired {changed} rows that referred to a deleted user or operation.")
     return changed
 

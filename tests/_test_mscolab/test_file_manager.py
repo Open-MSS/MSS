@@ -278,6 +278,26 @@ class Test_FileManager:
             assert Operation.query.filter_by(id=operation.id).first().path == flight_path
             assert os.path.exists(os.path.join(self.fm.data_dir, flight_path, "main.ftml"))
 
+    def test_delete_operation_keeps_everything_if_its_directory_cant_be_moved(self):
+        # it would block the name of the operation for good
+        with self.app.test_client():
+            flight_path, operation = self._create_operation(flight_path="locked")
+            with mock.patch("pathlib.Path.rename", side_effect=PermissionError("locked")):
+                assert self.fm.delete_operation(operation.id, self.user) is False
+            assert Operation.query.filter_by(id=operation.id).first() is not None
+            assert os.path.exists(os.path.join(self.fm.data_dir, flight_path, "main.ftml"))
+
+    def test_delete_operation_puts_the_directory_back_if_the_commit_fails(self):
+        with self.app.test_client():
+            flight_path, operation = self._create_operation(flight_path="kept")
+            with mock.patch.object(db.session, "commit", side_effect=IntegrityError("", {}, None)):
+                with pytest.raises(IntegrityError):
+                    self.fm.delete_operation(operation.id, self.user)
+            db.session.rollback()
+            assert Operation.query.filter_by(id=operation.id).first() is not None
+            assert os.path.exists(os.path.join(self.fm.data_dir, flight_path, "main.ftml"))
+            assert not [name for name in os.listdir(self.fm.data_dir) if name.startswith(".deleted-")]
+
     def test_delete_operation_refuses_path_outside_data_dir(self):
         # an operation named ".." as it could have been stored before names were validated
         with self.app.test_client():

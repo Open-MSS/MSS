@@ -41,6 +41,17 @@ class _ForeignKeyCheck:
         self.check = True
 
 
+def _drop_batch_tables(connection):
+    """Drops the temporary tables of the batch mode of alembic that a failed rebuild left behind on SQLite"""
+    connection.rollback()
+    names = [row[0] for row in connection.exec_driver_sql(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE '\\_alembic\\_tmp\\_%' ESCAPE '\\'")]
+    for name in names:
+        logging.warning("Dropping %s, left behind by a failed change of the database schema", name)
+        connection.exec_driver_sql(f'DROP TABLE "{name}"')
+    connection.commit()
+
+
 @contextlib.contextmanager
 def sqlite_foreign_keys_off(connection):
     """
@@ -58,6 +69,8 @@ def sqlite_foreign_keys_off(connection):
     if sqlite:
         connection.exec_driver_sql("PRAGMA foreign_keys=OFF")
         connection.commit()
+        # e.g. of a process that was killed during a rebuild
+        _drop_batch_tables(connection)
     try:
         with connection.begin():
             yield state
@@ -67,6 +80,12 @@ def sqlite_foreign_keys_off(connection):
             if violations:
                 raise RuntimeError("Rows refer to missing rows (table, rowid, referred table, foreign key): "
                                    f"{violations}")
+    except BaseException:
+        if sqlite:
+            # the sqlite3 module runs the CREATE TABLE of a rebuild outside the transaction, the rollback keeps it;
+            # a later rebuild of the table would fail on it
+            _drop_batch_tables(connection)
+        raise
     finally:
         if sqlite:
             connection.exec_driver_sql("PRAGMA foreign_keys=ON")

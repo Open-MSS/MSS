@@ -36,7 +36,7 @@ from flask import current_app
 
 from mslib.mscolab.cli_notify import USER_DELETED, notify_socket_event
 from mslib.mscolab.api.events import SocketEvents
-from mslib.mscolab.models import Operation, Permission, User, db
+from mslib.mscolab.models import Operation, Permission, User, db, fits_column
 from mslib.mscolab.migrations.schema_repair import fix_postgresql_sequences
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.utils import is_valid_operation_path, remove_operation_attachments
@@ -130,6 +130,12 @@ def add_user(email, username, password, fullname):
     """
     on db level we add a user
     """
+    if not all(fits_column(column, value) for column, value in (
+            (User.emailid, email), (User.username, username), (User.fullname, fullname))):
+        # PostgreSQL refuses longer values
+        logging.error("refusing user %r: email, username and full name can have at most %s characters each",
+                      email, User.username.type.length)
+        return False
     user_email_exists = User.query.filter_by(emailid=str(email)).first()
     user_name_exists = User.query.filter_by(username=str(username)).first()
     if not user_email_exists and not user_name_exists:
@@ -174,6 +180,10 @@ def _create_operation_files(operation_name):
 def add_operation(operation_name, description):
     if not is_valid_operation_path(operation_name):
         logging.error("invalid operation name %r", operation_name)
+        return False
+    if not fits_column(Operation.description, description):
+        logging.error("refusing operation %r: its description can have at most %s characters", operation_name,
+                      Operation.description.type.length)
         return False
     operation_available = Operation.query.filter_by(path=operation_name).first()
     if not operation_available:

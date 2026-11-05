@@ -42,7 +42,7 @@ from sqlalchemy.exc import IntegrityError
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.mscolab.models import db, Operation, Permission, User, Change, fits_column
 from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX, is_valid_operation_path, get_operation_dir, \
-    remove_operation_files
+    remove_operation_files, restore_operation_dir, set_aside_operation_dir
 from mslib.mscolab.api.attachments import file_extension, normalized_extensions
 
 # "creator" is assigned only by create_operation
@@ -271,11 +271,21 @@ class FileManager:
         profile_image_path = user.profile_image_path
         handovers, deleted_operations = user.prepare_deletion()
         db.session.delete(user)
-        db.session.commit()
+        set_aside = []
+        try:
+            for op_id, path in deleted_operations:
+                set_aside.append((op_id, path, set_aside_operation_dir(self.data_dir, path)))
+            db.session.commit()
+        except Exception:
+            # e.g. a directory that can't be moved: it would block the name of the operation
+            db.session.rollback()
+            for _, path, aside in set_aside:
+                restore_operation_dir(aside, self.data_dir, path)
+            raise
         if profile_image_path:
             self.delete_user_profile_image(profile_image_path)
-        for op_id, path in deleted_operations:
-            remove_operation_files(self.data_dir, current_app.config['UPLOAD_FOLDER'], op_id, path)
+        for op_id, path, aside in set_aside:
+            remove_operation_files(aside, current_app.config['UPLOAD_FOLDER'], op_id, path)
         return handovers, [op_id for op_id, _ in deleted_operations]
 
     def modify_user(self, user, attribute=None, value=None, action=None):
@@ -496,13 +506,18 @@ class FileManager:
             return False
         operation = Operation.query.filter_by(id=op_id).first()
         try:
-            get_operation_dir(self.data_dir, operation.path)
-        except ValueError as ex:
+            aside = set_aside_operation_dir(self.data_dir, operation.path)
+        except (ValueError, OSError) as ex:
             logging.error("refusing to delete operation %s: %s", op_id, ex)
             return False
         path = Operation.delete_with_dependent_rows(op_id)
-        db.session.commit()
-        remove_operation_files(self.data_dir, current_app.config['UPLOAD_FOLDER'], op_id, path)
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            restore_operation_dir(aside, self.data_dir, path)
+            raise
+        remove_operation_files(aside, current_app.config['UPLOAD_FOLDER'], op_id, path)
         return True
 
     def get_authorized_users(self, op_id):
