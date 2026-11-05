@@ -36,9 +36,10 @@ from flask import current_app
 
 from mslib.mscolab.cli_notify import USER_DELETED, notify_socket_event
 from mslib.mscolab.api.events import SocketEvents
-from mslib.mscolab.models import Change, Message, Operation, Permission, User, db
+from mslib.mscolab.models import Operation, Permission, User, db
 from mslib.mscolab.migrations.schema_repair import fix_postgresql_sequences
-from mslib.mscolab.utils import is_valid_operation_path, remove_operation_dir
+from mslib.mscolab.file_manager import FileManager
+from mslib.mscolab.utils import is_valid_operation_path, remove_operation_attachments
 
 
 XML_CONTENT_INIT = """<?xml version="1.0" encoding="utf-8"?>
@@ -108,11 +109,8 @@ def delete_user(email):
         logging.info("User: %s deleted from db", email)
         u_id = user.id
         op_ids = [permission.op_id for permission in user.permissions]
-        handovers, deleted_paths = user.prepare_deletion()
-        db.session.delete(user)
-        db.session.commit()
-        for path in deleted_paths:
-            remove_operation_dir(current_app.config['OPERATIONS_DATA'], path)
+        # like the deletion by REST, also the profile image goes
+        handovers = FileManager(current_app.config['OPERATIONS_DATA']).delete_user(user)
         # an admin became the creator of the operations of the user
         for op_id, creator_id, message in handovers:
             notify_socket_event(SocketEvents.UPDATE_PERMISSION, u_id=creator_id, op_id=op_id)
@@ -189,12 +187,11 @@ def delete_operation(operation_name):
     operation = Operation.query.filter_by(path=operation_name).first()
     if operation:
         op_id = operation.id
-        # the rows referring to the operation first, PostgreSQL enforces the foreign keys
-        Permission.query.filter_by(op_id=op_id).delete()
-        Change.query.filter_by(op_id=op_id).delete()
-        Message.query.filter_by(op_id=op_id).delete()
-        db.session.delete(operation)
+        Operation.delete_with_dependent_rows(op_id)
         db.session.commit()
+        # its directory stays, as before: add_operation takes it over again. The attachments go, they are stored by
+        # the id of the operation
+        remove_operation_attachments(current_app.config['UPLOAD_FOLDER'], op_id, operation_name)
         notify_socket_event(SocketEvents.OPERATION_DELETED, op_id=op_id)
         return True
     return False

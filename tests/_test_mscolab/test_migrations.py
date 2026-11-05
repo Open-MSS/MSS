@@ -36,6 +36,7 @@ import mslib.mscolab.mscolab
 import mslib.mscolab.seed
 from mslib.mscolab.app import create_app, db, initialise_db
 from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.models import Operation
 
 
 def test_migrations(mscolab_app):
@@ -315,7 +316,6 @@ def test_server_start_only_warns_about_rows_of_deleted_users_and_operations(msco
         with mock.patch("mslib.mscolab.app.logging.warning") as warning:
             initialise_db()
         assert "mscolab db --repair_references" in warning.call_args.args[0]
-        assert warning.call_args.args[1] == len(ids)
         assert [db.session.execute(sqlalchemy.text(f"SELECT COUNT(*) FROM {table}")).scalar()
                 for table in ("messages", "changes", "permissions")] == counts
         # the repair by the CLI, it logs every row it changes
@@ -342,6 +342,40 @@ def test_ids_of_deleted_users_are_not_reused(mscolab_app):
         assert mslib.mscolab.seed.get_user("new@example.org").id > deleted_id
 
 
+def test_ids_of_deleted_operations_are_not_reused(mscolab_app):
+    # the attachments of an operation are stored by its id, a new operation must not get them
+    with mscolab_app.app_context():
+        assert mslib.mscolab.seed.add_operation("first", "first")
+        assert mslib.mscolab.seed.add_operation("last", "last")
+        deleted_id = Operation.query.filter_by(path="last").first().id
+        assert mslib.mscolab.seed.delete_operation("last")
+        assert mslib.mscolab.seed.add_operation("new", "new")
+        assert Operation.query.filter_by(path="new").first().id > deleted_id
+
+
+def test_server_start_stops_sqlite_reusing_ids_of_operations(mscolab_app):
+    """a development database that ran the 12.0.0 migration before operations got AUTOINCREMENT"""
+    from alembic.migration import MigrationContext
+    from alembic.operations import Operations
+    from mslib.mscolab.migrations.schema_repair import has_autoincrement_ids, sqlite_foreign_keys_off
+    with mscolab_app.app_context():
+        if db.engine.dialect.name != "sqlite":
+            pytest.skip("only SQLite reuses ids")
+        mslib.mscolab.mscolab.handle_db_seed()
+        db.session.remove()
+        with db.engine.connect() as conn, sqlite_foreign_keys_off(conn), conn.begin():
+            with Operations(MigrationContext.configure(conn)).batch_alter_table(
+                    'operations', recreate='always', table_kwargs={'sqlite_autoincrement': False}):
+                pass
+            assert not has_autoincrement_ids(conn, "operations")
+        with mock.patch("mslib.mscolab.app.logging.warning") as warning:
+            initialise_db()
+        assert "reuses the ids of deleted users or operations" in warning.call_args.args[0]
+        with db.engine.connect() as conn:
+            assert has_autoincrement_ids(conn, "operations") and has_autoincrement_ids(conn, "users")
+        assert Operation.query.count() > 0
+
+
 def test_migrate_from_repairs_rows_of_deleted_users_and_operations(mscolab_app, tmp_path):
     """The copy of an old database with SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM, the target enforces foreign keys"""
     migrations_path = mslib.mscolab.migrations.__path__[0]
@@ -365,7 +399,10 @@ def test_migrate_from_repairs_rows_of_deleted_users_and_operations(mscolab_app, 
             db.session.commit()
             with mock.patch("mslib.mscolab.app.logging.warning") as warning:
                 initialise_db()
-            assert any("referred to a deleted user or operation" in call.args[0] for call in warning.call_args_list)
+            # the log names every row that was skipped or copied without its reference
+            logged = {row_id for call in warning.call_args_list if "of the old database" in call.args[0]
+                      for row_id in call.args[2]}
+            assert logged == set(ids.values())
             _assert_repaired(ids)
     finally:
         mscolab_app.config['SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM'] = None

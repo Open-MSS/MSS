@@ -130,22 +130,28 @@ def create_files():
     Path(current_app.config['SSO_DIR']).mkdir(parents=True, exist_ok=True)
 
 
-def _repair_references(table, values, references, copied_ids):
+def _repair_references(table, values, references, copied_ids, repaired):
     """
     Repairs the row values of table that refer to a row not copied, returns False if the row is to be skipped
 
-    The rules of migrations.schema_repair.remove_dangling_references: messages and changes of a deleted user stay
-    without the user, a reply to a removed message stays without it, other rows of a deleted user or operation go.
+    The rules of migrations.schema_repair.KEPT_WITHOUT_REFERENCE, as the 12.0.0 migration repairs such rows: messages
+    and changes of a deleted user stay without the user, a reply to a removed message stays without it, other rows
+    of a deleted user or operation go. Adds the id of the row to repaired[(table, column, kept)] for the log.
     """
+    from mslib.mscolab.migrations.schema_repair import KEPT_WITHOUT_REFERENCE
+    kept = True
     for column, referred_table in references.items():
         value = values.get(column)
         if value is None or value in copied_ids.get(referred_table, ()):
             continue
-        if (table, column) in (("messages", "u_id"), ("changes", "u_id"), ("messages", "reply_id")):
+        if (table, column) in KEPT_WITHOUT_REFERENCE:
             values[column] = None
+            repaired.setdefault((table, column, True), []).append(values.get("id"))
         else:
-            return False
-    return True
+            repaired.setdefault((table, column, False), []).append(values.get("id"))
+            kept = False
+            break
+    return kept
 
 
 def initialise_db():
@@ -207,7 +213,7 @@ your database MSColab will abort. Please follow the documentation for a manual d
         # the ids copied per table: older versions left rows behind that refer to a deleted user or operation, the
         # target enforces the foreign keys
         copied_ids = {}
-        skipped = 0
+        repaired = {}
         with source_engine.connect() as src_connection, target_engine.connect() as target_connection:
             for table in source_metadata.sorted_tables:
                 if table.name == "alembic_version":
@@ -223,15 +229,17 @@ your database MSColab will abort. Please follow the documentation for a manual d
                     values = {
                         name: value.replace(tzinfo=datetime.timezone.utc) if isinstance(value, datetime.datetime)
                         else value for name, value in row._mapping.items()}
-                    if not _repair_references(table.name, values, references, copied_ids):
-                        skipped += 1
+                    if not _repair_references(table.name, values, references, copied_ids, repaired):
                         continue
                     target_connection.execute(stmt.values(**values))
                     copied_ids[table.name].add(values.get("id"))
             target_connection.commit()
-        if skipped:
-            logging.warning("Skipped %s rows of the old database that referred to a deleted user or operation",
-                            skipped)
+        for (table_name, column, kept), ids in repaired.items():
+            if kept:
+                logging.warning("Copied the %s %s of the old database without their %s, it is deleted",
+                                table_name, ids, column)
+            else:
+                logging.warning("Skipped the %s %s of the old database, their %s is deleted", table_name, ids, column)
         with target_engine.connect() as target_connection:
             # the rows were copied with their ids
             from mslib.mscolab.migrations.schema_repair import fix_postgresql_sequences
@@ -260,10 +268,10 @@ def repair_schema():
     """
     from alembic.migration import MigrationContext
     from alembic.operations import Operations
-    from mslib.mscolab.migrations.schema_repair import (add_fullname, add_token_nonce, dangling_references,
-                                                        fix_postgresql_sequences, has_autoincrement_user_ids,
-                                                        has_column, sqlite_foreign_keys_off,
-                                                        use_autoincrement_user_ids)
+    from mslib.mscolab.migrations.schema_repair import (AUTOINCREMENT_TABLES, add_fullname, add_token_nonce,
+                                                        fix_postgresql_sequences, has_autoincrement_ids,
+                                                        has_column, has_dangling_references,
+                                                        sqlite_foreign_keys_off, use_autoincrement_ids)
     from mslib.mscolab.models import db
 
     # the repairs recreate tables on SQLite, like the migrations
@@ -279,19 +287,18 @@ def repair_schema():
             logging.warning("The database misses users.token_nonce, it ran an earlier development state of the "
                             "12.0.0 migration. Adding it now; every user has to log in again.")
             add_token_nonce(Operations(MigrationContext.configure(conn)), conn)
-        dangling = sum(len(ids) for _, ids, _ in dangling_references(conn))
-        if dangling:
+        if has_dangling_references(conn):
             # Only a database that ran an earlier development state of the 12.0.0 migration, which repairs them:
             # a server start doesn't delete rows. Until they are repaired, deleting their user or operation fails.
-            logging.warning("%s rows of the database refer to a deleted user or operation. Back up the database, "
-                            "then repair them with `mscolab db --repair_references`.", dangling)
+            logging.warning("Rows of the database refer to a deleted user or operation. Back up the database, "
+                            "then repair them with `mscolab db --repair_references`.")
             foreign_keys.check = False
         # e.g. a database seeded before the seed fixed them
         fix_postgresql_sequences(conn)
-        if not has_autoincrement_user_ids(conn):
-            logging.warning("The database reuses the ids of deleted users, it ran an earlier development state of "
-                            "the 12.0.0 migration. Changing that now.")
-            use_autoincrement_user_ids(Operations(MigrationContext.configure(conn)), conn)
+        if not all(has_autoincrement_ids(conn, table) for table in AUTOINCREMENT_TABLES):
+            logging.warning("The database reuses the ids of deleted users or operations, it ran an earlier "
+                            "development state of the 12.0.0 migration. Changing that now.")
+            use_autoincrement_ids(Operations(MigrationContext.configure(conn)), conn)
 
 
 # endpoints of uploads, a request to them is limited to MAX_UPLOAD_SIZE instead of MAX_CONTENT_LENGTH

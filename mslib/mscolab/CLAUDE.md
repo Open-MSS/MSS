@@ -76,11 +76,14 @@ and `servers-without-qt` contracts in setup.cfg.
   `app/__init__.py`), as PostgreSQL does. Schema changes that recreate tables on SQLite (alembic batch
   mode, `app.repair_schema`) run inside `migrations.schema_repair.sqlite_foreign_keys_off`, which
   checks the foreign keys afterwards. Delete dependent rows before their parent row.
-- A user is deleted only through `FileManager.delete_user` (REST) or `seed.delete_user` (CLI), both
-  call `User.prepare_deletion()`: an admin becomes creator of the user's operations (system message in
-  the chat, without the deleted user's name), an operation without other members is deleted (its directory
-  by the caller after the commit), messages and changes stay with `u_id` NULL, shown as from a deleted user.
-  User ids are never reused (`sqlite_autoincrement` on SQLite).
+- A user is deleted only through `FileManager.delete_user` (REST, and `seed.delete_user` for the CLI),
+  which calls `User.prepare_deletion()`: an admin becomes creator of the user's operations (system message in
+  the chat, without the deleted user's name), an operation without other members is deleted, messages and
+  changes stay with `u_id` NULL, shown as from a deleted user.
+- An operation's rows are deleted only by `Operation.delete_with_dependent_rows`; after the commit
+  `utils.remove_operation_files` removes its directory and its attachments (`UPLOAD_FOLDER/<op_id>`).
+  Ids of users and operations are never reused (`sqlite_autoincrement` on SQLite,
+  `schema_repair.AUTOINCREMENT_TABLES`): tokens, sockets and attachments refer to them.
 - Rows referring to deleted users or operations are repaired only by the 12.0.0 migration and
   `mscolab db --repair_references` (`schema_repair.remove_dangling_references`, logs every row id);
   `repair_schema()` on a server start only warns, it never deletes rows.

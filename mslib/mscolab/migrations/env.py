@@ -111,7 +111,8 @@ def run_migrations_online():
         with context.begin_transaction():
             context.run_migrations()
         # a migration must not leave rows referring to missing rows; rows of older versions that already did, in a
-        # database at the latest revision, are repaired by app.repair_schema after this
+        # database at the latest revision, are only reported by app.repair_schema, `mscolab db --repair_references`
+        # repairs them
         foreign_keys.check = context.get_context().get_current_revision() != revision
 
 

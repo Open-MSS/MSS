@@ -288,6 +288,8 @@ class Test_Server:
             "collaborator"
         assert [message["text"] for message in cm.get_messages(op_id)] == []
 
+    # the deletion of the user must not delete the permissions of the deleted operation again
+    @pytest.mark.filterwarnings("error::sqlalchemy.exc.SAWarning")
     @pytest.mark.parametrize("deletion", ["delete_own_account", "cli"])
     def test_delete_creator_deletes_an_operation_without_other_members(self, mscolab_managers, deletion):
         _, cm, fm = mscolab_managers
@@ -303,6 +305,9 @@ class Test_Server:
         assert fm.save_file(alone, XML_CONTENT1, creator)
         alone_dir = Path(current_app.config['OPERATIONS_DATA']) / "alone"
         assert alone_dir.is_dir()
+        attachments = Path(current_app.config['UPLOAD_FOLDER']) / str(alone)
+        attachments.mkdir(parents=True)
+        (attachments / "attachment.txt").write_text("attached")
         if deletion == "delete_own_account":
             with self.app.test_client() as test_client:
                 response = test_client.post('/delete_own_account', data={"token": self._get_token(test_client)})
@@ -312,7 +317,7 @@ class Test_Server:
         # nobody could reach it any more
         assert Operation.query.filter_by(path="alone").first() is None
         assert Message.query.filter_by(op_id=alone).count() == 0 and Change.query.filter_by(op_id=alone).count() == 0
-        assert not alone_dir.exists()
+        assert not alone_dir.exists() and not attachments.exists()
         # one with a member stays, without creator: a viewer doesn't get the rights of the creator
         shared = Operation.query.filter_by(path="shared").first()
         assert [permission.access_level for permission in Permission.query.filter_by(op_id=shared.id)] == ["viewer"]

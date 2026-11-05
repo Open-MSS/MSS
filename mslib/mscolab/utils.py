@@ -97,11 +97,24 @@ def get_operation_dir(data_dir, path):
     return operation_dir
 
 
-def remove_operation_dir(data_dir, path):
-    """Removes the directory of the deleted operation named path below data_dir, if it has one"""
+def _remove_tree(directory, what, path):
     try:
-        shutil.rmtree(get_operation_dir(data_dir, path))
+        shutil.rmtree(directory())
     except FileNotFoundError:
         pass
     except (ValueError, OSError) as ex:
-        logging.error("can't remove the directory of the deleted operation %r: %s", path, ex)
+        logging.error("can't remove the %s of the deleted operation %r: %s", what, path, ex)
+
+
+def remove_operation_attachments(upload_folder, op_id, path):
+    """Removes the chat attachments of the deleted operation op_id named path, below upload_folder"""
+    _remove_tree(lambda: Path(upload_folder) / str(int(op_id)), "attachments", path)
+
+
+def remove_operation_files(data_dir, upload_folder, op_id, path):
+    """
+    Removes the files of the deleted operation op_id named path: its directory below data_dir and its chat
+    attachments below upload_folder
+    """
+    _remove_tree(lambda: get_operation_dir(data_dir, path), "directory", path)
+    remove_operation_attachments(upload_folder, op_id, path)

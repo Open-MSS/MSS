@@ -102,6 +102,28 @@ def _update_ids(conn, statement, ids):
     return len(ids)
 
 
+# Of the rows that refer to a deleted row, these (table, column) keep the row without the reference: messages and
+# changes of a deleted user, a reply to a deleted message. Any other such row is removed. The rules of
+# dangling_references, and of the copy of an older database in app.initialise_db.
+KEPT_WITHOUT_REFERENCE = (("messages", "u_id"), ("changes", "u_id"), ("messages", "reply_id"))
+
+# the rows that refer to a deleted user or operation, see dangling_references
+_DANGLING_CONDITIONS = (
+    ("permissions", "u_id NOT IN (SELECT id FROM users) OR op_id NOT IN (SELECT id FROM operations)"),
+    ("messages", "op_id NOT IN (SELECT id FROM operations)"),
+    ("changes", "op_id NOT IN (SELECT id FROM operations)"),
+    ("messages", "u_id IS NOT NULL AND u_id NOT IN (SELECT id FROM users)"),
+    ("changes", "u_id IS NOT NULL AND u_id NOT IN (SELECT id FROM users)"),
+    ("messages", "reply_id IS NOT NULL AND reply_id NOT IN (SELECT id FROM messages)"),
+)
+
+
+def has_dangling_references(conn):
+    """True if a row refers to a deleted user or operation, see dangling_references; stops at the first one"""
+    return any(conn.execute(sa.text(f"SELECT 1 FROM {table} WHERE {condition} LIMIT 1")).first() is not None
+               for table, condition in _DANGLING_CONDITIONS)
+
+
 def dangling_references(conn):
     """
     The repairs of the rows that refer to a deleted user or operation, as (log message, row ids, statement)
@@ -153,25 +175,35 @@ def remove_dangling_references(conn):
     return changed
 
 
-def has_autoincrement_user_ids(conn):
-    """True unless the database is SQLite and its table users reuses the ids of deleted users"""
+# the tables whose ids SQLite must never hand out again: a token or socket of a deleted user, or the attachments of
+# a deleted operation (stored by operation id), would belong to the new row
+AUTOINCREMENT_TABLES = ("users", "operations")
+
+
+def has_autoincrement_ids(conn, table):
+    """True unless the database is SQLite and table reuses the ids of deleted rows"""
     if conn.dialect.name != "sqlite":
         return True
-    sql = conn.execute(sa.text("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'users'")).scalar()
+    sql = conn.execute(sa.text("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = :table"),
+                       {"table": table}).scalar()
     return sql is None or "AUTOINCREMENT" in sql.upper()
 
 
-def use_autoincrement_user_ids(op, conn):
+def use_autoincrement_ids(op, conn):
     """
-    Lets SQLite never hand out the id of a deleted user again, as PostgreSQL never does
+    Lets SQLite never hand out the id of a deleted row of AUTOINCREMENT_TABLES again, as PostgreSQL never does
 
-    Without AUTOINCREMENT, SQLite gives a new row the highest id + 1, so a new user can get the id of the last
-    deleted one. op is an alembic Operations object for conn.
+    Without AUTOINCREMENT, SQLite gives a new row the highest id + 1, so a new user or operation can get the id of
+    the last deleted one. op is an alembic Operations object for conn. Returns the tables it changed.
     """
-    if not has_autoincrement_user_ids(conn):
-        with op.batch_alter_table('users', schema=None, recreate='always',
-                                  table_kwargs={'sqlite_autoincrement': True}):
-            pass
+    changed = []
+    for table in AUTOINCREMENT_TABLES:
+        if not has_autoincrement_ids(conn, table):
+            with op.batch_alter_table(table, schema=None, recreate='always',
+                                      table_kwargs={'sqlite_autoincrement': True}):
+                pass
+            changed.append(table)
+    return changed
 
 
 def add_fullname(op, conn):

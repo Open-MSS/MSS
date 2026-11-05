@@ -40,9 +40,9 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import insert
 from sqlalchemy.exc import IntegrityError
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
-from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
+from mslib.mscolab.models import db, Operation, Permission, User, Change
 from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX, is_valid_operation_path, get_operation_dir, \
-    remove_operation_dir
+    remove_operation_files
 from mslib.mscolab.api.attachments import file_extension, normalized_extensions
 
 # "creator" is assigned only by create_operation
@@ -266,11 +266,11 @@ class FileManager:
         """
         if user.profile_image_path:
             self.delete_user_profile_image(user.profile_image_path)
-        handovers, deleted_paths = user.prepare_deletion()
+        handovers, deleted_operations = user.prepare_deletion()
         db.session.delete(user)
         db.session.commit()
-        for path in deleted_paths:
-            remove_operation_dir(self.data_dir, path)
+        for op_id, path in deleted_operations:
+            remove_operation_files(self.data_dir, current_app.config['UPLOAD_FOLDER'], op_id, path)
         return handovers
 
     def modify_user(self, user, attribute=None, value=None, action=None):
@@ -489,16 +489,13 @@ class FileManager:
             return False
         operation = Operation.query.filter_by(id=op_id).first()
         try:
-            operation_dir = get_operation_dir(self.data_dir, operation.path)
+            get_operation_dir(self.data_dir, operation.path)
         except ValueError as ex:
             logging.error("refusing to delete operation %s: %s", op_id, ex)
             return False
-        Permission.query.filter_by(op_id=op_id).delete()
-        Change.query.filter_by(op_id=op_id).delete()
-        Message.query.filter_by(op_id=op_id).delete()
-        shutil.rmtree(operation_dir)
-        db.session.delete(operation)
+        path = Operation.delete_with_dependent_rows(op_id)
         db.session.commit()
+        remove_operation_files(self.data_dir, current_app.config['UPLOAD_FOLDER'], op_id, path)
         return True
 
     def get_authorized_users(self, op_id):

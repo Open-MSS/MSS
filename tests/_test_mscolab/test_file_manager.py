@@ -243,8 +243,15 @@ class Test_FileManager:
     def test_delete_operation(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path='operation4')
+            attachments = os.path.join(current_app.config['UPLOAD_FOLDER'], str(operation.id))
+            os.makedirs(attachments)
+            with open(os.path.join(attachments, "attachment.txt"), "w") as attachment:
+                attachment.write("attached")
             assert self.fm.delete_operation(operation.id, self.user)
             assert Operation.query.filter_by(path=flight_path).first() is None
+            # a new operation must not get the attachments
+            assert not os.path.exists(attachments)
+            assert not os.path.exists(os.path.join(self.fm.data_dir, flight_path))
 
     @pytest.mark.parametrize("bad_path", ["", ".", "..", "a/b", "a\\b", "a b", "a.b", "C:x", "abc\n"])
     def test_create_operation_rejects_invalid_path(self, bad_path):

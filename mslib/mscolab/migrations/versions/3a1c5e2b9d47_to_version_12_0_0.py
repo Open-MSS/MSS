@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from alembic import op
 
 from mslib.mscolab.migrations.schema_repair import (add_fullname, add_token_nonce, has_column,
-                                                    remove_dangling_references, use_autoincrement_user_ids)
+                                                    remove_dangling_references, use_autoincrement_ids)
 
 
 # revision identifiers, used by Alembic.
@@ -69,12 +69,12 @@ def upgrade():
     if not has_column(conn, 'users', 'token_nonce'):
         add_token_nonce(op, conn)
 
-    # SQLite: the id of a deleted user is never handed out again
-    use_autoincrement_user_ids(op, conn)
+    # SQLite: the id of a deleted user or operation is never handed out again
+    use_autoincrement_ids(op, conn)
 
 
 def downgrade():
-    # AUTOINCREMENT of users on SQLite stays, an earlier version works with it
+    # AUTOINCREMENT of users and operations on SQLite stays, an earlier version works with it
     # missing in a database that ran an earlier development state of this migration
     if has_column(op.get_bind(), 'users', 'token_nonce'):
         with op.batch_alter_table('users', schema=None) as batch_op:
