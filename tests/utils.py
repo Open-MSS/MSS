@@ -25,16 +25,16 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import json
 import requests
 import xml.etree.ElementTree as etree
 
 from urllib.parse import urljoin
 
-from flask import json
-
-from mslib.mscolab.auth import register_user
 from tests.constants import create_msui_settings_file  # noqa: F401
-from mslib.mscolab.seed import XML_CONTENT_INIT
+
+# The mscolab helpers below import mslib.mscolab inside the functions: this module is shared by the suites of
+# all packages, and a suite must be able to run with only its own package installed.
 
 
 XML_CONTENT1 = """<?xml version="1.0" encoding="utf-8"?>
@@ -144,6 +144,7 @@ def mscolab_register_user(app, msc_url, email, password, username, fullname):
 
 
 def mscolab_register_and_login(app, msc_url, email, password, username, fullname):
+    from mslib.mscolab.auth import register_user
     register_user(email, password, username, fullname)
     data = {
         'email': email,
@@ -212,7 +213,10 @@ def mscolab_delete_all_operations(app, msc_url, email, password, username, fulln
         response = app.test_client().post(url, data=data)
 
 
-def mscolab_create_operation(app, msc_url, response, path='f', description='description', content=XML_CONTENT_INIT):
+def mscolab_create_operation(app, msc_url, response, path='f', description='description', content=None):
+    if content is None:
+        from mslib.mscolab.seed import XML_CONTENT_INIT
+        content = XML_CONTENT_INIT
     data = json.loads(response.get_data(as_text=True))
     data["path"] = path
     data['description'] = description
