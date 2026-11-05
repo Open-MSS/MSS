@@ -267,7 +267,8 @@ class MSUIMscolab(QtCore.QObject):
             creator_name = "unknown"
         else:
             parsed = GetCreatorOfOperationResponse.from_text(response.text)
-            creator_name = parsed.username if parsed is not None else "unknown"
+            # no username when the creator deleted the account
+            creator_name = parsed.username if parsed is not None and parsed.username is not None else "unknown"
         QMessageBox.information(
             self.ui, "Operation Description",
             # chosen by users, must not be interpreted as markup

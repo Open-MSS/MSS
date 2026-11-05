@@ -77,6 +77,12 @@ def _ensure_mswms_server_if_needed(request):
         request.getfixturevalue("mswms_server")
 
 
+def pytest_sessionfinish(session, exitstatus):
+    """Drop the PostgreSQL databases of this process, only with MSCOLAB_TEST_POSTGRES_URL"""
+    from tests.database import drop_databases
+    drop_databases()
+
+
 # Make the server fixtures available everywhere. tests.fixtures imports nothing but the standard library and
 # pytest at module level (mslib.mscolab, mslib.mswms etc. are imported inside the fixtures that need them),
 # so this is safe and cheap regardless of which test directories are in scope.

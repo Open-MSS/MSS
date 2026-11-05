@@ -72,6 +72,20 @@ and `servers-without-qt` contracts in setup.cfg.
   `app.extensions['sockio' | 'cm' | 'fm' | 'basic_auth']`, read via `current_app`.
   Two apps must be able to exist side by side, that is what the tests rely on.
 - DB schema changes require an Alembic migration (see docs/development.rst).
+- Foreign keys are enforced on SQLite too (`PRAGMA foreign_keys=ON` for every connection,
+  `app/__init__.py`), as PostgreSQL does. Schema changes that recreate tables on SQLite (alembic batch
+  mode, `app.repair_schema`) run inside `migrations.schema_repair.sqlite_foreign_keys_off`, which
+  checks the foreign keys afterwards. Delete dependent rows before their parent row.
+- A user is deleted only through `FileManager.delete_user` (REST) or `seed.delete_user` (CLI), both
+  call `User.prepare_deletion()`: an admin becomes creator of the user's operations (system message in
+  the chat, without the deleted user's name), an operation without other members is deleted (its directory
+  by the caller after the commit), messages and changes stay with `u_id` NULL, shown as from a deleted user.
+  User ids are never reused (`sqlite_autoincrement` on SQLite).
+- Rows referring to deleted users or operations are repaired only by the 12.0.0 migration and
+  `mscolab db --repair_references` (`schema_repair.remove_dangling_references`, logs every row id);
+  `repair_schema()` on a server start only warns, it never deletes rows.
+- The MSColab tests also run on PostgreSQL (`MSCOLAB_TEST_POSTGRES_URL`, `tests/database.py`), in CI
+  in the job `test-mscolab-postgres`.
 
 ## Verify
 

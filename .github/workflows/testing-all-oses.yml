@@ -39,6 +39,41 @@ jobs:
         format: cobertura
         flag-name: ${{ join(matrix.*, ' - ') }}
 
+  test-mscolab-postgres:
+    # MSColab servers run on PostgreSQL in production, which behaves differently from SQLite:
+    # it enforces foreign keys and locks tables for schema changes (#2311)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
+    - uses: prefix-dev/setup-pixi@ad1da6449d9e506fd127fd67ab2d054a769f6a94 # v0.11.2
+      with:
+        pixi-version: latest
+        cache: true
+        environments: dev
+    - name: Run the MSColab tests on PostgreSQL
+      # the server tests, and the msui tests that drive a real MSColab server
+      timeout-minutes: 30
+      env:
+        # every test app and test process gets a database of its own on this server, see tests/database.py
+        MSCOLAB_TEST_POSTGRES_URL: postgresql://postgres:postgres@localhost:5432
+        # a statement waiting for a lock fails after a minute instead of hanging until the job's timeout
+        PGOPTIONS: -c lock_timeout=60s
+      run: >-
+        pixi run -e dev env QT_QPA_PLATFORM=offscreen pytest -v -n logical --durations=20
+        tests/_test_mscolab tests/_test_msui/test_mscolab*.py
+
   finish:
     needs: test
     runs-on: ubuntu-latest

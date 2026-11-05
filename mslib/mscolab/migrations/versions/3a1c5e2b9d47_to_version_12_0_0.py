@@ -10,7 +10,8 @@ import logging
 import sqlalchemy as sa
 from alembic import op
 
-from mslib.mscolab.migrations.schema_repair import add_token_nonce, has_column
+from mslib.mscolab.migrations.schema_repair import (add_fullname, add_token_nonce, has_column,
+                                                    remove_dangling_references, use_autoincrement_user_ids)
 
 
 # revision identifiers, used by Alembic.
@@ -25,6 +26,14 @@ _ACCESS_LEVEL_RANK = {"creator": 3, "admin": 2, "collaborator": 1, "viewer": 0}
 
 
 def upgrade():
+    # 11.0.0 added users.fullname to the migration of 10.0.0 after its release, databases of 10.x miss it
+    add_fullname(op, op.get_bind())
+
+    # rows of deleted users and operations, they would break the foreign keys now checked on SQLite too
+    removed = remove_dangling_references(op.get_bind())
+    if removed:
+        logging.warning("repaired %s rows that referred to a deleted user or operation", removed)
+
     # A user has at most one permission per operation. Older versions could create duplicates,
     # e.g. by adding members to a {category}Group operation. Keep the one with the highest
     # access level, and of those the oldest.
@@ -60,8 +69,12 @@ def upgrade():
     if not has_column(conn, 'users', 'token_nonce'):
         add_token_nonce(op, conn)
 
+    # SQLite: the id of a deleted user is never handed out again
+    use_autoincrement_user_ids(op, conn)
+
 
 def downgrade():
+    # AUTOINCREMENT of users on SQLite stays, an earlier version works with it
     # missing in a database that ran an earlier development state of this migration
     if has_column(op.get_bind(), 'users', 'token_nonce'):
         with op.batch_alter_table('users', schema=None) as batch_op:

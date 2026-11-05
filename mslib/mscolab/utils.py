@@ -23,8 +23,10 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import logging
 import os
 import re
+import shutil
 from pathlib import Path
 
 # Operation names become directory names below OPERATIONS_DATA. The msui client
@@ -65,7 +67,8 @@ def get_message_dict(message):
     return {
         "id": message.id,
         "u_id": message.u_id,
-        "username": message.user.username,
+        # None for a message of a deleted user
+        "username": message.user.username if message.user is not None else None,
         "text": message.text,
         "message_type": message.message_type,
         "reply_id": message.reply_id,
@@ -92,3 +95,13 @@ def get_operation_dir(data_dir, path):
     if not path or operation_dir.parent != data_dir:
         raise ValueError(f"operation path {path!r} is outside of {data_dir}")
     return operation_dir
+
+
+def remove_operation_dir(data_dir, path):
+    """Removes the directory of the deleted operation named path below data_dir, if it has one"""
+    try:
+        shutil.rmtree(get_operation_dir(data_dir, path))
+    except FileNotFoundError:
+        pass
+    except (ValueError, OSError) as ex:
+        logging.error("can't remove the directory of the deleted operation %r: %s", path, ex)

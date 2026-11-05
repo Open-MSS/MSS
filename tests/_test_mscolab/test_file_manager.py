@@ -277,10 +277,12 @@ class Test_FileManager:
             flight_path, operation = self._create_operation(flight_path="legacy")
             operation.path = ".."
             db.session.commit()
-            db_file = os.path.join(os.path.dirname(self.fm.data_dir), "mscolab.db")
-            assert os.path.exists(db_file)
+            # ".." is the directory above the data directory, e.g. with the SQLite database
+            canary = os.path.join(os.path.dirname(self.fm.data_dir), "canary.txt")
+            with open(canary, "w") as canary_file:
+                canary_file.write("must stay")
             assert self.fm.delete_operation(operation.id, self.user) is False
-            assert os.path.exists(db_file)
+            assert os.path.exists(canary)
             assert Operation.query.filter_by(id=operation.id).first() is not None
 
     def test_get_authorized_users(self):

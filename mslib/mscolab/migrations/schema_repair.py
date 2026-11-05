@@ -28,9 +28,47 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import contextlib
+import logging
 import secrets
 
 import sqlalchemy as sa
+
+
+class _ForeignKeyCheck:
+    """whether sqlite_foreign_keys_off checks the foreign keys at its end"""
+    def __init__(self):
+        self.check = True
+
+
+@contextlib.contextmanager
+def sqlite_foreign_keys_off(connection):
+    """
+    Switches the foreign keys of an SQLite connection off for schema changes, checks them afterwards
+
+    The batch mode of alembic recreates tables on SQLite, which needs them off, see
+    https://www.sqlite.org/lang_altertable.html#otheralter. The PRAGMA has no effect inside a transaction, so
+    connection must have none open. Rows left referring to missing rows raise a RuntimeError, PostgreSQL would
+    refuse them; setting check of the yielded object to False skips that. Other databases are left as they are.
+    """
+    state = _ForeignKeyCheck()
+    if connection.dialect.name != "sqlite":
+        yield state
+        return
+    connection.exec_driver_sql("PRAGMA foreign_keys=OFF")
+    connection.commit()
+    violations = []
+    try:
+        yield state
+        connection.commit()
+        if state.check:
+            violations = connection.exec_driver_sql("PRAGMA foreign_key_check").fetchall()
+    finally:
+        connection.rollback()
+        connection.exec_driver_sql("PRAGMA foreign_keys=ON")
+        connection.commit()
+    if violations:
+        raise RuntimeError(f"Rows refer to missing rows (table, rowid, referred table, foreign key): {violations}")
 
 
 def has_column(conn, table, column):
@@ -52,3 +90,122 @@ def add_token_nonce(op, conn):
                      {"nonce": secrets.token_hex(16), "id": u_id})
     with op.batch_alter_table('users', schema=None) as batch_op:
         batch_op.alter_column('token_nonce', existing_type=sa.String(length=32), nullable=False)
+
+
+def _ids(conn, query):
+    return [row.id for row in conn.execute(sa.text(query))]
+
+
+def _update_ids(conn, statement, ids):
+    if ids:
+        conn.execute(sa.text(statement).bindparams(sa.bindparam("ids", expanding=True)), {"ids": ids})
+    return len(ids)
+
+
+def dangling_references(conn):
+    """
+    The repairs of the rows that refer to a deleted user or operation, as (log message, row ids, statement)
+
+    Before 12.0.0 a deleted user left its chat messages and flight track changes behind, still referring to it, and
+    a deleted operation could leave its rows behind. SQLite didn't check this, PostgreSQL refuses it. The messages
+    and changes of a deleted user stay, without the user, as when a user is deleted now; the rows of a deleted
+    operation are removed.
+    """
+    missing_user = "u_id IS NOT NULL AND u_id NOT IN (SELECT id FROM users)"
+    missing_operation = "op_id NOT IN (SELECT id FROM operations)"
+    # a reply to a message that goes stays without it; PostgreSQL checks this per statement, so before the message
+    # is deleted (the ids first: MySQL doesn't update a table selected from in the same statement)
+    replies = _ids(conn, "SELECT reply.id FROM messages reply LEFT JOIN messages answered "
+                         "ON reply.reply_id = answered.id WHERE reply.reply_id IS NOT NULL "
+                         "AND (answered.id IS NULL OR answered.op_id NOT IN (SELECT id FROM operations))")
+    repairs = [
+        ("deleted the permissions %s of deleted users or operations",
+         _ids(conn, f"SELECT id FROM permissions WHERE u_id NOT IN (SELECT id FROM users) OR {missing_operation}"),
+         "DELETE FROM permissions WHERE id IN :ids"),
+        ("removed the answered message from the replies %s, it is deleted or missing",
+         replies, "UPDATE messages SET reply_id = NULL WHERE id IN :ids"),
+        ("deleted the chat messages %s of deleted operations",
+         _ids(conn, f"SELECT id FROM messages WHERE {missing_operation}"), "DELETE FROM messages WHERE id IN :ids"),
+        ("deleted the flight track changes %s of deleted operations",
+         _ids(conn, f"SELECT id FROM changes WHERE {missing_operation}"), "DELETE FROM changes WHERE id IN :ids"),
+        ("kept the chat messages %s of deleted users without their user",
+         _ids(conn, f"SELECT id FROM messages WHERE {missing_user} AND NOT ({missing_operation})"),
+         "UPDATE messages SET u_id = NULL WHERE id IN :ids"),
+        ("kept the flight track changes %s of deleted users without their user",
+         _ids(conn, f"SELECT id FROM changes WHERE {missing_user} AND NOT ({missing_operation})"),
+         "UPDATE changes SET u_id = NULL WHERE id IN :ids"),
+    ]
+    return [repair for repair in repairs if repair[1]]
+
+
+def remove_dangling_references(conn):
+    """
+    Repairs the rows that refer to a deleted user or operation, see dangling_references; returns how many rows
+    were changed
+
+    It deletes rows, so it runs only in the 12.0.0 migration and by `mscolab db --repair_references`, never on a
+    server start. Logs the ids of every row it changes.
+    """
+    changed = 0
+    for message, ids, statement in dangling_references(conn):
+        logging.warning("Repairing the database: " + message, ids)
+        changed += _update_ids(conn, statement, ids)
+    return changed
+
+
+def has_autoincrement_user_ids(conn):
+    """True unless the database is SQLite and its table users reuses the ids of deleted users"""
+    if conn.dialect.name != "sqlite":
+        return True
+    sql = conn.execute(sa.text("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'users'")).scalar()
+    return sql is None or "AUTOINCREMENT" in sql.upper()
+
+
+def use_autoincrement_user_ids(op, conn):
+    """
+    Lets SQLite never hand out the id of a deleted user again, as PostgreSQL never does
+
+    Without AUTOINCREMENT, SQLite gives a new row the highest id + 1, so a new user can get the id of the last
+    deleted one. op is an alembic Operations object for conn.
+    """
+    if not has_autoincrement_user_ids(conn):
+        with op.batch_alter_table('users', schema=None, recreate='always',
+                                  table_kwargs={'sqlite_autoincrement': True}):
+            pass
+
+
+def add_fullname(op, conn):
+    """
+    Adds users.fullname, if it is missing
+
+    11.0.0 added it to the migration of 10.0.0 after that was released, so a database created by 10.x and upgraded
+    later misses it. op is an alembic Operations object for conn.
+    """
+    if not has_column(conn, 'users', 'fullname'):
+        with op.batch_alter_table('users', schema=None) as batch_op:
+            batch_op.add_column(sa.Column('fullname', sa.String(length=255), nullable=True))
+
+
+def fix_postgresql_sequences(conn):
+    """
+    Moves the id sequences of a PostgreSQL database behind the highest id of their table, never back
+
+    Rows inserted with explicit ids, by the seed or the copy of an older database, leave a sequence behind, so the
+    next new row would get an id that exists. Never back: ids of deleted rows are not handed out again. Other
+    databases are left as they are.
+    """
+    if conn.dialect.name != "postgresql":
+        return
+    for table in sa.inspect(conn).get_table_names():
+        if "id" not in {column["name"] for column in sa.inspect(conn).get_columns(table)}:
+            continue
+        sequence = conn.execute(sa.text("SELECT pg_get_serial_sequence(:table, 'id')"), {"table": table}).scalar()
+        if sequence is None:
+            continue
+        highest = conn.execute(sa.text(f'SELECT MAX(id) FROM "{table}"')).scalar()
+        if highest is None:
+            # an empty table, a sequence not used yet would otherwise start at 2
+            continue
+        # sequence is the quoted, schema qualified name from the catalog
+        conn.execute(sa.text(f"SELECT setval(:sequence, GREATEST(:highest, (SELECT last_value FROM {sequence})))"),
+                     {"sequence": sequence, "highest": highest})

@@ -68,6 +68,8 @@ class AwareDateTime(sqlalchemy.types.TypeDecorator):
 class User(db.Model):
 
     __tablename__ = 'users'
+    # SQLite: the id of a deleted user is never handed out again, as on PostgreSQL
+    __table_args__ = {"sqlite_autoincrement": True}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
     username = db.Column(db.String(255))
     emailid = db.Column(db.String(255), unique=True)
@@ -161,6 +163,58 @@ class User(db.Model):
         issued in between are invalid too. The caller commits the session.
         """
         self.token_nonce = secrets.token_hex(16)
+
+    def prepare_deletion(self):
+        """
+        Hands over the operations the user created and keeps its messages and changes, before the user is deleted
+
+        Of each operation the user created, the admin who is a member longest becomes its creator, a system
+        message in its chat tells so, without the name of the user. An operation without other members is deleted:
+        nobody could reach it any more. One with members but without an admin stays without creator, no
+        collaborator or viewer gets the rights of a creator. Returns the hand-overs as (op_id, u_id of the new
+        creator, system message) for the socket events, and the paths of the deleted operations, whose directories
+        the caller removes after the commit. The caller deletes the user and commits the session.
+        """
+        handovers = []
+        deleted_paths = []
+        for created in Permission.query.filter_by(u_id=self.id, access_level="creator").all():
+            others = Permission.query.filter(Permission.op_id == created.op_id, Permission.u_id != self.id)
+            admin = others.filter(Permission.access_level == "admin").order_by(Permission.id).first()
+            if admin is not None:
+                admin.access_level = "creator"
+                message = Message(created.op_id, admin.u_id,
+                                  f"[service message] The creator deleted the account, **{admin.user.username}** "
+                                  f"is the creator of the operation now.",
+                                  message_type=MessageType.SYSTEM_MESSAGE)
+                db.session.add(message)
+                handovers.append((created.op_id, admin.u_id, message))
+            elif others.first() is None:
+                operation = Operation.query.filter_by(id=created.op_id).first()
+                logging.info("deleting operation %s, its creator %s is deleted and it has no other members",
+                             created.op_id, self.id)
+                # the rows referring to the operation first, the foreign keys are checked
+                Permission.query.filter_by(op_id=created.op_id).delete(synchronize_session=False)
+                Change.query.filter_by(op_id=created.op_id).delete(synchronize_session=False)
+                Message.query.filter_by(op_id=created.op_id).delete(synchronize_session=False)
+                if operation is not None:
+                    deleted_paths.append(operation.path)
+                    db.session.delete(operation)
+            else:
+                logging.warning("operation %s keeps no creator, its creator %s is deleted and it has no admin",
+                                created.op_id, self.id)
+        self.unlink_messages_and_changes()
+        db.session.flush()
+        return handovers, deleted_paths
+
+    def unlink_messages_and_changes(self):
+        """
+        Keeps the chat messages and flight track changes of the user in their operations, without the user
+
+        To call before the user is deleted: they would otherwise refer to a user that doesn't exist, which
+        PostgreSQL refuses. They are shown as from a deleted user then. The caller commits the session.
+        """
+        Message.query.filter_by(u_id=self.id).update({Message.u_id: None}, synchronize_session=False)
+        Change.query.filter_by(u_id=self.id).update({Change.u_id: None}, synchronize_session=False)
 
     def reset_password(self, password_hash, password):
         """

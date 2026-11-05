@@ -41,7 +41,8 @@ from sqlalchemy import insert
 from sqlalchemy.exc import IntegrityError
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
-from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX, is_valid_operation_path, get_operation_dir
+from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX, is_valid_operation_path, get_operation_dir, \
+    remove_operation_dir
 from mslib.mscolab.api.attachments import file_extension, normalized_extensions
 
 # "creator" is assigned only by create_operation
@@ -256,6 +257,22 @@ class FileManager:
         """
         return self.auth_type(u_id, op_id) in WRITE_ACCESS_LEVELS and not self.is_archived(op_id)
 
+    def delete_user(self, user):
+        """
+        Deletes user; its operations go to an admin or are deleted without other members, its messages and changes
+        stay, see User.prepare_deletion
+
+        Returns the hand-overs of User.prepare_deletion for the socket events.
+        """
+        if user.profile_image_path:
+            self.delete_user_profile_image(user.profile_image_path)
+        handovers, deleted_paths = user.prepare_deletion()
+        db.session.delete(user)
+        db.session.commit()
+        for path in deleted_paths:
+            remove_operation_dir(self.data_dir, path)
+        return handovers
+
     def modify_user(self, user, attribute=None, value=None, action=None):
         if action == "create":
             user_query = User.query.filter_by(emailid=str(user.emailid)).first()
@@ -267,11 +284,7 @@ class FileManager:
         elif action == "delete":
             user_query = User.query.filter_by(id=user.id).first()
             if user_query is not None:
-                # Delete profile image if it exists
-                if user.profile_image_path:
-                    self.delete_user_profile_image(user.profile_image_path)
-                db.session.delete(user)
-                db.session.commit()
+                self.delete_user(user)
             user_query = User.query.filter_by(id=user.id).first()
             # on delete we return successful deleted
             if user_query is None:
@@ -603,7 +616,8 @@ class FileManager:
             'id': change.id,
             'comment': change.comment,
             'version_name': change.version_name,
-            'username': change.user.username,
+            # None for a change of a deleted user
+            'username': change.user.username if change.user is not None else None,
             'created_at': change.created_at.isoformat()
         }, changes))
 
@@ -715,6 +729,9 @@ class FileManager:
             # any participant of the OP is allowed to see who is the creator
             return False
         current_operation_creator = Permission.query.filter_by(op_id=op_id, access_level="creator").first()
+        # None when the creator deleted the account, its permissions are deleted with it
+        if current_operation_creator is None:
+            return None
         return current_operation_creator.user.username
 
     def _group_member_operations(self, operation, user, managed_only=True):

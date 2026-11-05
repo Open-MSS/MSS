@@ -32,7 +32,7 @@ from PIL import Image
 from flask import Blueprint, g, request, jsonify, send_from_directory, current_app
 
 from mslib.mscolab.auth import verify_user
-from mslib.mscolab.models import db
+from mslib.mscolab.models import User, db
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.attachments import IMAGE_EXTENSIONS, IMAGE_FORMATS
 from mslib.mscolab.api.schemas import (
@@ -126,10 +126,15 @@ def delete_own_account():
     user = g.user
     u_id = user.id
     op_ids = [permission.op_id for permission in user.permissions]
-    result = fm.modify_user(user, action="delete")
+    handovers = fm.delete_user(user)
+    result = User.query.filter_by(id=u_id).first() is None
     if result:
-        # like the CLI delete_user, the sockets of the user leave the rooms of its operations
         sm = current_app.extensions['sockio'].sm
+        # an admin became the creator of the operations of the user
+        for op_id, creator_id, message in handovers:
+            sm.emit_update_permission(creator_id, op_id, access_level="creator")
+            sm.emit_chat_message(message)
+        # like the CLI delete_user, the sockets of the user leave the rooms of its operations
         for op_id in op_ids:
             sm.emit_revoke_permission(u_id, op_id)
             sm.emit_operation_permissions_updated(u_id, op_id)
