@@ -597,7 +597,6 @@ class Test_WMS:
         assert os.path.exists(os.path.join(docsdir, "plots"))
         assert os.path.exists(os.path.join(docsdir, "code"))
         assert os.path.exists(os.path.join(docsdir, "plots.html"))
-        mslib.mswms.gallery_builder.plot_htmls = {}
 
 
 def _with_valid_times(layer, valid_times):
