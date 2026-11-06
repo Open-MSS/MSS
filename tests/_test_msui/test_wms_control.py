@@ -158,23 +158,32 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.window.multilayers.get_current_layer() is None
         self.window.leftrow_is_selected("2012-10-17T12:00:00Z")
 
-    @pytest.mark.skip("Breaks other tests in this class because of a lingering message box, for some reason")
     def test_forward_backward_clicks(self, qtbot):
+        """
+        a step forward followed by a step back restores times and level
+        """
         self.query_server(qtbot, self.url)
-        self.window.init_time_back_click()
-        self.window.init_time_fwd_click()
-        self.window.valid_time_fwd_click()
-        self.window.valid_time_back_click()
-        self.window.level_fwd_click()
-        self.window.level_back_click()
-        self.window.cb_init_time_back_click()
-        self.window.cb_valid_time_back_click()
-        self.window.cb_init_time_fwd_click()
-        self.window.cb_valid_time_fwd_click()
-        try:
-            self.window.secs_from_timestep("Wrong")
-        except ValueError:
-            pass
+        window = self.window
+        for fwd, back, widget in [(window.init_time_fwd_click, window.init_time_back_click, window.dteInitTime),
+                                  (window.valid_time_fwd_click, window.valid_time_back_click, window.dteValidTime)]:
+            before = widget.dateTime()
+            fwd()
+            assert widget.dateTime() > before
+            back()
+            assert widget.dateTime() == before
+        for fwd, back, widget in [(window.level_fwd_click, window.level_back_click, window.cbLevel),
+                                  (window.cb_init_time_fwd_click, window.cb_init_time_back_click, window.cbInitTime),
+                                  (window.cb_valid_time_fwd_click, window.cb_valid_time_back_click,
+                                   window.cbValidTime)]:
+            widget.setCurrentIndex(0)
+            if widget.count() > 1:
+                fwd()
+                assert widget.currentIndex() == 1
+            back()
+            assert widget.currentIndex() == 0
+        assert window.secs_from_timestep("3 hours") == 3 * 3600
+        with pytest.raises(ValueError):
+            window.secs_from_timestep("Wrong")
 
     @pytest.mark.skip("Has a race condition where the abort might not happen fast enough")
     def test_server_abort_getmap(self, qtbot):

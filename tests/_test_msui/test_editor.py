@@ -24,12 +24,12 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import pytest
+import json
+from pathlib import Path
+
 import mock
-import os
 from PyQt5 import QtWidgets
 from mslib.msui import editor
-from tests import constants
 
 
 def test_import_config_reports_ignored_entries(qtbot, tmp_path):
@@ -49,43 +49,61 @@ def test_import_config_reports_ignored_entries(qtbot, tmp_path):
         window.close()
 
 
-@pytest.mark.skip("To be done for new UI")
-class Test_Editor:
-    sample_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "msui_settings.json"))
-    sample_file = sample_file.replace('\\', '/')
+def _editor_with_change(tmp_path):
+    """
+    An editor window that saves to tmp_path, with one value changed by an import
+    """
+    import_file = tmp_path / "import.json"
+    import_file.write_text('{"num_interpolation_points": 30}')
+    window = editor.ConfigurationEditorWindow()
+    window.path = str(tmp_path / "msui_settings.json")
+    with mock.patch("mslib.msui.editor.get_open_filename", return_value=str(import_file)):
+        window.import_config()
+    assert window.check_modified()
+    return window
 
-    save_file_name = constants.MSUI_CONFIG_PATH / "testeditor_save.json"
 
-    @pytest.fixture(autouse=True)
-    def setup(self, qtbot):
-        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
-            self.window = editor.EditorMainWindow()
-            self.save_file_name = self.save_file_name
-            self.window.show()
-            yield
-            if os.path.exists(self.save_file_name):
-                os.remove(self.save_file_name)
-            self.window.hide()
+def test_save_config_and_restart(qtbot, tmp_path):
+    """
+    Saving changes asks for the restart, saves to the window's path and asks the main window
+    to restart by a signal; a window without a main window restarts nothing (#1138)
+    """
+    window = _editor_with_change(tmp_path)
+    window.show()
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes) as m, \
+            qtbot.wait_signal(window.restartApplication, timeout=1000):
+        assert window.save_config() is True
+    assert "restart" in m.call_args_list[0][0][2]
+    assert json.loads(Path(window.path).read_text())["num_interpolation_points"] == 30
+    assert not window.isVisible()
+    assert not window.check_modified()
 
-    @mock.patch("mslib.msui.editor.get_open_filename", return_value=sample_file)
-    def test_file_open(self, mockfile):
-        self.window.file_open()
-        assert "location" in self.window.file_content
 
-    @pytest.mark.skip("needs to be run isolated! With the restart of MSS the config for all other tests is changed")
-    @mock.patch("mslib.msui.editor.get_open_filename", return_value=sample_file)
-    def test_file_save_and_quit(self, mockfile):
-        self.window.file_open()
-        self.window.path = self.save_file_name
-        self.window.editor.setPlainText(self.window.editor.toPlainText() + " ")
-        self.window.file_save_and_quit()
-        assert os.path.exists(self.save_file_name)
+def test_save_config_declined(qtbot, tmp_path):
+    """
+    Declining the restart doesn't save and doesn't restart
+    """
+    window = _editor_with_change(tmp_path)
+    emitted = mock.Mock()
+    window.restartApplication.connect(emitted)
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.No):
+        window.save_config()
+    assert not Path(window.path).exists()
+    emitted.assert_not_called()
+    assert window.check_modified()
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.No):
+        window.close()
 
-    @mock.patch("mslib.msui.editor.get_open_filename", return_value=sample_file)
-    @mock.patch("mslib.msui.editor.get_save_filename", return_value=save_file_name)
-    def test_file_saveas(self, mocksaveas, mockfile):
-        self.window.file_open()
-        self.window.path = None
-        self.window.editor.setPlainText(self.window.editor.toPlainText() + " ")
-        self.window.file_saveas()
-        assert os.path.exists(self.save_file_name)
+
+def test_export_config(qtbot, tmp_path):
+    """
+    Export writes the changed values to the chosen file, without asking for a restart
+    """
+    window = _editor_with_change(tmp_path)
+    export_file = tmp_path / "export.json"
+    with mock.patch("mslib.msui.editor.get_save_filename", return_value=str(export_file)):
+        window.export_config()
+    assert json.loads(export_file.read_text())["num_interpolation_points"] == 30
+    assert not Path(window.path).exists()
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.No):
+        window.close()
