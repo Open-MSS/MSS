@@ -126,12 +126,19 @@ def delete_own_account():
     user = g.user
     u_id = user.id
     op_ids = [permission.op_id for permission in user.permissions]
-    result = fm.modify_user(user, action="delete")
-    if result:
-        # like the CLI delete_user, the sockets of the user leave the rooms of its operations
-        sm = current_app.extensions['sockio'].sm
-        for op_id in op_ids:
-            sm.emit_revoke_permission(u_id, op_id)
-            sm.emit_operation_permissions_updated(u_id, op_id)
-        sm.forget_user(u_id)
-    return jsonify(DeleteOwnAccountResponse(success=result).to_dict()), 200
+    # commits or raises
+    handovers, deleted_op_ids = fm.delete_user(user)
+    sm = current_app.extensions['sockio'].sm
+    # an admin became the creator of the operations of the user
+    for op_id, creator_id, message in handovers:
+        sm.emit_update_permission(creator_id, op_id, access_level="creator")
+        sm.emit_chat_message(message)
+    # deleted with the user, nobody else was a member; other clients of the user close it
+    for op_id in deleted_op_ids:
+        sm.emit_operation_delete(op_id)
+    # like the CLI delete_user, the sockets of the user leave the rooms of its operations
+    for op_id in op_ids:
+        sm.emit_revoke_permission(u_id, op_id)
+        sm.emit_operation_permissions_updated(u_id, op_id)
+    sm.forget_user(u_id)
+    return jsonify(DeleteOwnAccountResponse(success=True).to_dict()), 200

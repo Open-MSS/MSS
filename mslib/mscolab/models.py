@@ -65,9 +65,20 @@ class AwareDateTime(sqlalchemy.types.TypeDecorator):
         return value
 
 
+def fits_column(column, value):
+    """
+    True if value fits into the String column, e.g. User.username; None fits
+
+    PostgreSQL refuses a longer value with an error, SQLite stored it.
+    """
+    return value is None or len(str(value)) <= column.type.length
+
+
 class User(db.Model):
 
     __tablename__ = 'users'
+    # SQLite: the id of a deleted user is never handed out again, as on PostgreSQL
+    __table_args__ = {"sqlite_autoincrement": True}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
     username = db.Column(db.String(255))
     emailid = db.Column(db.String(255), unique=True)
@@ -162,6 +173,56 @@ class User(db.Model):
         """
         self.token_nonce = secrets.token_hex(16)
 
+    def prepare_deletion(self):
+        """
+        Hands over the operations the user created and keeps its messages and changes, before the user is deleted
+
+        Of each operation the user created, the admin who is a member longest becomes its creator, a system
+        message in its chat tells so, without the name of the user. An operation without other members is deleted:
+        nobody could reach it any more. One with members but without an admin stays without creator, no
+        collaborator or viewer gets the rights of a creator. Returns the hand-overs as (op_id, u_id of the new
+        creator, system message) for the socket events, and the deleted operations as (op_id, path), whose files
+        the caller removes after the commit. The caller deletes the user and commits the session.
+        """
+        handovers = []
+        deleted_operations = []
+        for created in Permission.query.filter_by(u_id=self.id, access_level="creator").all():
+            others = Permission.query.filter(Permission.op_id == created.op_id, Permission.u_id != self.id)
+            admin = others.filter(Permission.access_level == "admin").order_by(Permission.id).first()
+            if admin is not None:
+                admin.access_level = "creator"
+                message = Message(created.op_id, admin.u_id,
+                                  f"[service message] The creator deleted the account, **{admin.user.username}** "
+                                  f"is the creator of the operation now.",
+                                  message_type=MessageType.SYSTEM_MESSAGE)
+                db.session.add(message)
+                handovers.append((created.op_id, admin.u_id, message))
+            elif others.first() is None:
+                logging.info("deleting operation %s, its creator %s is deleted and it has no other members",
+                             created.op_id, self.id)
+                path = Operation.delete_with_dependent_rows(created.op_id)
+                if path is not None:
+                    deleted_operations.append((created.op_id, path))
+            else:
+                logging.warning("operation %s keeps no creator, its creator %s is deleted and it has no admin",
+                                created.op_id, self.id)
+        self.unlink_messages_and_changes()
+        if deleted_operations:
+            # their permissions are deleted already, the deletion of the user must not delete them again
+            db.session.expire(self, ["permissions"])
+        db.session.flush()
+        return handovers, deleted_operations
+
+    def unlink_messages_and_changes(self):
+        """
+        Keeps the chat messages and flight track changes of the user in their operations, without the user
+
+        To call before the user is deleted: they would otherwise refer to a user that doesn't exist, which
+        PostgreSQL refuses. They are shown as from a deleted user then. The caller commits the session.
+        """
+        Message.query.filter_by(u_id=self.id).update({Message.u_id: None}, synchronize_session=False)
+        Change.query.filter_by(u_id=self.id).update({Change.u_id: None}, synchronize_session=False)
+
     def reset_password(self, password_hash, password):
         """
         Sets password and revokes all login tokens, if the password hash is still password_hash; returns whether
@@ -207,6 +268,8 @@ class Permission(db.Model):
 class Operation(db.Model):
 
     __tablename__ = "operations"
+    # SQLite: a new operation never gets the id of a deleted one, its attachments are stored by operation id
+    __table_args__ = {"sqlite_autoincrement": True}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
     path = db.Column(db.String(255), unique=True)
     category = db.Column(db.String(255))
@@ -233,6 +296,23 @@ class Operation(db.Model):
         return f'<Operation path: {self.path}, desc: {self.description},' \
                f' cat: {self.category}, active: {self.active}, ' \
                f'last_used: {self.last_used}> '
+
+    @staticmethod
+    def delete_with_dependent_rows(op_id):
+        """
+        Deletes the operation op_id with its permissions, chat messages and flight track changes; returns its path,
+        None if there is no such operation
+
+        The rows referring to the operation first, the foreign keys are checked. The caller commits the session and
+        then removes its files, see utils.remove_operation_files.
+        """
+        operation = Operation.query.filter_by(id=op_id).first()
+        if operation is None:
+            return None
+        for model in (Permission, Change, Message):
+            model.query.filter_by(op_id=op_id).delete(synchronize_session=False)
+        db.session.delete(operation)
+        return operation.path
 
 
 class Message(db.Model):

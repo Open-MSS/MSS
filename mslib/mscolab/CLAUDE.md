@@ -31,7 +31,10 @@ Global map: ../../ARCHITECTURE.md
   released version; model changes go into the one migration of the next major release
   (docs/development.rst), currently 3a1c5e2b9d47 for 12.0.0. Development databases already
   stamped with that revision don't run a later added change: make the change idempotent in
-  `migrations/schema_repair.py` and add it to `app.repair_schema()` (server start, `mscolab db`)
+  `migrations/schema_repair.py` and add it to `app.repair_schema()` (server start, `mscolab db`; it acts only
+  on a database at the latest revision). One exception was made: the 9.0.0 migration failed on PostgreSQL for
+  every database with users, so it got a temporary server default (see its comment). On SQLite, rebuild
+  `users`/`operations` only through `schema_repair.batch_alter_table`, which keeps AUTOINCREMENT and its counter
 - `api/schemas.py` + `api/endpoints.py` — the typed client/server contract
   (request/response dataclasses, endpoint-name registry); `api/events.py`
   (`SocketEvents`) + `api/message_type.py` (`MessageType`) — socket
@@ -72,6 +75,26 @@ and `servers-without-qt` contracts in setup.cfg.
   `app.extensions['sockio' | 'cm' | 'fm' | 'basic_auth']`, read via `current_app`.
   Two apps must be able to exist side by side, that is what the tests rely on.
 - DB schema changes require an Alembic migration (see docs/development.rst).
+- Foreign keys are enforced on SQLite too (`PRAGMA foreign_keys=ON` for every connection of the app's
+  engine, `app/__init__.py`), as PostgreSQL does. Schema changes that recreate tables on SQLite (alembic batch
+  mode, `app.repair_schema`) run inside `migrations.schema_repair.sqlite_foreign_keys_off`, which
+  checks the foreign keys before its commit and rolls back, leftover `_alembic_tmp_*` tables included.
+  Delete dependent rows before their parent row.
+- A user is deleted only through `FileManager.delete_user` (REST, and `seed.delete_user` for the CLI),
+  which calls `User.prepare_deletion()`: an admin becomes creator of the user's operations (system message in
+  the chat, without the deleted user's name), an operation without other members is deleted, messages and
+  changes stay with `u_id` NULL, shown as from a deleted user.
+- An operation's rows are deleted only by `Operation.delete_with_dependent_rows`. Its directory is moved
+  aside before the commit (`utils.set_aside_operation_dir`, a failure aborts the deletion: the directory would
+  block the name), after the commit `utils.remove_operation_files` removes it and the attachments
+  (`UPLOAD_FOLDER/<op_id>`).
+  Ids of users and operations are never reused (`sqlite_autoincrement` on SQLite,
+  `schema_repair.AUTOINCREMENT_TABLES`): tokens, sockets and attachments refer to them.
+- Rows referring to deleted users or operations are repaired only by the 12.0.0 migration and
+  `mscolab db --repair_references` (`schema_repair.remove_dangling_references`, logs every row id);
+  `repair_schema()` on a server start only warns, it never deletes rows.
+- The MSColab tests also run on PostgreSQL (`MSCOLAB_TEST_POSTGRES_URL`, `tests/database.py`), in CI
+  in the job `test-mscolab-postgres`.
 
 ## Verify
 
