@@ -9,34 +9,26 @@
     </style>
     <div class="col">
       <br>
-      <p>Congratulations! You have successfully logged in to the mscolab server using Identity Provider.</p>
-      <p>Please proceed to log in using the user interface by below token.</p>
-      <p><b>Token</b> : {{token}}
+      <p>You have logged in to the MSColab server by your identity provider.</p>
+      <p>Enter this code in the user interface within 20 minutes to finish the login. It works once.</p>
+      <p><b>Code</b>: <code id="idpCode">{{ code }}</code>
         <br>
-        <button onclick="copyToClipboard('{{token}}')">Copy to Clipboard</button>
+        <button onclick="copyCode()">Copy to Clipboard</button>
       </p>
-
+      <p>If an MSColab account with your email exists already, the user interface asks for its password once, to link
+        this login to the account.</p>
     </div>
 
     <script>
-      function copyToClipboard(text) {
-        // Create a temporary input element
+      function copyCode() {
+        // a temporary input element, also without the clipboard API of a secure context
         const tempInput = document.createElement('input');
-        tempInput.value = text;
-
-        // Append the input element to the document
+        tempInput.value = document.getElementById('idpCode').textContent;
         document.body.appendChild(tempInput);
-
-        // Select the text within the input element
         tempInput.select();
-
-        // Copy the selected text to the clipboard
         document.execCommand('copy');
-
-        // Remove the temporary input element
         document.body.removeChild(tempInput);
-
-        alert('Token copied to clipboard.');
+        alert('Code copied to clipboard.');
       }
     </script>
   </div>

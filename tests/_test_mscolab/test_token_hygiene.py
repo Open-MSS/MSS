@@ -131,16 +131,12 @@ def test_logout_everywhere(app):
 def test_token_purposes_are_separate(app):
     email = USER[0]
     confirmation = auth.generate_confirmation_token(email, auth.EMAIL_CONFIRMATION)
-    idp_login = auth.generate_confirmation_token(email, auth.IDP_LOGIN)
     reset = auth.generate_password_reset_token(get_user(email))
     assert auth.confirm_token(confirmation, auth.EMAIL_CONFIRMATION) == email
-    assert auth.confirm_token(idp_login, auth.IDP_LOGIN) == email
     # a token of one purpose is no token of another one
-    assert auth.confirm_token(confirmation, auth.IDP_LOGIN) is False
-    assert auth.confirm_token(idp_login, auth.EMAIL_CONFIRMATION) is False
+    assert auth.confirm_token(confirmation, auth.PASSWORD_RESET) is False
     assert auth.confirm_token(reset, auth.EMAIL_CONFIRMATION) is False
     assert auth.confirm_password_reset_token(confirmation) is None
-    assert auth.confirm_password_reset_token(idp_login) is None
     assert auth.confirm_password_reset_token(reset)[0].emailid == email
     with pytest.raises(ValueError):
         auth.generate_confirmation_token(email, "unknown")

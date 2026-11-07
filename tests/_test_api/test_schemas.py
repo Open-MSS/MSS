@@ -66,6 +66,8 @@ from mslib.mscolab.api.schemas import (
     GetOperationUsersRequest,
     GetOperationUsersResponse,
     GetUserResponse,
+    IdpLinkRequest,
+    IdpLinkResponse,
     IdpLoginAuthRequest,
     IdpLoginAuthResponse,
     IdpUserInfo,
@@ -687,8 +689,19 @@ class Test_IdpLoginAuthRequest:
 
 class Test_IdpUserInfo:
     def test_round_trip(self):
-        user = IdpUserInfo(username="berta", id=1, emailid="berta@example.com")
+        user = IdpUserInfo(username="berta", id=1, emailid="berta@example.com", fullname="Berta B")
         assert IdpUserInfo.from_dict(user.to_dict()) == user
+
+    def test_older_server_without_fullname(self):
+        assert IdpUserInfo.from_dict({"username": "berta", "id": 1, "emailid": "berta@example.com"}).fullname == ""
+
+    def test_is_also_a_login_response(self):
+        # msui's after_login reads the response of IDP_LOGIN_AUTH as a LoginResponse
+        response = IdpLoginAuthResponse(
+            success=True, token="abc", user=IdpUserInfo(username="berta", id=1, emailid="b@example.com", fullname="B"))
+        login = LoginResponse.from_text(response.to_text())
+        assert login.token == "abc"
+        assert login.user == UserInfo(id=1, username="berta", fullname="B")
 
 
 class Test_IdpLoginAuthResponse:
@@ -703,6 +716,46 @@ class Test_IdpLoginAuthResponse:
 
     def test_to_dict_omits_token_and_user(self):
         assert IdpLoginAuthResponse(success=False).to_dict() == {"success": False}
+
+    def test_round_trip_link_required(self):
+        response = IdpLoginAuthResponse(success=False, link_required=True, emailid="berta@example.com")
+        assert response.to_dict() == {"success": False, "link_required": True, "emailid": "berta@example.com"}
+        assert IdpLoginAuthResponse.from_text(json.dumps(response.to_dict())) == response
+
+    def test_round_trip_refused_with_message(self):
+        response = IdpLoginAuthResponse(success=False, message="Confirm your email address")
+        assert response.to_dict() == {"success": False, "message": "Confirm your email address"}
+        assert IdpLoginAuthResponse.from_text(json.dumps(response.to_dict())) == response
+
+    def test_reply_of_a_server_before_12_is_a_legacy_password(self):
+        # its token is a one-time password for endpoints.TOKEN, its user has no fullname
+        old = IdpLoginAuthResponse.from_text(json.dumps(
+            {"success": True, "token": "password", "user": {"username": "berta", "id": 1, "emailid": "b@x.org"}}))
+        assert old.legacy_password is True and old.token == "password"
+        new = IdpLoginAuthResponse(success=True, token="abc", user=IdpUserInfo(username="berta", id=1,
+                                                                               emailid="b@x.org"))
+        assert IdpLoginAuthResponse.from_text(new.to_text()).legacy_password is False
+        # the mark decides, not a missing field: a proxy or a later server may send other user fields
+        unmarked = json.loads(new.to_text())
+        del unmarked["login_token"]
+        assert IdpLoginAuthResponse.from_text(json.dumps(unmarked)).legacy_password is True
+
+
+class Test_IdpLinkRequest:
+    def test_round_trip(self):
+        req = IdpLinkRequest(token="token", code="code")
+        assert req.to_form_data() == {"token": "token", "code": "code"}
+        assert IdpLinkRequest.from_form(req.to_form_data()) == req
+
+
+class Test_IdpLinkResponse:
+    @pytest.mark.parametrize("success", [True, False])
+    def test_round_trip(self, success):
+        response = IdpLinkResponse(success=success)
+        assert IdpLinkResponse.from_text(json.dumps(response.to_dict())) == response
+
+    def test_invalid_login_token(self):
+        assert IdpLinkResponse.from_text("False") == IdpLinkResponse(success=False)
 
 
 class Test_ChatMessageInfo:

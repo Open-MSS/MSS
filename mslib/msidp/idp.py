@@ -32,6 +32,9 @@
 
 import argparse
 import base64
+import binascii
+import hmac
+import html
 import ssl
 import importlib
 import logging
@@ -44,7 +47,7 @@ import warnings
 from mslib import msidp
 from http.cookies import SimpleCookie
 from hashlib import sha1
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlencode
 import saml2.xmldsig as ds
 
 from saml2 import (
@@ -56,7 +59,6 @@ from saml2 import (
     server,
     time_util
 )
-from saml2.authn import is_equal
 from saml2.authn_context import (
     PASSWORD,
     UNSPECIFIED,
@@ -97,10 +99,44 @@ LOOKUP = TemplateLookup(
 )
 
 
+# how long a login at the IdP is valid, in minutes, in the cookie and on the server
+SESSION_LIFETIME = 5
+
+
 class Cache:
     def __init__(self):
         self.user2uid = {}
         self.uid2user = {}
+        # uid -> time.time() when it expires; the cookie expires too, but its owner could keep sending it
+        self.uid_expires = {}
+
+    def login(self, user):
+        """A new session id for user, the one of an earlier login of user ends"""
+        self.logout(user)
+        uid = rndstr(24)
+        self.uid2user[uid] = user
+        self.user2uid[user] = uid
+        self.uid_expires[uid] = time.time() + SESSION_LIFETIME * 60
+        return uid
+
+    def logout(self, user):
+        uid = self.user2uid.pop(user, None)
+        if uid is not None:
+            self.uid2user.pop(uid, None)
+            self.uid_expires.pop(uid, None)
+
+    def user_of(self, uid):
+        """The user of the session uid, None if it is unknown or expired"""
+        user = self.uid2user.get(uid)
+        if user is not None and self.uid_expires.get(uid, 0) < time.time():
+            self.logout(user)
+            return None
+        return user
+
+
+def _error_message(message):
+    # the text of an error response is HTML; exception texts can contain parts of the request
+    return html.escape(str(message))
 
 
 def _expiration(timeout, tformat="%a, %d-%b-%Y %H:%M:%S GMT"):
@@ -131,7 +167,6 @@ def dict2list_of_tuples(d):
 class Service:
     def __init__(self, environ, start_response, user=None):
         self.environ = environ
-        logger.debug("ENVIRON: %s", environ)
         self.start_response = start_response
         self.user = user
 
@@ -145,7 +180,6 @@ class Service:
     def unpack_post(self):
         post_data = get_post(self.environ)
         _dict = parse_qs(post_data if isinstance(post_data, str) else post_data.decode("utf-8"))
-        logger.debug("unpack_post:: %s", _dict)
         try:
             return {k: v[0] for k, v in _dict.items()}
         except Exception:
@@ -357,11 +391,11 @@ class SSO(Service):
             resp_args, _resp = self.verify_request(query, binding_in)
         except UnknownPrincipal as excp:
             logger.error("UnknownPrincipal: %s", excp)
-            resp = ServiceError(f"UnknownPrincipal: {excp}")
+            resp = ServiceError(_error_message(f"UnknownPrincipal: {excp}"))
             return resp(self.environ, self.start_response)
         except UnsupportedBinding as excp:
             logger.error("UnsupportedBinding: %s", excp)
-            resp = ServiceError(f"UnsupportedBinding: {excp}")
+            resp = ServiceError(_error_message(f"UnsupportedBinding: {excp}"))
             return resp(self.environ, self.start_response)
 
         if not _resp:
@@ -384,7 +418,7 @@ class SSO(Service):
                 )
             except Exception as excp:
                 logging.error(exception_trace(excp))
-                resp = ServiceError(f"Exception: {excp}")
+                resp = ServiceError(_error_message(f"Exception: {excp}"))
                 return resp(self.environ, self.start_response)
 
         logger.info("AuthNResponse: %s", _resp)
@@ -506,17 +540,14 @@ class SSO(Service):
             authz_info = self.environ["HTTP_AUTHORIZATION"]
             if authz_info.startswith("Basic "):
                 try:
-                    _info = base64.b64decode(authz_info[6:])
-                except TypeError:
+                    user, passwd = base64.b64decode(authz_info[6:], validate=True).decode("utf-8").split(":", 1)
+                except (binascii.Error, UnicodeDecodeError, ValueError):
                     resp = Unauthorized()
                 else:
-                    try:
-                        (user, passwd) = _info.split(":")
-                        if is_equal(PASSWD[user], passwd):
-                            resp = Unauthorized()
+                    if password_is_valid(user, passwd):
                         self.user = user
                         self.environ["idp.authn"] = IdpServerSettings_.AUTHN_BROKER.get_authn_by_accr(PASSWORD)
-                    except ValueError:
+                    else:
                         resp = Unauthorized()
             else:
                 resp = Unauthorized()
@@ -576,15 +607,19 @@ def username_password_authn(environ, start_response, reference, key, redirect_ur
         "authn_reference": reference,
         "redirect_uri": redirect_uri,
     }
-    logger.info("do_authentication argv: %s", argv)
     return resp(environ, start_response, **argv)
+
+
+def password_is_valid(username, password):
+    """True if password is the one of username in PASSWD"""
+    return username in PASSWD and hmac.compare_digest(PASSWD[username].encode("utf-8"), password.encode("utf-8"))
 
 
 def verify_username_and_password(dic):
     # verify username and password
     username = dic["login"][0]
     password = dic["password"][0]
-    if PASSWD[username] == password:
+    if password_is_valid(username, password):
         return True, username
     else:
         return False, None
@@ -596,8 +631,6 @@ def do_verify(environ, start_response, _):
         query_str = query_str.decode("ascii")
     query = parse_qs(query_str)
 
-    logger.debug("do_verify: %s", query)
-
     try:
         _ok, user = verify_username_and_password(query)
     except KeyError:
@@ -607,15 +640,13 @@ def do_verify(environ, start_response, _):
     if not _ok:
         resp = Unauthorized("Unknown user or wrong password")
     else:
-        uid = rndstr(24)
-        IdpServerSettings_.IDP.cache.uid2user[uid] = user
-        IdpServerSettings_.IDP.cache.user2uid[user] = uid
-        logger.debug("Register %s under '%s'", user, uid)
+        uid = IdpServerSettings_.IDP.cache.login(user)
+        logger.debug("Logged in %s", user)
 
         kaka = set_cookie("idpauthn", "/", uid, query["authn_reference"][0])
 
-        lox = f"{query['redirect_uri'][0]}?id={uid}&key={query['key'][0]}"
-        logger.debug("Redirect => %s", lox)
+        # the session id only in the cookie: the redirect_uri comes from the form
+        lox = f"{query['redirect_uri'][0]}?{urlencode({'key': query['key'][0]})}"
         resp = Redirect(lox, headers=[kaka], content="text/html")
 
     return resp(environ, start_response)
@@ -649,24 +680,20 @@ class SLO(Service):
             req_info = IdpServerSettings_.IDP.parse_logout_request(request, binding)
         except Exception as exc:
             logger.error("Bad request: %s", exc)
-            resp = BadRequest(f"{exc}")
+            resp = BadRequest(_error_message(exc))
             return resp(self.environ, self.start_response)
 
         msg = req_info.message
         if msg.name_id:
             lid = IdpServerSettings_.IDP.ident.find_local_id(msg.name_id)
             logger.info("local identifier: %s", lid)
-            if lid in IdpServerSettings_.IDP.cache.user2uid:
-                uid = IdpServerSettings_.IDP.cache.user2uid[lid]
-                if uid in IdpServerSettings_.IDP.cache.uid2user:
-                    del IdpServerSettings_.IDP.cache.uid2user[uid]
-                del IdpServerSettings_.IDP.cache.user2uid[lid]
+            IdpServerSettings_.IDP.cache.logout(lid)
             # remove the authentication
             try:
                 IdpServerSettings_.IDP.session_db.remove_authn_statements(msg.name_id)
             except KeyError as exc:
                 logger.error("Unknown session: %s", exc)
-                resp = ServiceError(f"Unknown session: {exc}")
+                resp = ServiceError(_error_message(f"Unknown session: {exc}"))
                 return resp(self.environ, self.start_response)
 
         resp = IdpServerSettings_.IDP.create_logout_response(msg, [binding])
@@ -684,7 +711,7 @@ class SLO(Service):
                                                          destination, relay_state, response=response)
         except Exception as exc:
             logger.error("ServiceError: %s", exc)
-            resp = ServiceError(f"{exc}")
+            resp = ServiceError(_error_message(exc))
             return resp(self.environ, self.start_response)
 
         # _tlh = dict2list_of_tuples(hinfo["headers"])
@@ -746,7 +773,7 @@ class AIDR(Service):
         try:
             assertion = IdpServerSettings_.IDP.create_assertion_id_request_response(aid)
         except Unknown:
-            resp = NotFound(aid)
+            resp = NotFound(_error_message(aid))
             return resp(self.environ, self.start_response)
 
         hinfo = IdpServerSettings_.IDP.apply_binding(BINDING_URI, f"{assertion}", response=True)
@@ -871,7 +898,6 @@ class NIM(Service):
 
 
 def info_from_cookie(kaka):
-    logger.debug("KAKA: %s", kaka)
     if kaka:
         cookie_obj = SimpleCookie(kaka)
         morsel = cookie_obj.get("idpauthn", None)
@@ -881,8 +907,11 @@ def info_from_cookie(kaka):
                 if not isinstance(data, str):
                     data = data.decode("ascii")
                 key, ref = data.split(":", 1)
-                return IdpServerSettings_.IDP.cache.uid2user[key], ref
-            except (KeyError, TypeError):
+                user = IdpServerSettings_.IDP.cache.user_of(key)
+                if user is None:
+                    return None, None
+                return user, ref
+            except (KeyError, TypeError, ValueError, binascii.Error, UnicodeDecodeError):
                 return None, None
         else:
             logger.debug("No idpauthn cookie")
@@ -891,17 +920,22 @@ def info_from_cookie(kaka):
 
 def delete_cookie(environ, name):
     kaka = environ.get("HTTP_COOKIE", "")
-    logger.debug("delete KAKA: %s", kaka)
     if kaka:
-        cookie_obj = SimpleCookie(kaka)
-        morsel = cookie_obj.get(name, None)
         cookie = SimpleCookie()
         cookie[name] = ""
-        cookie[name]["path"] = "/"
-        logger.debug("Expire: %s", morsel)
+        _protect_cookie(cookie[name])
         cookie[name]["expires"] = _expiration("dawn")
         return tuple(cookie.output().split(": ", 1))
     return None
+
+
+def _protect_cookie(morsel):
+    # not readable by scripts, not sent along with requests of other sites, only by HTTPS if the IdP uses it
+    morsel["path"] = "/"
+    morsel["httponly"] = True
+    morsel["samesite"] = "Lax"
+    if IdpServerSettings_.https:
+        morsel["secure"] = True
 
 
 def set_cookie(name, _, *args):
@@ -916,9 +950,8 @@ def set_cookie(name, _, *args):
         data64 = data64.decode("ascii")
 
     cookie[name] = data64
-    cookie[name]["path"] = "/"
-    cookie[name]["expires"] = _expiration(5)  # 5 minutes from now
-    logger.debug("Cookie expires: %s", cookie[name]["expires"])
+    _protect_cookie(cookie[name])
+    cookie[name]["expires"] = _expiration(SESSION_LIFETIME)
     return tuple(cookie.output().split(": ", 1))
 
 
@@ -1035,18 +1068,12 @@ def application(environ, start_response):
     kaka = environ.get("HTTP_COOKIE", None)
     logger.info("<application> PATH: %s", path)
 
+    # the session only from the cookie, a session id in the URL ends up in logs and the Referer header
+    user = None
     if kaka:
-        logger.info("= KAKA =")
         user, authn_ref = info_from_cookie(kaka)
         if authn_ref:
             environ["idp.authn"] = IdpServerSettings_.AUTHN_BROKER[authn_ref]
-    else:
-        try:
-            query = parse_qs(environ["QUERY_STRING"])
-            logger.debug("QUERY: %s", query)
-            user = IdpServerSettings_.IDP.cache.uid2user[query["id"][0]]
-        except KeyError:
-            user = None
 
     url_patterns = AUTHN_URLS
     if not user:
@@ -1082,16 +1109,22 @@ class IdpServerSettings:
         self.AUTHN_BROKER = AuthnBroker()
         self.IDP = None
         self.args = None
+        self.https = False
 
 
 IdpServerSettings_ = IdpServerSettings()
 
 
+TEST_ONLY_WARNING = """
+WARNING: msidp is an identity provider for development and tests of the SAML login of MSColab only.
+Never run it where others can reach it, and never configure an MSColab server for others to trust it:
+its users and passwords are the ones in mslib/msidp/idp_user.py, known to everyone, and it lacks protections
+of a real identity provider (e.g. it accepts unsigned requests and redirects to any redirect_uri).
+"""
+
+
 def main():
-    warnings.warn(
-        '\033[91mWARNING: msidp is solely for development and '
-        'testing purposes; do not use in production environments.\033[0m'
-    )
+    warnings.warn(f"\033[91m{TEST_ONLY_WARNING}\033[0m")
     if os.name == "nt":
         logger.error("The msidp application is not usable on Windows.")
         return 1
@@ -1143,6 +1176,7 @@ def main():
 
     ssl_context = None
     _https = ""
+    IdpServerSettings_.https = bool(CONFIG.HTTPS)
     if CONFIG.HTTPS:
         _https = "using HTTPS"
         # Creating an SSL context

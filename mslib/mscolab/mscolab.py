@@ -246,7 +246,8 @@ config:
         want_response_signed: true
         want_assertion_signed: true
         allow_unknown_attributes: true
-        allow_unsolicited: true
+        # only responses to a login request of this server, see mslib.mscolab.auth.OutstandingSamlRequests
+        allow_unsolicited: false
         endpoints:
           assertion_consumer_service:
             - [http://localhost:8083/localhost_test_idp/acs/post, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST']
@@ -302,7 +303,7 @@ config:
   #       want_response_signed: true
   #       want_assertion_signed: true
   #       allow_unknown_attributes: true
-  #       allow_unsolicited: true
+  #       allow_unsolicited: false
   #       endpoints:
   #         assertion_consumer_service:
   #           - [http://localhost:8083/idp2/acs/post, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST']

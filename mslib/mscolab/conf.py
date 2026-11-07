@@ -172,6 +172,9 @@ except ImportError as ex:
                 'idp_identity_name': 'localhost_test_idp',
                 'idp_data': {
                     'idp_name': 'Testing Identity Provider',
+                    # the attribute that identifies a user, it must not change and not be given to someone else;
+                    # without it, the IdP must send a persistent NameID
+                    'user_id_attribute': 'eduPersonPrincipalName',
                 }
 
             },
@@ -179,6 +182,7 @@ except ImportError as ex:
             #     'idp_identity_name': 'idp2',
             #     'idp_data': {
             #         'idp_name': '2nd Identity Provider',
+            #         'user_id_attribute': 'eduPersonPrincipalName',
             #     }
             # },
         ]
