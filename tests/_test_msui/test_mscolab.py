@@ -262,6 +262,29 @@ class Test_Mscolab_connect_window:
         assert posts[0][1]["json"] == {"token": "the-code"}
         assert posts[0][1]["auth"] == ("user", "testvaluepassword")
 
+    def test_idp_login_refused_with_a_reason(self, qtbot):
+        self._connect_to_mscolab(qtbot)
+        refused = mock.Mock(status_code=403, text=json.dumps({"success": False, "message": "Confirm your email"}))
+        _, post = self._idp_post(refused)
+        self._submit_idp_code("the-code", post)
+        assert self.window.statusLabel.text().endswith("Confirm your email")
+        # the code stays valid, the user can enter it again
+        assert self.window.stackedWidget.currentWidget() == self.window.idpAuthPage
+
+    def test_idp_login_at_a_server_before_12(self, qtbot):
+        # it answers with a one-time password and a user without fullname; msui logs in with it at /token
+        self._connect_to_mscolab(qtbot)
+        old_reply = json.dumps({"success": True, "token": self.userdata[2], "user": {
+            "username": self.userdata[1], "id": 1, "emailid": self.userdata[0]}})
+        posts, post = self._idp_post(mock.Mock(status_code=200, text=old_reply))
+        self._submit_idp_code("the-code", post)
+
+        def assert_():
+            assert self.main_window.usernameLabel.text() == self.userdata[1]
+            assert self.main_window.mscolab.connect_window is None
+        qtbot.wait_until(assert_)
+        assert len(posts) == 1
+
     def test_idp_login_with_invalid_code(self, qtbot):
         self._connect_to_mscolab(qtbot)
         _, post = self._idp_post(mock.Mock(status_code=401, text='{"success": false}'))

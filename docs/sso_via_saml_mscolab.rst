@@ -238,14 +238,19 @@ MSColab links an account to SAML identities: the entity id of the IdP together w
 IdP sends another email address than before.
 
 * The first login by an identity that isn't linked yet gets a new account with the email address and the given name
-  that the IdP sends. The given name becomes the username, without one the part of the email address before the ``@``.
-  The browser shows why a login is refused: no valid email address, or a username that contains ``@``, is longer than
-  255 characters or belongs to another account.
-* If an account with that email address exists already, in any upper and lower case, the login is refused until its owner links the identity: msui
-  asks for the password of that account once and links the identity right after the password login. Nobody gets an
-  existing account by an IdP that asserts its email address.
+  that the IdP sends. The given name becomes the username; if it is taken, contains ``@`` or is longer than 255
+  characters, the part of the email address before the ``@`` does. The browser shows why a login is refused: no valid
+  email address, or both usernames can't be used, or several accounts have the email address in different upper and
+  lower case.
+* If an account with that email address exists already, in any upper and lower case, the login is refused until its
+  owner links the identity: msui asks for the password of that account once and links the identity right after the
+  password login.
 * Accounts of MSColab before 12.0.0 that logged in by SAML have no linked identity yet. Such an account is linked on
-  its next login, if that login comes from the IdP it logged in by before; any other IdP needs the link by the owner.
+  its next login by email, if it logged in by the same configured IdP before and the response comes from the IdP that
+  MSColab sent the login request to. A response of another IdP of the same metadata, e.g. of a federation, needs the
+  link by the owner, like any other existing account.
+* With ``MAIL_ENABLED`` an account whose email address isn't confirmed can't log in by SAML either; msui tells so, and
+  the code works again once the address is confirmed.
 * A SAML login never changes the password of an account. Accounts created by a SAML login have a random password; their
   owners can set one by a password reset.
 
@@ -258,7 +263,10 @@ server accepts only responses to login requests it sent, each once, so ``allow_u
 login started at the IdP (IdP-initiated) doesn't work. The requests are stored in the database, so every process of
 the server accepts the response. Anyone can start a login, so the server keeps at most 1000 unfinished ones; further
 logins are refused with "503 Service Unavailable" until some of them expire. With ``ENABLE_BASIC_HTTP_AUTHENTICATION``
-msui needs the basic authentication of the server to exchange the code, as for a password login.
+the browser needs the basic authentication of the server to start a login, and msui to exchange the code, as for a
+password login. An assertion that isn't signed counts only if the signed response around it comes from the same IdP.
+msui 12.0.0 also logs in by SAML to servers before 12.0.0; msui before 12.0.0 can't log in by SAML to a 12.0.0
+server.
 
 
 3. Configuration example through Keycloak 13.0.1

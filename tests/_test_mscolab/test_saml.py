@@ -306,13 +306,23 @@ def _saml_login_of(identity, issuer=IDP_ENTITY_ID, idp_identity_name=IDP_NAME, r
                                   identity["email"][0], identity["givenName"][0])
 
 
-def test_account_of_an_older_version_is_linked_on_its_first_login(mscolab_app):
+@pytest.fixture
+def request_idp(monkeypatch):
+    """The entity id MSColab sends the login requests of IDP_NAME to, without a configured IdP"""
+    monkeypatch.setattr(auth, "get_idp_entity_id", lambda name: IDP_ENTITY_ID if name == IDP_NAME else None)
+
+
+def test_account_of_an_older_version_is_linked_on_its_first_login(mscolab_app, request_idp):
     with mscolab_app.app_context():
         # logged in by this IdP before, by email alone
         assert add_user(*LOCAL_USER)
         user = get_user(LOCAL_USER[0])
         user.authentication_backend = IDP_NAME
         db.session.commit()
+        # another IdP of the same metadata, e.g. of a federation, can assert the email too: the owner links it
+        code = _saml_login_of(ALICE, issuer="https://evil.example.org/idp.xml", request_id="id-0")
+        assert auth.idp_login(code) == (None, LOCAL_USER[0])
+        assert user.idp_identities == []
         assert auth.idp_login(_saml_login_of(ALICE, request_id="id-1")) == (user, None)
         assert [i.subject for i in user.idp_identities] == ["alice@idp.example.org"]
         # from then on only this identity: another one with the same email must be linked by the owner
@@ -476,7 +486,7 @@ def test_code_exchange_needs_the_basic_auth_of_the_server(mscolab_app):
                        headers=_basic_auth()).get_json() == {"success": False}
 
 
-def test_unconfirmed_account_does_not_log_in_by_saml(mscolab_app):
+def test_unconfirmed_account_does_not_log_in_by_saml(mscolab_app, request_idp):
     mscolab_app.config.update(USE_SAML2=True, MAIL_ENABLED=True)
     client = mscolab_app.test_client()
     with mscolab_app.app_context():
@@ -488,7 +498,16 @@ def test_unconfirmed_account_does_not_log_in_by_saml(mscolab_app):
         db.session.commit()
         code = _saml_login_of(ALICE)
     response = _exchange(client, code)
-    assert response.status_code == 401 and "token" not in json.loads(response.text)
+    # refused before the code is used: nothing is linked yet, the user learns why
+    assert response.status_code == 403 and "token" not in json.loads(response.text)
+    assert "isn't confirmed" in json.loads(response.text)["message"]
+    with mscolab_app.app_context():
+        assert get_user(LOCAL_USER[0]).idp_identities == []
+        user = get_user(LOCAL_USER[0])
+        user.confirmed = True
+        db.session.commit()
+    # confirmed, the same code logs in
+    assert _exchange(client, code).status_code == 200
 
 
 def test_email_of_an_account_matches_in_any_case(mscolab_app):
@@ -516,7 +535,7 @@ def test_failed_link_keeps_the_code(mscolab_app):
         assert auth.idp_login(second) == (None, None)
 
 
-def test_account_of_an_older_version_gets_only_one_identity_on_login(mscolab_app):
+def test_account_of_an_older_version_gets_only_one_identity_on_login(mscolab_app, request_idp):
     with mscolab_app.app_context():
         assert add_user(*LOCAL_USER)
         user = get_user(LOCAL_USER[0])
@@ -563,11 +582,11 @@ def test_too_many_open_saml_logins_answer_503(saml_app, monkeypatch):
     (None, "Alice", "no valid email"),
     ("not an email", "Alice", "no valid email"),
     ("alice@" + "a" * 250 + ".org", "Alice", "no valid email"),
-    ("alice@example.org", "Alice@Example", "can't be used"),
-    ("alice@example.org", "A" * 256, "can't be used"),
-    ("alice@example.org", "taken", "belongs to another account"),
-    # without a username the start of the email
-    ("taken@example.org", None, "belongs to another account"),
+    # the start of the email is taken too
+    ("taken@example.org", "Alice@Example", "are taken or can't be used"),
+    ("taken@example.org", "A" * 256, "are taken or can't be used"),
+    ("taken@example.org", "taken", "are taken or can't be used"),
+    ("taken@example.org", None, "are taken or can't be used"),
 ], ids=["no-email", "invalid-email", "long-email", "username-with-at", "long-username", "taken-username",
         "taken-email-start"])
 def test_saml_login_with_unusable_data_is_refused(mscolab_app, emailid, username, message):
@@ -590,19 +609,94 @@ def test_saml_login_data_is_checked_only_for_a_new_account(mscolab_app):
         assert auth.check_saml_login(IDP_ENTITY_ID, "alice@idp.example.org", None, "x@y") == (None, None)
 
 
-def test_username_taken_after_the_response_is_refused(mscolab_app):
+@pytest.mark.parametrize("username, expected", [
+    ("Alice", "Alice"), ("Max", "alice"), ("Alice@Example", "alice"), ("A" * 256, "alice"), (None, "alice"),
+], ids=["given-name", "given-name-taken", "given-name-with-at", "given-name-too-long", "no-given-name"])
+def test_new_account_falls_back_to_the_start_of_the_email(mscolab_app, username, expected):
+    # common first names are taken soon
+    with mscolab_app.app_context():
+        assert add_user("max@example.org", "Max", "max-password", "Max")
+        assert auth.check_saml_login(IDP_ENTITY_ID, "subject", "alice@example.org", username) == (
+            "alice@example.org", expected)
+
+
+def test_usernames_taken_after_the_response_are_refused(mscolab_app):
     with mscolab_app.app_context():
         code = _saml_login_of(ALICE)
         assert add_user("bob@example.org", "Alice", "bob-password", "Bob")
+        assert add_user("carol@example.org", "alice", "carol-password", "Carol")
         assert auth.idp_login(code) == (None, None)
-        assert User.query.count() == 1
+        assert User.query.count() == 2
 
 
 @requires_xmlsec1
-def test_saml_login_with_a_taken_username_shows_why(saml_app, test_idp):
+def test_saml_login_with_taken_usernames_shows_why(saml_app, test_idp):
     assert add_user("bob@example.org", "Alice", "bob-password", "Bob")
+    assert add_user("carol@example.org", "alice", "carol-password", "Carol")
     client = saml_app.test_client()
     response = _post_response(client, test_idp.response(_start_login(client)))
     assert response.status_code == 403
-    assert "The username &#39;Alice&#39; that your identity provider sent belongs to another account" in response.text
+    assert "The usernames &#39;Alice&#39; and &#39;alice&#39; that your identity provider sent are taken" \
+        in response.text
     assert SamlLogin.query.filter(SamlLogin.code_hash.isnot(None)).count() == 0
+
+
+def _assertion_response(signed_assertion, signed_response, response_issuer):
+    assertion = mock.Mock(issuer=mock.Mock(text=IDP_ENTITY_ID), signature="signed" if signed_assertion else None)
+    authn_response = mock.Mock(assertion=assertion, name_id=None,
+                               response=mock.Mock(signature="signed" if signed_response else None))
+    authn_response.issuer.return_value = response_issuer
+    return authn_response
+
+
+@pytest.mark.parametrize("signed_assertion, signed_response, response_issuer, accepted", [
+    (True, False, None, True),
+    (False, True, IDP_ENTITY_ID, True),
+    # an IdP of the same metadata signs the response around an assertion that claims another IdP
+    (False, True, "https://evil.example.org/idp.xml", False),
+    (False, False, IDP_ENTITY_ID, False),
+], ids=["signed-assertion", "signed-response-same-issuer", "signed-response-other-issuer", "nothing-signed"])
+def test_issuer_of_an_unsigned_assertion_needs_the_signed_response(signed_assertion, signed_response, response_issuer,
+                                                                   accepted):
+    idp_data = {"user_id_attribute": "eduPersonPrincipalName"}
+    attributes = {"eduPersonPrincipalName": ["alice@idp.example.org"]}
+    identity = auth.saml_identity(_assertion_response(signed_assertion, signed_response, response_issuer), idp_data,
+                                  attributes)
+    assert identity == ((IDP_ENTITY_ID, "alice@idp.example.org") if accepted else None)
+
+
+def test_identity_refusals_are_logged_with_their_reason():
+    response = _assertion_response(True, False, None)
+    with mock.patch("mslib.mscolab.auth.logging.warning") as warning:
+        assert auth.saml_identity(response, {"user_id_attribute": "id"}, {"id": ["x" * 256]}) is None
+    assert "longer than 255" in warning.call_args.args[0]
+    with mock.patch("mslib.mscolab.auth.logging.warning") as warning:
+        assert auth.saml_identity(response, {"user_id_attribute": "id"}, {}) is None
+    assert "persistent identifier" in warning.call_args.args[0]
+
+
+def test_email_in_several_cases_is_refused(mscolab_app):
+    with mscolab_app.app_context():
+        assert add_user("Bob@example.org", "bob1", "bob-password", "Bob")
+        assert add_user("bob@Example.org", "bob2", "bob-password", "Bob")
+        with pytest.raises(auth.SamlLoginRefused, match="different upper and lower case"):
+            auth.check_saml_login(IDP_ENTITY_ID, "subject", "BOB@example.org", "Bob")
+        # an exact match is not ambiguous
+        assert auth.check_saml_login(IDP_ENTITY_ID, "subject", "Bob@example.org", "Bob") == ("Bob@example.org", None)
+
+
+@pytest.mark.parametrize("body", ['["x"]', '"code"', '42', 'null'])
+def test_code_exchange_with_a_body_that_is_no_object(mscolab_app, body):
+    mscolab_app.config.update(USE_SAML2=True)
+    response = mscolab_app.test_client().post("/idp_login_auth/", data=body, content_type="application/json")
+    assert response.status_code == 401
+
+
+def test_starting_a_saml_login_needs_the_basic_auth_of_the_server(mscolab_app):
+    # anyone could fill the open SAML logins otherwise
+    mscolab_app.config.update(USE_SAML2=True, ENABLE_BASIC_HTTP_AUTHENTICATION=True)
+    client = mscolab_app.test_client()
+    assert client.get("/available_idps/").status_code == 401
+    assert client.post("/idp_login/", data={"selectedIdentityProvider": IDP_NAME}).status_code == 401
+    assert client.post("/idp_login/", data={"selectedIdentityProvider": "unknown"},
+                       headers=_basic_auth()).status_code == 404

@@ -343,13 +343,21 @@ def saml_identity(authn_response, idp_data, attributes):
     identifier
 
     The issuer is the entity id of the IdP that signed the assertion: the metadata of one configured IdP can hold
-    several, e.g. of a federation. The issuer of the response around it may be unsigned. The subject is the value of
-    the attribute idp_data['user_id_attribute'] in attributes, see saml_attributes, or the NameID if that isn't set
-    and the NameID is persistent. A transient NameID changes with every login, an email address can be given to
-    someone else.
+    several, e.g. of a federation. The issuer of the response around it may be unsigned. An unsigned assertion
+    (want_assertion_signed: false) counts only if the signed response has the same issuer: pysaml2 checks the
+    signature of an assertion or response that has one, so only a signature ties the issuer to its key. The subject
+    is the value of the attribute idp_data['user_id_attribute'] in attributes, see saml_attributes, or the NameID if
+    that isn't set and the NameID is persistent. A transient NameID changes with every login, an email address can
+    be given to someone else. Logs why a response has no identity.
     """
     assertion = getattr(authn_response, "assertion", None)
     issuer = assertion.issuer.text if assertion is not None and assertion.issuer is not None else None
+    if issuer and getattr(assertion, "signature", None) is None:
+        response = getattr(authn_response, "response", None)
+        if getattr(response, "signature", None) is None or authn_response.issuer() != issuer:
+            logging.warning("Refused a SAML response with an unsigned assertion of %r: the response around it isn't "
+                            "signed by the same IdP", issuer)
+            return None
     attribute = idp_data.get('user_id_attribute')
     if attribute:
         values = attributes.get(attribute, [])
@@ -358,7 +366,15 @@ def saml_identity(authn_response, idp_data, attributes):
     else:
         name_id = authn_response.name_id
         subject = name_id.text if name_id is not None and name_id.format == NAMEID_FORMAT_PERSISTENT else None
-    if not issuer or not subject or len(issuer) > 255 or len(subject) > 255:
+    if not issuer:
+        logging.warning("Refused a SAML response without issuer")
+        return None
+    if not subject:
+        logging.warning("Refused a SAML response of %r without a persistent identifier: set 'user_id_attribute' of "
+                        "the IdP to a single valued attribute that identifies a user", issuer)
+        return None
+    if len(issuer) > 255 or len(subject) > 255:
+        logging.warning("Refused a SAML response of %r: its issuer or identifier is longer than 255 characters", issuer)
         return None
     return issuer, subject
 
@@ -368,26 +384,34 @@ class SamlLoginRefused(Exception):
 
 
 def user_of_email(emailid):
-    """The user of emailid, whatever its case, None if there is none; an exact match comes first"""
+    """
+    The user of emailid, whatever its case, None if there is none; an exact match comes first
+
+    Raises SamlLoginRefused if several accounts have emailid in different case: which one is meant is unknown.
+    """
     user = User.query.filter_by(emailid=str(emailid)).first()
     if user is None:
-        user = User.query.filter(sqlalchemy.func.lower(User.emailid) == str(emailid).lower()).first()
+        users = User.query.filter(sqlalchemy.func.lower(User.emailid) == str(emailid).lower()).limit(2).all()
+        if len(users) > 1:
+            raise SamlLoginRefused("Several accounts of this server have your email address in different upper and "
+                                   "lower case. Ask its administrator for help.")
+        user = users[0] if users else None
     return user
 
 
 def _new_saml_username(emailid, username):
     """
-    The username of a new account for a SAML login: the one that the IdP sent, else the start of the email; raises
-    SamlLoginRefused if register_user would refuse it
+    The username of a new account for a SAML login: the one that the IdP sent, else, also if that is taken or
+    can't be used, the start of the email; raises SamlLoginRefused if register_user would refuse both
     """
-    username = username or emailid.split("@")[0]
-    if len(username) > 255 or "@" in username:
-        raise SamlLoginRefused(f"The username {username!r} that your identity provider sent can't be used for an "
-                               "account of this server.")
-    if User.query.filter_by(username=username).first() is not None:
-        raise SamlLoginRefused(f"The username {username!r} that your identity provider sent belongs to another "
-                               "account of this server. Ask its administrator for help.")
-    return username
+    candidates = [name for name in (username, emailid.split("@")[0]) if name]
+    for candidate in candidates:
+        if len(candidate) <= 255 and "@" not in candidate \
+                and User.query.filter_by(username=candidate).first() is None:
+            return candidate
+    raise SamlLoginRefused(f"The usernames {' and '.join(repr(name) for name in candidates)} that your identity "
+                           "provider sent are taken or can't be used for an account of this server. Ask its "
+                           "administrator for help.")
 
 
 def check_saml_login(issuer, subject, emailid, username):
@@ -487,6 +511,13 @@ def _use_saml_login(saml_login, user, link=False, first_identity=False):
     return True
 
 
+def _refuse_unconfirmed(user):
+    # like /token, before the code is used: the user can confirm the email and try the same code again
+    if current_app.config['MAIL_ENABLED'] and not user.confirmed:
+        raise SamlLoginRefused("Your account isn't confirmed yet. Confirm your email address, then enter the code "
+                               "again.")
+
+
 def idp_login(code):
     """
     The user that the one-time code of a SAML login logs in
@@ -494,7 +525,8 @@ def idp_login(code):
     Returns (user, None) and makes the code invalid. Returns (None, emailid) if the identity isn't linked to a user
     and its email belongs to an existing account: the user must log in to that account to link it, see
     link_idp_identity, the code stays valid for that. Returns (None, None) if the code is invalid or expired, or the
-    login can't log in, see check_saml_login.
+    login can't log in, see check_saml_login. Raises SamlLoginRefused, with a message for the user, if the account
+    isn't confirmed (with MAIL_ENABLED) or its email is ambiguous; the code stays valid then.
 
     A new identity gets a new account. A SAML login never changes the password of an account.
     """
@@ -504,6 +536,7 @@ def idp_login(code):
     identity = IdpIdentity.query.filter_by(issuer=saml_login.issuer, subject=saml_login.subject).first()
     if identity is not None:
         user = identity.user
+        _refuse_unconfirmed(user)
         return (user, None) if _use_saml_login(saml_login, user) else (None, None)
     if not saml_login.emailid:
         logging.warning("The SAML login of %s has no email, can't create an account", saml_login.idp_identity_name)
@@ -511,9 +544,13 @@ def idp_login(code):
     user = user_of_email(saml_login.emailid)
     if user is not None:
         # Accounts of older versions logged in by the email that the IdP sent. One that logged in by this IdP before
-        # and has no identity yet is linked on its first login; any other account must be linked by its owner.
-        if user.authentication_backend != saml_login.idp_identity_name or user.idp_identities:
+        # and has no identity yet is linked on its first login, if the response comes from the IdP the login request
+        # went to: the metadata of a federation lets any of its IdPs answer and assert the email. Any other account
+        # must be linked by its owner.
+        if user.authentication_backend != saml_login.idp_identity_name or user.idp_identities \
+                or saml_login.issuer != get_idp_entity_id(saml_login.idp_identity_name):
             return None, user.emailid
+        _refuse_unconfirmed(user)
         linked = _use_saml_login(saml_login, user, link=True, first_identity=True)
         return (user, None) if linked else (None, None)
     try:

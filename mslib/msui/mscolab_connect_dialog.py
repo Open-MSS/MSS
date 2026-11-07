@@ -316,7 +316,15 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
             return
         if response.status_code == 200:
             idp_response = IdpLoginAuthResponse.from_text(response.text)
+            if idp_response.legacy_password:
+                # a server before 12.0.0: the token is a one-time password for the login at endpoints.TOKEN
+                self.legacy_idp_login(idp_response)
+                return
             self.mscolab.after_login(idp_response.user.emailid, self.mscolab_server_url, response)
+        elif response.status_code == 403:
+            # refused with a reason, e.g. an account whose email isn't confirmed; the code stays valid
+            message = IdpLoginAuthResponse.from_text(response.text).message
+            self.set_status("Error", message or 'Your identity provider login was refused by the server.')
         elif response.status_code == 409:
             # an account with the email of the SAML login exists: its owner links the SAML login to it by logging in
             idp_response = IdpLoginAuthResponse.from_text(response.text)
@@ -328,6 +336,27 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
         else:
             self.set_status("Error", 'Invalid or expired code. Please log in by your identity provider again.')
             self.stackedWidget.setCurrentWidget(self.loginPage)
+
+    def legacy_idp_login(self, idp_response):
+        """The SAML login at an MSColab server before 12.0.0: logs in with the one-time password it handed out"""
+        req = LoginRequest(email=idp_response.user.emailid, password=idp_response.token)
+        session = requests.Session()
+        session.auth = self.auth
+        url = urljoin(self.mscolab_server_url, endpoints.TOKEN)
+        try:
+            response = session.post(url, data=req.to_form_data(),
+                                    timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            response.raise_for_status()
+        except requests.exceptions.RequestException as ex:
+            logging.error("unexpected error: %s %s %s", type(ex), url, ex)
+            self.set_status("Error", f'Failed to establish a new connection to "{self.mscolab_server_url}". '
+                            'Try again in a moment.')
+            return
+        if response.text == "False":
+            self.set_status("Error", 'Invalid or expired code. Please log in by your identity provider again.')
+            self.stackedWidget.setCurrentWidget(self.loginPage)
+            return
+        self.mscolab.after_login(req.email, self.mscolab_server_url, response)
 
     def link_idp_identity(self, token):
         """Links the SAML login of idp_link_code to the account of token, which just logged in"""

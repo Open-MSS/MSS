@@ -722,6 +722,20 @@ class Test_IdpLoginAuthResponse:
         assert response.to_dict() == {"success": False, "link_required": True, "emailid": "berta@example.com"}
         assert IdpLoginAuthResponse.from_text(json.dumps(response.to_dict())) == response
 
+    def test_round_trip_refused_with_message(self):
+        response = IdpLoginAuthResponse(success=False, message="Confirm your email address")
+        assert response.to_dict() == {"success": False, "message": "Confirm your email address"}
+        assert IdpLoginAuthResponse.from_text(json.dumps(response.to_dict())) == response
+
+    def test_reply_of_a_server_before_12_is_a_legacy_password(self):
+        # its token is a one-time password for endpoints.TOKEN, its user has no fullname
+        old = IdpLoginAuthResponse.from_text(json.dumps(
+            {"success": True, "token": "password", "user": {"username": "berta", "id": 1, "emailid": "b@x.org"}}))
+        assert old.legacy_password is True and old.token == "password"
+        new = IdpLoginAuthResponse(success=True, token="abc", user=IdpUserInfo(username="berta", id=1,
+                                                                               emailid="b@x.org"))
+        assert IdpLoginAuthResponse.from_text(new.to_text()).legacy_password is False
+
 
 class Test_IdpLinkRequest:
     def test_round_trip(self):

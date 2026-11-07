@@ -194,8 +194,7 @@ def _acs_post_handler(idp_config):
         attributes = saml_attributes(authn_response)
         identity = saml_identity(authn_response, idp_config['idp_data'], attributes)
         if identity is None:
-            logging.warning("A SAML response of %s has no persistent identifier, set 'user_id_attribute' of the IdP to "
-                            "an attribute that identifies a user", idp_identity_name)
+            # saml_identity logged why
             return render_template('auth/errors/403.html'), 403
         try:
             email, username = check_saml_login(*identity, _first(attributes.get("email") or attributes.get("mail")),
@@ -215,6 +214,7 @@ def _acs_post_handler(idp_config):
 
 @AUTH_BP.route('/available_idps/', methods=['GET'])
 @saml_required
+@optional_auth
 def available_idps():
     """The page to choose one of the IdPs of setup_saml2_backend.CONFIGURED_IDPS for a login"""
     configured_idps = setup_saml2_backend.CONFIGURED_IDPS
@@ -223,6 +223,7 @@ def available_idps():
 
 @AUTH_BP.route("/idp_login/", methods=['POST'])
 @saml_required
+@optional_auth
 def idp_login_handler():
     """Starts a login by the selected IdP: sends the browser there with an AuthnRequest"""
     selected_idp = request.form.get('selectedIdentityProvider')
@@ -257,14 +258,16 @@ def idp_login_auth():
     """
     Exchanges the one-time code of a SAML login for a login token
 
-    409 if the SAML identity must first be linked to the existing account of its email, see idp_link. Like /token
-    behind the HTTP basic authentication of the server, if it has one.
+    409 if the SAML identity must first be linked to the existing account of its email, see idp_link; 403 with a
+    message if the login is refused, e.g. for an account that isn't confirmed (like /token). Like /token behind the
+    HTTP basic authentication of the server, if it has one.
     """
-    req = IdpLoginAuthRequest.from_json_data(request.get_json(silent=True) or {})
-    user, emailid = idp_login(req.token)
-    if user is not None and current_app.config['MAIL_ENABLED'] and not user.confirmed:
-        # like /token: an account that is not confirmed can't log in
-        user = None
+    data = request.get_json(silent=True)
+    req = IdpLoginAuthRequest.from_json_data(data if isinstance(data, dict) else {})
+    try:
+        user, emailid = idp_login(req.token)
+    except SamlLoginRefused as ex:
+        return jsonify(IdpLoginAuthResponse(success=False, message=str(ex)).to_dict()), 403
     if user is not None:
         user_info = IdpUserInfo(username=user.username, id=user.id, emailid=user.emailid, fullname=user.fullname)
         return IdpLoginAuthResponse(success=True, token=user.generate_auth_token(), user=user_info).to_text()

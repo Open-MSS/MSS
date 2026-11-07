@@ -1148,7 +1148,13 @@ class IdpLoginAuthResponse:
     the emailid of the account if the SAML identity isn't linked to an
     account yet and its email belongs to one -- the user logs in to that
     account and links the identity by POST endpoints.IDP_LINK with the same
-    code. to_dict() lets the handler keep using jsonify() for these paths.
+    code. HTTP 403 with a message for the user if the login is refused,
+    e.g. for an account whose email isn't confirmed. to_dict() lets the
+    handler keep using jsonify() for these paths.
+
+    Servers before 12.0.0 answer success with a one-time password in token
+    and a user without fullname; legacy_password tells msui to log in with
+    it at endpoints.TOKEN, as they expect.
     """
 
     success: bool
@@ -1156,6 +1162,8 @@ class IdpLoginAuthResponse:
     user: Optional[IdpUserInfo] = None
     link_required: bool = False
     emailid: Optional[str] = None
+    message: Optional[str] = None
+    legacy_password: bool = False
 
     def to_text(self):
         return json.dumps({"success": self.success, "token": self.token, "user": self.user.to_dict()})
@@ -1164,6 +1172,8 @@ class IdpLoginAuthResponse:
         data = {"success": self.success}
         if self.link_required:
             data.update(link_required=True, emailid=self.emailid)
+        if self.message is not None:
+            data.update(message=self.message)
         return data
 
     @classmethod
@@ -1171,7 +1181,9 @@ class IdpLoginAuthResponse:
         data = json.loads(text)
         user = IdpUserInfo.from_dict(data["user"]) if data.get("user") else None
         return cls(success=data["success"], token=data.get("token"), user=user,
-                   link_required=bool(data.get("link_required", False)), emailid=data.get("emailid"))
+                   link_required=bool(data.get("link_required", False)), emailid=data.get("emailid"),
+                   message=data.get("message"),
+                   legacy_password=bool(data.get("success")) and "fullname" not in (data.get("user") or {}))
 
 
 @dataclass
