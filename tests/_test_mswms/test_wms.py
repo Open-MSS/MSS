@@ -546,19 +546,26 @@ class Test_WMS:
             "data_access", new=watch_access):
             do_test()
 
-    @pytest.mark.skip("""\
-This test changes global variables (e.g. DOCS_LOCATION) which can affect other tests depending on test order
-(e.g. tests/_test_mswms/test_mss_plot_driver.py::Test_VSec::test_VS_gallery_template fails consistently in reverse order
-on macOS 14).
-""".strip(),
-    )
-    def test_gallery(self, tmpdir):
-        tempdir = tmpdir.mkdir("static")
-        docsdir = tmpdir.mkdir("docs")
-        mslib.mswms.wms.STATIC_LOCATION = tempdir
-        mslib.mswms.gallery_builder.STATIC_LOCATION = tempdir
-        mslib.mswms.wms.DOCS_LOCATION = docsdir
-        mslib.mswms.gallery_builder.DOCS_LOCATION = docsdir
+    @pytest.fixture
+    def gallery_paths(self, tmp_path, monkeypatch):
+        """
+        Output directories of the gallery in tmp_path; the gallery builder keeps its state in module globals,
+        they are restored after the test, so no other test depends on the order (#1138)
+        """
+        import copy
+        static, docs = tmp_path / "static", tmp_path / "docs"
+        static.mkdir()
+        docs.mkdir()
+        for module in (mslib.mswms.wms, mslib.mswms.gallery_builder):
+            monkeypatch.setattr(module, "STATIC_LOCATION", str(static))
+            monkeypatch.setattr(module, "DOCS_LOCATION", str(docs))
+        for name in ("plots", "plot_htmls", "begin", "end"):
+            monkeypatch.setattr(mslib.mswms.gallery_builder, name,
+                                copy.deepcopy(getattr(mslib.mswms.gallery_builder, name)))
+        return str(static), str(docs)
+
+    def test_gallery(self, gallery_paths):
+        tempdir, docsdir = gallery_paths
         linear_plots = [[mslib.mswms.wms.server.lsec_drivers, mslib.mswms.wms.server.lsec_layer_registry]]
 
         mslib.mswms.wms.server.generate_gallery(generate_code=True, plot_list=linear_plots)
@@ -590,7 +597,6 @@ on macOS 14).
         assert os.path.exists(os.path.join(docsdir, "plots"))
         assert os.path.exists(os.path.join(docsdir, "code"))
         assert os.path.exists(os.path.join(docsdir, "plots.html"))
-        mslib.mswms.gallery_builder.plot_htmls = {}
 
 
 def _with_valid_times(layer, valid_times):
