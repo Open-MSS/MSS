@@ -34,6 +34,7 @@ from flask import Blueprint, request, url_for, render_template, jsonify, flash, 
 from flask.wrappers import Response
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from saml2.metadata import create_metadata_string
+from saml2.saml import NAMEID_FORMAT_PERSISTENT
 
 from mslib.mscolab.auth import check_login, register_user, generate_confirmation_token, get_idp_entity_id, \
     confirm_token, generate_password_reset_token, confirm_password_reset_token, public_url_for, EMAIL_CONFIRMATION
@@ -168,9 +169,18 @@ def init_saml(state):
         except KeyError as ex:
             logging.warning("The IdP %s has no assertion consumer service: %s", idp_config.get('idp_identity_name'), ex)
             continue
+        if not idp_config['idp_data'].get('user_id_attribute'):
+            name_id_formats = idp_config['idp_data']['saml2client'].config.getattr("name_id_format", "sp") or []
+            if NAMEID_FORMAT_PERSISTENT not in ([name_id_formats] if isinstance(name_id_formats, str)
+                                                else name_id_formats):
+                logging.warning("The IdP %s has no 'user_id_attribute' and the SP asks for no persistent NameID: "
+                                "every SAML login by it is refused. Set 'user_id_attribute' in "
+                                "setup_saml2_backend.py, see docs/sso_via_saml_mscolab.rst",
+                                idp_config['idp_identity_name'])
         for index, path in enumerate(endpoints_):
-            app.add_url_rule(f"/{path.strip('/')}", f"saml_acs_{idp_config['idp_identity_name']}_{index}",
-                             _acs_post_handler(idp_config), methods=['POST'])
+            # as configured, also with a trailing slash: the metadata tells the IdP this URL
+            app.add_url_rule(f"/{path.lstrip('/')}", f"saml_acs_{idp_config['idp_identity_name']}_{index}",
+                             _acs_post_handler(idp_config), methods=['POST'], strict_slashes=False)
 
 
 def _first(values):

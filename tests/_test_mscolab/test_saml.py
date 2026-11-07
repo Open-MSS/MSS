@@ -700,3 +700,60 @@ def test_starting_a_saml_login_needs_the_basic_auth_of_the_server(mscolab_app):
     assert client.post("/idp_login/", data={"selectedIdentityProvider": IDP_NAME}).status_code == 401
     assert client.post("/idp_login/", data={"selectedIdentityProvider": "unknown"},
                        headers=_basic_auth()).status_code == 404
+
+
+def test_password_reset_unlinks_the_saml_identities(mscolab_app, request_idp):
+    # an IdP that lets its users choose their email: someone created the account with the address of another person,
+    # who takes it over by a password reset
+    with mscolab_app.app_context():
+        user, _ = auth.idp_login(_saml_login_of(ALICE, request_id="id-1"))
+        assert len(user.idp_identities) == 1
+        assert user.reset_password(user.password, "the-owners-password")
+        assert get_user(ALICE["email"][0]).idp_identities == []
+        assert get_user(ALICE["email"][0]).authentication_backend == "local"
+        # the identity must be linked again, with the new password, also by the IdP that created the account
+        assert auth.idp_login(_saml_login_of(ALICE, request_id="id-2")) == (None, ALICE["email"][0])
+
+
+def _app_with_idp(tmp_path, idp_config):
+    settings = _isolated_mscolab_settings(tmp_path)
+    settings.USE_SAML2 = True
+    Path(settings.DATA_DIR).mkdir(parents=True, exist_ok=True)
+    with mock.patch.object(setup_saml2_backend, "CONFIGURED_IDPS", [idp_config]):
+        return create_server_app(settings)
+
+
+def _mock_idp(path, user_id_attribute="eduPersonPrincipalName", name_id_format=NAMEID_FORMAT_TRANSIENT):
+    client = mock.Mock()
+    client.config.getattr.return_value = name_id_format
+    idp_data = {'assertion_consumer_endpoints': [path], 'saml2client': client}
+    if user_id_attribute:
+        idp_data['user_id_attribute'] = user_id_attribute
+    return {'idp_identity_name': 'mocked_idp', 'idp_data': idp_data}
+
+
+@pytest.mark.parametrize("path", ["mocked_idp/acs/post/", "mocked_idp/acs/post"], ids=["trailing-slash", "no-slash"])
+def test_assertion_consumer_service_as_configured(tmp_path, path):
+    # the metadata tells the IdP the configured URL, with its trailing slash
+    app = _app_with_idp(tmp_path, _mock_idp(path))
+    adapter = app.url_map.bind("localhost")
+    for url in ("/mocked_idp/acs/post/", "/mocked_idp/acs/post"):
+        assert adapter.match(url, method="POST")[0] == "saml_acs_mocked_idp_0"
+
+
+def test_idp_without_identifier_warns_at_the_start(tmp_path):
+    with mock.patch("mslib.mscolab.blueprints.auth.logging.warning") as warning:
+        _app_with_idp(tmp_path, _mock_idp("mocked_idp/acs/post", user_id_attribute=None))
+    assert any("every SAML login by it is refused" in call.args[0] for call in warning.call_args_list)
+    with mock.patch("mslib.mscolab.blueprints.auth.logging.warning") as warning:
+        _app_with_idp(tmp_path, _mock_idp("mocked_idp/acs/post", user_id_attribute=None,
+                                          name_id_format=[NAMEID_FORMAT_PERSISTENT]))
+    assert not any("every SAML login by it is refused" in call.args[0] for call in warning.call_args_list)
+
+
+@pytest.mark.parametrize("username", ["   ", " Alice "], ids=["blank", "padded"])
+def test_given_name_is_stripped(mscolab_app, username):
+    with mscolab_app.app_context():
+        expected = username.strip() or "alice"
+        assert auth.check_saml_login(IDP_ENTITY_ID, "subject", "alice@example.org", username) == (
+            "alice@example.org", expected)

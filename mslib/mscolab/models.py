@@ -171,10 +171,19 @@ class User(db.Model):
 
         For a password reset link, which works once: of two requests with the same link at the same time only the
         first changes the password, the stored hash no longer matches for the second. Commits the session.
+
+        Also unlinks the SAML identities of the user: whoever resets the password owns the email address, an IdP that
+        lets its users choose their email could have linked another person's identity to the account before. A SAML
+        user links again on the next SAML login, with the new password. The account counts as a password account
+        from then on (authentication_backend 'local'): the first login of an account of an older version links it
+        without the password, see auth.idp_login.
         """
         updated = User.query.filter_by(id=self.id, password=password_hash).update(
-            {User.password: PH.hash(password), User.token_nonce: secrets.token_hex(16), User.confirmed: True},
+            {User.password: PH.hash(password), User.token_nonce: secrets.token_hex(16), User.confirmed: True,
+             User.authentication_backend: "local"},
             synchronize_session=False)
+        if updated == 1:
+            IdpIdentity.query.filter_by(u_id=self.id).delete(synchronize_session=False)
         db.session.commit()
         db.session.refresh(self)
         if updated == 1 and self.confirmed_on is None:

@@ -735,6 +735,10 @@ class Test_IdpLoginAuthResponse:
         new = IdpLoginAuthResponse(success=True, token="abc", user=IdpUserInfo(username="berta", id=1,
                                                                                emailid="b@x.org"))
         assert IdpLoginAuthResponse.from_text(new.to_text()).legacy_password is False
+        # the mark decides, not a missing field: a proxy or a later server may send other user fields
+        unmarked = json.loads(new.to_text())
+        del unmarked["login_token"]
+        assert IdpLoginAuthResponse.from_text(json.dumps(unmarked)).legacy_password is True
 
 
 class Test_IdpLinkRequest:

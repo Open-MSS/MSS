@@ -252,7 +252,10 @@ IdP sends another email address than before.
 * With ``MAIL_ENABLED`` an account whose email address isn't confirmed can't log in by SAML either; msui tells so, and
   the code works again once the address is confirmed.
 * A SAML login never changes the password of an account. Accounts created by a SAML login have a random password; their
-  owners can set one by a password reset.
+  owners can set one by a password reset. A password reset unlinks the SAML identities of the account: whoever resets
+  the password owns the email address. The next SAML login links the identity again, with the new password.
+* Without ``user_id_attribute`` an IdP must send a persistent NameID. The server warns at its start if neither is set
+  up for a configured IdP: every SAML login by it would be refused.
 
 The login in msui
 -----------------

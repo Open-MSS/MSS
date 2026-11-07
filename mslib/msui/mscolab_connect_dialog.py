@@ -29,6 +29,7 @@ import requests
 import webbrowser
 from urllib.parse import urljoin
 
+from PyQt5 import QtCore
 from PyQt5.QtWidgets import QDialog, QMessageBox
 
 from mslib.msui.qt5 import ui_mscolab_connect_dialog as ui_conn
@@ -121,7 +122,12 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
         self.newPasswordLe.setText("")
         self.newConfirmPasswordLe.setText("")
 
-    def set_status(self, _type="Error", msg=""):
+    def set_status(self, _type="Error", msg="", plain_text=False):
+        """
+        Shows msg in the status line; plain_text for a text of the server, which must not be rendered as rich text
+        with links or images
+        """
+        self.statusLabel.setTextFormat(QtCore.Qt.PlainText if plain_text else QtCore.Qt.AutoText)
         if _type == "Error":
             _msg = f"⚠ {msg}"
             self.statusLabel.setOpenExternalLinks(True)
@@ -292,7 +298,13 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
             else:
                 self.save_user_credentials_to_config_file(req.email, req.password)
                 if self.idp_link_code is not None:
-                    self.link_idp_identity(LoginResponse.from_text(response.text).token)
+                    try:
+                        token = LoginResponse.from_text(response.text).token
+                    except (KeyError, TypeError, ValueError) as ex:
+                        # after_login tells the user that the reply can't be read
+                        logging.error("can't read the login response of %s: %s %s", url, type(ex), ex)
+                    else:
+                        self.link_idp_identity(token)
                 self.mscolab.after_login(req.email, self.mscolab_server_url, response)
 
     def idp_login_handler(self):
@@ -314,25 +326,38 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.set_status("Error", f'Failed to establish a new connection to "{self.mscolab_server_url}". '
                             'Try again in a moment.')
             return
+        try:
+            idp_response = IdpLoginAuthResponse.from_text(response.text) \
+                if response.status_code in (200, 403, 409) else None
+        except (KeyError, TypeError, ValueError) as ex:
+            # e.g. the error page of a proxy
+            logging.error("can't read the response of %s: %s %s", url_idp_login_auth, type(ex), ex)
+            self.set_status("Error", "Can't read the response of the MSColab server. It may be incompatible with this "
+                            "version of MSUI.")
+            return
         if response.status_code == 200:
-            idp_response = IdpLoginAuthResponse.from_text(response.text)
             if idp_response.legacy_password:
                 # a server before 12.0.0: the token is a one-time password for the login at endpoints.TOKEN
                 self.legacy_idp_login(idp_response)
                 return
             self.mscolab.after_login(idp_response.user.emailid, self.mscolab_server_url, response)
         elif response.status_code == 403:
-            # refused with a reason, e.g. an account whose email isn't confirmed; the code stays valid
-            message = IdpLoginAuthResponse.from_text(response.text).message
-            self.set_status("Error", message or 'Your identity provider login was refused by the server.')
+            # refused with a reason, e.g. an account whose email isn't confirmed; the code stays valid. Text of the
+            # server: plain text
+            self.set_status("Error", idp_response.message or 'Your identity provider login was refused by the server.',
+                            plain_text=True)
         elif response.status_code == 409:
             # an account with the email of the SAML login exists: its owner links the SAML login to it by logging in
-            idp_response = IdpLoginAuthResponse.from_text(response.text)
             self.stackedWidget.setCurrentWidget(self.loginPage)
             self.loginEmailLe.setText(idp_response.emailid)
             self.idp_link_code = code
-            self.set_status("Info", "An account with your email exists. Log in with its password once to link your "
-                            "identity provider login to it.")
+            message = "An account with your email exists. Log in with its password once to link your identity " \
+                      "provider login to it."
+            if getattr(self.mscolab.server_status, "mail_enabled", None):
+                # accounts that logged in by SAML before 12.0.0 got a password nobody knows
+                url_recover_password = urljoin(self.mscolab_server_url, "reset_request")
+                message += f' If you do not know it, <a href="{url_recover_password}">reset it</a> first.'
+            self.set_status("Info", message)
         else:
             self.set_status("Error", 'Invalid or expired code. Please log in by your identity provider again.')
             self.stackedWidget.setCurrentWidget(self.loginPage)

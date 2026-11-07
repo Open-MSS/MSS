@@ -248,7 +248,7 @@ class Test_Mscolab_connect_window:
         self._connect_to_mscolab(qtbot)
         with self.app.app_context():
             user = get_user(self.userdata[0])
-            text = json.dumps({"success": True, "token": user.generate_auth_token(), "user": {
+            text = json.dumps({"success": True, "token": user.generate_auth_token(), "login_token": True, "user": {
                 "username": user.username, "id": user.id, "emailid": user.emailid, "fullname": user.fullname}})
         posts, post = self._idp_post(mock.Mock(status_code=200, text=text))
         # the HTTP basic authentication of a server that has one
@@ -270,6 +270,22 @@ class Test_Mscolab_connect_window:
         assert self.window.statusLabel.text().endswith("Confirm your email")
         # the code stays valid, the user can enter it again
         assert self.window.stackedWidget.currentWidget() == self.window.idpAuthPage
+
+    def test_idp_refusal_of_the_server_is_plain_text(self, qtbot):
+        self._connect_to_mscolab(qtbot)
+        message = '<a href="https://example.org">click</a><img src="file://host/share/x.png">'
+        _, post = self._idp_post(mock.Mock(status_code=403, text=json.dumps({"success": False, "message": message})))
+        self._submit_idp_code("the-code", post)
+        assert self.window.statusLabel.textFormat() == QtCore.Qt.PlainText
+        assert self.window.statusLabel.text().endswith(message)
+
+    @pytest.mark.parametrize("status_code", [200, 403, 409])
+    def test_idp_reply_that_is_no_json(self, qtbot, status_code):
+        # e.g. the error page of a proxy
+        self._connect_to_mscolab(qtbot)
+        _, post = self._idp_post(mock.Mock(status_code=status_code, text="<html>proxy error</html>"))
+        self._submit_idp_code("the-code", post)
+        assert "Can't read the response" in self.window.statusLabel.text()
 
     def test_idp_login_at_a_server_before_12(self, qtbot):
         # it answers with a one-time password and a user without fullname; msui logs in with it at /token

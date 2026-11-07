@@ -404,7 +404,7 @@ def _new_saml_username(emailid, username):
     The username of a new account for a SAML login: the one that the IdP sent, else, also if that is taken or
     can't be used, the start of the email; raises SamlLoginRefused if register_user would refuse both
     """
-    candidates = [name for name in (username, emailid.split("@")[0]) if name]
+    candidates = [name.strip() for name in (username, emailid.split("@")[0]) if name and name.strip()]
     for candidate in candidates:
         if len(candidate) <= 255 and "@" not in candidate \
                 and User.query.filter_by(username=candidate).first() is None:

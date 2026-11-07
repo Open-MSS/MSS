@@ -1152,9 +1152,10 @@ class IdpLoginAuthResponse:
     e.g. for an account whose email isn't confirmed. to_dict() lets the
     handler keep using jsonify() for these paths.
 
-    Servers before 12.0.0 answer success with a one-time password in token
-    and a user without fullname; legacy_password tells msui to log in with
-    it at endpoints.TOKEN, as they expect.
+    Servers before 12.0.0 answer success with a one-time password in token;
+    a 12.0.0 server marks its login token with "login_token": true.
+    legacy_password, a success without that mark, tells msui to log in with
+    the password at endpoints.TOKEN, as the older servers expect.
     """
 
     success: bool
@@ -1166,7 +1167,8 @@ class IdpLoginAuthResponse:
     legacy_password: bool = False
 
     def to_text(self):
-        return json.dumps({"success": self.success, "token": self.token, "user": self.user.to_dict()})
+        return json.dumps({"success": self.success, "token": self.token, "login_token": True,
+                           "user": self.user.to_dict()})
 
     def to_dict(self):
         data = {"success": self.success}
@@ -1183,7 +1185,7 @@ class IdpLoginAuthResponse:
         return cls(success=data["success"], token=data.get("token"), user=user,
                    link_required=bool(data.get("link_required", False)), emailid=data.get("emailid"),
                    message=data.get("message"),
-                   legacy_password=bool(data.get("success")) and "fullname" not in (data.get("user") or {}))
+                   legacy_password=bool(data.get("success")) and data.get("login_token") is not True)
 
 
 @dataclass
