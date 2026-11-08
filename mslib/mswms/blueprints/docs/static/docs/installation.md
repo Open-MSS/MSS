@@ -1,75 +1,61 @@
-# Installation
+# MSWMS installation
 
-## User installation
+The MSS Web Map Service (MSWMS) is included in the
+[conda-forge `mss` package](https://anaconda.org/conda-forge/mss).
 
-The Mission Support System (MSS), including the Web Map Service, Collaboration Server, and graphical user interface, is available as the [conda-forge `mss` package](https://anaconda.org/conda-forge/mss).
+## Project installation
 
-Install [Pixi](https://pixi.sh/latest/) for your operating system, then choose a global installation or add MSS to a project.
+Install [Pixi](https://pixi.sh/latest/) for your operating system. Use a
+dedicated system user for the server, for example `mss`, and log in as that
+user before creating a project in its home directory.
 
-### Global installation
-
-Install MSS globally when you want to start the client without setting up a project:
-
-```sh
-pixi global install mss
-```
-
-You can then start the applications from a terminal:
+The following commands use a POSIX shell:
 
 ```sh
-msui
-mswms -h
-mscolab -h
-mssautoplot -h
-```
-
-To update the global installation:
-
-```sh
-pixi global update mss
-```
-
-### Project installation
-
-Create a project and add MSS from conda-forge:
-
-```sh
-pixi init MSS
-cd MSS
-pixi shell
+cd ~
+pixi init MSWMS
+cd MSWMS
 pixi add mss
+pixi shell
 ```
 
-Activate the project environment with `pixi shell` before starting MSS applications. The first `msui` launch may take longer while it sets up fonts.
+For later sessions, return to this project directory and activate its
+environment with `pixi shell`.
+
+## Start MSWMS
+
+Configure `mswms_settings.py` for your forecast data and layers as described
+in the [MSWMS documentation](https://mss.readthedocs.io/en/stable/mswms.html).
+The configuration module is found through `PYTHONPATH`. Before starting
+the server, add the directory containing that file to `PYTHONPATH`; replace
+`/path/to/config` below with that directory:
 
 ```sh
-msui
-mswms -h
-mscolab -h
-mssautoplot -h
+export PYTHONPATH=/path/to/config
+mswms
 ```
 
-Update the project dependencies using the lock file:
+With the default address and port, check the WMS capabilities at
+<http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1>.
+The server runs in the foreground; stop it with Ctrl+C.
+
+This built-in server is for development only. For production, use a WSGI
+server such as Waitress or Apache with mod_wsgi, as described in
+[WMS Server Deployment](https://mss.readthedocs.io/en/stable/mswms.html#wms-server-deployment).
+
+## Update the installation
+
+Stop the server and run the following in the project directory to update
+MSS within the version constraints in the project manifest:
 
 ```sh
 pixi update mss
 ```
 
-To upgrade to the latest package versions, disregarding the version constraints in the project manifest:
+To upgrade to the latest package versions, disregarding those constraints:
 
 ```sh
 pixi upgrade mss
 ```
 
-### Server installation
-
-For an MSWMS or MSColab server, you may want to use a dedicated system user and install MSS in a Pixi project for that user. To try the built-in servers, start them in the project environment:
-
-```sh
-mswms &
-mscolab start
-```
-
-Check the MSColab status at <http://127.0.0.1:8083/status> and the WMS capabilities at <http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1>.
-
-See the [MSS installation guide](https://mss.readthedocs.io/en/stable/installation.html) for further details.
+Restart MSWMS after updating.

@@ -1,75 +1,64 @@
-# Installation
+# MSColab installation
 
-## User installation
+The MSS collaboration server (MSColab) is included in the
+[conda-forge `mss` package](https://anaconda.org/conda-forge/mss).
 
-The Mission Support System (MSS), including the Web Map Service, Collaboration Server, and graphical user interface, is available as the [conda-forge `mss` package](https://anaconda.org/conda-forge/mss).
+## Project installation
 
-Install [Pixi](https://pixi.sh/latest/) for your operating system, then choose a global installation or add MSS to a project.
+Install [Pixi](https://pixi.sh/latest/) for your operating system. Use a
+dedicated system user for the server, for example `mss`, and log in as that
+user before creating a project in its home directory.
 
-### Global installation
-
-Install MSS globally when you want to start the client without setting up a project:
-
-```sh
-pixi global install mss
-```
-
-You can then start the applications from a terminal:
+The following commands use a POSIX shell:
 
 ```sh
-msui
-mswms -h
-mscolab -h
-mssautoplot -h
-```
-
-To update the global installation:
-
-```sh
-pixi global update mss
-```
-
-### Project installation
-
-Create a project and add MSS from conda-forge:
-
-```sh
-pixi init MSS
-cd MSS
-pixi shell
+cd ~
+pixi init MSColab
+cd MSColab
 pixi add mss
+pixi shell
 ```
 
-Activate the project environment with `pixi shell` before starting MSS applications. The first `msui` launch may take longer while it sets up fonts.
+For later sessions, return to this project directory and activate its
+environment with `pixi shell`.
+
+## Start MSColab
+
+MSColab requires a secret key. For a local start, generate one and pass it
+in the environment before starting the server:
 
 ```sh
-msui
-mswms -h
-mscolab -h
-mssautoplot -h
+export MSCOLAB_SECRET_KEY=$(python -c "import secrets; print(secrets.token_urlsafe(32))")
+mscolab start
 ```
 
-Update the project dependencies using the lock file:
+The first start initializes the database, using SQLite by default. Check
+the server status at <http://127.0.0.1:8083/status>. Stop the foreground
+server with Ctrl+C.
+
+For a persistent installation, keep the secret key private and reuse the
+same value across all server processes and restarts. Configure the key
+in the service environment rather than generating a new one for each
+process.
+
+For production setup, see
+[Configuring Your MSColab Server](https://mss.readthedocs.io/en/stable/mscolab.html#configuring-your-mscolab-server)
+and [Notes for server administrators](https://mss.readthedocs.io/en/stable/mscolab.html#notes-for-server-administrators)
+in the [MSColab documentation](https://mss.readthedocs.io/en/stable/mscolab.html).
+
+## Update the installation
+
+Stop the server and run the following in the project directory to update
+MSS within the version constraints in the project manifest:
 
 ```sh
 pixi update mss
 ```
 
-To upgrade to the latest package versions, disregarding the version constraints in the project manifest:
+To upgrade to the latest package versions, disregarding those constraints:
 
 ```sh
 pixi upgrade mss
 ```
 
-### Server installation
-
-For an MSWMS or MSColab server, you may want to use a dedicated system user and install MSS in a Pixi project for that user. To try the built-in servers, start them in the project environment:
-
-```sh
-mswms &
-mscolab start
-```
-
-Check the MSColab status at <http://127.0.0.1:8083/status> and the WMS capabilities at <http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1>.
-
-See the [MSS installation guide](https://mss.readthedocs.io/en/stable/installation.html) for further details.
+Restart MSColab after updating, using the same secret key.
