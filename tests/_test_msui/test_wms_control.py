@@ -35,7 +35,7 @@ import socket
 from xml.sax.saxutils import quoteattr
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.msui import flighttrack as ft
-from mslib.msui.utils.config import config_loader
+from mslib.msui.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings
 import mslib.msui.wms_control as wc
 from tests.utils import shown_text
 from mslib.msui.utils.service_manager import strip_request_params
@@ -53,6 +53,49 @@ class VSecViewMockup(mock.Mock):
     get_crs = mock.Mock(return_value="VERT:LOGP")
     getBBOX = mock.Mock(return_value=(3, 500, 3, 10))
     get_plot_size_in_px = mock.Mock(return_value=(200, 100))
+
+
+def test_recent_wms_urls():
+    # the single URL remembered by older msui versions
+    save_settings_qsettings("wms", {"recent_wms_url": "http://old/"})
+    assert wc.load_recent_wms_urls() == ["http://old/"]
+    for url in ["http://a/", "http://b/", "http://a/"]:
+        wc.remember_wms_url(url)
+    assert wc.load_recent_wms_urls() == ["http://a/", "http://b/", "http://old/"]
+    wc.forget_wms_url("http://b/")
+    assert wc.load_recent_wms_urls() == ["http://a/", "http://old/"]
+    save_settings_qsettings("wms", {"recent_wms_urls": ["http://single/"]})
+    assert wc.load_recent_wms_urls() == ["http://single/"]
+
+
+def test_add_wms_urls_skips_duplicates(qtbot):
+    combo = QtWidgets.QComboBox()
+    qtbot.addWidget(combo)
+    combo.addItem("http://a/")
+    wc.add_wms_urls(combo, ["http://a/", "http://b/", "http://b/"])
+    assert [combo.itemText(i) for i in range(combo.count())] == ["http://a/", "http://b/"]
+
+
+def press_in_url_list(combo, url, key=QtCore.Qt.Key_Delete):
+    """Opens the list of the URL combo box, highlights url and presses key."""
+    combo.showPopup()
+    combo.view().setCurrentIndex(combo.model().index(combo.findText(url), 0))
+    QtTest.QTest.keyClick(combo.view(), key)
+    combo.hidePopup()
+
+
+def test_delete_in_url_list_keeps_default_url(qtbot, tmp_path):
+    wc.remember_wms_url("http://recent/")
+    window = wc.HSecWMSControlWidget(default_WMS=["http://default/"], view=HSecViewMockup(), wms_cache=tmp_path)
+    qtbot.addWidget(window)
+    combo = window.multilayers.cbWMS_URL
+    combo.setEditText("http://typed/")
+    press_in_url_list(combo, "http://default/")
+    assert combo.findText("http://default/") != -1
+    press_in_url_list(combo, "http://recent/")
+    assert combo.findText("http://recent/") == -1
+    assert wc.load_recent_wms_urls() == []
+    assert combo.currentText() == "http://typed/"
 
 
 class WMSControlWidgetSetup:
@@ -447,6 +490,52 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
+
+    def query_server_by_enter(self, qtbot, url):
+        """Types url and presses Enter, which inserts it into the combo box, before loading the capabilities."""
+        self.window.multilayers.cbWMS_URL.setEditText("")
+        QtTest.QTest.keyClicks(self.window.multilayers.cbWMS_URL, url)
+        QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Return)
+        with qtbot.wait_signal(self.window.cpdlg.canceled, timeout=WMS_REQUEST_TIMEOUT_MS):
+            QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
+
+    def test_typed_url_is_remembered(self, qtbot):
+        self.query_server_by_enter(qtbot, self.url)
+        assert load_settings_qsettings("wms")["recent_wms_urls"][0] == f"{self.url}/"
+        other = wc.HSecWMSControlWidget(view=HSecViewMockup(), wms_cache=self.tempdir)
+        qtbot.addWidget(other)
+        assert other.multilayers.cbWMS_URL.findText(f"{self.url}/") != -1
+
+    def test_url_entered_again_is_listed_once(self, qtbot):
+        # entered without the trailing slash, loaded from the URL with it
+        self.query_server_by_enter(qtbot, self.url)
+        self.query_server_by_enter(qtbot, self.url)
+        combo = self.window.multilayers.cbWMS_URL
+        urls = [combo.itemText(i) for i in range(combo.count())]
+        assert urls.count(f"{self.url}/") == 1
+        assert self.url not in urls
+        assert combo.currentText() == f"{self.url}/"
+
+    @pytest.mark.parametrize("key", [QtCore.Qt.Key_Delete, QtCore.Qt.Key_Backspace], ids=["delete", "backspace"])
+    def test_delete_in_url_list_forgets_url(self, qtbot, key):
+        self.query_server_by_enter(qtbot, self.url)
+        url = f"{self.url}/"
+        # unloading the server keeps its URL
+        server = self.window.multilayers.listLayers.findItems(url, QtCore.Qt.MatchFixedString)[0]
+        self.window.multilayers.delete_server(server)
+        assert url in wc.load_recent_wms_urls()
+        combo = self.window.multilayers.cbWMS_URL
+        press_in_url_list(combo, url, key)
+        assert url not in wc.load_recent_wms_urls()
+        assert combo.findText(url) == -1
+
+    def test_delete_in_url_list_keeps_loaded_server_listed(self, qtbot):
+        self.query_server_by_enter(qtbot, self.url)
+        url = f"{self.url}/"
+        combo = self.window.multilayers.cbWMS_URL
+        press_in_url_list(combo, url)
+        assert url not in wc.load_recent_wms_urls()
+        assert combo.findText(url) != -1
 
 
 class Test_VSecWMSControlWidget(WMSControlWidgetSetup):

@@ -60,9 +60,30 @@ from mslib.msui.utils.config import modify_config_file
 
 
 def add_wms_urls(combo_box, url_list):
-    combo_box_urls = [combo_box.itemText(_i) for _i in range(combo_box.count())]
-    for url in (_url for _url in url_list if _url not in combo_box_urls):
-        combo_box.addItem(url)
+    for url in url_list:
+        if combo_box.findText(url) == -1:
+            combo_box.addItem(url)
+
+
+def load_recent_wms_urls():
+    """Returns the WMS URLs msui connected to successfully, most recent first."""
+    wms_settings = load_settings_qsettings('wms', {'recent_wms_urls': [], 'recent_wms_url': None})
+    urls = list(wms_settings['recent_wms_urls'] or [])
+    # settings of msui versions that remembered only one URL
+    if wms_settings['recent_wms_url'] and wms_settings['recent_wms_url'] not in urls:
+        urls.append(wms_settings['recent_wms_url'])
+    return urls
+
+
+def remember_wms_url(url):
+    """Puts url at the front of the recently used WMS URLs and stores them."""
+    urls = [url] + [_url for _url in load_recent_wms_urls() if _url != url]
+    save_settings_qsettings('wms', {'recent_wms_urls': urls})
+
+
+def forget_wms_url(url):
+    """Removes url from the recently used WMS URLs."""
+    save_settings_qsettings('wms', {'recent_wms_urls': [_url for _url in load_recent_wms_urls() if _url != url]})
 
 
 class MSUIWebMapServiceMixin:
@@ -547,12 +568,12 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Initial list of WMS servers.
         self.multilayers.cbWMS_URL.setModel(QtGui.QStandardItemModel())
-        if default_WMS is not None:
-            add_wms_urls(self.multilayers.cbWMS_URL, default_WMS)
-        # set last connected url to editable
-        wms_settings = load_settings_qsettings('wms', {'recent_wms_url': None})
-        if wms_settings['recent_wms_url'] is not None:
-            add_wms_urls(self.multilayers.cbWMS_URL, [wms_settings['recent_wms_url']])
+        self.default_wms_urls = list(default_WMS or [])
+        add_wms_urls(self.multilayers.cbWMS_URL, self.default_wms_urls)
+        # WMS servers connected to recently
+        add_wms_urls(self.multilayers.cbWMS_URL, load_recent_wms_urls())
+        self.url_list_view = self.multilayers.cbWMS_URL.view()
+        self.url_list_view.installEventFilter(self)
 
         self.layerChangeInProgress = False
         self.save_level = None
@@ -899,23 +920,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.cpdlg.setValue(9)
             if wms is not None:
 
-                # update the combo box, if entry requires change/insertion
-                found = False
-                current_url = self.multilayers.cbWMS_URL.currentText()
-                for count in range(self.multilayers.cbWMS_URL.count()):
-                    if self.multilayers.cbWMS_URL.itemText(count) == current_url:
-                        self.multilayers.cbWMS_URL.setItemText(count, base_url)
-                        self.multilayers.cbWMS_URL.setCurrentIndex(count)
-                        found = True
-                        break
-                    if self.multilayers.cbWMS_URL.itemText(count) == base_url:
-                        self.multilayers.cbWMS_URL.setCurrentIndex(count)
-                        found = True
-                if not found:
-                    logging.debug("inserting URL: %s", base_url)
-                    add_wms_urls(self.multilayers.cbWMS_URL, [base_url])
-                    self.multilayers.cbWMS_URL.setEditText(base_url)
-                    save_settings_qsettings('wms', {'recent_wms_url': base_url})
+                self.select_wms_url(base_url)
+                remember_wms_url(base_url)
 
                 self.activate_wms(wms, level=level)
                 self.service_manager.cache_service(base_url, wms)
@@ -1010,6 +1016,52 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 "Load the Web Map Service from there? If it asks for a login, the login is sent to that server."),
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
         return ret == QtWidgets.QMessageBox.Yes
+
+    def select_wms_url(self, base_url):
+        """
+        Selects base_url, the URL the capabilities were loaded from, in the URL combo box.
+
+        The URL as entered (e.g. without trailing slash, or before a redirect) is replaced by base_url,
+        or removed if base_url is listed already.
+        """
+        combo = self.multilayers.cbWMS_URL
+        entered_index = combo.findText(combo.currentText())
+        if combo.findText(base_url) == -1:
+            if entered_index != -1:
+                combo.setItemText(entered_index, base_url)
+            else:
+                logging.debug("inserting URL: %s", base_url)
+                combo.addItem(base_url)
+        elif entered_index not in (-1, combo.findText(base_url)):
+            with QtCore.QSignalBlocker(combo):
+                combo.removeItem(entered_index)
+        combo.setCurrentIndex(combo.findText(base_url))
+
+    def eventFilter(self, obj, event):
+        """Del or Backspace in the opened list of WMS URLs forgets the highlighted recently used URL."""
+        if obj is self.url_list_view and event.type() == QtCore.QEvent.KeyPress \
+                and event.key() in (QtCore.Qt.Key_Delete, QtCore.Qt.Key_Backspace):
+            index = self.url_list_view.currentIndex()
+            if index.isValid() and index.data() not in self.default_wms_urls:
+                self.forget_wms_server(index.data())
+            return True
+        return super().eventFilter(obj, event)
+
+    def forget_wms_server(self, url):
+        """
+        Removes url from the recently used URLs and from the URL combo box. The entry stays in the
+        combo box while the server is loaded, as selecting its layers selects it there.
+        """
+        forget_wms_url(url)
+        if url in self.multilayers.layers:
+            return
+        combo = self.multilayers.cbWMS_URL
+        text = combo.currentText()
+        # keep the entered text and do not load another server by changing it
+        with QtCore.QSignalBlocker(combo):
+            while (index := combo.findText(url)) != -1:
+                combo.removeItem(index)
+            combo.setEditText(text)
 
     def warn_about_getmap_url(self, wms):
         """
