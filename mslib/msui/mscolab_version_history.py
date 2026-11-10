@@ -150,7 +150,9 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                 local_time = utc_to_local_datetime(created_at)
                 date = local_time.strftime('%d/%m/%Y')
                 time = local_time.strftime('%I:%M %p')
-                item_text = f'{change.username} made change on {date} at {time}'
+                # the server sends no username for a change of a deleted user
+                username = change.username if change.username is not None else "deleted user"
+                item_text = f'{username} made change on {date} at {time}'
                 if change.version_name is not None:
                     item_text = f'{change.version_name}\n{item_text}'
                 item = QtWidgets.QListWidgetItem(item_text, parent=self.changes)

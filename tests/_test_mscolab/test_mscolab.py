@@ -53,9 +53,9 @@ def test_main():
 
     with mock.patch("mslib.mscolab.mscolab.argparse.ArgumentParser.parse_args",
                     return_value=argparse.Namespace(version=False, update=False, action="db",
-                                                    reset=False, seed=False, users_by_file=None,
-                                                    default_operation=False, add_all_to_all_operation=False,
-                                                    delete_users_by_file=False)):
+                                                    reset=False, seed=False, repair_references=False,
+                                                    users_by_file=None, default_operation=False,
+                                                    add_all_to_all_operation=False, delete_users_by_file=False)):
         main()
         # currently only checking precedence of all args
 
@@ -127,3 +127,17 @@ class Test_Mscolab:
         assert len(all_users) == 10
         all_permissions = Permission.query.all()
         assert len(all_permissions) == 17
+
+
+def test_main_repairs_references_after_confirmation():
+    args = argparse.Namespace(version=False, update=False, action="db", reset=False, seed=False,
+                              repair_references=True, users_by_file=None, default_operation=False,
+                              add_all_to_all_operation=False, delete_users_by_file=False, yes=False)
+    with mock.patch("mslib.mscolab.mscolab.argparse.ArgumentParser.parse_args", return_value=args), \
+            mock.patch("mslib.mscolab.mscolab.handle_db_repair_references") as repair:
+        with mock.patch("mslib.mscolab.mscolab.confirm_action", return_value=False):
+            main()
+        repair.assert_not_called()
+        with mock.patch("mslib.mscolab.mscolab.confirm_action", return_value=True):
+            main()
+        repair.assert_called_once_with()

@@ -80,6 +80,25 @@ def _is_database_file(path, db_path):
     return path == db_path or (path.parent == db_path.parent and path.name.startswith(f"{db_path.name}-"))
 
 
+def handle_db_repair_references():
+    """
+    Repairs the rows of a development database that refer to a deleted user or operation, see
+    migrations.schema_repair.DANGLING_REFERENCES; returns how many rows were changed
+
+    The 12.0.0 migration does this for every older database. The server start only warns: it deletes rows.
+    """
+    from mslib.mscolab.migrations.schema_repair import (hand_over_operations_without_creator,
+                                                        remove_dangling_references)
+    from mslib.mscolab.models import db
+    db.session.remove()
+    with db.engine.begin() as conn:
+        changed = remove_dangling_references(conn)
+        # as the migration: e.g. creators deleted with their permissions by an earlier development state
+        hand_over_operations_without_creator(conn)
+    print(f"Repaired {changed} rows that referred to a deleted user or operation.")
+    return changed
+
+
 def handle_db_reset(verbose=True):
     import sqlalchemy as _sa
     from mslib.mscolab.models import db
@@ -442,6 +461,9 @@ def _main():
     db_actions = database_parser.add_mutually_exclusive_group(required=True)
     db_actions.add_argument("--reset", help="Reset database", action="store_true")
     db_actions.add_argument("--seed", help="Seed database", action="store_true")
+    db_actions.add_argument("--repair_references", action="store_true",
+                            help="Repair rows that refer to a deleted user or operation; deletes rows of deleted "
+                                 "operations, back up the database first")
     db_actions.add_argument("--users_by_file", type=argparse.FileType("r"),
                             help="adds users into database, fileformat: suggested_username  name   <email>")
     db_actions.add_argument("--delete_users_by_file", type=argparse.FileType("r"),
@@ -500,6 +522,13 @@ def _main():
                     assume_yes=args.yes)
                 if confirmation is True:
                     handle_db_reset()
+            elif args.repair_references:
+                confirmation = confirm_action(
+                    "Are you sure you want to repair the database? This deletes the rows of deleted operations, "
+                    "back up the database first (y/[n]):",
+                    assume_yes=args.yes)
+                if confirmation is True:
+                    handle_db_repair_references()
             elif args.seed:
                 confirmation = confirm_action(
                     "Are you sure you want to seed the database? Seeding will delete all your "

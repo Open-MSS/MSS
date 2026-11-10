@@ -245,6 +245,23 @@ If you want to keep using your old database URI you can first rename your existi
 and just set ``SQLALCHEMY_DATABASE_URI_TO_MIGRATE_FROM`` to that.
 
 
+Database Upgrade to Version 12
+..............................
+
+**Make a backup of your database before the first start of MSColab 12.** Its migration enforces the foreign keys
+of the database, also on SQLite, and repairs the rows that older versions left behind when a user or an
+operation was deleted:
+
+- chat messages and flight track changes of a deleted user stay in their operations, shown as from a deleted user;
+- permissions, chat messages and flight track changes of a deleted operation are deleted;
+- a reply to a deleted chat message stays, as a message of its own.
+
+Operations whose creator was deleted by an earlier version have no creator: the migration makes their admin
+who is a member longest the creator. The log names the ids of every row the migration changes. A later server start changes no rows: if a database
+still has such rows, e.g. one that ran a development state of 12.0.0, the server warns at its start; repair them
+after a backup with ``mscolab db --repair_references``.
+
+
 Steps to use the MSColab UI features
 ------------------------------------
 
@@ -254,7 +271,11 @@ To get access to the mscolab feature click Connect.
 User based features
 ....................
   - A user can register and login.
-  - A user can also delete his/her account.
+  - A user can also delete his/her account. The account and its permissions are deleted; its chat messages and
+    flight track changes stay in their operations, shown as from a deleted user, without the name. An operation the
+    user created goes to its admin who is a member longest, the chat says so without naming the deleted user. An
+    operation without other members is deleted. One with members but without an admin stays without creator.
+    Servers that publish a privacy policy should mention that the messages and changes of a deleted account stay.
 
 Operation based features
 ........................

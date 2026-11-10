@@ -43,7 +43,7 @@ from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from mslib.mscolab.api.schemas import TOKEN_HEADER
 from mslib.mscolab.app import db
 from mslib.mscolab.conf import setup_saml2_backend
-from mslib.mscolab.models import IdpIdentity, SamlLogin, User
+from mslib.mscolab.models import IdpIdentity, SamlLogin, User, fits_column
 
 
 def optional_auth(f):
@@ -85,6 +85,11 @@ def register_user(email, password, username, fullname):
         return {"success": False, "message": "Your email ID is not valid!"}
     if not is_valid_username:
         return {"success": False, "message": "Your username cannot contain @ symbol!"}
+    if not all(fits_column(column, value) for column, value in (
+            (User.emailid, email), (User.username, username), (User.fullname, fullname))):
+        return {"success": False,
+                "message": f"Your email, username and full name can have at most {User.username.type.length} "
+                           "characters each"}
     user_exists = User.query.filter_by(emailid=str(email)).first()
     if user_exists:
         return {"success": False, "message": "This email ID is already taken!"}

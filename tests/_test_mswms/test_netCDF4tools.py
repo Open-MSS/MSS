@@ -26,7 +26,6 @@
 """
 
 import os
-import pytest
 import datetime
 from netCDF4 import Dataset
 from mslib.utils.netCDF4tools import (
@@ -121,10 +120,6 @@ class Test_netCDF4tools:
         time_name, time_var = identify_CF_time(self.ncfile_ml)
         assert time_name == "time"
         assert time_var.size == 7
-
-    @pytest.mark.skip(reason="no demodata available yet")
-    def test_identify_CF_ensemble(self):
-        pass
 
     def test_get_latlon_data(self):
         lat_data, lon_data, lat_order = get_latlon_data(self.ncfile_pl)

@@ -44,6 +44,7 @@ from flask_sqlalchemy import SQLAlchemy
 from mslib.mscolab.api.schemas import InvalidRequest
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab import migrations
+from mslib.mscolab.migrations.schema_repair import KEPT_WITHOUT_REFERENCE
 from mslib.utils import prefix_route, release_info
 from mslib.utils.basic_auth import PasswordCheckBusy, check_basic_auth_setting
 from mslib.utils.file_exists import file_exists
@@ -92,6 +93,20 @@ mail = Mail()
 migrate = Migrate(render_as_batch=True, user_module_prefix="cu.")
 
 
+def _enforce_sqlite_foreign_keys(dbapi_connection, connection_record):
+    """
+    SQLite enforces foreign keys only when asked for, per connection; PostgreSQL always does
+
+    So a row that refers to a missing row fails on SQLite too, not only on a PostgreSQL production server. The
+    migrations switch it off, see migrations/env.py. Listens to the engine of each app only, see create_app: other
+    engines of the process, e.g. of an old database to copy, stay as they are.
+    """
+    if type(dbapi_connection).__module__.startswith("sqlite3"):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
+
 def _xstatic(name):
     mod_names = [
         'jquery', 'bootstrap',
@@ -114,6 +129,29 @@ def create_files():
     Path(current_app.config['OPERATIONS_DATA']).mkdir(parents=True, exist_ok=True)
     Path(current_app.config['UPLOAD_FOLDER']).mkdir(parents=True, exist_ok=True)
     Path(current_app.config['SSO_DIR']).mkdir(parents=True, exist_ok=True)
+
+
+def _repair_references(table, values, references, copied_ids, repaired):
+    """
+    Repairs the row values of table that refer to a row not copied, returns False if the row is to be skipped
+
+    The rules of migrations.schema_repair.KEPT_WITHOUT_REFERENCE, as the 12.0.0 migration repairs such rows: messages
+    and changes of a deleted user stay without the user, a reply to a removed message stays without it, other rows
+    of a deleted user or operation go. Adds the id of the row to repaired[(table, column, kept)] for the log.
+    Per row and not by the SQL of DANGLING_REFERENCES after the copy: a PostgreSQL target refuses such rows already
+    while they are copied.
+    """
+    missing = [column for column, referred_table in references.items()
+               if values.get(column) is not None and values[column] not in copied_ids.get(referred_table, ())]
+    skipped_by = [column for column in missing if (table, column) not in KEPT_WITHOUT_REFERENCE]
+    if skipped_by:
+        # logged as skipped only, also if another reference would have been kept without
+        repaired.setdefault((table, skipped_by[0], False), []).append(values.get("id"))
+        return False
+    for column in missing:
+        values[column] = None
+        repaired.setdefault((table, column, True), []).append(values.get("id"))
+    return True
 
 
 def initialise_db():
@@ -168,51 +206,48 @@ your database MSColab will abort. Please follow the documentation for a manual d
         # current_app.config['SQLALCHEMY_DATABASE_URI'], which may be a relative SQLite
         # path that Flask-SQLAlchemy expands via instance_path — plain
         # sqlalchemy.create_engine would resolve it against CWD instead.
-        target_engine = sqlalchemy.create_engine(str(db.engine.url))
+        # the URL object, str() of it masks the password as ***
+        target_engine = sqlalchemy.create_engine(db.engine.url)
+        sqlalchemy.event.listen(target_engine, "connect", _enforce_sqlite_foreign_keys)
         target_metadata = sqlalchemy.MetaData()
         target_metadata.reflect(bind=target_engine)
+        # the ids copied per table: older versions left rows behind that refer to a deleted user or operation, the
+        # target enforces the foreign keys
+        copied_ids = {}
+        repaired = {}
         with source_engine.connect() as src_connection, target_engine.connect() as target_connection:
-            for table in source_metadata.sorted_tables:
-                if table.name == "alembic_version":
+            # in the order of the foreign keys of the target: an old database may not declare them, a table would
+            # then be copied before the rows it refers to and lose all its references
+            for target_table in target_metadata.sorted_tables:
+                if target_table.name == "alembic_version" or target_table.name not in source_metadata.tables:
                     # Do not migrate the alembic_version table!
                     continue
+                table = source_metadata.tables[target_table.name]
                 logging.debug("Copying table %s", table.name)
-                stmt = target_metadata.tables[table.name].insert()
-                for row in src_connection.execute(table.select()):
+                stmt = target_table.insert()
+                references = {fk.parent.name: fk.column.table.name for fk in target_table.foreign_keys}
+                copied_ids[table.name] = set()
+                for row in src_connection.execute(table.select().order_by(*table.primary_key.columns)):
                     logging.debug("Copying row %s", row)
-                    row = tuple(
-                        r.replace(tzinfo=datetime.timezone.utc) if isinstance(r, datetime.datetime) else r for r in row
-                    )
-                    target_connection.execute(stmt.values(row))
+                    values = {
+                        name: value.replace(tzinfo=datetime.timezone.utc) if isinstance(value, datetime.datetime)
+                        else value for name, value in row._mapping.items()}
+                    if not _repair_references(table.name, values, references, copied_ids, repaired):
+                        continue
+                    target_connection.execute(stmt.values(**values))
+                    copied_ids[table.name].add(values.get("id"))
             target_connection.commit()
-            if target_engine.name == "postgresql":
-                # Fix the databases auto-increment sequences, if it is a PostgreSQL database
-                # For reference, see: https://wiki.postgresql.org/wiki/Fixing_Sequences
-                logging.info("Using a PostgreSQL database, will fix up sequences")
-                cur = target_connection.execute(sqlalchemy.text(r"""
-SELECT
-    'SELECT SETVAL(' ||
-    quote_literal(quote_ident(sequence_namespace.nspname) || '.' || quote_ident(class_sequence.relname)) ||
-    ', COALESCE(MAX(' ||quote_ident(pg_attribute.attname)|| '), 1) ) FROM ' ||
-    quote_ident(table_namespace.nspname)|| '.'||quote_ident(class_table.relname)|| ';'
-FROM pg_depend
-    INNER JOIN pg_class AS class_sequence
-        ON class_sequence.oid = pg_depend.objid
-            AND class_sequence.relkind = 'S'
-    INNER JOIN pg_class AS class_table
-        ON class_table.oid = pg_depend.refobjid
-    INNER JOIN pg_attribute
-        ON pg_attribute.attrelid = class_table.oid
-            AND pg_depend.refobjsubid = pg_attribute.attnum
-    INNER JOIN pg_namespace as table_namespace
-        ON table_namespace.oid = class_table.relnamespace
-    INNER JOIN pg_namespace AS sequence_namespace
-        ON sequence_namespace.oid = class_sequence.relnamespace
-ORDER BY sequence_namespace.nspname, class_sequence.relname;
-"""))
-                for stmt, in cur.all():
-                    target_connection.execute(sqlalchemy.text(stmt))
-                target_connection.commit()
+        for (table_name, column, kept), ids in repaired.items():
+            if kept:
+                logging.warning("Copied the %s %s of the old database without their %s, it is deleted",
+                                table_name, ids, column)
+            else:
+                logging.warning("Skipped the %s %s of the old database, their %s is deleted", table_name, ids, column)
+        with target_engine.connect() as target_connection:
+            # the rows were copied with their ids
+            from mslib.mscolab.migrations.schema_repair import fix_postgresql_sequences
+            fix_postgresql_sequences(target_connection)
+            target_connection.commit()
         logging.info("Data migration finished")
         # Dispose the temporary copy engine so it doesn't hold SQLite
         # connections across subsequent initialise_db() iterations.
@@ -236,13 +271,26 @@ def repair_schema():
     """
     from alembic.migration import MigrationContext
     from alembic.operations import Operations
-    from mslib.mscolab.migrations.schema_repair import add_saml_tables, add_token_nonce, has_column, has_table
+    from mslib.mscolab.migrations.schema_repair import (AUTOINCREMENT_TABLES, add_fullname, add_saml_tables,
+                                                        add_token_nonce, fix_postgresql_sequences,
+                                                        has_autoincrement_ids, has_column,
+                                                        has_dangling_references, has_table,
+                                                        sqlite_foreign_keys_off, use_autoincrement_ids)
     from mslib.mscolab.models import db
 
-    with db.engine.begin() as conn:
-        if MigrationContext.configure(conn).get_current_revision() is None:
-            # an empty database, the upgrade creates everything
+    from alembic.script import ScriptDirectory
+
+    head = ScriptDirectory(migrations.__path__[0]).get_current_head()
+    # the repairs recreate tables on SQLite, like the migrations
+    with db.engine.connect() as conn, sqlite_foreign_keys_off(conn) as foreign_keys:
+        if MigrationContext.configure(conn).get_current_revision() != head:
+            # an empty database, or one the upgrade still has to bring up to the latest revision, e.g. before
+            # `mscolab db` upgrades: a column added now would make the migration that adds it fail
             return
+        if not has_column(conn, "users", "fullname"):
+            logging.warning("The database misses users.fullname: it was created by MSColab 10.x, whose migration "
+                            "lacked it. Adding it now.")
+            add_fullname(Operations(MigrationContext.configure(conn)), conn)
         if not has_column(conn, "users", "token_nonce"):
             logging.warning("The database misses users.token_nonce, it ran an earlier development state of the "
                             "12.0.0 migration. Adding it now; every user has to log in again.")
@@ -251,6 +299,18 @@ def repair_schema():
             logging.warning("The database misses the tables of SAML logins, it ran an earlier development state of "
                             "the 12.0.0 migration. Adding them now.")
             add_saml_tables(Operations(MigrationContext.configure(conn)), conn)
+        if has_dangling_references(conn):
+            # Only a database that ran an earlier development state of the 12.0.0 migration, which repairs them:
+            # a server start doesn't delete rows. Until they are repaired, deleting their user or operation fails.
+            logging.warning("Rows of the database refer to a deleted user or operation. Back up the database, "
+                            "then repair them with `mscolab db --repair_references`.")
+            foreign_keys.check = False
+        # e.g. a database seeded before the seed fixed them
+        fix_postgresql_sequences(conn)
+        if not all(has_autoincrement_ids(conn, table) for table in AUTOINCREMENT_TABLES):
+            logging.warning("The database reuses the ids of deleted users or operations, it ran an earlier "
+                            "development state of the 12.0.0 migration. Changing that now.")
+            use_autoincrement_ids(Operations(MigrationContext.configure(conn)), conn)
 
 
 # endpoints of uploads, a request to them is limited to MAX_UPLOAD_SIZE instead of MAX_CONTENT_LENGTH
@@ -415,6 +475,8 @@ def create_app(config_object=mscolab_settings):
     app.xstatic = _xstatic
 
     db.init_app(app)
+    with app.app_context():
+        sqlalchemy.event.listen(db.engine, "connect", _enforce_sqlite_foreign_keys)
     migrate.init_app(app, db)
     mail.init_app(app)
     # mslib.mscolab.mail.send_email sends its messages via current_app.mail

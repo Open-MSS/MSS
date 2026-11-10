@@ -40,8 +40,9 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import insert
 from sqlalchemy.exc import IntegrityError
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
-from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
-from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX, is_valid_operation_path, get_operation_dir
+from mslib.mscolab.models import db, Operation, Permission, User, Change, fits_column
+from mslib.mscolab.utils import ATTACHMENTS_URL_PREFIX, is_valid_operation_path, get_operation_dir, \
+    remove_operation_files, restore_operation_dir, set_aside_operation_dir
 from mslib.mscolab.api.attachments import file_extension, normalized_extensions
 
 # "creator" is assigned only by create_operation
@@ -86,6 +87,9 @@ class FileManager:
         # set codes on these later
         if not is_valid_operation_path(path):
             logging.debug("malicious request: %s", user)
+            return False
+        if not all(fits_column(column, value) for column, value in (
+                (Operation.path, path), (Operation.description, description), (Operation.category, category))):
             return False
         proj_available = Operation.query.filter_by(path=path).first()
         if proj_available is not None:
@@ -256,6 +260,34 @@ class FileManager:
         """
         return self.auth_type(u_id, op_id) in WRITE_ACCESS_LEVELS and not self.is_archived(op_id)
 
+    def delete_user(self, user):
+        """
+        Deletes user; its operations go to an admin or are deleted without other members, its messages and changes
+        stay, see User.prepare_deletion
+
+        Returns the hand-overs of User.prepare_deletion and the ids of the deleted operations, for the socket events.
+        The files go only after the commit: if it fails, the user keeps them.
+        """
+        profile_image_path = user.profile_image_path
+        handovers, deleted_operations = user.prepare_deletion()
+        db.session.delete(user)
+        set_aside = []
+        try:
+            for op_id, path in deleted_operations:
+                set_aside.append((op_id, path, set_aside_operation_dir(self.data_dir, path)))
+            db.session.commit()
+        except Exception:
+            # e.g. a directory that can't be moved: it would block the name of the operation
+            db.session.rollback()
+            for _, path, aside in set_aside:
+                restore_operation_dir(aside, self.data_dir, path)
+            raise
+        if profile_image_path:
+            self.delete_user_profile_image(profile_image_path)
+        for op_id, path, aside in set_aside:
+            remove_operation_files(aside, current_app.config['UPLOAD_FOLDER'], op_id, path)
+        return handovers, [op_id for op_id, _ in deleted_operations]
+
     def modify_user(self, user, attribute=None, value=None, action=None):
         if action == "create":
             user_query = User.query.filter_by(emailid=str(user.emailid)).first()
@@ -267,11 +299,7 @@ class FileManager:
         elif action == "delete":
             user_query = User.query.filter_by(id=user.id).first()
             if user_query is not None:
-                # Delete profile image if it exists
-                if user.profile_image_path:
-                    self.delete_user_profile_image(user.profile_image_path)
-                db.session.delete(user)
-                db.session.commit()
+                self.delete_user(user)
             user_query = User.query.filter_by(id=user.id).first()
             # on delete we return successful deleted
             if user_query is None:
@@ -407,6 +435,8 @@ class FileManager:
         if not self.is_admin(user.id, op_id) and not self.is_creator(user.id, op_id):
             return False
         operation = Operation.query.filter_by(id=op_id).first()
+        if attribute in ("path", "description", "category") and not fits_column(getattr(Operation, attribute), value):
+            return False
         if attribute == "path":
             if not is_valid_operation_path(value):
                 logging.debug("malicious request: %s", user)
@@ -469,16 +499,18 @@ class FileManager:
             return False
         operation = Operation.query.filter_by(id=op_id).first()
         try:
-            operation_dir = get_operation_dir(self.data_dir, operation.path)
-        except ValueError as ex:
+            aside = set_aside_operation_dir(self.data_dir, operation.path)
+        except (ValueError, OSError) as ex:
             logging.error("refusing to delete operation %s: %s", op_id, ex)
             return False
-        Permission.query.filter_by(op_id=op_id).delete()
-        Change.query.filter_by(op_id=op_id).delete()
-        Message.query.filter_by(op_id=op_id).delete()
-        shutil.rmtree(operation_dir)
-        db.session.delete(operation)
-        db.session.commit()
+        path = Operation.delete_with_dependent_rows(op_id)
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            restore_operation_dir(aside, self.data_dir, path)
+            raise
+        remove_operation_files(aside, current_app.config['UPLOAD_FOLDER'], op_id, path)
         return True
 
     def get_authorized_users(self, op_id):
@@ -596,7 +628,8 @@ class FileManager:
             'id': change.id,
             'comment': change.comment,
             'version_name': change.version_name,
-            'username': change.user.username,
+            # None for a change of a deleted user
+            'username': change.user.username if change.user is not None else None,
             'created_at': change.created_at.isoformat()
         }, changes))
 
@@ -708,6 +741,9 @@ class FileManager:
             # any participant of the OP is allowed to see who is the creator
             return False
         current_operation_creator = Permission.query.filter_by(op_id=op_id, access_level="creator").first()
+        # None when the creator deleted the account, its permissions are deleted with it
+        if current_operation_creator is None:
+            return None
         return current_operation_creator.user.username
 
     def _group_member_operations(self, operation, user, managed_only=True):
@@ -857,10 +893,13 @@ class FileManager:
         existing_users = set([perm.u_id for perm in existing_perms])
 
         current_operation_creator = Permission.query.filter_by(op_id=current_op_id, access_level="creator").first()
-        import_perms = Permission.query\
-            .filter(Permission.op_id == import_op_id)\
-            .filter((Permission.u_id != u_id) & (Permission.u_id != current_operation_creator.u_id))\
-            .all()
+        import_perms = Permission.query \
+            .filter(Permission.op_id == import_op_id) \
+            .filter(Permission.u_id != u_id)
+        # None when the creator deleted the account and the operation had no admin then
+        if current_operation_creator is not None:
+            import_perms = import_perms.filter(Permission.u_id != current_operation_creator.u_id)
+        import_perms = import_perms.all()
         import_users = set([perm.u_id for perm in import_perms])
 
         is_perm = []

@@ -256,3 +256,10 @@ class Test_MscolabAdminWindow:
                 if access_level is not None:
                     assert table.item(row_num, 1).text() == access_level
         assert found == 2
+
+    def test_operation_without_creator_shows_unknown(self):
+        # /creator_of_operation answers no username when the creator deleted the account and there was no admin
+        with mock.patch("mslib.msui.mscolab_admin_window.mscolab_get",
+                        return_value=mock.Mock(text=json.dumps({"success": True, "username": None}))):
+            self.admin_window.set_label_text()
+        assert self.admin_window.creatorNameLabel.text() == "Creator: unknown"

@@ -30,7 +30,7 @@ import git
 import pytest
 from flask import current_app
 
-from mslib.mscolab.models import User, Operation
+from mslib.mscolab.models import db, User, Operation
 from mslib.mscolab.seed import (add_user, get_user, add_operation, add_user_to_operation,
                                 delete_user, delete_operation, add_all_users_default_operation, XML_CONTENT_INIT)
 
@@ -64,9 +64,13 @@ class Test_Seed:
             assert add_operation("todelete", "description")
             operation = Operation.query.filter_by(path="todelete").first()
             assert operation.id > 0
+            attachments = Path(current_app.config['UPLOAD_FOLDER']) / str(operation.id)
+            attachments.mkdir(parents=True)
+            (attachments / "attachment.txt").write_text("attached")
             assert delete_operation("todelete")
             operation = Operation.query.filter_by(path="todelete").first()
             assert operation is None
+            assert not attachments.exists()
 
     def test_add_all_users_default_operation_viewer(self):
         with self.app.test_client():
@@ -153,9 +157,16 @@ class Test_Seed:
             assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2], self.userdata_2[3])
             user = User.query.filter_by(emailid=self.userdata_2[0]).first()
             assert user is not None
+            # like the deletion by REST, the profile image goes too
+            image = Path(current_app.config['UPLOAD_FOLDER']) / "profile" / "image.png"
+            image.parent.mkdir(parents=True, exist_ok=True)
+            image.write_bytes(b"image")
+            user.profile_image_path = "profile/image.png"
+            db.session.commit()
             assert delete_user(self.userdata_2[0])
             user = User.query.filter_by(emailid=self.userdata_2[0]).first()
             assert user is None
+            assert not image.exists()
 
 
 @pytest.mark.parametrize("leftover", ["empty", "main.ftml"])
