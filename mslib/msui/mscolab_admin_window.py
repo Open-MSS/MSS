@@ -195,7 +195,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         for label in (self.operationNameLabel, self.creatorNameLabel, self.usernameLabel):
             label.setTextFormat(QtCore.Qt.PlainText)
         if r.text != "False":
-            creator_name = GetCreatorOfOperationResponse.from_text(r.text).username
+            # None when the creator deleted the account and the operation had no admin
+            creator_name = GetCreatorOfOperationResponse.from_text(r.text).username or "unknown"
             self.operationNameLabel.setText(f"Operation: {self.operation_name}")
             self.creatorNameLabel.setText(f"Creator: {creator_name}")
         self.usernameLabel.setText(f"Logged In: {self.user['username']}")

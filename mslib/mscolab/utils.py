@@ -23,8 +23,11 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import logging
 import os
 import re
+import secrets
+import shutil
 from pathlib import Path
 
 # Operation names become directory names below OPERATIONS_DATA. The msui client
@@ -65,7 +68,8 @@ def get_message_dict(message):
     return {
         "id": message.id,
         "u_id": message.u_id,
-        "username": message.user.username,
+        # None for a message of a deleted user
+        "username": message.user.username if message.user is not None else None,
         "text": message.text,
         "message_type": message.message_type,
         "reply_id": message.reply_id,
@@ -74,9 +78,14 @@ def get_message_dict(message):
     }
 
 
+# Operation.path is a String(255), and file systems limit a directory name to 255 bytes
+MAX_OPERATION_PATH_LENGTH = 255
+
+
 def is_valid_operation_path(path):
     """True if path is usable as an operation name, i.e. as a single directory name"""
-    return isinstance(path, str) and OPERATION_PATH_PATTERN.fullmatch(path) is not None
+    return isinstance(path, str) and len(path) <= MAX_OPERATION_PATH_LENGTH \
+        and OPERATION_PATH_PATTERN.fullmatch(path) is not None
 
 
 def get_operation_dir(data_dir, path):
@@ -92,3 +101,50 @@ def get_operation_dir(data_dir, path):
     if not path or operation_dir.parent != data_dir:
         raise ValueError(f"operation path {path!r} is outside of {data_dir}")
     return operation_dir
+
+
+def _remove_tree(directory, what, path):
+    try:
+        shutil.rmtree(directory())
+    except FileNotFoundError:
+        pass
+    except (ValueError, OSError) as ex:
+        logging.error("can't remove the %s of the deleted operation %r: %s", what, path, ex)
+
+
+def remove_operation_attachments(upload_folder, op_id, path):
+    """Removes the chat attachments of the deleted operation op_id named path, below upload_folder"""
+    _remove_tree(lambda: Path(upload_folder) / str(int(op_id)), "attachments", path)
+
+
+def set_aside_operation_dir(data_dir, path):
+    """
+    Renames the directory of the operation named path, which is being deleted, to a name no operation can have;
+    returns the new path, None if there is no directory
+
+    Before the deletion is committed: a directory that can't be moved raises OSError and the deletion is to be
+    rolled back, otherwise it would block the name for new operations. After the commit remove_operation_files
+    removes it; restore_operation_dir puts it back if the commit fails.
+    """
+    operation_dir = get_operation_dir(data_dir, path)
+    if not operation_dir.exists():
+        return None
+    aside = operation_dir.with_name(f".deleted-{path}-{secrets.token_hex(4)}")
+    operation_dir.rename(aside)
+    return aside
+
+
+def restore_operation_dir(aside, data_dir, path):
+    """Moves a directory of set_aside_operation_dir back, the deletion of its operation failed"""
+    if aside is not None:
+        aside.rename(get_operation_dir(data_dir, path))
+
+
+def remove_operation_files(aside, upload_folder, op_id, path):
+    """
+    Removes the files of the deleted operation op_id named path: its directory, moved aside by
+    set_aside_operation_dir, and its chat attachments below upload_folder
+    """
+    if aside is not None:
+        _remove_tree(lambda: aside, "directory", path)
+    remove_operation_attachments(upload_folder, op_id, path)

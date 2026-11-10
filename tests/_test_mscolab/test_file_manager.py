@@ -243,8 +243,15 @@ class Test_FileManager:
     def test_delete_operation(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path='operation4')
+            attachments = os.path.join(current_app.config['UPLOAD_FOLDER'], str(operation.id))
+            os.makedirs(attachments)
+            with open(os.path.join(attachments, "attachment.txt"), "w") as attachment:
+                attachment.write("attached")
             assert self.fm.delete_operation(operation.id, self.user)
             assert Operation.query.filter_by(path=flight_path).first() is None
+            # a new operation must not get the attachments
+            assert not os.path.exists(attachments)
+            assert not os.path.exists(os.path.join(self.fm.data_dir, flight_path))
 
     @pytest.mark.parametrize("bad_path", ["", ".", "..", "a/b", "a\\b", "a b", "a.b", "C:x", "abc\n"])
     def test_create_operation_rejects_invalid_path(self, bad_path):
@@ -271,16 +278,38 @@ class Test_FileManager:
             assert Operation.query.filter_by(id=operation.id).first().path == flight_path
             assert os.path.exists(os.path.join(self.fm.data_dir, flight_path, "main.ftml"))
 
+    def test_delete_operation_keeps_everything_if_its_directory_cant_be_moved(self):
+        # it would block the name of the operation for good
+        with self.app.test_client():
+            flight_path, operation = self._create_operation(flight_path="locked")
+            with mock.patch("pathlib.Path.rename", side_effect=PermissionError("locked")):
+                assert self.fm.delete_operation(operation.id, self.user) is False
+            assert Operation.query.filter_by(id=operation.id).first() is not None
+            assert os.path.exists(os.path.join(self.fm.data_dir, flight_path, "main.ftml"))
+
+    def test_delete_operation_puts_the_directory_back_if_the_commit_fails(self):
+        with self.app.test_client():
+            flight_path, operation = self._create_operation(flight_path="kept")
+            with mock.patch.object(db.session, "commit", side_effect=IntegrityError("", {}, None)):
+                with pytest.raises(IntegrityError):
+                    self.fm.delete_operation(operation.id, self.user)
+            db.session.rollback()
+            assert Operation.query.filter_by(id=operation.id).first() is not None
+            assert os.path.exists(os.path.join(self.fm.data_dir, flight_path, "main.ftml"))
+            assert not [name for name in os.listdir(self.fm.data_dir) if name.startswith(".deleted-")]
+
     def test_delete_operation_refuses_path_outside_data_dir(self):
         # an operation named ".." as it could have been stored before names were validated
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="legacy")
             operation.path = ".."
             db.session.commit()
-            db_file = os.path.join(os.path.dirname(self.fm.data_dir), "mscolab.db")
-            assert os.path.exists(db_file)
+            # ".." is the directory above the data directory, e.g. with the SQLite database
+            canary = os.path.join(os.path.dirname(self.fm.data_dir), "canary.txt")
+            with open(canary, "w") as canary_file:
+                canary_file.write("must stay")
             assert self.fm.delete_operation(operation.id, self.user) is False
-            assert os.path.exists(db_file)
+            assert os.path.exists(canary)
             assert Operation.query.filter_by(id=operation.id).first() is not None
 
     def test_get_authorized_users(self):
@@ -939,6 +968,21 @@ class Test_FileManager:
             db.session.expire_all()
             assert db.session.get(Operation, operation.id).path == "morningGroup"
             assert get_operation_dir(self.fm.data_dir, "morningGroup").exists()
+
+    def test_import_permissions_into_an_operation_without_creator(self):
+        # its creator deleted the account and it had no admin then; an admin was added later, e.g. by the CLI
+        with self.app.test_client():
+            _, source = self._create_operation_with_users(flight_path="source")
+            _, target = self._create_operation(flight_path="target", user=self.anotheruser)
+            self.fm.add_bulk_permission(target.id, self.anotheruser, [self.user.id], "admin")
+            Permission.query.filter_by(op_id=target.id, access_level="creator").delete()
+            db.session.commit()
+            success, _, _ = self.fm.import_permissions(source.id, target.id, self.user.id)
+            assert success is True
+            levels = {permission.u_id: permission.access_level
+                      for permission in Permission.query.filter_by(op_id=target.id)}
+            assert levels == {self.user.id: "admin", self.vieweruser.id: "viewer",
+                              self.collaboratoruser.id: "collaborator"}
 
     def test_import_permission(self):
         with self.app.test_client():
