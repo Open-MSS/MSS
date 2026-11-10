@@ -179,13 +179,14 @@ CONFIG = {
                 "formatter": "simple",
             },
         },
+        # DEBUG logs the passwords of logins and the session ids
         "loggers": {
             "saml2": {
-                "level": "DEBUG"
+                "level": "WARNING"
             },
         },
         "root": {
-            "level": "DEBUG",
+            "level": "WARNING",
             "handlers": [
                 "stderr",
             ],

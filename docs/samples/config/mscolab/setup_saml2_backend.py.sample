@@ -17,6 +17,9 @@ class setup_saml2_backend:
             'idp_identity_name': 'localhost_test_idp',  #  make sure to use underscore for the blanks
             'idp_data': {
                 'idp_name': 'Testing Identity Provider',  # this name is used on the Login page to connect to the Provider.
+                # the attribute that identifies a user: it must not change and must never be given to someone else.
+                # Without it the IdP must send a persistent NameID.
+                'user_id_attribute': 'eduPersonPrincipalName',
             }
         },
 

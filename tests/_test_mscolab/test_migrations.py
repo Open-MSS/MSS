@@ -117,6 +117,9 @@ def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
             # Check that no further migration is required
             flask_migrate.check(directory=migrations_path)
             actual_data = {name: db.session.execute(table.select()).all() for name, table in db.metadata.tables.items()}
+            # Tables added by a later version start empty
+            for name in set(actual_data) - set(expected_data):
+                assert actual_data.pop(name) == [], name
             # Check that all tables have the right number of entries with matching ids copied over
             assert {k: [e[0] for e in v] for k, v in expected_data.items()} == {
                 k: [e[0] for e in v] for k, v in actual_data.items()
@@ -230,6 +233,43 @@ def test_repair_of_database_without_token_nonce(mscolab_app):
         user = mslib.mscolab.seed.get_user("a@notexisting.org")
         assert mslib.mscolab.models.User.verify_auth_token(user.generate_auth_token()).id == user.id
         # nothing to repair any more
+        with mock.patch("mslib.mscolab.app.logging.warning") as warning:
+            initialise_db()
+        warning.assert_not_called()
+
+
+def _tables():
+    db.session.remove()
+    return set(sqlalchemy.inspect(db.engine).get_table_names())
+
+
+def test_downgrade_removes_saml_tables(mscolab_app):
+    migrations_path = mslib.mscolab.migrations.__path__[0]
+    with mscolab_app.app_context():
+        assert {"idp_identities", "saml_logins"} <= _tables()
+        flask_migrate.downgrade(directory=migrations_path, revision="922e4d9c94e2")
+        assert not {"idp_identities", "saml_logins"} & _tables()
+        flask_migrate.upgrade(directory=migrations_path)
+        assert {"idp_identities", "saml_logins"} <= _tables()
+
+
+def test_repair_of_database_without_saml_tables(mscolab_app):
+    """The server start adds the tables to a database that ran an earlier state of the 12.0.0 migration"""
+    with mscolab_app.app_context():
+        mslib.mscolab.mscolab.handle_db_seed()
+        with db.engine.begin() as conn:
+            conn.execute(sqlalchemy.text("DROP TABLE idp_identities"))
+            conn.execute(sqlalchemy.text("DROP TABLE saml_logins"))
+        assert not {"idp_identities", "saml_logins"} & _tables()
+        with mock.patch("mslib.mscolab.app.logging.warning") as warning:
+            initialise_db()
+        assert any("tables of SAML logins" in call.args[0] for call in warning.call_args_list)
+        assert {"idp_identities", "saml_logins"} <= _tables()
+        migrations_path = mslib.mscolab.migrations.__path__[0]
+        try:
+            flask_migrate.check(directory=migrations_path)
+        except SystemExit as e:
+            assert e.code == 0
         with mock.patch("mslib.mscolab.app.logging.warning") as warning:
             initialise_db()
         warning.assert_not_called()

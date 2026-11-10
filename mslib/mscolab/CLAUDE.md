@@ -70,6 +70,13 @@ and `servers-without-qt` contracts in setup.cfg.
   `logout_everywhere`) sets a new one and invalidates all earlier tokens. Email-link tokens use
   `generate_confirmation_token(email, purpose)` with their own salt per purpose, and
   links in emails are built with `public_url_for` from `PUBLIC_URL`, never `_external=True`.
+- A SAML login is accepted by the linked `IdpIdentity` (IdP entity id + configured `user_id_attribute` or
+  persistent NameID), never by email alone, and never changes a password. Only responses to a request in
+  `saml_logins` are accepted, once, at most `MAX_SAML_LOGINS` open at a time; msui exchanges the one-time code at
+  `idp_login_auth` (see `auth.idp_login`). The issuer is the one of the signed assertion (of an unsigned one only if
+  the signed response has the same issuer). A pre-12 account is linked by email only for the IdP the request went
+  to. The code is used up in the same transaction that creates or links the account, so a failure leaves it valid.
+  The ACS routes are added to the app in `init_saml`: a blueprint can't change after its first registration.
 - No module level state that belongs to one app (app, db engine, SocketIO,
   HTTPBasicAuth, managers). It lives on the app: `app.config` or
   `app.extensions['sockio' | 'cm' | 'fm' | 'basic_auth']`, read via `current_app`.

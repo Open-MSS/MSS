@@ -8,7 +8,10 @@ Testing IDP (`mslib/msidp`) is specifically designed for testing the Single Sign
 Here is documentation that explains the configuration of the MSS Colab Server with the testing IdP.
 
 .. warning::
-   When running publicly rather than in development, you should not use the built-in development server ( msidp / idp.py ).
+   msidp is for development and tests only. Never run it where others can reach it, and never let an MSColab
+   server that others use trust it: its users and passwords are the ones in ``mslib/msidp/idp_user.py``, which
+   everyone knows, and it lacks protections of a real identity provider. For example it accepts unsigned requests,
+   has no CSRF protection on its login form and redirects to any ``redirect_uri``. It prints this warning on start.
 
    The development server is provided by MSS for convenience, but is not designed to be particularly efficient, stable, or secure.
 
@@ -127,5 +130,7 @@ When migrations finished, you can start mscolab server  using the following comm
 
     $ msui
 
-* Login with identity provider through Qt Client application.
+* Login with identity provider through Qt Client application. After the login at msidp the browser shows a
+  one-time code, enter it in msui. If an MSColab account with the email of the msidp user exists already, msui asks
+  for its password once to link the msidp login to it.
 * To log in to the mscolab server through the identity provider, you can use the credentials specified in the ``USERS`` and ``PASSWD`` section of the ``MSS/mslib/msidp/idp_user.py`` file. Look for the relevant section in the file to find the necessary login credentials.

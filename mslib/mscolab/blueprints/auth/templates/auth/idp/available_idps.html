@@ -48,24 +48,15 @@
     </style>
     <div class="col">
       <h1 id="title">Choose Identity Provider</h1>
-      <form id="identityForm" method="post" action="/idp_login">
+      <form id="identityForm" method="post" action="{{ url_for('auth.idp_login_handler') }}">
           <ul id="ulButtons">
             {% for idp in configured_idps %}
               <li>
-                <button id="idpButton" type="button" onclick="selectIdentityProvider('{{ idp['idp_identity_name']|safe }}')">{{ idp['idp_data']['idp_name'] }}</button>
+                <button id="idpButton" type="submit" name="selectedIdentityProvider" value="{{ idp['idp_identity_name'] }}">{{ idp['idp_data']['idp_name'] }}</button>
               </li>
             {% endfor %}
-
           </ul>
-          <input type="hidden" id="selectedIdentityProvider" name="selectedIdentityProvider" value="">
       </form>
-      <script>
-          function selectIdentityProvider(value) {
-            console.log(value)
-              document.getElementById('selectedIdentityProvider').value = value;
-              document.getElementById('identityForm').submit();
-          }
-      </script>
     </div>
   </div>
   {% endblock %}

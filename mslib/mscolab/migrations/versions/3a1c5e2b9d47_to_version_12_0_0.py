@@ -10,9 +10,10 @@ import logging
 import sqlalchemy as sa
 from alembic import op
 
-from mslib.mscolab.migrations.schema_repair import (add_fullname, add_token_nonce, batch_alter_table,
-                                                    hand_over_operations_without_creator, has_column,
-                                                    remove_dangling_references, use_autoincrement_ids)
+from mslib.mscolab.migrations.schema_repair import (add_fullname, add_saml_tables, add_token_nonce,
+                                                    batch_alter_table, hand_over_operations_without_creator,
+                                                    has_column, has_table, remove_dangling_references,
+                                                    use_autoincrement_ids)
 
 
 # revision identifiers, used by Alembic.
@@ -67,15 +68,23 @@ def upgrade():
     if not has_column(conn, 'users', 'token_nonce'):
         add_token_nonce(op, conn)
 
+    # SAML identities linked to a user, and the SAML logins in progress
+    add_saml_tables(op, conn)
+
     # SQLite: the id of a deleted user or operation is never handed out again
     use_autoincrement_ids(op, conn)
 
 
 def downgrade():
     # AUTOINCREMENT of users and operations on SQLite stays, an earlier version works with it
-    # missing in a database that ran an earlier development state of this migration
-    if has_column(op.get_bind(), 'users', 'token_nonce'):
-        with batch_alter_table(op, op.get_bind(), 'users') as batch_op:
+    # missing, like token_nonce, in a database that ran an earlier development state of this migration
+    conn = op.get_bind()
+    for table in ('saml_logins', 'idp_identities'):
+        if has_table(conn, table):
+            op.drop_table(table)
+
+    if has_column(conn, 'users', 'token_nonce'):
+        with batch_alter_table(op, conn, 'users') as batch_op:
             batch_op.drop_column('token_nonce')
 
     with op.batch_alter_table('permissions', schema=None) as batch_op:

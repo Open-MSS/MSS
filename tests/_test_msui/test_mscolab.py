@@ -223,6 +223,123 @@ class Test_Mscolab_connect_window:
         else:
             assert "resend_confirmation" not in text
 
+    def _idp_post(self, login_auth_response, link_response=None):
+        """A stand-in for requests.post of the dialog: the test server has no SAML, so its answers for the IdP routes"""
+        posts = []
+
+        def post(url, **kwargs):
+            posts.append((url, kwargs))
+            if url.endswith("/idp_login_auth"):
+                return login_auth_response
+            assert url.endswith("/idp_link")
+            return link_response
+        return posts, post
+
+    def _submit_idp_code(self, code, post):
+        with mock.patch("mslib.msui.mscolab_connect_dialog.webbrowser.open") as browser:
+            QtTest.QTest.mouseClick(self.window.loginWithIDPBtn, QtCore.Qt.LeftButton)
+        assert browser.call_args.args[0] == f"{self.url}/available_idps"
+        assert self.window.stackedWidget.currentWidget() == self.window.idpAuthPage
+        self.window.idpAuthPasswordLe.setText(f" {code} ")
+        with mock.patch("mslib.msui.mscolab_connect_dialog.requests.post", side_effect=post):
+            QtTest.QTest.mouseClick(self.window.idpAuthTokenSubmitBtn, QtCore.Qt.LeftButton)
+
+    def test_idp_login_with_code(self, qtbot):
+        self._connect_to_mscolab(qtbot)
+        with self.app.app_context():
+            user = get_user(self.userdata[0])
+            text = json.dumps({"success": True, "token": user.generate_auth_token(), "login_token": True, "user": {
+                "username": user.username, "id": user.id, "emailid": user.emailid, "fullname": user.fullname}})
+        posts, post = self._idp_post(mock.Mock(status_code=200, text=text))
+        # the HTTP basic authentication of a server that has one
+        self.window.auth = ("user", "testvaluepassword")
+        self._submit_idp_code("the-code", post)
+
+        def assert_():
+            assert self.main_window.usernameLabel.text() == self.userdata[1]
+            assert self.main_window.mscolab.connect_window is None
+        qtbot.wait_until(assert_)
+        assert posts[0][1]["json"] == {"token": "the-code"}
+        assert posts[0][1]["auth"] == ("user", "testvaluepassword")
+
+    def test_idp_login_refused_with_a_reason(self, qtbot):
+        self._connect_to_mscolab(qtbot)
+        refused = mock.Mock(status_code=403, text=json.dumps({"success": False, "message": "Confirm your email"}))
+        _, post = self._idp_post(refused)
+        self._submit_idp_code("the-code", post)
+        assert self.window.statusLabel.text().endswith("Confirm your email")
+        # the code stays valid, the user can enter it again
+        assert self.window.stackedWidget.currentWidget() == self.window.idpAuthPage
+
+    def test_idp_refusal_of_the_server_is_plain_text(self, qtbot):
+        self._connect_to_mscolab(qtbot)
+        message = '<a href="https://example.org">click</a><img src="file://host/share/x.png">'
+        _, post = self._idp_post(mock.Mock(status_code=403, text=json.dumps({"success": False, "message": message})))
+        self._submit_idp_code("the-code", post)
+        assert self.window.statusLabel.textFormat() == QtCore.Qt.PlainText
+        assert self.window.statusLabel.text().endswith(message)
+
+    @pytest.mark.parametrize("status_code", [200, 403, 409])
+    def test_idp_reply_that_is_no_json(self, qtbot, status_code):
+        # e.g. the error page of a proxy
+        self._connect_to_mscolab(qtbot)
+        _, post = self._idp_post(mock.Mock(status_code=status_code, text="<html>proxy error</html>"))
+        self._submit_idp_code("the-code", post)
+        assert "Can't read the response" in self.window.statusLabel.text()
+
+    def test_idp_login_at_a_server_before_12(self, qtbot):
+        # it answers with a one-time password and a user without fullname; msui logs in with it at /token
+        self._connect_to_mscolab(qtbot)
+        old_reply = json.dumps({"success": True, "token": self.userdata[2], "user": {
+            "username": self.userdata[1], "id": 1, "emailid": self.userdata[0]}})
+        posts, post = self._idp_post(mock.Mock(status_code=200, text=old_reply))
+        self._submit_idp_code("the-code", post)
+
+        def assert_():
+            assert self.main_window.usernameLabel.text() == self.userdata[1]
+            assert self.main_window.mscolab.connect_window is None
+        qtbot.wait_until(assert_)
+        assert len(posts) == 1
+
+    def test_idp_login_with_invalid_code(self, qtbot):
+        self._connect_to_mscolab(qtbot)
+        _, post = self._idp_post(mock.Mock(status_code=401, text='{"success": false}'))
+        self._submit_idp_code("the-code", post)
+        assert "Invalid or expired code" in self.window.statusLabel.text()
+        assert self.window.stackedWidget.currentWidget() == self.window.loginPage
+        assert self.window.idp_link_code is None
+
+    @pytest.mark.parametrize("linked", [True, False])
+    def test_idp_login_links_the_account_of_its_email(self, qtbot, linked):
+        self._connect_to_mscolab(qtbot)
+        link_required = mock.Mock(status_code=409, text=json.dumps(
+            {"success": False, "link_required": True, "emailid": self.userdata[0]}))
+        link = mock.Mock(status_code=200, text=json.dumps({"success": linked}))
+        posts, post = self._idp_post(link_required, link)
+        self._submit_idp_code("the-code", post)
+        # the owner of the account logs in with its password
+        assert self.window.stackedWidget.currentWidget() == self.window.loginPage
+        assert self.window.loginEmailLe.text() == self.userdata[0]
+        assert "Log in with its password once" in self.window.statusLabel.text()
+        assert self.main_window.mscolab.connect_window is self.window
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self.window.loginPasswordLe.setText(self.userdata[2])
+        with mock.patch("mslib.msui.mscolab_connect_dialog.requests.post", side_effect=post), \
+                mock.patch("PyQt5.QtWidgets.QMessageBox.information") as information, \
+                mock.patch("PyQt5.QtWidgets.QMessageBox.warning") as warning:
+            QtTest.QTest.mouseClick(self.window.loginBtn, QtCore.Qt.LeftButton)
+
+            def assert_():
+                assert self.main_window.usernameLabel.text() == self.userdata[1]
+            qtbot.wait_until(assert_)
+        url, kwargs = posts[1]
+        assert url == f"{self.url}/idp_link"
+        assert kwargs["data"]["code"] == "the-code"
+        assert kwargs["data"]["token"] == self.main_window.mscolab.token
+        assert [kwargs["auth"] for _, kwargs in posts] == [self.window.auth] * 2
+        assert information.called is linked and warning.called is not linked
+        assert len(posts) == 2
+
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_login_with_different_account_shows_update_credentials_popup(self, mockbox, qtbot):
         self._connect_to_mscolab(qtbot)

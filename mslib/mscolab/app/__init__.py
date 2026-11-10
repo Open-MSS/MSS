@@ -271,9 +271,10 @@ def repair_schema():
     """
     from alembic.migration import MigrationContext
     from alembic.operations import Operations
-    from mslib.mscolab.migrations.schema_repair import (AUTOINCREMENT_TABLES, add_fullname, add_token_nonce,
-                                                        fix_postgresql_sequences, has_autoincrement_ids,
-                                                        has_column, has_dangling_references,
+    from mslib.mscolab.migrations.schema_repair import (AUTOINCREMENT_TABLES, add_fullname, add_saml_tables,
+                                                        add_token_nonce, fix_postgresql_sequences,
+                                                        has_autoincrement_ids, has_column,
+                                                        has_dangling_references, has_table,
                                                         sqlite_foreign_keys_off, use_autoincrement_ids)
     from mslib.mscolab.models import db
 
@@ -294,6 +295,10 @@ def repair_schema():
             logging.warning("The database misses users.token_nonce, it ran an earlier development state of the "
                             "12.0.0 migration. Adding it now; every user has to log in again.")
             add_token_nonce(Operations(MigrationContext.configure(conn)), conn)
+        if not (has_table(conn, "idp_identities") and has_table(conn, "saml_logins")):
+            logging.warning("The database misses the tables of SAML logins, it ran an earlier development state of "
+                            "the 12.0.0 migration. Adding them now.")
+            add_saml_tables(Operations(MigrationContext.configure(conn)), conn)
         if has_dangling_references(conn):
             # Only a database that ran an earlier development state of the 12.0.0 migration, which repairs them:
             # a server start doesn't delete rows. Until they are repaired, deleting their user or operation fails.
