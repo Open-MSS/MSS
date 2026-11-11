@@ -31,13 +31,13 @@ from PyQt5 import QtCore, QtTest, QtWidgets
 from tests.constants import ROOT_DIR
 from mslib.msui import mscolab
 from mslib.msui import msui
-from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 from mslib.msui.utils.config import modify_config_file
 
 
 class Test_MscolabVersionHistory:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot, mscolab_server_app, mscolab_server):
+        from mslib.mscolab.seed import add_operation, add_user, add_user_to_operation, get_user
         self.app = mscolab_server_app
         self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'

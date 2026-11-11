@@ -46,7 +46,12 @@ and pysaml2:
   other package imports it (`msidp-not-imported`).
 
 This is what lets the conda recipe ship the packages separately (package
-split, #2307).
+split, #2307). The pixi environments named after a package (`msutils`,
+`msapi`, `mswms`, `mscolab`, `msidp`, `msui`, see `pixi.toml`) have only the
+dependencies of that conda package and run its tests, so an import of a
+dependency the package doesn't have fails there (CI job `test-packages`). The
+`msui` environment has no server: tests that use a server fixture are marked
+`servers` (`tests/_test_msui/conftest.py`) and run in `dev`.
 
 Grandfathered violations (do not add new ones; the lists live in `setup.cfg`
 under `ignore_imports` and must only shrink):
@@ -164,6 +169,7 @@ entry.
 | `pixi run -e dev test-mscolab` / `test-mswms` | one server suite | minutes |
 | `pixi run -e dev test-msui` | full GUI suite (offscreen Qt) | ~10 min |
 | `pixi run -e dev test` | everything | ~13 min |
+| `pixi run -e <package environment> test-<package>` | one suite with only that package's dependencies: `-e msutils test-utils`, `-e msapi test-api`, `-e mswms test-mswms`, `-e mscolab test-mscolab`, `-e msidp test-msidp`, `-e msui test-msui-without-servers` / `test-plugins` | like the suite |
 
 Tests live under `tests/_test_<package>/`, mirroring the package layout. The
 MSColab server fixture forks only when a collected test needs it; Qt tests

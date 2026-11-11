@@ -16,12 +16,22 @@ Python constraint: **< 3.12** (pinned in pixi.toml).
 pixi run -e dev lint            # flake8 over tracked .py files
 pixi run -e dev lint-imports    # architectural import contracts (setup.cfg)
 pixi run -e dev codespell       # spelling
+pixi audit                      # known vulnerabilities in pixi.lock; needs the pixi-audit extension and PIXI_AUDIT_TOKEN, rules in [tool.pixi-audit] of pixi.toml (CI workflow audit.yml)
 pixi run -e dev test-fast       # api + plugins + utils + meta; no servers, fastest signal
 pixi run -e dev test-msui       # GUI suite (offscreen Qt)
 pixi run -e dev test-mscolab    # collaboration-server suite
 MSCOLAB_TEST_POSTGRES_URL=postgresql://postgres:postgres@localhost:5432 pixi run -e dev test-mscolab  # same on PostgreSQL (tests/database.py)
 pixi run -e dev test-mswms      # WMS-server suite
 pixi run -e dev test            # full suite (~13 min)
+
+# one package with only its dependencies, as the conda recipe ships it (CI job test-packages)
+pixi run -e msutils test-utils
+pixi run -e msapi test-api
+pixi run -e mswms test-mswms
+pixi run -e mscolab test-mscolab   # psycopg2 included, for MSCOLAB_TEST_POSTGRES_URL
+pixi run -e msidp test-msidp
+pixi run -e msui test-msui-without-servers   # msui without the servers; tests marked "servers" run in dev
+pixi run -e msui test-plugins
 
 # single test file
 pixi run -e dev env QT_QPA_PLATFORM=offscreen pytest tests/_test_msui/test_topview.py -v

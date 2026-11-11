@@ -37,7 +37,6 @@ from tests.utils import (mscolab_register_and_login, mscolab_create_operation,
 from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.msui.utils.config import modify_config_file
-from mslib.mscolab.seed import XML_CONTENT_INIT
 
 
 class Test_Mscolab_Merge_Waypoints:
@@ -64,6 +63,7 @@ class Test_Mscolab_Merge_Waypoints:
             self.window.mscolab.conn.disconnect()
 
     def _create_user_data(self, qtbot, emailid='merge@alpha.org'):
+        from mslib.mscolab.seed import XML_CONTENT_INIT
         with self.app.app_context():
             self._connect_to_mscolab(qtbot)
             response = mscolab_register_and_login(self.app, self.url, emailid, 'abcdef', 'alpha', 'Alpha')

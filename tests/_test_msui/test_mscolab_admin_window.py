@@ -35,14 +35,13 @@ from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.schemas import UpdateOperationRequest
-from mslib.mscolab.models import Operation
-from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 from mslib.msui.utils.config import modify_config_file
 
 
 class Test_MscolabAdminWindow:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot, mscolab_server_app, mscolab_server):
+        from mslib.mscolab.seed import add_operation, add_user, add_user_to_operation, get_user
         self.app = mscolab_server_app
         self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
@@ -194,6 +193,8 @@ class Test_MscolabAdminWindow:
 
     def test_operation_archived_while_open_is_no_longer_offered_for_import(self, qtbot):
         # e.g. an archived Group operation is not used for memberships
+        from mslib.mscolab.models import Operation
+
         def offered():
             return [self.admin_window.importPermissionsCB.itemText(row)
                     for row in range(self.admin_window.importPermissionsCB.count())]
