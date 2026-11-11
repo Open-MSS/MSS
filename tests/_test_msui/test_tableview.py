@@ -25,8 +25,10 @@
     limitations under the License.
 """
 
+import datetime
 import mock
 import os
+import time
 import pytest
 
 from PyQt5 import QtWidgets, QtCore, QtTest
@@ -141,24 +143,16 @@ class Test_TableView:
         Check effect of performance settings on TableView
         """
         self.window.cbTools.currentIndexChanged.emit(2)
-
-        self.window.waypoints_model.performance_settings = DEFAULT_PERFORMANCE
-        self.window.waypoints_model.update_distances(0)
-        self.window.waypoints_model.dataChanged.emit(
-            self.window.waypoints_model.index(0, 0), self.window.waypoints_model.index(0, 0))
-        self.window.resizeColumns()
-        assert self.window.waypoints_model.columnCount() == 15
-        visible = dict(DEFAULT_PERFORMANCE)
-        visible["visible"] = True
-        self.window.waypoints_model.performance_settings = visible
-        self.window.waypoints_model.update_distances(0)
-        self.window.waypoints_model.dataChanged.emit(
-            self.window.waypoints_model.index(0, 0), self.window.waypoints_model.index(0, 0))
-        self.window.resizeColumns()
-        assert self.window.waypoints_model.columnCount() == 15
-        # todo this does not check that actually something happens
+        model = self.window.waypoints_model
+        assert model.columnCount() == 15
+        changes = []
+        model.performanceDataChanged.connect(lambda: changes.append(1))
         QtTest.QTest.mouseClick(self.window.docks[1].widget().pbLoadPerformance, QtCore.Qt.LeftButton)
         assert mockopen.call_count == 1
+        # the aircraft is applied once, not for each weight of the dock
+        assert changes == [1]
+        assert model.performance_settings["aircraft"] is not DEFAULT_PERFORMANCE["aircraft"]
+        assert model.waypoints[0].weight == model.performance_settings["takeoff_weight"] == 91000
 
     def test_show_linear_data(self):
         """
@@ -490,18 +484,13 @@ class Test_TableView:
         """
         Copying the table to the clipboard produces CSV text with the
         columns currently shown, leaving out columns that are empty for
-        every waypoint (e.g. the performance columns hidden by default).
+        every waypoint (e.g. data columns of the linear view without data).
         Numbers use the decimal point of the active QLocale ('.' for the
         C locale used here), which also determines the field delimiter.
         """
-        self.window.waypoints_model.performance_settings = DEFAULT_PERFORMANCE
-        self.window.resizeColumns()
-
         rows = self._copy_table_to_clipboard_csv(QtCore.QLocale.c(), delimiter=",")
         header = [cell.strip() for cell in rows[0]]
-        expected_header = [
-            "Location", "Lat (+-90)", "Lon (+-180)", "Flightlevel", "Pressure (hPa)",
-            "Leg dist. (km [nm])", "Cum. dist. (km [nm])", "Comments"]
+        expected_header = [" ".join(column[0].split()) for column in ft.TABLE_FULL]
         assert header == expected_header
         assert len(rows) == 1 + len(self.window.waypoints_model.waypoints)
         assert rows[1][0] == "EDMO"
@@ -520,3 +509,128 @@ class Test_TableView:
         de_locale = QtCore.QLocale(QtCore.QLocale.German, QtCore.QLocale.Germany)
         rows = self._copy_table_to_clipboard_csv(de_locale, delimiter=";")
         assert rows[2][1:3] == ["48,1", "10,27"]
+
+    @mock.patch("mslib.msui.flighttrack.save_settings_qsettings")
+    def test_edit_time_shifts_flight(self, mocksave):
+        """
+        Editing the time of one waypoint sets the takeoff time such that the
+        waypoint is reached at that time; all other times follow.
+        """
+        default_takeoff = DEFAULT_PERFORMANCE["takeoff_time"]
+        model = self.window.waypoints_model
+        assert model.flags(model.index(2, ft.TIME_UTC)) & QtCore.Qt.ItemIsEditable
+        legs = [wp.utc_time - model.waypoints[0].utc_time for wp in model.waypoints]
+        model.modified = False
+
+        assert model.setData(model.index(2, ft.TIME_UTC), "2030-01-01 12:00:00")
+        target = datetime.datetime(2030, 1, 1, 12)
+        # QDateTime holds milliseconds only
+        ms = datetime.timedelta(milliseconds=1)
+        assert abs(model.waypoints[2].utc_time - target) < ms
+        assert model.data(model.index(2, ft.TIME_UTC)).value() == "2030-01-01 12:00:00"
+        takeoff = model.performance_settings["takeoff_time"].toPyDateTime()
+        assert abs(takeoff - (target - legs[2])) < ms
+        assert all(abs((wp.utc_time - takeoff) - leg) < ms for wp, leg in zip(model.waypoints, legs))
+        assert DEFAULT_PERFORMANCE["takeoff_time"] is default_takeoff
+
+        # a time edit is no change of the flight plan
+        assert not model.modified
+        # unparsable input is discarded
+        assert not model.setData(model.index(2, ft.TIME_UTC), "noon")
+        assert model.data(model.index(2, ft.TIME_UTC)).value() == "2030-01-01 12:00:00"
+
+    @mock.patch("mslib.msui.flighttrack.save_settings_qsettings")
+    def test_edit_time_with_editor(self, mocksave):
+        model = self.window.waypoints_model
+        index = model.index(3, ft.TIME_UTC)
+        delegate = self.window.tableWayPoints.itemDelegate()
+        editor = delegate.createEditor(self.window.tableWayPoints, QtWidgets.QStyleOptionViewItem(), index)
+        assert isinstance(editor, QtWidgets.QDateTimeEdit)
+        delegate.setEditorData(editor, index)
+        assert editor.dateTime().toString("yyyy-MM-dd HH:mm:ss") == model.data(index).value()
+        target = QtCore.QDateTime(2031, 6, 15, 8, 30, 0)
+        target.setTimeSpec(QtCore.Qt.UTC)
+        editor.setDateTime(target)
+        delegate.setModelData(editor, model, index)
+        assert model.data(index).value() == "2031-06-15 08:30:00"
+
+    def test_pick_location_changes_once(self):
+        """
+        Picking a location sets its coordinates and name, a single change of the flight track.
+        """
+        model = self.window.waypoints_model
+        index = model.index(1, ft.LOCATION)
+        changes = []
+        model.dataChanged.connect(lambda *args: changes.append(args))
+        delegate = self.window.tableWayPoints.itemDelegate()
+        editor = delegate.createEditor(self.window.tableWayPoints, QtWidgets.QStyleOptionViewItem(), index)
+        editor.setCurrentText("Hamburg")
+        delegate.setModelData(editor, model, index)
+        assert len(changes) == 1
+        assert (model.waypoints[1].location, model.waypoints[1].lat, model.waypoints[1].lon) == ("Hamburg", 53.55, 9.99)
+
+    @mock.patch("mslib.msui.flighttrack.save_settings_qsettings")
+    def test_unchanged_editor_keeps_time(self, mocksave):
+        """
+        The editor shows full seconds; committing it unchanged must not shift
+        the flight by the rounding difference.
+        """
+        model = self.window.waypoints_model
+        model.setData(model.index(1, ft.TIME_UTC), "2030-01-01 12:00:00")
+        index = model.index(3, ft.TIME_UTC)
+        assert model.waypoints[3].utc_time.microsecond != 0
+        takeoff = model.performance_settings["takeoff_time"]
+        changes = []
+        model.performanceDataChanged.connect(lambda: changes.append(1))
+        delegate = self.window.tableWayPoints.itemDelegate()
+        editor = delegate.createEditor(self.window.tableWayPoints, QtWidgets.QStyleOptionViewItem(), index)
+        delegate.setEditorData(editor, index)
+        delegate.setModelData(editor, model, index)
+        assert model.performance_settings["takeoff_time"] == takeoff
+        assert changes == []
+
+    @mock.patch("mslib.msui.flighttrack.save_settings_qsettings")
+    def test_performance_dock_keeps_edited_time(self, mocksave):
+        model = self.window.waypoints_model
+        self.window.cbTools.currentIndexChanged.emit(2)
+        model.setData(model.index(1, ft.TIME_UTC), "2030-01-01 12:00:00")
+        changes = []
+        model.performanceDataChanged.connect(lambda: changes.append(1))
+        spinbox = self.window.docks[1].widget().dsbTakeoffWeight
+        spinbox.selectAll()
+        QtTest.QTest.keyClicks(spinbox, "80000")
+        assert changes == []
+        QtTest.QTest.keyClick(spinbox, QtCore.Qt.Key_Return)
+        # the flight track is updated once, not for each key stroke
+        assert changes == [1]
+        assert model.performance_settings["takeoff_weight"] == 80000
+        assert model.data(model.index(1, ft.TIME_UTC)).value() == "2030-01-01 12:00:00"
+
+    @pytest.mark.skipif(not hasattr(time, "tzset"), reason="time.tzset is available on Unix only")
+    @mock.patch("mslib.msui.flighttrack.save_settings_qsettings")
+    def test_edit_time_in_local_dst_gap(self, mocksave, monkeypatch):
+        """
+        Times are UTC throughout; a time that does not exist in the local
+        time zone (daylight saving gap) must still round trip through the editor.
+        """
+        monkeypatch.setenv("TZ", "Europe/Berlin")
+        time.tzset()
+        try:
+            model = self.window.waypoints_model
+            index = model.index(1, ft.TIME_UTC)
+            assert model.setData(index, "2030-03-31 02:30:00")
+            assert model.data(index).value() == "2030-03-31 02:30:00"
+            delegate = self.window.tableWayPoints.itemDelegate()
+            editor = delegate.createEditor(self.window.tableWayPoints, QtWidgets.QStyleOptionViewItem(), index)
+            delegate.setEditorData(editor, index)
+            assert editor.dateTime().toString("yyyy-MM-dd HH:mm:ss") == "2030-03-31 02:30:00"
+            delegate.setModelData(editor, model, index)
+            assert model.data(index).value() == "2030-03-31 02:30:00"
+        finally:
+            monkeypatch.undo()
+            time.tzset()
+
+    def test_seconds_rounded(self):
+        assert ft.seconds_to_string(3599.5) == "01:00:00"
+        assert ft.seconds_to_string(3599.4) == "00:59:59"
+        assert ft.format_utc_time(datetime.datetime(2030, 1, 1, 11, 59, 59, 500000)) == "2030-01-01 12:00:00"

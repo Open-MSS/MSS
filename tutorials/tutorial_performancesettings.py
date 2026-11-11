@@ -67,11 +67,6 @@ def automate_performance():
     find_and_click_picture('tableviewwindow-select.png', 'Select button not found')
     type_path(sample_path, clear=True)
 
-    # Checking the Show Performance checkbox to display the settings file in the table view
-    find_and_click_picture('tableviewwindow-show-performance.png',
-                           'Show performance button not found',
-                           bounding_box=(0, 0, 140, 23))
-
     # Changing the maximum take off weight
     find_and_click_picture('tableviewwindow-maximum-take-off-weight-lb.png',
                            'Max take off weight lb not found')
@@ -87,29 +82,8 @@ def automate_performance():
     pag.click(x + 300, y, duration=2)
     type_and_key('48000')
 
-    # Changing the take off time of the dummy aircraft
-    find_and_click_picture('tableviewwindow-take-off-time.png',
-                           'take off time not found')
-    x, y = pag.position()
-    pag.click(x + 410, y, duration=2)
-    type_and_key('')
-    for _ in range(5):
-        pag.press('up')
-        pag.sleep(2)
-    type_and_key('04', interval=0.5)
-
     # update tutorial images
     create_tutorial_images()
-
-    # Showing and hiding the performance settings
-    for _ in range(2):
-        find_and_click_picture('tableviewwindow-show-performance.png',
-                               'show performance button not found',
-                               bounding_box=(0, 0, 140, 23))
-        # move the mouse pointer to a different location, so that the image can be found
-        pag.move(50, 50)
-        # update tutorial images
-        create_tutorial_images()
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
     finish(close_widgets=2)

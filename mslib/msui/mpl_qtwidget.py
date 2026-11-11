@@ -461,10 +461,7 @@ class MplSideViewCanvas(MplCanvas):
            a vertical section image if one exists, as it is invalid after
            a path change.
         """
-        times_visible = False
-        if self.waypoints_model is not None:
-            times_visible = self.waypoints_model.performance_settings["visible"]
-        self.plotter.redraw_xaxis(lats, lons, times, times_visible)
+        self.plotter.redraw_xaxis(lats, lons, times, self.waypoints_model is not None)
 
         for _line in self.ceiling_alt:
             _line.remove()
@@ -488,8 +485,7 @@ class MplSideViewCanvas(MplCanvas):
                     xs, thermolib.flightlevel2pressure(np.asarray(ys) * units.hft).magnitude,
                     color="k", ls="--")
                 self.update_ceiling(
-                    self.plotter.get_settings()["draw_ceiling"] and
-                    self.waypoints_model.performance_settings["visible"],
+                    self.plotter.get_settings()["draw_ceiling"],
                     self.plotter.get_settings()["colour_ceiling"])
                 highlight = [[wp.lat, wp.lon] for wp in self.waypoints_model.waypoints]
                 self.plotter.draw_vertical_lines(highlight, lats, lons)
@@ -560,11 +556,8 @@ class MplSideViewCanvas(MplCanvas):
         settings = self.plotter.get_settings()
         self.set_flight_levels(settings["flightlevels"])
         self.set_flight_levels_visible(settings["draw_flightlevels"])
-        self.update_ceiling(
-            settings["draw_ceiling"] and (
-                self.waypoints_model is not None and
-                self.waypoints_model.performance_settings["visible"]),
-            settings["colour_ceiling"])
+        self.update_ceiling(settings["draw_ceiling"] and self.waypoints_model is not None,
+                            settings["colour_ceiling"])
         self.update_vertical_extent_from_settings()
 
         if self.waypoints_interactor is not None:

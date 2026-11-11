@@ -1120,7 +1120,7 @@ class MSUIMscolab(QtCore.QObject):
     def reload_local_wp(self):
         self.waypoints_model = ft.WaypointsTableModel(filename=self.local_ftml_file, data_dir=self.data_dir)
         self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
-        self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+        self.connect_waypoints_model()
         self.reload_view_windows()
 
     def operation_category_handler(self, update_operations=True):
@@ -1163,7 +1163,7 @@ class MSUIMscolab(QtCore.QObject):
                 self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
                 self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
-                self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+                self.connect_waypoints_model()
                 self.reload_view_windows()
                 show_popup(self.ui, "Success", "New Waypoints Fetched To Local File!", icon=1)
         self.merge_dialog.close()
@@ -1182,7 +1182,7 @@ class MSUIMscolab(QtCore.QObject):
                 self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
                 self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
-                self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+                self.connect_waypoints_model()
                 self.reload_view_windows()
                 show_popup(self.ui, "Success", "New Waypoints Saved To Server!", icon=1)
         self.merge_dialog.close()
@@ -1631,7 +1631,7 @@ class MSUIMscolab(QtCore.QObject):
             self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
             self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
             self.waypoints_model.name = self.active_operation_name
-            self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+            self.connect_waypoints_model()
 
     def reload_operations(self):
         logging.debug('reload_operations')
@@ -1648,13 +1648,29 @@ class MSUIMscolab(QtCore.QObject):
         self.load_wps_from_server()
         self.reload_view_windows()
 
+    def _flight_plan_signals(self):
+        """
+        The signals of a change of the flight plan of the active operation, which is sent to the server or written
+        to the local file. Only the flight plan is stored, not the times and fuel (performanceDataChanged).
+        """
+        model = self.waypoints_model
+        return model.dataChanged, model.rowsInserted, model.rowsRemoved, model.modelReset
+
+    def connect_waypoints_model(self):
+        for signal in self._flight_plan_signals():
+            signal.connect(self.handle_waypoints_changed)
+
+    def disconnect_waypoints_model(self):
+        for signal in self._flight_plan_signals():
+            signal.disconnect(self.handle_waypoints_changed)
+
     def handle_waypoints_changed(self, _1=None, _2=None, _3=None, version_name=None):
         logging.debug("handle_waypoints_changed")
         if self.ui.workLocallyCheckbox.isChecked():
             self.waypoints_model.save_to_ftml(self.local_ftml_file)
         else:
             xml_content = self.waypoints_model.get_xml_content()
-            # one change emits dataChanged twice, e.g. from setData and from update_distances; a reloaded flight
+            # skip content that was sent already, e.g. a cell committed with its old value; a reloaded flight
             # track is a new model, so after it the same content is sent again
             sent = (self.waypoints_model, self.active_op_id, xml_content)
             if version_name is None and self.last_sent_flight_track is not None and \
@@ -1708,12 +1724,12 @@ class MSUIMscolab(QtCore.QObject):
         if not verify_waypoint_data(xml_content):
             show_popup(self.ui, "Import Failed", f"The file - {file_name}, was not imported!", 0)
             return
-        self.waypoints_model.dataChanged.disconnect(self.handle_waypoints_changed)
+        self.disconnect_waypoints_model()
         self.waypoints_model = model
         self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
         # the server refuses longer version names
         self.handle_waypoints_changed(version_name=file_name[:MAX_VERSION_NAME_LENGTH])
-        self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+        self.connect_waypoints_model()
         self.reload_view_windows()
         show_popup(self.ui, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
 

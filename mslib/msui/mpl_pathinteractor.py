@@ -858,23 +858,28 @@ class PathInteractor(QtCore.QObject):
         # If a model exists, disconnect from the old change() signals.
         wpm = self.waypoints_model
         if wpm:
-            wpm.dataChanged.disconnect(self.qt_data_changed_listener)
-            wpm.rowsInserted.disconnect(self.qt_insert_remove_point_listener)
-            wpm.rowsRemoved.disconnect(self.qt_insert_remove_point_listener)
+            for signal, slot in self._model_connections(wpm):
+                signal.disconnect(slot)
         # Set the new waypoints model.
         self.waypoints_model = waypoints
         # Connect to the new model's signals.
         wpm = self.waypoints_model
-        wpm.dataChanged.connect(self.qt_data_changed_listener)
-        wpm.rowsInserted.connect(self.qt_insert_remove_point_listener)
-        wpm.rowsRemoved.connect(self.qt_insert_remove_point_listener)
+        for signal, slot in self._model_connections(wpm):
+            signal.connect(slot)
         # Redraw.
         self.plotter.update_from_waypoints(wpm.all_waypoint_data())
         self.redraw_figure()
 
-    def qt_insert_remove_point_listener(self, index, first, last):
-        """Listens to rowsInserted() and rowsRemoved() signals emitted
-           by the flight track data model. The view can thus react to
+    def _model_connections(self, wpm):
+        return ((wpm.dataChanged, self.qt_data_changed_listener),
+                (wpm.rowsInserted, self.qt_insert_remove_point_listener),
+                (wpm.rowsRemoved, self.qt_insert_remove_point_listener),
+                (wpm.modelReset, self.qt_insert_remove_point_listener),
+                (wpm.performanceDataChanged, self.qt_performance_data_changed_listener))
+
+    def qt_insert_remove_point_listener(self, *args):
+        """Listens to rowsInserted(), rowsRemoved() and modelReset() signals
+           emitted by the flight track data model. The view can thus react to
            data changes induced by another view (table, side view).
         """
         self.plotter.update_from_waypoints(self.waypoints_model.all_waypoint_data())
@@ -886,6 +891,13 @@ class PathInteractor(QtCore.QObject):
            by another view (table, top view).
         """
         # REIMPLEMENT IN SUBCLASSES.
+        pass
+
+    def qt_performance_data_changed_listener(self):
+        """Listens to performanceDataChanged() signals emitted by the flight
+           track data model, i.e. to changed times of the waypoints.
+        """
+        # REIMPLEMENT IN SUBCLASSES that show times.
         pass
 
     def get_ind_under_point(self, event):
@@ -1088,19 +1100,29 @@ class VPathInteractor(PathInteractor):
            data model. The side view can thus react to data changes
            induced by another view (table, top view).
         """
-        # If the altitude of a point has changed, only the plotted flight
-        # profile needs to be redrawn (redraw_path()). If the horizontal
-        # position of a waypoint has changed, the entire figure needs to be
-        # redrawn, as this affects the x-position of all points.
-        self.plotter.update_from_waypoints(self.waypoints_model.all_waypoint_data())
-        if index1.column() in [ft.FLIGHTLEVEL, ft.PRESSURE, ft.LOCATION]:
+        # If the altitude of a point has changed, the plotted flight profile
+        # needs to be redrawn (redraw_path()), and the x-axis, as the flight
+        # times and the aircraft weight (ceiling altitude) depend on the
+        # altitude. If the horizontal position of a waypoint has changed, the
+        # entire figure needs to be redrawn, as this affects the x-position of
+        # all points.
+        columns = ft.changed_columns(index1, index2)
+        if columns & {ft.LAT, ft.LON}:
+            self.plotter.update_from_waypoints(self.waypoints_model.all_waypoint_data())
+            self.redraw_figure()
+        elif columns & {ft.FLIGHTLEVEL, ft.PRESSURE, ft.LOCATION}:
+            self.plotter.update_from_waypoints(self.waypoints_model.all_waypoint_data())
             self.plotter.redraw_path(
                 self.plotter.pathpatch.get_path().vertices, self.waypoints_model.all_waypoint_data())
-        elif index1.column() in [ft.LAT, ft.LON]:
-            self.redraw_figure()
-        elif index1.column() in [ft.TIME_UTC]:
-            if self.redraw_xaxis is not None:
+            if columns & {ft.FLIGHTLEVEL, ft.PRESSURE} and self.redraw_xaxis is not None:
                 self.redraw_xaxis(self.plotter.path.ilats, self.plotter.path.ilons, self.plotter.path.itimes)
+
+    def qt_performance_data_changed_listener(self):
+        """The times of the waypoints label the x-axis.
+        """
+        self.plotter.update_from_waypoints(self.waypoints_model.all_waypoint_data())
+        if self.redraw_xaxis is not None:
+            self.redraw_xaxis(self.plotter.path.ilats, self.plotter.path.ilons, self.plotter.path.itimes)
 
 
 class LPathInteractor(PathInteractor):
@@ -1152,8 +1174,11 @@ class LPathInteractor(PathInteractor):
            data model. The linear view can thus react to data changes
            induced by another view (table, top view, side view).
         """
-        self.plotter.update_from_waypoints(self.waypoints_model.all_waypoint_data())
-        self.redraw_figure()
+        # A new section is requested only for a changed path, not e.g. for a
+        # changed name or comment.
+        if ft.changed_columns(index1, index2) & {ft.LAT, ft.LON, ft.FLIGHTLEVEL, ft.PRESSURE}:
+            self.plotter.update_from_waypoints(self.waypoints_model.all_waypoint_data())
+            self.redraw_figure()
 
 
 class HPathInteractor(PathInteractor):
@@ -1326,9 +1351,15 @@ class HPathInteractor(PathInteractor):
            data model. The top view can thus react to data changes
            induced by another view (table, side view).
         """
-        # Update the top view if the horizontal position of any point has been
-        # changed.
-        if index1.column() in [ft.LOCATION, ft.LAT, ft.LON, ft.FLIGHTLEVEL]:
+        # Update the top view if the horizontal position or the name of any
+        # point has been changed, or its flight level (tangent and solar lines).
+        if ft.changed_columns(index1, index2) & {ft.LOCATION, ft.LAT, ft.LON, ft.FLIGHTLEVEL, ft.PRESSURE}:
+            self.update()
+
+    def qt_performance_data_changed_listener(self):
+        """Only the solar angle lines depend on the times of the waypoints.
+        """
+        if self.plotter.show_solar_angle is not None:
             self.update()
 
     def update(self):
