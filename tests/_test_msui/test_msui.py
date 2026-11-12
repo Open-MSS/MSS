@@ -330,6 +330,33 @@ class Test_MSSSideViewWindow:
         self.window.actionTableView.trigger()
         assert self.window.listViews.count() == 1
 
+    def test_closed_views_leave_the_list_of_views(self):
+        self.window.actionTopView.trigger()
+        self.window.actionSideView.trigger()
+        topview, sideview = self.window.get_active_views()
+        topview.handle_force_close()
+        assert self.window.get_active_views() == [sideview]
+        assert self.window.listViews.count() == 1
+
+    def test_deleted_view_is_not_returned_as_active(self):
+        """
+        a view deleted without closing it must not be handed out, any access raises RuntimeError, see #2899
+        """
+        self.window.actionTopView.trigger()
+        self.window.actionSideView.trigger()
+        topview, sideview = self.window.get_active_views()
+        sip.delete(topview)
+        assert self.window.get_active_views() == [sideview]
+        assert self.window.listViews.count() == 1
+
+    def test_restart_application_skips_deleted_views(self):
+        self.window.actionTopView.trigger()
+        self.window.actionSideView.trigger()
+        topview, sideview = self.window.get_active_views()
+        sip.delete(topview)
+        self.window.restart_application()
+        assert self.window.listViews.count() == 0
+
     def test_open_linearview(self):
         assert self.window.listViews.count() == 0
         self.window.actionLinearView.trigger()
