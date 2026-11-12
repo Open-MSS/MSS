@@ -31,37 +31,57 @@ pyproj = "*"
 requests = ">=2.33.0"
 scipy = "*"
 
+# The test tasks run in dev without -e, as before the package environments; `pixi run -e <package environment>
+# test-<package>` runs a suite with only the dependencies of its package.
 [feature.utils.tasks]
-test-utils = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_utils"
+test-utils = { cmd = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_utils", default-environment = "dev" }
 
 # mss-mscolab-api needs nothing but python
 [feature.api.tasks]
-test-api = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_api"
+test-api = { cmd = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_api", default-environment = "dev" }
 
-[feature.mswms.dependencies]
-basemap = ">=1.3.3"
-chameleon = "*"
-flask = ">=3.1.3"
-flask-httpauth = ">=4.8.1"
-# matplotlib pulls in pyqt
-matplotlib-base = ">=3.5.3"
-multidict = ">=6.9.1"
-owslib = ">=0.24"
-pillow = ">=13.0.0"
+# The dependencies more than one server shares, each pinned in one place: werkzeug (mswms, mscolab, msidp), the
+# Flask stack of the two servers, and SAML (mscolab, msidp)
+[feature.werkzeug.dependencies]
 # 3.1.9 fixes safe_join with Windows device names (GHSA-g6x2-hccm-hh4m)
 werkzeug = ">=3.1.9"
+
+[feature.server.dependencies]
+flask = ">=3.1.3"
+flask-httpauth = ">=4.8.1"
+pillow = ">=13.0.0"
 xstatic = "<2.0.0"
 xstatic-bootstrap = ">=5"
 xstatic-jquery = "*"
 
-[feature.mswms.tasks]
-test-mswms = "env QT_QPA_PLATFORM=offscreen pytest -v -n logical tests/_test_mswms"
+[feature.saml.dependencies]
+pysaml2 = "*"
 
+[feature.saml.target.linux-64.dependencies]
+libxmlsec1 = "*"
+
+[feature.saml.target.osx-64.dependencies]
+libxmlsec1 = "*"
+
+[feature.saml.target.osx-arm64.dependencies]
+libxmlsec1 = "*"
+
+# mss-mswms: with the features werkzeug and server
+[feature.mswms.dependencies]
+basemap = ">=1.3.3"
+chameleon = "*"
+# matplotlib pulls in pyqt
+matplotlib-base = ">=3.5.3"
+multidict = ">=6.9.1"
+owslib = ">=0.24"
+
+[feature.mswms.tasks]
+test-mswms = { cmd = "env QT_QPA_PLATFORM=offscreen pytest -v -n logical tests/_test_mswms", default-environment = "dev" }
+
+# mss-mscolab: with the features werkzeug, server and saml
 [feature.mscolab.dependencies]
 email_validator = "*"
-flask = ">=3.1.3"
 flask-cors = "*"
-flask-httpauth = ">=4.8.1"
 flask-mail = "*"
 flask-migrate = "*"
 flask-socketio = ">=5.1.0"
@@ -70,53 +90,36 @@ flask-wtf = "*"
 git = "*"
 gitpython = ">=3.2.1"
 itsdangerous = "*"
-pillow = ">=13.0.0"
 # PostgreSQL, supported and tested since #3295
 psycopg2 = "*"
 pyjwt = ">=2.15.0"
 pymysql = ">=0.9.3"
-pysaml2 = "*"
 python-engineio = ">=4.13.2"
 python-socketio = ">=5.16.2"
 pyyaml = "*"
-werkzeug = ">=3.1.9"
-xstatic = "<2.0.0"
-xstatic-bootstrap = ">=5"
-xstatic-jquery = "*"
-
-[feature.mscolab.target.linux-64.dependencies]
-libxmlsec1 = "*"
-
-[feature.mscolab.target.osx-64.dependencies]
-libxmlsec1 = "*"
-
-[feature.mscolab.target.osx-arm64.dependencies]
-libxmlsec1 = "*"
 
 [feature.mscolab.tasks]
-test-mscolab = "env QT_QPA_PLATFORM=offscreen pytest -v -n logical tests/_test_mscolab"
+test-mscolab = { cmd = "env QT_QPA_PLATFORM=offscreen pytest -v -n logical tests/_test_mscolab", default-environment = "dev" }
 
+# mss-msidp: with the features werkzeug and saml
 [feature.msidp.dependencies]
 mako = ">=1.3.12"
-pysaml2 = "*"
-werkzeug = ">=3.1.9"
-
-[feature.msidp.target.linux-64.dependencies]
-libxmlsec1 = "*"
-
-[feature.msidp.target.osx-64.dependencies]
-libxmlsec1 = "*"
-
-[feature.msidp.target.osx-arm64.dependencies]
-libxmlsec1 = "*"
 
 [feature.msidp.tasks]
-test-msidp = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_msidp"
+test-msidp = { cmd = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_msidp", default-environment = "dev" }
 
 # mss-msui: msui with plugins, support and autoplot
 [feature.msui.dependencies]
 basemap = ">=1.3.3"
 click = "*"
+# imported by msui directly, also in the utils feature
+defusedxml = "*"
+isodate = "*"
+markdown = "*"
+metpy = "*"
+numpy = ">=2.2.4"
+pyproj = "*"
+requests = ">=2.33.0"
 fastkml = ">=1.1.0,<2"
 gpxpy = ">=1.4.2"
 humanfriendly = ">=10.0,<11"
@@ -149,8 +152,8 @@ dbus-python = "*"
 
 [feature.msui.tasks]
 # the tests that run against an MSColab or MSWMS server need the dev environment, see tests/_test_msui/conftest.py
-test-msui-without-servers = "env QT_QPA_PLATFORM=offscreen pytest -v -n logical -m 'not servers' tests/_test_msui"
-test-plugins = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_plugins"
+test-msui-without-servers = { cmd = "env QT_QPA_PLATFORM=offscreen pytest -v -n logical -m 'not servers' tests/_test_msui", default-environment = "msui" }
+test-plugins = { cmd = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_plugins", default-environment = "dev" }
 
 [feature.test.dependencies]
 mock = "*"
@@ -161,6 +164,11 @@ pytest-xdist = "*"
 
 [feature.qttest.dependencies]
 pytest-qt = "*"
+
+[feature.qttest.activation.env]
+# MSS uses PyQt5; pytest-qt would otherwise take the first Qt binding it finds (not in pytest.ini: the environments
+# without pytest-qt would warn about an unknown option)
+PYTEST_QT_API = "pyqt5"
 
 # the mswms tests change their test data with nco (tests/_test_mswms/test_wms.py)
 [feature.ncotest.dependencies]
@@ -214,20 +222,20 @@ sphinxcontrib-video = ">=0.2.1"
 
 [environments]
 # all packages, for using MSS from this repository: `pixi run msui`
-default = ["utils", "api", "mswms", "mscolab", "msidp", "msui"]
+default = ["utils", "api", "werkzeug", "server", "saml", "mswms", "mscolab", "msidp", "msui"]
 # the environment of all developers: every package, all tests incl. the msui tests against the servers, lint, docs
-dev = { features = ["utils", "api", "mswms", "mscolab", "msidp", "msui", "test", "qttest", "ncotest", "dev", "docs"] }
+dev = { features = ["utils", "api", "werkzeug", "server", "saml", "mswms", "mscolab", "msidp", "msui", "test", "qttest", "ncotest", "dev", "docs"] }
 # Each package environment is solved on its own, as conda installs that package alone: a server environment
 # isn't held back by what msui (Qt5) pins, it gets the latest fixed versions (pixi audit).
 msutils = { features = ["utils", "test"] }
 msapi = { features = ["api", "test"] }
-mswms = { features = ["utils", "mswms", "test", "ncotest"] }
-mscolab = { features = ["utils", "api", "mscolab", "test"] }
-msidp = { features = ["msidp", "test"] }
+mswms = { features = ["utils", "werkzeug", "server", "mswms", "test", "ncotest"] }
+mscolab = { features = ["utils", "api", "werkzeug", "server", "saml", "mscolab", "test"] }
+msidp = { features = ["werkzeug", "saml", "msidp", "test"] }
 msui = { features = ["utils", "api", "msui", "test", "qttest"] }
-addons = ["utils", "api", "mswms", "mscolab", "msidp", "msui", "addons"]
-tutorials = ["utils", "api", "mswms", "mscolab", "msidp", "msui", "tutorials"]
-docs = ["utils", "api", "mswms", "mscolab", "msidp", "msui", "docs"]
+addons = ["utils", "api", "werkzeug", "server", "saml", "mswms", "mscolab", "msidp", "msui", "addons"]
+tutorials = ["utils", "api", "werkzeug", "server", "saml", "mswms", "mscolab", "msidp", "msui", "tutorials"]
+docs = ["utils", "api", "werkzeug", "server", "saml", "mswms", "mscolab", "msidp", "msui", "docs"]
 
 [tool.pixi-audit]
 # `pixi audit` (CI workflow audit.yml) fails for a known vulnerability with a fixed release: update the lock file or
@@ -318,4 +326,46 @@ ignore = [
   { id = "CVE-2026-88823", package = "openssl", reason = "fixed in the openssl 4.1 branch only, no 3.6 release with the fix yet", expired-at = "2027-02-28" },
   { id = "CVE-2026-95691", package = "openssl", reason = "fixed in the openssl 4.1 branch only, no 3.6 release with the fix yet", expired-at = "2027-02-28" },
   { id = "CVE-2026-95692", package = "openssl", reason = "fixed in the openssl 4.1 branch only, no 3.6 release with the fix yet", expired-at = "2027-02-28" },
+]
+# The critical and high vulnerabilities of the server environments without any fixed release (sec-report.md),
+# each with the reason why it doesn't reach MSS; they come back as soon as a fix is released. The expiry is for
+# checking the reasons again.
+ignore-until-fixed = [
+  { id = "CVE-2026-120757", package = "hdf5", reason = "server envs: crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2007-3149", package = "krb5", reason = "server envs: false positive matched by CPE, a 2007 sudo vulnerability when linked with krb5; MSS doesn't ship sudo", expired-at = "2027-02-28" },
+  { id = "CVE-2026-107778", package = "krb5", reason = "server envs: pulled in by libcurl and libpq/openldap; no Kerberos/GSSAPI authentication is configured anywhere in MSS", expired-at = "2027-02-28" },
+  { id = "CVE-2026-40355", package = "krb5", reason = "server envs: pulled in by libcurl and libpq/openldap; no Kerberos/GSSAPI authentication is configured anywhere in MSS", expired-at = "2027-02-28" },
+  { id = "CVE-2026-40356", package = "krb5", reason = "server envs: pulled in by libcurl and libpq/openldap; no Kerberos/GSSAPI authentication is configured anywhere in MSS", expired-at = "2027-02-28" },
+  { id = "CVE-2026-3441", package = "ld_impl_linux-64", reason = "server envs: the binutils linker, a build tool, not used at runtime", expired-at = "2027-02-28" },
+  { id = "CVE-2026-3442", package = "ld_impl_linux-64", reason = "server envs: the binutils linker, a build tool, not used at runtime", expired-at = "2027-02-28" },
+  { id = "CVE-2026-3441", package = "ld_impl_linux-aarch64", reason = "server envs: the binutils linker, a build tool, not used at runtime", expired-at = "2027-02-28" },
+  { id = "CVE-2026-3442", package = "ld_impl_linux-aarch64", reason = "server envs: the binutils linker, a build tool, not used at runtime", expired-at = "2027-02-28" },
+  { id = "CVE-2026-113351", package = "libexpat", reason = "server envs: XML from outside is parsed with defusedxml (verify_waypoint_data.py, mswms/wms.py), which refuses entity declarations and external entities", expired-at = "2027-02-28" },
+  { id = "CVE-2026-115506", package = "libexpat", reason = "server envs: XML from outside is parsed with defusedxml (verify_waypoint_data.py, mswms/wms.py), which refuses entity declarations and external entities", expired-at = "2027-02-28" },
+  { id = "CVE-2025-14932", package = "libnetcdf", reason = "server envs: crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2025-14933", package = "libnetcdf", reason = "server envs: crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2025-14934", package = "libnetcdf", reason = "server envs: crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2025-14935", package = "libnetcdf", reason = "server envs: crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2025-14936", package = "libnetcdf", reason = "server envs: crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2026-86095", package = "libnetcdf", reason = "server envs: crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2019-17455", package = "libntlm", reason = "server envs, linux-aarch64 build only: psycopg2 -> libpq -> openldap -> cyrus-sasl, only for LDAP with SASL NTLM; MSColab authenticates to PostgreSQL by password", expired-at = "2027-02-28" },
+  { id = "CVE-2022-25852", package = "libpq", reason = "server envs: false positive matched by CPE, the advisory is about the Node.js package pg-native", expired-at = "2027-02-28" },
+  { id = "CVE-2026-119586", package = "libsqlite", reason = "server envs: command injection in the sqlite3 CLI (.recover); MSColab uses the library, not the CLI", expired-at = "2027-02-28" },
+  { id = "CVE-2025-15661", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
+  { id = "CVE-2026-55199", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
+  { id = "CVE-2026-55200", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
+  { id = "CVE-2026-58050", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
+  { id = "CVE-2026-58051", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
+  { id = "CVE-2026-66032", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
+  { id = "CVE-2026-66033", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
+  { id = "CVE-2026-66034", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
+  { id = "CVE-2026-66035", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
+  { id = "CVE-2026-7598", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
+  { id = "CVE-2026-53613", package = "libuuid", reason = "server envs: TOCTOU in util-linux mount, which isn't part of MSS", expired-at = "2027-02-28" },
+  { id = "CVE-2025-7425", package = "libxslt", reason = "server envs: pysaml2 rejects signature transforms other than enveloped-signature/exclusive c14n before xmlsec1 runs; MSS runs no XSLT with lxml", expired-at = "2027-02-28" },
+  { id = "CVE-2026-76844", package = "libzlib", reason = "server envs: heap overflow in the gzwrite/gz_vacate file API; Python's gzip and zlib modules use the deflate stream API", expired-at = "2027-02-28" },
+  { id = "CVE-2026-85091", package = "libzlib", reason = "server envs: heap overflow in the gzwrite/gz_vacate file API; Python's gzip and zlib modules use the deflate stream API", expired-at = "2027-02-28" },
+  { id = "CVE-2026-119586", package = "sqlite", reason = "server envs: command injection in the sqlite3 CLI (.recover); MSColab uses the library, not the CLI", expired-at = "2027-02-28" },
+  { id = "CVE-2026-76844", package = "zlib", reason = "server envs: heap overflow in the gzwrite/gz_vacate file API; Python's gzip and zlib modules use the deflate stream API", expired-at = "2027-02-28" },
+  { id = "CVE-2026-85091", package = "zlib", reason = "server envs: heap overflow in the gzwrite/gz_vacate file API; Python's gzip and zlib modules use the deflate stream API", expired-at = "2027-02-28" },
 ]
