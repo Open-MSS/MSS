@@ -71,3 +71,9 @@ SQLAlchemy; `client-without-server-stack` contract).
 `pixi run -e dev test-msui` (~10 min) or a single file:
 `pixi run -e dev env QT_QPA_PLATFORM=offscreen pytest tests/_test_msui/test_<x>.py -q`
 Known flaky: `test_topview.py::Test_TopViewWMS::test_server_getmap`.
+Without the servers, as `mss-msui` is installed: `pixi run -e msui test-msui-without-servers`
+(and `test-plugins`). Tests that use a fixture of `tests/fixtures.py` (a server) are marked
+`servers` by `tests/_test_msui/conftest.py` and run only in `dev`; a test module imports
+`mslib.mscolab`/`mslib.mswms` only inside the tests that need them, never at module level, or the
+whole module breaks in the msui environment. A dependency msui imports goes into the `msui` feature of
+`pixi.toml` (and the recipe's `mss-msui`).

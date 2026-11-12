@@ -21,3 +21,4 @@ signatures stable, third-party configs reference them.
 ## Verify
 
 `pixi run -e dev test-plugins` (pure I/O round-trips, seconds).
+They ship in `mss-msui`: `pixi run -e msui test-plugins`.

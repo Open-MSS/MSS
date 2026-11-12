@@ -2,14 +2,18 @@ name: audit
 
 # Known vulnerabilities in the locked dependencies of all environments, with pixi audit
 # (https://prefix.dev/blog/pixi-audit-beta). It fails for a vulnerability with a fixed release; the rules for
-# fixed releases we can't reach yet are in [tool.pixi-audit] of pixi.toml. The weekly run reports new
-# vulnerabilities and expired rules also when nothing changed here.
+# fixed releases we can't reach yet are in [tool.pixi-audit] of pixi.toml. It runs when pixi.toml or pixi.lock
+# change; the weekly run reports new vulnerabilities and expired rules also when nothing changed here.
 
 on:
   push:
     branches:
     - develop
     - stable
+    paths:
+    - pixi.toml
+    - pixi.lock
+    - .github/workflows/audit.yml
   pull_request:
     branches:
     - develop
@@ -43,9 +47,15 @@ jobs:
       env:
         # API token of prefix.dev (Basilisk); a repository secret, pull requests from forks don't get it
         PIXI_AUDIT_TOKEN: ${{ secrets.PIXI_AUDIT_TOKEN }}
+        FROM_FORK: ${{ github.event.pull_request.head.repo.fork }}
       run: |
         if [ -z "$PIXI_AUDIT_TOKEN" ]; then
-          echo "::notice::PIXI_AUDIT_TOKEN is not available, the audit is skipped"
-          exit 0
+          if [ "$FROM_FORK" = "true" ]; then
+            echo "::notice::A pull request from a fork gets no PIXI_AUDIT_TOKEN, the audit is skipped"
+            exit 0
+          fi
+          # never pass without auditing: a missing or expired secret has to be noticed
+          echo "::error::The repository secret PIXI_AUDIT_TOKEN is missing"
+          exit 1
         fi
         pixi audit

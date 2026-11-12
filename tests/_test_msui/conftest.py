@@ -35,9 +35,17 @@ from tests.msui_fixtures import *  # noqa: F401,F403
 # mscolab_settings at its first import: write and load the test settings first.
 ensure_mscolab_config()
 
-# the fixtures of tests/fixtures.py that start or build a server, see pytest_collection_modifyitems
-SERVER_FIXTURES = {"mscolab_server", "mscolab_server_app", "mscolab_app", "mscolab_managers", "mswms_server",
-                   "mswms_app"}
+# tests/fixtures.py holds the fixtures that start or build an MSColab or MSWMS server, and only those
+SERVER_FIXTURES_MODULE = "tests.fixtures"
+
+
+def _uses_a_server(item):
+    """True if the test uses a fixture of tests/fixtures.py, also through another fixture or an override of it"""
+    fixtureinfo = getattr(item, "_fixtureinfo", None)
+    if fixtureinfo is None:
+        return False
+    return any(fixturedef.func.__module__ == SERVER_FIXTURES_MODULE
+               for fixturedefs in fixtureinfo.name2fixturedefs.values() for fixturedef in fixturedefs)
 
 
 @pytest.hookimpl(tryfirst=True)
@@ -49,7 +57,7 @@ def pytest_collection_modifyitems(config, items):
     with -m "not servers". The test modules import mslib.mscolab and mslib.mswms only inside the tests that need them.
     """
     for item in items:
-        if SERVER_FIXTURES & set(item.fixturenames):
+        if _uses_a_server(item):
             item.add_marker(pytest.mark.servers)
 
 
