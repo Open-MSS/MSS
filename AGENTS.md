@@ -25,7 +25,7 @@ pixi run -e dev test            # full suite (~13 min)
 pixi run -e msutils test-utils
 pixi run -e msapi test-api
 pixi run -e mswms test-mswms
-pixi run -e mscolab test-mscolab   # psycopg2 included, for MSCOLAB_TEST_POSTGRES_URL
+pixi run -e mscolab test-mscolab   # psycopg included, for MSCOLAB_TEST_POSTGRES_URL
 pixi run -e msidp test-msidp
 pixi run -e msui test-msui-without-servers   # msui without the servers; tests marked "servers" run in dev
 pixi run -e msui test-plugins

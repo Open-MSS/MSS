@@ -90,8 +90,8 @@ flask-wtf = "*"
 git = "*"
 gitpython = ">=3.2.1"
 itsdangerous = "*"
-# PostgreSQL, supported and tested since #3295
-psycopg2 = "*"
+# PostgreSQL, supported and tested since #3295; psycopg 3 is the driver of postgresql:// URLs since SQLAlchemy 2.1
+psycopg = ">=3.2"
 pyjwt = ">=2.15.0"
 pymysql = ">=0.9.3"
 python-engineio = ">=4.13.2"
@@ -350,7 +350,7 @@ ignore-until-fixed = [
   { id = "CVE-2025-14935", package = "libnetcdf", reason = "crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none, msui only files its user chooses (operators: trusted data sources only)", expired-at = "2027-02-28" },
   { id = "CVE-2025-14936", package = "libnetcdf", reason = "crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none, msui only files its user chooses (operators: trusted data sources only)", expired-at = "2027-02-28" },
   { id = "CVE-2026-86095", package = "libnetcdf", reason = "crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none, msui only files its user chooses (operators: trusted data sources only)", expired-at = "2027-02-28" },
-  { id = "CVE-2019-17455", package = "libntlm", reason = "linux-aarch64 build only; via libpq -> openldap -> cyrus-sasl (psycopg2 in mscolab, Qt's QPSQL plugin in msui), only for LDAP with SASL NTLM; MSColab authenticates to PostgreSQL by password, msui never loads QPSQL", expired-at = "2027-02-28" },
+  { id = "CVE-2019-17455", package = "libntlm", reason = "linux-aarch64 build only; via libpq -> openldap -> cyrus-sasl (psycopg in mscolab, Qt's QPSQL plugin in msui), only for LDAP with SASL NTLM; MSColab authenticates to PostgreSQL by password, msui never loads QPSQL", expired-at = "2027-02-28" },
   { id = "CVE-2022-25852", package = "libpq", reason = "false positive matched by CPE, the advisory is about the Node.js package pg-native", expired-at = "2027-02-28" },
   { id = "CVE-2026-119586", package = "libsqlite", reason = "command injection in the sqlite3 CLI (.recover); MSS uses the library, not the CLI", expired-at = "2027-02-28" },
   { id = "CVE-2025-15661", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
