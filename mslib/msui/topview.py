@@ -360,7 +360,9 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.setFlightTrackModel(self.waypoints_model)
 
         # Automatically enable or disable roundtrip when data changes
-        self.waypoints_model.dataChanged.connect(self.update_roundtrip_enabled)
+        for signal in (self.waypoints_model.dataChanged, self.waypoints_model.rowsInserted,
+                       self.waypoints_model.rowsRemoved, self.waypoints_model.modelReset):
+            signal.connect(self.update_roundtrip_enabled)
         self.update_roundtrip_enabled()
         self.mpl.navbar.push_current()
 

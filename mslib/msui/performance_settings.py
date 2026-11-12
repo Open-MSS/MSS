@@ -37,10 +37,9 @@ from mslib.msui.qt5 import ui_performance_dockwidget as ui_dw
 
 DEFAULT_PERFORMANCE = {
     "aircraft": aircraft.SimpleAircraft(aircraft.AIRCRAFT_DUMMY),
-    "visible": False,
-    "takeoff_weight": 0,
+    "takeoff_weight": aircraft.AIRCRAFT_DUMMY["takeoff_weight"],
     "takeoff_time": QtCore.QDateTime.currentDateTimeUtc(),
-    "empty_weight": 0,
+    "empty_weight": aircraft.AIRCRAFT_DUMMY["empty_weight"],
     "ceiling_alt": [410],
 }
 
@@ -66,16 +65,14 @@ class MSUI_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDock
             settings_dict = DEFAULT_PERFORMANCE
         self.aircraft = settings_dict["aircraft"]
         self.lbAircraftName.setText(self.aircraft.name)
-        self.cbShowPerformance.setChecked(settings_dict["visible"])
         self.dsbTakeoffWeight.setValue(settings_dict["takeoff_weight"])
         self.dsbEmptyWeight.setValue(
             settings_dict.get("empty_weight", settings_dict["takeoff_weight"] - settings_dict.get("fuel", 0)))
-        self.dteTakeoffTime.setDateTime(settings_dict["takeoff_time"])
 
-        # Connecting signals
+        # Connecting signals. Each update recomputes and redraws the flight
+        # track, the spin boxes have no keyboard tracking, so that typing a
+        # value emits valueChanged once, not on every key stroke.
         self.pbLoadPerformance.clicked.connect(self.load_performance)
-        self.cbShowPerformance.stateChanged.connect(self.update_parent_performance)
-        self.dteTakeoffTime.dateTimeChanged.connect(self.update_parent_performance)
         self.dsbTakeoffWeight.valueChanged.connect(self.update_parent_performance)
         self.dsbEmptyWeight.valueChanged.connect(self.update_parent_performance)
 
@@ -88,8 +85,8 @@ class MSUI_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDock
         """
         settings_dict = {
             "aircraft": self.aircraft,
-            "visible": self.cbShowPerformance.isChecked(),
-            "takeoff_time": self.dteTakeoffTime.dateTime(),
+            # The takeoff time is set by editing the time column of the table view.
+            "takeoff_time": self.parent.waypoints_model.performance_settings["takeoff_time"],
             "takeoff_weight": self.dsbTakeoffWeight.value(),
             "empty_weight": self.dsbEmptyWeight.value()
         }
@@ -111,15 +108,21 @@ class MSUI_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDock
                     performance = json.load(tf)
                 self.aircraft = aircraft.SimpleAircraft(performance)
                 self.lbAircraftName.setText(self.aircraft.name)
-                self.dsbTakeoffWeight.setValue(self.aircraft.takeoff_weight)
-                if not any(hasattr(self.aircraft, _x) for _x in ("fuel", "empty_weight")):
-                    raise KeyError("empty_weight")
-                if hasattr(self.aircraft, "empty_weight"):
-                    self.dsbEmptyWeight.setValue(self.aircraft.empty_weight)
-                else:
-                    self.dsbEmptyWeight.setValue(self.aircraft.takeoff_weight - self.aircraft.fuel)
-
-                self.update_parent_performance()
+                # Apply the new aircraft once, not for each changed weight.
+                self.dsbTakeoffWeight.blockSignals(True)
+                self.dsbEmptyWeight.blockSignals(True)
+                try:
+                    self.dsbTakeoffWeight.setValue(self.aircraft.takeoff_weight)
+                    if not any(hasattr(self.aircraft, _x) for _x in ("fuel", "empty_weight")):
+                        raise KeyError("empty_weight")
+                    if hasattr(self.aircraft, "empty_weight"):
+                        self.dsbEmptyWeight.setValue(self.aircraft.empty_weight)
+                    else:
+                        self.dsbEmptyWeight.setValue(self.aircraft.takeoff_weight - self.aircraft.fuel)
+                finally:
+                    self.dsbTakeoffWeight.blockSignals(False)
+                    self.dsbEmptyWeight.blockSignals(False)
+                    self.update_parent_performance()
 
             except KeyError as ex:
                 QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),

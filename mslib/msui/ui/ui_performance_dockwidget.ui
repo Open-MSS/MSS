@@ -80,6 +80,9 @@
      </item>
      <item>
       <widget class="QDoubleSpinBox" name="dsbEmptyWeight">
+       <property name="keyboardTracking">
+        <bool>false</bool>
+       </property>
        <property name="decimals">
         <number>0</number>
        </property>
@@ -93,22 +96,18 @@
      </item>
     </layout>
    </item>
-   <item row="0" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
-     <item>
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Take off time</string>
-       </property>
-       <property name="indent">
-        <number>1</number>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDateTimeEdit" name="dteTakeoffTime"/>
-     </item>
-    </layout>
+   <item row="0" column="0" colspan="2">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Set the waypoint times by editing the Time (UTC) column of the table view.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="indent">
+      <number>1</number>
+     </property>
+    </widget>
    </item>
    <item row="1" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout_5">
@@ -127,6 +126,9 @@
      </item>
      <item>
       <widget class="QDoubleSpinBox" name="dsbTakeoffWeight">
+       <property name="keyboardTracking">
+        <bool>false</bool>
+       </property>
        <property name="decimals">
         <number>0</number>
        </property>
@@ -135,23 +137,6 @@
        </property>
        <property name="singleStep">
         <double>1000.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item row="0" column="1">
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QCheckBox" name="cbShowPerformance">
-       <property name="layoutDirection">
-        <enum>Qt::LeftToRight</enum>
-       </property>
-       <property name="text">
-        <string>Show Performance</string>
-       </property>
-       <property name="tristate">
-        <bool>false</bool>
        </property>
       </widget>
      </item>

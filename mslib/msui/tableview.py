@@ -112,11 +112,17 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         """
         Updating Table View with updated performance settings.
         """
-        self.waypoints_model.performance_settings = settings
-        self.waypoints_model.update_distances(0)
-        self.waypoints_model.save_settings()
+        # The table is repainted on performanceDataChanged.
+        self.waypoints_model.set_performance_settings(settings)
         self.resizeColumns()
-        self.tableWayPoints.viewport().repaint()
+
+    def update_performance_data(self):
+        """
+        Slot called when the times or fuel of the waypoints have changed. They
+        are not part of the flight plan, hence the model does not emit
+        dataChanged() for them and the table has to be repainted here.
+        """
+        self.tableWayPoints.viewport().update()
 
     def setLinearDataVisible(self, visible):
         """
@@ -334,6 +340,14 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         for column in range(self.waypoints_model.columnCount()):
             self.tableWayPoints.resizeColumnToContents(column)
 
+    def _model_connections(self, model):
+        return ((model.dataChanged, self.update_roundtrip_enabled),
+                (model.rowsInserted, self.update_roundtrip_enabled),
+                (model.rowsRemoved, self.update_roundtrip_enabled),
+                (model.modelReset, self.update_roundtrip_enabled),
+                (model.performanceDataChanged, self.update_performance_data),
+                (model.linearDataChanged, self.update_linear_data))
+
     def setFlightTrackModel(self, model):
         """
         Set the QAbstractItemModel instance that the table displays.
@@ -343,8 +357,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         if previous is not None and previous is not self.waypoints_model:
             # Stop listening to the flight track that is not displayed here
             # any more, otherwise the connections pile up on every switch.
-            for signal, slot in ((previous.dataChanged, self.update_roundtrip_enabled),
-                                 (previous.linearDataChanged, self.update_linear_data)):
+            for signal, slot in self._model_connections(previous):
                 try:
                     signal.disconnect(slot)
                 except (TypeError, RuntimeError):
@@ -352,10 +365,10 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         self.tableWayPoints.setModel(self.waypoints_model)
 
         # Automatically enable or disable roundtrip when data changes
-        self.waypoints_model.dataChanged.connect(self.update_roundtrip_enabled)
+        for signal, slot in self._model_connections(self.waypoints_model):
+            signal.connect(slot)
         self.update_roundtrip_enabled()
 
-        self.waypoints_model.linearDataChanged.connect(self.update_linear_data)
         if previous is None or previous is self.waypoints_model:
             # Adopt what the flight track already shows, another table view
             # of the same track may have switched the data columns on.

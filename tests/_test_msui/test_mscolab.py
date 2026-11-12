@@ -42,7 +42,7 @@ from tests import constants
 import mslib.msui.utils.auth
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.message_type import MessageType
-from mslib.msui.flighttrack import LON, WaypointsTableModel
+from mslib.msui.flighttrack import LON, TIME_UTC, Waypoint, WaypointsTableModel
 from PyQt5 import QtCore, QtGui, QtTest, QtWidgets
 from mslib.msui.utils.config import MSUIDefaultConfig, read_config_file, config_loader, modify_config_file
 from tests.utils import create_msui_settings_file, ExceptionMock
@@ -1402,18 +1402,30 @@ class Test_Mscolab:
         self._activate_operation_at_index(0)
         mscolab_ = self.window.mscolab
         model = mscolab_.waypoints_model
-        with mock.patch.object(mscolab_.conn, "save_file") as save_file:
-            # setData emits dataChanged twice, from update_distances and for the changed cell
+        with mock.patch.object(mscolab_.conn, "save_file") as save_file, \
+                mock.patch("mslib.msui.flighttrack.save_settings_qsettings"):
+            # times and fuel are not part of the flight plan
+            model.setData(model.index(0, TIME_UTC), "2030-01-01 12:00:00")
+            model.set_performance_settings(dict(model.performance_settings, takeoff_weight=1000))
+            save_file.assert_not_called()
             model.setData(model.index(0, LON), QtCore.QVariant(model.waypoint_data(0).lon + 1))
             save_file.assert_called_once()
             assert save_file.call_args.args[:2] == (mscolab_.active_op_id, model.get_xml_content())
+            for change in (lambda: model.insertRows(1, waypoints=[Waypoint(50., 10., 200.)]),
+                           lambda: model.removeRows(1),
+                           model.invert_direction):
+                save_file.reset_mock()
+                change()
+                save_file.assert_called_once()
+                assert save_file.call_args.args[1] == model.get_xml_content()
+            save_file.reset_mock()
             # a reloaded flight track, e.g. after the server refused the change, is sent again when it changes
             mscolab_.waypoints_model = WaypointsTableModel(xml_content=model.get_xml_content())
             mscolab_.handle_waypoints_changed()
-            assert save_file.call_count == 2
+            assert save_file.call_count == 1
             # a version name is always sent
             mscolab_.handle_waypoints_changed(version_name="imported")
-            assert save_file.call_count == 3
+            assert save_file.call_count == 2
 
     def test_user_chosen_text_is_not_markup(self, qtbot):
         markup = '<b>bold</b><img src="file://attacker.example/s/x.png">'

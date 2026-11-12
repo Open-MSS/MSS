@@ -195,7 +195,9 @@ Performance
 MSS may also roughly estimate the fuel consumption and thus range of the aircraft
 neglecting weather conditions given a proper configuration file specifying the
 aircraft performance. Such a file may be loaded using the 'performance settings' button
-in Table View. The aircraft performance is specified using tables given in the JSON format.
+in Table View. The table shows the estimated time (UTC) at each waypoint. Edit the time of any
+waypoint to shift the whole flight; all other times follow.
+The aircraft performance is specified using tables given in the JSON format.
 A basic configuration looks like the following file:
 
 .. literalinclude:: samples/config/msui/performance_simple.json.sample
