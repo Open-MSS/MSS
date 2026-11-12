@@ -34,3 +34,4 @@ exception. Code that needs Qt or keyring belongs to `mslib/msui/utils/`.
 
 `pixi run -e dev test-utils` (fast, no servers forked) or
 `pixi run -e dev test-fast` for the whole no-server tier.
+With only the dependencies of `mss-utils` (no Qt, Flask or keyring): `pixi run -e msutils test-utils`.

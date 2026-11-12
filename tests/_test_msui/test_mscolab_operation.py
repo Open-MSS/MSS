@@ -33,14 +33,12 @@ import requests
 
 from tests.constants import ROOT_DIR
 from mslib.msui.icons import icons
-from mslib.mscolab.models import Message, MessageType
+from mslib.mscolab.api.message_type import MessageType
 from PyQt5 import QtCore, QtGui, QtTest, QtWidgets
 from mslib.mscolab.api.attachments import normalized_extensions
 from mslib.msui import mscolab
 from mslib.msui import msui
-from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 from mslib.msui.utils.config import modify_config_file
-from mslib.mscolab.utils import get_message_dict
 
 
 class Actions:
@@ -54,6 +52,7 @@ class Actions:
 class Test_MscolabOperation:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot, mscolab_server_app, mscolab_server):
+        from mslib.mscolab.seed import add_operation, add_user, add_user_to_operation, get_user
         self.app = mscolab_server_app
         self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
@@ -84,6 +83,8 @@ class Test_MscolabOperation:
         self.window.hide()
 
     def test_send_message(self, qtbot):
+        from mslib.mscolab.models import Message
+        from mslib.mscolab.utils import get_message_dict
         self._send_message(qtbot, "**test message**")
         self._send_message(qtbot, "**test message**")
         with self.app.app_context():
@@ -127,6 +128,7 @@ class Test_MscolabOperation:
         QtTest.QTest.mouseClick(self.chat_window.sendMessageBtn, QtCore.Qt.LeftButton)
 
         def assert_():
+            from mslib.mscolab.models import Message
             with self.app.app_context():
                 message = Message.query.filter_by(text='test reply')
                 assert message.count() == 1
@@ -141,11 +143,13 @@ class Test_MscolabOperation:
         QtTest.QTest.mouseClick(self.chat_window.editMessageBtn, QtCore.Qt.LeftButton)
 
         def assert_():
+            from mslib.mscolab.models import Message
             with self.app.app_context():
                 assert Message.query.filter_by(text='test edit').count() == 1
         qtbot.wait_until(assert_)
 
     def test_delete_message(self, qtbot):
+        from mslib.mscolab.models import Message
         self._send_message(qtbot, "**test message**")
         self._send_message(qtbot, "**test message**")
         self._activate_context_menu_action(Actions.DELETE)

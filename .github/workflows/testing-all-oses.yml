@@ -39,6 +39,41 @@ jobs:
         format: cobertura
         flag-name: ${{ join(matrix.*, ' - ') }}
 
+  test-packages:
+    # every package in an environment of its own, with only the dependencies of its conda package (pixi.toml):
+    # an import of something a package doesn't depend on fails here
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - environment: msutils
+            tasks: test-utils
+          - environment: msapi
+            tasks: test-api
+          - environment: mswms
+            tasks: test-mswms
+          - environment: mscolab
+            tasks: test-mscolab
+          - environment: msidp
+            tasks: test-msidp
+          - environment: msui
+            # the msui tests against the servers run in the dev environment of the job above
+            tasks: test-msui-without-servers test-plugins
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
+    - uses: prefix-dev/setup-pixi@ad1da6449d9e506fd127fd67ab2d054a769f6a94 # v0.11.2
+      with:
+        pixi-version: latest
+        cache: true
+        environments: ${{ matrix.environment }}
+    - name: Run the tests of ${{ matrix.environment }}
+      timeout-minutes: 30
+      run: |
+        for task in ${{ matrix.tasks }}; do
+          pixi run -e ${{ matrix.environment }} $task
+        done
+
   test-mscolab-postgres:
     # MSColab servers run on PostgreSQL in production, which behaves differently from SQLite:
     # it enforces foreign keys and locks tables for schema changes (#2311)
@@ -61,9 +96,9 @@ jobs:
       with:
         pixi-version: latest
         cache: true
-        environments: dev
+        environments: mscolab dev
     - name: Run the MSColab tests on PostgreSQL
-      # the server tests, and the msui tests that drive a real MSColab server
+      # the server tests, in the environment of the server alone
       timeout-minutes: 30
       env:
         # every test app and test process gets a database of its own on this server, see tests/database.py
@@ -71,8 +106,16 @@ jobs:
         # a statement waiting for a lock fails after a minute instead of hanging until the job's timeout
         PGOPTIONS: -c lock_timeout=60s
       run: >-
+        pixi run -e mscolab env QT_QPA_PLATFORM=offscreen pytest -v -n logical --durations=20 tests/_test_mscolab
+    - name: Run the msui tests against an MSColab server on PostgreSQL
+      # they need msui and the server, the dev environment
+      timeout-minutes: 30
+      env:
+        MSCOLAB_TEST_POSTGRES_URL: postgresql://postgres:postgres@localhost:5432
+        PGOPTIONS: -c lock_timeout=60s
+      run: >-
         pixi run -e dev env QT_QPA_PLATFORM=offscreen pytest -v -n logical --durations=20
-        tests/_test_mscolab tests/_test_msui/test_mscolab*.py
+        tests/_test_msui/test_mscolab*.py
 
   finish:
     needs: test

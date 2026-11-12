@@ -49,3 +49,6 @@ Enforced: `gui-isolation`, `server-isolation`, `servers-without-qt` contracts.
 
 `pixi run -e dev test-mswms`; a single style renders via
 `pixi run -e dev env QT_QPA_PLATFORM=offscreen pytest tests/_test_mswms/test_wms.py -q`.
+With only the dependencies of `mss-mswms`: `pixi run -e mswms test-mswms` (no Qt; CI job
+`test-packages`). A new dependency goes into the `mswms` feature of `pixi.toml`, or `server`/`werkzeug`
+when MSColab shares it.

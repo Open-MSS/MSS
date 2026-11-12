@@ -8,116 +8,192 @@ platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64", "win-64"]
 [pypi-dependencies]
 open-mss = { path = ".", editable = true }
 
+# The default feature is the repository itself. The dependencies of each package are a feature of their own, as
+# the conda recipe splits them: mss-utils, mss-mscolab-api, mss-mswms, mss-mscolab, mss-msidp, mss-msui. The
+# environments named after a package (msutils, msapi, mswms, mscolab, msidp, msui) have only that package and what
+# it depends on, and run its tests: an import of something the package doesn't depend on fails there.
 [dependencies]
-basemap = ">=1.3.3"
-cftime = ">=1.0.1"
-chameleon = "*"
+python = "<3.12"
+
+[feature.utils.dependencies]
+argon2-cffi = ">=23.1.0"
 defusedxml = "*"
-email_validator = "*"
-execnet = "*"
-fastkml = ">=1.1.0,<2"
+hdf4 = "*"
+isodate = "*"
+libgfortran5 = ">=14"
+libtiff = ">=4.7.2"
+markdown = "*"
+metpy = "*"
+netcdf4 = "*"
+numpy = ">=2.2.4"
+pint = "*"
+pyproj = "*"
+requests = ">=2.33.0"
+scipy = "*"
+
+# The test tasks run in dev without -e, as before the package environments (test-msui-without-servers in msui);
+# `pixi run -e <package environment> test-<package>` runs a suite with only the dependencies of its package.
+[feature.utils.tasks]
+test-utils = { cmd = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_utils", default-environment = "dev" }
+
+# mss-mscolab-api needs nothing but python
+[feature.api.tasks]
+test-api = { cmd = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_api", default-environment = "dev" }
+
+# The dependencies more than one server shares, each pinned in one place: werkzeug (mswms, mscolab, msidp), the
+# Flask stack of the two servers, and SAML (mscolab, msidp)
+[feature.werkzeug.dependencies]
+# 3.1.9 fixes safe_join with Windows device names (GHSA-g6x2-hccm-hh4m)
+werkzeug = ">=3.1.9"
+
+[feature.server.dependencies]
 flask = ">=3.1.3"
+flask-httpauth = ">=4.8.1"
+pillow = ">=13.0.0"
+xstatic = "<2.0.0"
+xstatic-bootstrap = ">=5"
+xstatic-jquery = "*"
+
+[feature.saml.dependencies]
+pysaml2 = "*"
+
+[feature.saml.target.linux-64.dependencies]
+libxmlsec1 = "*"
+
+[feature.saml.target.osx-64.dependencies]
+libxmlsec1 = "*"
+
+[feature.saml.target.osx-arm64.dependencies]
+libxmlsec1 = "*"
+
+# mss-mswms: with the features werkzeug and server
+[feature.mswms.dependencies]
+basemap = ">=1.3.3"
+chameleon = "*"
+# matplotlib pulls in pyqt
+matplotlib-base = ">=3.5.3"
+multidict = ">=6.9.1"
+owslib = ">=0.24"
+
+[feature.mswms.tasks]
+test-mswms = { cmd = "env QT_QPA_PLATFORM=offscreen pytest -v -n logical tests/_test_mswms", default-environment = "dev" }
+
+# mss-mscolab: with the features werkzeug, server and saml
+[feature.mscolab.dependencies]
+email_validator = "*"
 flask-cors = "*"
-flask-httpauth = "*"
 flask-mail = "*"
 flask-migrate = "*"
 flask-socketio = ">=5.1.0"
 flask-sqlalchemy = ">=3.0.0"
 flask-wtf = "*"
 git = "*"
-gitpython = "*"
-gpxpy = ">=1.4.2"
-hdf4 = "*"
-isodate = "*"
+gitpython = ">=3.2.1"
 itsdangerous = "*"
-keyring = "*"
-libgfortran5 = ">=14"
-libtiff = "*"
-lxml = "*"
-markdown = "*"
-matplotlib = ">=3.5.3"
-metpy = "*"
-multidict = "*"
-netcdf4 = "*"
-numpy = ">=2.2.4"
-owslib = ">=0.24"
-argon2-cffi = ">=23.1.0"
-pillow = "*"
-pint = "*"
-platformdirs = "*"
-psycopg2 = "*"
-pycountry = "*"
-pyjwt = "*"
+# PostgreSQL, supported and tested since #3295; psycopg 3 is the driver of postgresql:// URLs since SQLAlchemy 2.1
+psycopg = ">=3.2"
+pyjwt = ">=2.15.0"
 pymysql = ">=0.9.3"
+python-engineio = ">=4.13.2"
+python-socketio = ">=5.16.2"
+pyyaml = "*"
+
+[feature.mscolab.tasks]
+test-mscolab = { cmd = "env QT_QPA_PLATFORM=offscreen pytest -v -n logical tests/_test_mscolab", default-environment = "dev" }
+
+# mss-msidp: with the features werkzeug and saml
+[feature.msidp.dependencies]
+mako = ">=1.3.12"
+
+[feature.msidp.tasks]
+test-msidp = { cmd = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_msidp", default-environment = "dev" }
+
+# mss-msui: msui with plugins, support and autoplot
+[feature.msui.dependencies]
+basemap = ">=1.3.3"
+click = "*"
+# imported by msui directly, also in the utils feature
+defusedxml = "*"
+isodate = "*"
+markdown = "*"
+metpy = "*"
+numpy = ">=2.2.4"
+pyproj = "*"
+requests = ">=2.33.0"
+fastkml = ">=1.1.0,<2"
+gpxpy = ">=1.4.2"
+humanfriendly = ">=10.0,<11"
+keyring = "*"
+lxml = ">=6.1.0"
+# not the matplotlib metapackage: depending on the build it pulls in another Qt binding (pyside6) besides pyqt
+matplotlib-base = ">=3.5.3"
+owslib = ">=0.24"
+packaging = "*"
+pillow = ">=13.0.0"
+platformdirs = "*"
+pycountry = "*"
 pyqt = ">=5.15.0"
-pysaml2 = "*"
-python = "<3.12"
-python-engineio = ">=4"
+python-engineio = ">=4.13.2"
 python-slugify = "*"
-python-socketio = ">=5"
-qt = ">=5.15.0"
-requests = ">=2.31.0"
-scipy = "*"
+python-socketio = ">=5.16.2"
 skyfield = ">=1.12"
 skyfield-data = ">=7"
-tk = "*"
 unicodecsv = "*"
 websocket-client = "*"
-werkzeug = ">=3.1.5"
-xstatic = "<2.0.0"
-xstatic-bootstrap = ">=5"
-xstatic-jquery = "*"
-humanfriendly = ">=10.0,<11"
 
-[target.linux-64.dependencies]
+[feature.msui.target.linux-64.dependencies]
 dbus-python = "*"
-libxmlsec1 = "*"
 
-[target.osx-64.dependencies]
+[feature.msui.target.osx-64.dependencies]
 dbus-python = "*"
-libxmlsec1 = "*"
 
-[target.osx-arm64.dependencies]
+[feature.msui.target.osx-arm64.dependencies]
 dbus-python = "*"
-libxmlsec1 = "*"
 
-[target.win-64.dependencies]
-# 3.1.9 fixes safe_join with Windows device names (GHSA-g6x2-hccm-hh4m); chat attachments and the gallery use it
-werkzeug = ">=3.1.9"
+[feature.msui.tasks]
+# the tests that run against an MSColab or MSWMS server need the dev environment, see tests/_test_msui/conftest.py
+test-msui-without-servers = { cmd = "env QT_QPA_PLATFORM=offscreen pytest -v -n logical -m 'not servers' tests/_test_msui", default-environment = "msui" }
+test-plugins = { cmd = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_plugins", default-environment = "dev" }
+
+[feature.test.dependencies]
+mock = "*"
+pytest = ">=9.0.3"
+pytest-cov = "*"
+pytest-randomly = "*"
+pytest-xdist = "*"
+
+[feature.qttest.dependencies]
+pytest-qt = "*"
+
+[feature.qttest.activation.env]
+# MSS uses PyQt5; pytest-qt would otherwise take the first Qt binding it finds (not in pytest.ini: the environments
+# without pytest-qt would warn about an unknown option)
+PYTEST_QT_API = "pyqt5"
+
+# the mswms tests change their test data with nco (tests/_test_mswms/test_wms.py)
+[feature.ncotest.dependencies]
+gsl = "==2.7.0"
+pynco = "*"
 
 [feature.addons.dependencies]
 geographiclib = "*"
 geomag = "*"
-geopy = "*"
+geopy = ">=2.5.0"
 
 [feature.dev.dependencies]
 codespell = "*"
 coveralls = "*"
-dnspython = ">=2.0.0, <2.3.0"
 flake8 = "*"
 flake8-builtins = "*"
-gsl = "==2.7.0"
 import-linter = ">=2"
-mock = "*"
 py = "*"
-pynco = "*"
-pytest = "*"
-pytest-cov = "*"
-pytest-qt = "*"
-pytest-randomly = "*"
-pytest-xdist = "*"
 
 [feature.dev.tasks]
 lint = { cmd = "git ls-files -z '**.py' | xargs -0 flake8" }
 lint-imports = "lint-imports"
 codespell = { cmd = "git ls-files -z | xargs -0 codespell --check-filenames" }
 test-fast = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_api tests/_test_plugins tests/_test_utils tests/test_meta.py tests/test_samples.py"
-test-api = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_api"
-test-plugins = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_plugins"
-test-utils = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_utils"
 test-msui = "env QT_QPA_PLATFORM=offscreen pytest -v -n logical tests/_test_msui"
-test-mscolab = "env QT_QPA_PLATFORM=offscreen pytest -v -n logical tests/_test_mscolab"
-test-mswms = "env QT_QPA_PLATFORM=offscreen pytest -v -n logical tests/_test_mswms"
 test = "env QT_QPA_PLATFORM=offscreen pytest -v -n logical --durations=20 tests"
 
 
@@ -145,7 +221,153 @@ sphinx_rtd_theme = "*"
 sphinxcontrib-video = ">=0.2.1"
 
 [environments]
-addons = ["addons"]
-dev = ["dev", "docs"]
-tutorials = ["tutorials"]
-docs = ["docs"]
+# all packages, for using MSS from this repository: `pixi run msui`
+default = ["utils", "api", "werkzeug", "server", "saml", "mswms", "mscolab", "msidp", "msui"]
+# the environment of all developers: every package, all tests incl. the msui tests against the servers, lint, docs
+dev = { features = ["utils", "api", "werkzeug", "server", "saml", "mswms", "mscolab", "msidp", "msui", "test", "qttest", "ncotest", "dev", "docs"] }
+# Each package environment is solved on its own, as conda installs that package alone: a server environment
+# isn't held back by what msui (Qt5) pins, it gets the latest fixed versions (pixi audit).
+msutils = { features = ["utils", "test"] }
+msapi = { features = ["api", "test"] }
+mswms = { features = ["utils", "werkzeug", "server", "mswms", "test", "ncotest"] }
+mscolab = { features = ["utils", "api", "werkzeug", "server", "saml", "mscolab", "test"] }
+msidp = { features = ["werkzeug", "saml", "msidp", "test"] }
+msui = { features = ["utils", "api", "msui", "test", "qttest"] }
+addons = ["utils", "api", "werkzeug", "server", "saml", "mswms", "mscolab", "msidp", "msui", "addons"]
+tutorials = ["utils", "api", "werkzeug", "server", "saml", "mswms", "mscolab", "msidp", "msui", "tutorials"]
+docs = ["utils", "api", "werkzeug", "server", "saml", "mswms", "mscolab", "msidp", "msui", "docs"]
+
+[tool.pixi-audit]
+# `pixi audit` (CI workflow audit.yml) fails for a known vulnerability with a fixed release: update the lock file or
+# raise the lower bound. Vulnerabilities without any fixed release are reported, they don't fail. The rules below
+# are for fixed releases we can't reach yet, each for the vulnerabilities known now: a new one fails the audit, and
+# each rule expires, then the audit reports them again and they have to be checked.
+ignore-unfixed = true
+ignore = [
+  { id = "CVE-2026-18295", package = "gstreamer", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-18296", package = "gstreamer", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-18297", package = "gstreamer", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-18298", package = "gstreamer", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-18299", package = "gstreamer", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-1940", package = "gstreamer", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-2920", package = "gstreamer", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-2921", package = "gstreamer", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-2922", package = "gstreamer", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-2923", package = "gstreamer", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-3081", package = "gstreamer", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-3082", package = "gstreamer", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-3083", package = "gstreamer", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-3084", package = "gstreamer", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-3085", package = "gstreamer", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-3086", package = "gstreamer", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-73434", package = "gstreamer", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-63379", package = "libevent", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-63380", package = "libevent", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-63381", package = "libevent", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-63382", package = "libevent", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-63383", package = "libevent", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-63384", package = "libevent", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-63385", package = "libevent", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-63387", package = "libevent", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-63388", package = "libevent", reason = "qt-main 5.15.15, the last Qt5 build of conda-forge (PyQt5), is built against it; fixed only with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2026-103111", package = "pcre2", reason = "libglib 2.90.1 and git 2.56.0 of conda-forge are built against pcre2 <10.48; fixed with their next build", expired-at = "2027-02-28" },
+  { id = "CVE-2026-86145", package = "pcre2", reason = "libglib 2.90.1 and git 2.56.0 of conda-forge are built against pcre2 <10.48; fixed with their next build", expired-at = "2027-02-28" },
+  { id = "CVE-2026-89156", package = "pcre2", reason = "libglib 2.90.1 and git 2.56.0 of conda-forge are built against pcre2 <10.48; fixed with their next build", expired-at = "2027-02-28" },
+  { id = "CVE-2026-89157", package = "pcre2", reason = "libglib 2.90.1 and git 2.56.0 of conda-forge are built against pcre2 <10.48; fixed with their next build", expired-at = "2027-02-28" },
+  { id = "CVE-2026-89158", package = "pcre2", reason = "libglib 2.90.1 and git 2.56.0 of conda-forge are built against pcre2 <10.48; fixed with their next build", expired-at = "2027-02-28" },
+  { id = "CVE-2026-89160", package = "pcre2", reason = "libglib 2.90.1 and git 2.56.0 of conda-forge are built against pcre2 <10.48; fixed with their next build", expired-at = "2027-02-28" },
+  { id = "CVE-2026-89161", package = "pcre2", reason = "libglib 2.90.1 and git 2.56.0 of conda-forge are built against pcre2 <10.48; fixed with their next build", expired-at = "2027-02-28" },
+  { id = "CVE-2026-89162", package = "pcre2", reason = "libglib 2.90.1 and git 2.56.0 of conda-forge are built against pcre2 <10.48; fixed with their next build", expired-at = "2027-02-28" },
+  { id = "CVE-2025-12781", package = "python", reason = "MSS supports python <3.12; conda-forge has the fixes in 3.13 and later only", expired-at = "2027-05-31" },
+  { id = "CVE-2025-15366", package = "python", reason = "MSS supports python <3.12; conda-forge has the fixes in 3.13 and later only", expired-at = "2027-05-31" },
+  { id = "CVE-2025-15367", package = "python", reason = "MSS supports python <3.12; conda-forge has the fixes in 3.13 and later only", expired-at = "2027-05-31" },
+  { id = "CVE-2026-103995", package = "python", reason = "MSS supports python <3.12; conda-forge has the fixes in 3.13 and later only", expired-at = "2027-05-31" },
+  { id = "CVE-2026-116566", package = "python", reason = "MSS supports python <3.12; conda-forge has the fixes in 3.13 and later only", expired-at = "2027-05-31" },
+  { id = "CVE-2026-12345", package = "python", reason = "MSS supports python <3.12; conda-forge has the fixes in 3.13 and later only", expired-at = "2027-05-31" },
+  { id = "CVE-2026-3446", package = "python", reason = "MSS supports python <3.12; conda-forge has the fixes in 3.13 and later only", expired-at = "2027-05-31" },
+  { id = "CVE-2026-3479", package = "python", reason = "MSS supports python <3.12; conda-forge has the fixes in 3.13 and later only", expired-at = "2027-05-31" },
+  { id = "CVE-2026-6019", package = "python", reason = "MSS supports python <3.12; conda-forge has the fixes in 3.13 and later only", expired-at = "2027-05-31" },
+  { id = "CVE-2025-12781", package = "libpython", reason = "MSS supports python <3.12; conda-forge has the fixes in 3.13 and later only", expired-at = "2027-05-31" },
+  { id = "CVE-2025-15366", package = "libpython", reason = "MSS supports python <3.12; conda-forge has the fixes in 3.13 and later only", expired-at = "2027-05-31" },
+  { id = "CVE-2025-15367", package = "libpython", reason = "MSS supports python <3.12; conda-forge has the fixes in 3.13 and later only", expired-at = "2027-05-31" },
+  { id = "CVE-2026-103995", package = "libpython", reason = "MSS supports python <3.12; conda-forge has the fixes in 3.13 and later only", expired-at = "2027-05-31" },
+  { id = "CVE-2026-116566", package = "libpython", reason = "MSS supports python <3.12; conda-forge has the fixes in 3.13 and later only", expired-at = "2027-05-31" },
+  { id = "CVE-2026-12345", package = "libpython", reason = "MSS supports python <3.12; conda-forge has the fixes in 3.13 and later only", expired-at = "2027-05-31" },
+  { id = "CVE-2026-3446", package = "libpython", reason = "MSS supports python <3.12; conda-forge has the fixes in 3.13 and later only", expired-at = "2027-05-31" },
+  { id = "CVE-2026-3479", package = "libpython", reason = "MSS supports python <3.12; conda-forge has the fixes in 3.13 and later only", expired-at = "2027-05-31" },
+  { id = "CVE-2026-6019", package = "libpython", reason = "MSS supports python <3.12; conda-forge has the fixes in 3.13 and later only", expired-at = "2027-05-31" },
+  { id = "CVE-2023-51714", package = "qt-main", reason = "fixed in Qt 5.15.17 and later, commercial LTS releases only; fixed with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2024-25580", package = "qt-main", reason = "fixed in Qt 5.15.17 and later, commercial LTS releases only; fixed with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2024-36048", package = "qt-main", reason = "fixed in Qt 5.15.17 and later, commercial LTS releases only; fixed with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2024-39936", package = "qt-main", reason = "fixed in Qt 5.15.17 and later, commercial LTS releases only; fixed with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2025-23050", package = "qt-main", reason = "fixed in Qt 5.15.17 and later, commercial LTS releases only; fixed with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2025-30348", package = "qt-main", reason = "fixed in Qt 5.15.17 and later, commercial LTS releases only; fixed with Qt6", expired-at = "2027-05-31" },
+  { id = "CVE-2022-26691", package = "libcups", reason = "fixed in cups 2.4, conda-forge has 2.3.3 only; pulled in by qt-main", expired-at = "2027-02-28" },
+  { id = "CVE-2023-34241", package = "libcups", reason = "fixed in cups 2.4, conda-forge has 2.3.3 only; pulled in by qt-main", expired-at = "2027-02-28" },
+  { id = "CVE-2023-4504", package = "libcups", reason = "fixed in cups 2.4, conda-forge has 2.3.3 only; pulled in by qt-main", expired-at = "2027-02-28" },
+  { id = "CVE-2024-35235", package = "libcups", reason = "fixed in cups 2.4, conda-forge has 2.3.3 only; pulled in by qt-main", expired-at = "2027-02-28" },
+  { id = "CVE-2025-58060", package = "libcups", reason = "fixed in cups 2.4, conda-forge has 2.3.3 only; pulled in by qt-main", expired-at = "2027-02-28" },
+  { id = "CVE-2025-58364", package = "libcups", reason = "fixed in cups 2.4, conda-forge has 2.3.3 only; pulled in by qt-main", expired-at = "2027-02-28" },
+  { id = "CVE-2025-58436", package = "libcups", reason = "fixed in cups 2.4, conda-forge has 2.3.3 only; pulled in by qt-main", expired-at = "2027-02-28" },
+  { id = "CVE-2025-61915", package = "libcups", reason = "fixed in cups 2.4, conda-forge has 2.3.3 only; pulled in by qt-main", expired-at = "2027-02-28" },
+  { id = "CVE-2026-107885", package = "libcups", reason = "fixed in cups 2.4, conda-forge has 2.3.3 only; pulled in by qt-main", expired-at = "2027-02-28" },
+  { id = "CVE-2026-107886", package = "libcups", reason = "fixed in cups 2.4, conda-forge has 2.3.3 only; pulled in by qt-main", expired-at = "2027-02-28" },
+  { id = "CVE-2026-107888", package = "libcups", reason = "fixed in cups 2.4, conda-forge has 2.3.3 only; pulled in by qt-main", expired-at = "2027-02-28" },
+  { id = "CVE-2026-107890", package = "libcups", reason = "fixed in cups 2.4, conda-forge has 2.3.3 only; pulled in by qt-main", expired-at = "2027-02-28" },
+  { id = "CVE-2026-41079", package = "libcups", reason = "fixed in cups 2.4, conda-forge has 2.3.3 only; pulled in by qt-main", expired-at = "2027-02-28" },
+  { id = "CVE-2026-55453", package = "libcups", reason = "fixed in cups 2.4, conda-forge has 2.3.3 only; pulled in by qt-main", expired-at = "2027-02-28" },
+  { id = "CVE-2026-55467", package = "libcups", reason = "fixed in cups 2.4, conda-forge has 2.3.3 only; pulled in by qt-main", expired-at = "2027-02-28" },
+  { id = "CVE-2026-55480", package = "libcups", reason = "fixed in cups 2.4, conda-forge has 2.3.3 only; pulled in by qt-main", expired-at = "2027-02-28" },
+  { id = "CVE-2026-61702", package = "libcups", reason = "fixed in cups 2.4, conda-forge has 2.3.3 only; pulled in by qt-main", expired-at = "2027-02-28" },
+  { id = "CVE-2026-117610", package = "libexpat", reason = "fixed in expat 2.10.0, no conda-forge build yet", expired-at = "2027-02-28" },
+  { id = "CVE-2026-118370", package = "libexpat", reason = "fixed in expat 2.10.0, no conda-forge build yet", expired-at = "2027-02-28" },
+  { id = "CVE-2025-62813", package = "lz4-c", reason = "fixed in lz4 1.11.1, no conda-forge build yet", expired-at = "2027-02-28" },
+  { id = "CVE-2026-88822", package = "openssl", reason = "fixed in the openssl 4.1 branch only, no 3.6 release with the fix yet", expired-at = "2027-02-28" },
+  { id = "CVE-2026-88823", package = "openssl", reason = "fixed in the openssl 4.1 branch only, no 3.6 release with the fix yet", expired-at = "2027-02-28" },
+  { id = "CVE-2026-95691", package = "openssl", reason = "fixed in the openssl 4.1 branch only, no 3.6 release with the fix yet", expired-at = "2027-02-28" },
+  { id = "CVE-2026-95692", package = "openssl", reason = "fixed in the openssl 4.1 branch only, no 3.6 release with the fix yet", expired-at = "2027-02-28" },
+]
+# The critical and high vulnerabilities without any fixed release (sec-report.md), each with the reason why it
+# doesn't reach MSS. The rules apply to all environments, so each reason covers the servers and msui. As long as
+# ignore-unfixed = true they document the reasons but don't change the result (ignore-unfixed hides these matches
+# anyway, also after the expiry); with ignore-unfixed = false (planned after 12.0.0) they take effect, come back
+# as soon as a fix is released, and the expiry is for checking the reasons again.
+ignore-until-fixed = [
+  { id = "CVE-2026-120757", package = "hdf5", reason = "crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none, msui only files its user chooses (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2007-3149", package = "krb5", reason = "false positive matched by CPE, a 2007 sudo vulnerability when linked with krb5; MSS doesn't ship sudo", expired-at = "2027-02-28" },
+  { id = "CVE-2026-107778", package = "krb5", reason = "krb5_rd_cred reads forwarded credentials on the accepting side; MSS is at most a GSSAPI client (libpq tries GSSAPI only with a Kerberos credential cache on the host, libcurl only for Negotiate)", expired-at = "2027-02-28" },
+  { id = "CVE-2026-40355", package = "krb5", reason = "NegoEx in gss_accept_sec_context(), the accepting side, and only with a NegoEx mechanism in /etc/gss/mech; MSS is at most a GSSAPI client (libpq, libcurl). Fixed upstream in 1.22.3, no conda-forge build yet", expired-at = "2027-02-28" },
+  { id = "CVE-2026-40356", package = "krb5", reason = "NegoEx in gss_accept_sec_context(), the accepting side, and only with a NegoEx mechanism in /etc/gss/mech; MSS is at most a GSSAPI client (libpq, libcurl). Fixed upstream in 1.22.3, no conda-forge build yet", expired-at = "2027-02-28" },
+  { id = "CVE-2026-3441", package = "ld_impl_linux-64", reason = "the binutils linker, a build tool, not used at runtime", expired-at = "2027-02-28" },
+  { id = "CVE-2026-3442", package = "ld_impl_linux-64", reason = "the binutils linker, a build tool, not used at runtime", expired-at = "2027-02-28" },
+  { id = "CVE-2026-3441", package = "ld_impl_linux-aarch64", reason = "the binutils linker, a build tool, not used at runtime", expired-at = "2027-02-28" },
+  { id = "CVE-2026-3442", package = "ld_impl_linux-aarch64", reason = "the binutils linker, a build tool, not used at runtime", expired-at = "2027-02-28" },
+  { id = "CVE-2026-113351", package = "libexpat", reason = "DoS via XML_ParserReset; Python's pyexpat never calls XML_ParserReset, it creates a new parser per document", expired-at = "2027-02-28" },
+  { id = "CVE-2026-115506", package = "libexpat", reason = "billion laughs; XML from outside is parsed with defusedxml, which refuses entity declarations: flight tracks (mslib/utils/verify_waypoint_data.py) and SAML messages (pysaml2, mscolab and msidp)", expired-at = "2027-02-28" },
+  { id = "CVE-2025-14932", package = "libnetcdf", reason = "crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none, msui only files its user chooses (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2025-14933", package = "libnetcdf", reason = "crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none, msui only files its user chooses (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2025-14934", package = "libnetcdf", reason = "crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none, msui only files its user chooses (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2025-14935", package = "libnetcdf", reason = "crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none, msui only files its user chooses (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2025-14936", package = "libnetcdf", reason = "crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none, msui only files its user chooses (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2026-86095", package = "libnetcdf", reason = "crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none, msui only files its user chooses (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2019-17455", package = "libntlm", reason = "linux-aarch64 build only; via libpq -> openldap -> cyrus-sasl (psycopg in mscolab, Qt's QPSQL plugin in msui), only for LDAP with SASL NTLM; MSColab authenticates to PostgreSQL by password, msui never loads QPSQL", expired-at = "2027-02-28" },
+  { id = "CVE-2022-25852", package = "libpq", reason = "false positive matched by CPE, the advisory is about the Node.js package pg-native", expired-at = "2027-02-28" },
+  { id = "CVE-2026-119586", package = "libsqlite", reason = "command injection in the sqlite3 CLI (.recover); MSS uses the library, not the CLI", expired-at = "2027-02-28" },
+  { id = "CVE-2025-15661", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-55199", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-55200", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-58050", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-58051", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-66032", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-66033", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-66034", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-66035", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-7598", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-53613", package = "libuuid", reason = "TOCTOU in util-linux mount, which isn't part of MSS", expired-at = "2027-02-28" },
+  { id = "CVE-2025-7425", package = "libxslt", reason = "no XSLT on outside data: MSS runs no XSLT with lxml; pysaml2 rejects signature transforms other than enveloped-signature/exclusive c14n before xmlsec1 verifies, and xmlsec1 --decrypt only runs after the response signature is checked, which needs want_response_signed: true (set in the generated MSColab SAML config, keep it)", expired-at = "2027-02-28" },
+  { id = "CVE-2026-76844", package = "libzlib", reason = "heap overflow in the gzwrite/gz_vacate file API; Python's gzip and zlib modules use the deflate stream API", expired-at = "2027-02-28" },
+  { id = "CVE-2026-85091", package = "libzlib", reason = "heap overflow in the gzwrite/gz_vacate file API; Python's gzip and zlib modules use the deflate stream API", expired-at = "2027-02-28" },
+  { id = "CVE-2026-119586", package = "sqlite", reason = "command injection in the sqlite3 CLI (.recover); MSS uses the library, not the CLI", expired-at = "2027-02-28" },
+  { id = "CVE-2026-76844", package = "zlib", reason = "heap overflow in the gzwrite/gz_vacate file API; Python's gzip and zlib modules use the deflate stream API", expired-at = "2027-02-28" },
+  { id = "CVE-2026-85091", package = "zlib", reason = "heap overflow in the gzwrite/gz_vacate file API; Python's gzip and zlib modules use the deflate stream API", expired-at = "2027-02-28" },
+]

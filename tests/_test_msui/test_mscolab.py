@@ -42,7 +42,6 @@ from tests import constants
 import mslib.msui.utils.auth
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.message_type import MessageType
-from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import LON, WaypointsTableModel
 from PyQt5 import QtCore, QtGui, QtTest, QtWidgets
 from mslib.msui.utils.config import MSUIDefaultConfig, read_config_file, config_loader, modify_config_file
@@ -50,7 +49,6 @@ from tests.utils import create_msui_settings_file, ExceptionMock
 from mslib.msui import msui
 from mslib.msui import mscolab
 from mslib.msui.mscolab_exceptions import MSColabSessionExpiredError
-from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 
 
 @pytest.mark.parametrize("name, directory", [
@@ -67,6 +65,7 @@ def test_safe_dir_name(name, directory):
 class Test_Mscolab_connect_window:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot, mscolab_server_app, mscolab_server):
+        from mslib.mscolab.seed import add_operation, add_user, add_user_to_operation, get_user
         self.app = mscolab_server_app
         self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
@@ -245,6 +244,7 @@ class Test_Mscolab_connect_window:
             QtTest.QTest.mouseClick(self.window.idpAuthTokenSubmitBtn, QtCore.Qt.LeftButton)
 
     def test_idp_login_with_code(self, qtbot):
+        from mslib.mscolab.seed import get_user
         self._connect_to_mscolab(qtbot)
         with self.app.app_context():
             user = get_user(self.userdata[0])
@@ -476,6 +476,7 @@ class Test_Mscolab:
 
     @pytest.fixture(autouse=True)
     def setup(self, qtbot, mscolab_server_app, mscolab_server):
+        from mslib.mscolab.seed import add_operation, add_user, add_user_to_operation, get_user
         self.app = mscolab_server_app
         self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'UserUV10'
@@ -597,6 +598,7 @@ class Test_Mscolab:
         and we are able to cycle a login/logout
         """
         # more operations for the user
+        from mslib.mscolab.seed import add_operation, add_user_to_operation
         for op_name in ["second", "third"]:
             with self.app.app_context():
                 assert add_operation(op_name, "description")
@@ -673,6 +675,7 @@ class Test_Mscolab:
         checks that when we use operations only the operations is bold marked not the flighttrack too
         """
         # more operations for the user
+        from mslib.mscolab.seed import add_operation, add_user_to_operation
         for op_name in ["second", "third"]:
             with self.app.app_context():
                 assert add_operation(op_name, "description")
@@ -717,6 +720,7 @@ class Test_Mscolab:
         checks that active_op_id is set
         """
         # more operations for the user
+        from mslib.mscolab.seed import add_operation, add_user_to_operation
         for op_name in ["second", "third"]:
             with self.app.app_context():
                 assert add_operation(op_name, "description")
@@ -747,6 +751,7 @@ class Test_Mscolab:
         between local flight track and operations, and we are able to cycle a login/logout
         """
         # more operations for the user
+        from mslib.mscolab.seed import add_operation, add_user_to_operation
         for op_name in ["second", "third"]:
             with self.app.app_context():
                 assert add_operation(op_name, "description")
@@ -1309,6 +1314,7 @@ class Test_Mscolab:
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_user_delete(self, mockmessage, qtbot):
+        from mslib.mscolab.models import Permission, User
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user(qtbot, "something", "something@something.org", "something", "Test User")
@@ -1368,6 +1374,7 @@ class Test_Mscolab:
 
     def test_new_permission_lists_the_operation_of_the_permission(self, qtbot):
         # the operations of a user come in no particular order, "four" was created after "europe"
+        from mslib.mscolab.seed import add_user_to_operation
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user(qtbot, "something", "something@something.org", "something", "Test User")

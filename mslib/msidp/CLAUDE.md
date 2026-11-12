@@ -27,3 +27,4 @@ per docs/conf_sso_test_msscolab.rst; MSColab's side of it is covered by
 `tests/_test_mscolab/test_saml.py` with an in-process pysaml2 IdP (needs
 `xmlsec1`, skipped without it). Run `pixi run -e dev lint` and
 `pixi run -e dev lint-imports`.
+With only its dependencies (no numpy, no Flask): `pixi run -e msidp test-msidp`.

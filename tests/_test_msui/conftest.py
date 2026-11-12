@@ -31,9 +31,34 @@ from tests.server_setup import ensure_example_ftml, ensure_mscolab_config, reset
 # the test keyring, the reset of the msui configuration and the Qt helpers
 from tests.msui_fixtures import *  # noqa: F401,F403
 
-# Some test modules import mslib.mscolab at module level (they run against an MSColab server),
-# mslib.mscolab.conf binds mscolab_settings at its first import: write and load the test settings first.
+# The tests that run against an MSColab server import mslib.mscolab, and mslib.mscolab.conf binds
+# mscolab_settings at its first import: write and load the test settings first.
 ensure_mscolab_config()
+
+# tests/fixtures.py holds the fixtures that start or build an MSColab or MSWMS server, and only those
+SERVER_FIXTURES_MODULE = "tests.fixtures"
+
+
+def _uses_a_server(item):
+    """True if the test uses a fixture of tests/fixtures.py, also through another fixture or an override of it"""
+    fixtureinfo = getattr(item, "_fixtureinfo", None)
+    if fixtureinfo is None:
+        return False
+    return any(fixturedef.func.__module__ == SERVER_FIXTURES_MODULE
+               for fixturedefs in fixtureinfo.name2fixturedefs.values() for fixturedef in fixturedefs)
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_collection_modifyitems(config, items):
+    """
+    Marks the tests that use an MSColab or MSWMS server with "servers"
+
+    The msui environment has no server components: there `pixi run -e msui test-msui-without-servers` deselects them
+    with -m "not servers". The test modules import mslib.mscolab and mslib.mswms only inside the tests that need them.
+    """
+    for item in items:
+        if _uses_a_server(item):
+            item.add_marker(pytest.mark.servers)
 
 
 @pytest.fixture(autouse=True)

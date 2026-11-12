@@ -113,3 +113,6 @@ by the autouse hook `_ensure_mscolab_server_if_needed` in the root `conftest.py`
 Two app fixtures exist in `tests/fixtures.py`: `mscolab_app` builds a fresh app with an empty database of its own for
 every test, `mscolab_server_app` is the shared app the forked server runs — use
 the latter only together with `mscolab_server`.
+With only the dependencies of `mss-mscolab` (incl. psycopg): `pixi run -e mscolab test-mscolab`,
+also with `MSCOLAB_TEST_POSTGRES_URL`. A new dependency goes into the `mscolab` feature of `pixi.toml`,
+or `server`/`werkzeug`/`saml` when MSWMS or msidp share it.
