@@ -645,10 +645,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         return False
 
     def insertRows(self, position, rows=1, index=QtCore.QModelIndex(),
-                   waypoints=None, hexagonCreated=False, data_copied=False):
+                   waypoints=None, hexagonCreated=False, data_copied=False, message=None):
         """
         Insert waypoint; overrides the corresponding QAbstractTableModel
-        method.
+        method. <message> replaces the default change message.
         """
         if not waypoints:
             waypoints = [Waypoint(0, 0, 0)] * rows
@@ -656,7 +656,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         assert len(waypoints) == rows, (waypoints, rows)
 
         savedChangeMessage = "Inserted a new waypoint."
-        if hexagonCreated:
+        if message is not None:
+            savedChangeMessage = message
+        elif hexagonCreated:
             savedChangeMessage = "Hexagon created."
         elif data_copied:
             savedChangeMessage = "Imported from another flight track"

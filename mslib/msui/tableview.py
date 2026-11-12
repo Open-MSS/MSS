@@ -34,6 +34,7 @@
 
 import types
 
+from mslib.msui import circle_dockwidget as circle_dock
 from mslib.msui import hexagon_dockwidget as hex_dock
 from mslib.msui import performance_settings as perfset
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -85,14 +86,14 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         self.setFlightTrackModel(model)
         self.tableWayPoints.setItemDelegate(ft.WaypointDelegate(self))
 
-        toolitems = ["(select to open control)", "Hexagon Control", "Performance Settings"]
+        toolitems = ["(select to open control)", "Hexagon Control", "Performance Settings", "Circle Control"]
         self.cbTools.clear()
         self.cbTools.addItems(toolitems)
         self.tableWayPoints.dropEvent = types.MethodType(dropEvent, self.tableWayPoints)
         self.tableWayPoints.dragEnterEvent = types.MethodType(dragEnterEvent, self.tableWayPoints)
 
-        # Dock windows [Hexagon].
-        self.docks = [None, None]
+        # Dock windows [Hexagon, Performance, Circle].
+        self.docks = [None, None, None]
 
         # Connect slots and signals.
         self.btAddWayPointToFlightTrack.clicked.connect(self.addWayPoint)
@@ -182,6 +183,9 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
                     view=self,
                     settings_dict=self.waypoints_model.performance_settings
                 )
+            elif index == 2:
+                title = "Circle Control"
+                widget = circle_dock.CircleControlWidget(view=self)
             else:
                 raise IndexError(f"invalid control index ({index})")
             self.createDockWidget(index, title, widget)

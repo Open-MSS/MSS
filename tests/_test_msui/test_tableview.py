@@ -105,18 +105,20 @@ class Test_TableView:
         Tests opening the hexagon dock widget.
         """
         self.window.cbTools.currentIndexChanged.emit(1)
-        assert len(self.window.docks) == 2
+        assert len(self.window.docks) == 3
         assert self.window.docks[0] is not None
         assert self.window.docks[1] is None
+        assert self.window.docks[2] is None
 
     def test_open_perf_settings(self):
         """
         Tests opening the performance settings dock widget.
         """
         self.window.cbTools.currentIndexChanged.emit(2)
-        assert len(self.window.docks) == 2
+        assert len(self.window.docks) == 3
         assert self.window.docks[0] is None
         assert self.window.docks[1] is not None
+        assert self.window.docks[2] is None
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question",
                 return_value=QtWidgets.QMessageBox.Yes)
@@ -131,6 +133,93 @@ class Test_TableView:
         assert mockbox.call_count == 0
         QtTest.QTest.mouseClick(self.window.docks[0].widget().pbRemoveHexagon, QtCore.Qt.LeftButton)
         assert mockbox.call_count == 1
+        assert len(self.window.waypoints_model.waypoints) == 5
+
+    def test_open_circle(self):
+        """
+        Tests opening the circle dock widget.
+        """
+        self.window.cbTools.currentIndexChanged.emit(3)
+        assert self.window.docks[0] is None
+        assert self.window.docks[1] is None
+        assert self.window.docks[2] is not None
+
+    @pytest.mark.parametrize("vertices", [6, 8])
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question",
+                return_value=QtWidgets.QMessageBox.Yes)
+    def test_insertremove_circle(self, mockbox, vertices):
+        """
+        Test inserting and removing a circle at the selected waypoint, which
+        stays in place.
+        """
+        self.window.cbTools.currentIndexChanged.emit(3)
+        widget = self.window.docks[2].widget()
+        widget.dsbCircleDuration.setValue(10)
+        widget.sbCircleVertices.setValue(vertices)
+        model = self.window.waypoints_model
+        start = model.waypoints[1]
+        start_data = (start.lat, start.lon, start.flightlevel, start.comments)
+        messages = []
+        model.changeMessageSignal.connect(messages.append)
+        self.window.tableWayPoints.selectRow(1)
+        QtTest.QTest.mouseClick(widget.pbAddCircle, QtCore.Qt.LeftButton)
+        assert messages == ["Circle created."]
+        assert len(model.waypoints) == 5 + vertices
+        assert model.waypoints[1] is start
+        circle = model.waypoints[2:2 + vertices]
+        assert [wp.comments for wp in circle] == [f"Circle {i + 1}" for i in range(vertices)]
+        assert (circle[-1].lat, circle[-1].lon) == (start.lat, start.lon)
+        assert all(wp.flightlevel == start.flightlevel for wp in circle)
+        # Dummy aircraft flies 400 kt; the polygon is flown in the requested time.
+        assert sum(wp.leg_time for wp in circle) == pytest.approx(600, rel=1e-2)
+
+        # Removal works from any waypoint of the circle.
+        self.window.tableWayPoints.selectRow(4)
+        QtTest.QTest.mouseClick(widget.pbRemoveCircle, QtCore.Qt.LeftButton)
+        assert mockbox.call_count == 1
+        assert len(model.waypoints) == 5
+        assert model.waypoints[1] is start
+        assert (start.lat, start.lon, start.flightlevel, start.comments) == start_data
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.warning")
+    def test_circle_not_nested(self, mockbox):
+        """
+        A circle cannot start at an inner vertex of another circle, but one can
+        follow at its closing vertex.
+        """
+        self.window.cbTools.currentIndexChanged.emit(3)
+        widget = self.window.docks[2].widget()
+        widget.sbCircleVertices.setValue(6)
+        model = self.window.waypoints_model
+        self.window.tableWayPoints.selectRow(1)
+        QtTest.QTest.mouseClick(widget.pbAddCircle, QtCore.Qt.LeftButton)
+        assert len(model.waypoints) == 11
+        for row in range(2, 7):  # Circle 1 to Circle 5
+            self.window.tableWayPoints.selectRow(row)
+            QtTest.QTest.mouseClick(widget.pbAddCircle, QtCore.Qt.LeftButton)
+        assert mockbox.call_count == 5
+        assert len(model.waypoints) == 11
+        self.window.tableWayPoints.selectRow(7)  # Circle 6, the closing vertex
+        QtTest.QTest.mouseClick(widget.pbAddCircle, QtCore.Qt.LeftButton)
+        assert mockbox.call_count == 5
+        assert len(model.waypoints) == 17
+        assert [wp.comments for wp in model.waypoints[2:14]] == [f"Circle {i % 6 + 1}" for i in range(12)]
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.warning")
+    def test_circle_needs_selection(self, mockbox):
+        """
+        Adding a circle without selected waypoint and removing a non-circle
+        waypoint only warn.
+        """
+        self.window.cbTools.currentIndexChanged.emit(3)
+        widget = self.window.docks[2].widget()
+        self.window.tableWayPoints.clearSelection()
+        self.window.tableWayPoints.setCurrentIndex(QtCore.QModelIndex())
+        QtTest.QTest.mouseClick(widget.pbAddCircle, QtCore.Qt.LeftButton)
+        assert mockbox.call_count == 1
+        self.window.tableWayPoints.selectRow(1)
+        QtTest.QTest.mouseClick(widget.pbRemoveCircle, QtCore.Qt.LeftButton)
+        assert mockbox.call_count == 2
         assert len(self.window.waypoints_model.waypoints) == 5
 
     @mock.patch("mslib.msui.performance_settings.get_open_filename",
