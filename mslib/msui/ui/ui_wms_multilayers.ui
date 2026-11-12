@@ -150,7 +150,8 @@
           </sizepolicy>
          </property>
          <property name="toolTip">
-          <string>Enter a valid WMS URL here.</string>
+          <string>Enter a valid WMS URL here.
+In the opened list, Del or Backspace forgets the highlighted recently used URL.</string>
          </property>
          <property name="styleSheet">
           <string notr="true">QComboBox QAbstractItemView { min-width: 800px; }</string>

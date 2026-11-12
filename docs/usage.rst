@@ -124,6 +124,13 @@ the same scheme, host and port as the address of the capabilities. Otherwise the
 the login, and msui warns once per session. It also warns when the capabilities were loaded with https and
 the maps are to be requested with http.
 
+WMS server list
+~~~~~~~~~~~~~~~
+The list of WMS URLs of a view starts with the default servers of that view (``default_WMS``,
+``default_VSEC_WMS``, ``default_LSEC_WMS``), followed by every URL msui loaded capabilities from, most
+recent first. The recently used URLs are shared by all views. To forget one, open the list, highlight the URL
+and press Del or Backspace; default servers are removed only by changing the configuration.
+
 
 MSUI Flight track import/export plugins
 .......................................
