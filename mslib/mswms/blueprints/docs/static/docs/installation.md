@@ -1,90 +1,61 @@
-# Installation
+# MSWMS installation
 
+The MSS Web Map Service (MSWMS) is included in the
+[conda-forge `mss` package](https://anaconda.org/conda-forge/mss).
 
-## Install distributed version by mamba
+## Project installation
 
-The Mission Support System (MSS) including a Web Map Service a Collaboration Server and a Graphical User Interface is available as
-[conda-forge](https://anaconda.org/conda-forge/mss) package.
+Install [Pixi](https://pixi.sh/latest/) for your operating system. Use a
+dedicated system user for the server, for example `mss`, and log in as that
+user before creating a project in its home directory.
 
+The following commands use a POSIX shell:
 
-We strongly recommend to start from [Miniforge3](https://github.com/conda-forge/miniforge?tab=readme-ov-file#miniforge3)
-a community project of the conda-forge community.
-
-You can install it either automatically with the help of a script or manually.
-
-### Automatically
-
-
-* For **Windows**, use [Windows.bat](https://github.com/Open-MSS/mss-install/blob/main/Windows.bat?raw=1)
-
- 1. Right click on the webpage and select "Save as..." to download the file
- 1. Double click the downloaded file and follow further instructions
-    * For fully automatic installation, open cmd and execute it with `/Path/To/Windows.bat -a`
-
-* For **Linux/Mac**, use [LinuxMac.sh](https://github.com/Open-MSS/mss-install/blob/main/LinuxMac.sh?raw=1)
-
- 1. Right click on the webpage and select "Save as..." to download the file
- 1. Make it executable via `chmod +x LinuxMac.sh`
- 1. Execute it and follow further instructions `./LinuxMac.sh`
-    * For fully automatic installation, run it with the -a parameter `./LinuxMac.sh -a`
-
-
-### Manually
-
-As **Beginner** start with an installation of Miniforge3
-Get [Miniforge3](https://github.com/conda-forge/miniforge?tab=readme-ov-file#miniforge3) for your Operation System
-
-
-You must install mss into a new environment to ensure the most recent
-versions for dependencies (On the Anaconda Prompt on Windows, you have
-to leave out the 'source' here and below).
-
-```
-  $ mamba create -n mssenv
-  $ mamba activate mssenv
-  $ mamba install mss python
-```
-For updating an existing MSS installation to the current version, it is
-best to install it into a new environment. If an existing environment
-shall be updated, it is important to update all packages in this
-environment.
-
-```
-  $ mamba activate mssenv
-  $ msui --update
+```sh
+cd ~
+pixi init MSWMS
+cd MSWMS
+pixi add mss
+pixi shell
 ```
 
+For later sessions, return to this project directory and activate its
+environment with `pixi shell`.
 
-### Server based installation
+## Start MSWMS
 
+Configure `mswms_settings.py` for your forecast data and layers as described
+in the [MSWMS documentation](https://mss.readthedocs.io/en/stable/mswms.html).
+The configuration module is found through `PYTHONPATH`. Before starting
+the server, add the directory containing that file to `PYTHONPATH`; replace
+`/path/to/config` below with that directory:
 
-For a wms server setup or mscolab setup you may want to have a dedicated
-user for the apache2 wsgi script. We suggest to create a mss user.
-
--   create a mss user on your system
--   login as mss user
--   create a *src* directory in /home/mss
--   cd src
--   get [Miniforge3](https://github.com/conda-forge/miniforge?tab=readme-ov-file#miniforge3)
--   set execute bit on install script
--   execute script, enable environment in .bashrc
--   start your shell again (new login)
--   python --version should tell Python 3.X.X
--   mamba create -n mssenv
--   mamba activate mssenv
--   mamba install mss python
-
-For a simple test you could start the builtin standalone *mswms* and
-*mscolab* server:
-
-```
-  $ mswms &
-  $ mscolab start
+```sh
+export PYTHONPATH=/path/to/config
+mswms
 ```
 
-Point a browser for the verification of both servers installed on
+With the default address and port, check the WMS capabilities at
+<http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1>.
+The server runs in the foreground; stop it with Ctrl+C.
 
-  - <http://127.0.0.1:8083/status>
-  - <http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1>
+This built-in server is for development only. For production, use a WSGI
+server such as Waitress or Apache with mod_wsgi, as described in
+[WMS Server Deployment](https://mss.readthedocs.io/en/stable/mswms.html#wms-server-deployment).
 
-Further details in the components section on <http://mss.rtfd.io>
+## Update the installation
+
+Stop the server and run the following in the project directory to update
+MSS within the version constraints in the project manifest:
+
+```sh
+pixi update mss
+```
+
+To upgrade to the latest package versions, disregarding those constraints:
+
+```sh
+pixi upgrade mss
+```
+
+Restart MSWMS after updating.
