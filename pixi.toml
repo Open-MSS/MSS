@@ -31,8 +31,8 @@ pyproj = "*"
 requests = ">=2.33.0"
 scipy = "*"
 
-# The test tasks run in dev without -e, as before the package environments; `pixi run -e <package environment>
-# test-<package>` runs a suite with only the dependencies of its package.
+# The test tasks run in dev without -e, as before the package environments (test-msui-without-servers in msui);
+# `pixi run -e <package environment> test-<package>` runs a suite with only the dependencies of its package.
 [feature.utils.tasks]
 test-utils = { cmd = "env QT_QPA_PLATFORM=offscreen pytest -q -n logical tests/_test_utils", default-environment = "dev" }
 
@@ -327,45 +327,47 @@ ignore = [
   { id = "CVE-2026-95691", package = "openssl", reason = "fixed in the openssl 4.1 branch only, no 3.6 release with the fix yet", expired-at = "2027-02-28" },
   { id = "CVE-2026-95692", package = "openssl", reason = "fixed in the openssl 4.1 branch only, no 3.6 release with the fix yet", expired-at = "2027-02-28" },
 ]
-# The critical and high vulnerabilities of the server environments without any fixed release (sec-report.md),
-# each with the reason why it doesn't reach MSS; they come back as soon as a fix is released. The expiry is for
-# checking the reasons again.
+# The critical and high vulnerabilities without any fixed release (sec-report.md), each with the reason why it
+# doesn't reach MSS. The rules apply to all environments, so each reason covers the servers and msui. As long as
+# ignore-unfixed = true they document the reasons but don't change the result (ignore-unfixed hides these matches
+# anyway, also after the expiry); with ignore-unfixed = false (planned after 12.0.0) they take effect, come back
+# as soon as a fix is released, and the expiry is for checking the reasons again.
 ignore-until-fixed = [
-  { id = "CVE-2026-120757", package = "hdf5", reason = "server envs: crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none (operators: trusted data sources only)", expired-at = "2027-02-28" },
-  { id = "CVE-2007-3149", package = "krb5", reason = "server envs: false positive matched by CPE, a 2007 sudo vulnerability when linked with krb5; MSS doesn't ship sudo", expired-at = "2027-02-28" },
-  { id = "CVE-2026-107778", package = "krb5", reason = "server envs: pulled in by libcurl and libpq/openldap; no Kerberos/GSSAPI authentication is configured anywhere in MSS", expired-at = "2027-02-28" },
-  { id = "CVE-2026-40355", package = "krb5", reason = "server envs: pulled in by libcurl and libpq/openldap; no Kerberos/GSSAPI authentication is configured anywhere in MSS", expired-at = "2027-02-28" },
-  { id = "CVE-2026-40356", package = "krb5", reason = "server envs: pulled in by libcurl and libpq/openldap; no Kerberos/GSSAPI authentication is configured anywhere in MSS", expired-at = "2027-02-28" },
-  { id = "CVE-2026-3441", package = "ld_impl_linux-64", reason = "server envs: the binutils linker, a build tool, not used at runtime", expired-at = "2027-02-28" },
-  { id = "CVE-2026-3442", package = "ld_impl_linux-64", reason = "server envs: the binutils linker, a build tool, not used at runtime", expired-at = "2027-02-28" },
-  { id = "CVE-2026-3441", package = "ld_impl_linux-aarch64", reason = "server envs: the binutils linker, a build tool, not used at runtime", expired-at = "2027-02-28" },
-  { id = "CVE-2026-3442", package = "ld_impl_linux-aarch64", reason = "server envs: the binutils linker, a build tool, not used at runtime", expired-at = "2027-02-28" },
-  { id = "CVE-2026-113351", package = "libexpat", reason = "server envs: XML from outside is parsed with defusedxml (verify_waypoint_data.py, mswms/wms.py), which refuses entity declarations and external entities", expired-at = "2027-02-28" },
-  { id = "CVE-2026-115506", package = "libexpat", reason = "server envs: XML from outside is parsed with defusedxml (verify_waypoint_data.py, mswms/wms.py), which refuses entity declarations and external entities", expired-at = "2027-02-28" },
-  { id = "CVE-2025-14932", package = "libnetcdf", reason = "server envs: crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none (operators: trusted data sources only)", expired-at = "2027-02-28" },
-  { id = "CVE-2025-14933", package = "libnetcdf", reason = "server envs: crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none (operators: trusted data sources only)", expired-at = "2027-02-28" },
-  { id = "CVE-2025-14934", package = "libnetcdf", reason = "server envs: crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none (operators: trusted data sources only)", expired-at = "2027-02-28" },
-  { id = "CVE-2025-14935", package = "libnetcdf", reason = "server envs: crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none (operators: trusted data sources only)", expired-at = "2027-02-28" },
-  { id = "CVE-2025-14936", package = "libnetcdf", reason = "server envs: crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none (operators: trusted data sources only)", expired-at = "2027-02-28" },
-  { id = "CVE-2026-86095", package = "libnetcdf", reason = "server envs: crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none (operators: trusted data sources only)", expired-at = "2027-02-28" },
-  { id = "CVE-2019-17455", package = "libntlm", reason = "server envs, linux-aarch64 build only: psycopg2 -> libpq -> openldap -> cyrus-sasl, only for LDAP with SASL NTLM; MSColab authenticates to PostgreSQL by password", expired-at = "2027-02-28" },
-  { id = "CVE-2022-25852", package = "libpq", reason = "server envs: false positive matched by CPE, the advisory is about the Node.js package pg-native", expired-at = "2027-02-28" },
-  { id = "CVE-2026-119586", package = "libsqlite", reason = "server envs: command injection in the sqlite3 CLI (.recover); MSColab uses the library, not the CLI", expired-at = "2027-02-28" },
-  { id = "CVE-2025-15661", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
-  { id = "CVE-2026-55199", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
-  { id = "CVE-2026-55200", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
-  { id = "CVE-2026-58050", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
-  { id = "CVE-2026-58051", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
-  { id = "CVE-2026-66032", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
-  { id = "CVE-2026-66033", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
-  { id = "CVE-2026-66034", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
-  { id = "CVE-2026-66035", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
-  { id = "CVE-2026-7598", package = "libssh2", reason = "server envs: pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs, MSWMS reads local data files and MSColab's git repositories are local", expired-at = "2027-02-28" },
-  { id = "CVE-2026-53613", package = "libuuid", reason = "server envs: TOCTOU in util-linux mount, which isn't part of MSS", expired-at = "2027-02-28" },
-  { id = "CVE-2025-7425", package = "libxslt", reason = "server envs: pysaml2 rejects signature transforms other than enveloped-signature/exclusive c14n before xmlsec1 runs; MSS runs no XSLT with lxml", expired-at = "2027-02-28" },
-  { id = "CVE-2026-76844", package = "libzlib", reason = "server envs: heap overflow in the gzwrite/gz_vacate file API; Python's gzip and zlib modules use the deflate stream API", expired-at = "2027-02-28" },
-  { id = "CVE-2026-85091", package = "libzlib", reason = "server envs: heap overflow in the gzwrite/gz_vacate file API; Python's gzip and zlib modules use the deflate stream API", expired-at = "2027-02-28" },
-  { id = "CVE-2026-119586", package = "sqlite", reason = "server envs: command injection in the sqlite3 CLI (.recover); MSColab uses the library, not the CLI", expired-at = "2027-02-28" },
-  { id = "CVE-2026-76844", package = "zlib", reason = "server envs: heap overflow in the gzwrite/gz_vacate file API; Python's gzip and zlib modules use the deflate stream API", expired-at = "2027-02-28" },
-  { id = "CVE-2026-85091", package = "zlib", reason = "server envs: heap overflow in the gzwrite/gz_vacate file API; Python's gzip and zlib modules use the deflate stream API", expired-at = "2027-02-28" },
+  { id = "CVE-2026-120757", package = "hdf5", reason = "crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none, msui only files its user chooses (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2007-3149", package = "krb5", reason = "false positive matched by CPE, a 2007 sudo vulnerability when linked with krb5; MSS doesn't ship sudo", expired-at = "2027-02-28" },
+  { id = "CVE-2026-107778", package = "krb5", reason = "krb5_rd_cred reads forwarded credentials on the accepting side; MSS is at most a GSSAPI client (libpq tries GSSAPI only with a Kerberos credential cache on the host, libcurl only for Negotiate)", expired-at = "2027-02-28" },
+  { id = "CVE-2026-40355", package = "krb5", reason = "NegoEx in gss_accept_sec_context(), the accepting side, and only with a NegoEx mechanism in /etc/gss/mech; MSS is at most a GSSAPI client (libpq, libcurl). Fixed upstream in 1.22.3, no conda-forge build yet", expired-at = "2027-02-28" },
+  { id = "CVE-2026-40356", package = "krb5", reason = "NegoEx in gss_accept_sec_context(), the accepting side, and only with a NegoEx mechanism in /etc/gss/mech; MSS is at most a GSSAPI client (libpq, libcurl). Fixed upstream in 1.22.3, no conda-forge build yet", expired-at = "2027-02-28" },
+  { id = "CVE-2026-3441", package = "ld_impl_linux-64", reason = "the binutils linker, a build tool, not used at runtime", expired-at = "2027-02-28" },
+  { id = "CVE-2026-3442", package = "ld_impl_linux-64", reason = "the binutils linker, a build tool, not used at runtime", expired-at = "2027-02-28" },
+  { id = "CVE-2026-3441", package = "ld_impl_linux-aarch64", reason = "the binutils linker, a build tool, not used at runtime", expired-at = "2027-02-28" },
+  { id = "CVE-2026-3442", package = "ld_impl_linux-aarch64", reason = "the binutils linker, a build tool, not used at runtime", expired-at = "2027-02-28" },
+  { id = "CVE-2026-113351", package = "libexpat", reason = "DoS via XML_ParserReset; Python's pyexpat never calls XML_ParserReset, it creates a new parser per document", expired-at = "2027-02-28" },
+  { id = "CVE-2026-115506", package = "libexpat", reason = "billion laughs; XML from outside is parsed with defusedxml, which refuses entity declarations: flight tracks (mslib/utils/verify_waypoint_data.py) and SAML messages (pysaml2, mscolab and msidp)", expired-at = "2027-02-28" },
+  { id = "CVE-2025-14932", package = "libnetcdf", reason = "crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none, msui only files its user chooses (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2025-14933", package = "libnetcdf", reason = "crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none, msui only files its user chooses (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2025-14934", package = "libnetcdf", reason = "crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none, msui only files its user chooses (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2025-14935", package = "libnetcdf", reason = "crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none, msui only files its user chooses (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2025-14936", package = "libnetcdf", reason = "crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none, msui only files its user chooses (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2026-86095", package = "libnetcdf", reason = "crafted HDF5/netCDF files; MSWMS opens only the data files its operator configures, MSColab opens none, msui only files its user chooses (operators: trusted data sources only)", expired-at = "2027-02-28" },
+  { id = "CVE-2019-17455", package = "libntlm", reason = "linux-aarch64 build only; via libpq -> openldap -> cyrus-sasl (psycopg2 in mscolab, Qt's QPSQL plugin in msui), only for LDAP with SASL NTLM; MSColab authenticates to PostgreSQL by password, msui never loads QPSQL", expired-at = "2027-02-28" },
+  { id = "CVE-2022-25852", package = "libpq", reason = "false positive matched by CPE, the advisory is about the Node.js package pg-native", expired-at = "2027-02-28" },
+  { id = "CVE-2026-119586", package = "libsqlite", reason = "command injection in the sqlite3 CLI (.recover); MSS uses the library, not the CLI", expired-at = "2027-02-28" },
+  { id = "CVE-2025-15661", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-55199", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-55200", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-58050", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-58051", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-66032", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-66033", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-66034", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-66035", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-7598", package = "libssh2", reason = "pulled in by libcurl (netCDF/HDF5, PROJ, git); only runs for scp:// or sftp:// URLs: MSWMS and msui read local or http(s) data, MSColab's git repositories are local without remotes", expired-at = "2027-02-28" },
+  { id = "CVE-2026-53613", package = "libuuid", reason = "TOCTOU in util-linux mount, which isn't part of MSS", expired-at = "2027-02-28" },
+  { id = "CVE-2025-7425", package = "libxslt", reason = "no XSLT on outside data: MSS runs no XSLT with lxml; pysaml2 rejects signature transforms other than enveloped-signature/exclusive c14n before xmlsec1 verifies, and xmlsec1 --decrypt only runs after the response signature is checked, which needs want_response_signed: true (set in the generated MSColab SAML config, keep it)", expired-at = "2027-02-28" },
+  { id = "CVE-2026-76844", package = "libzlib", reason = "heap overflow in the gzwrite/gz_vacate file API; Python's gzip and zlib modules use the deflate stream API", expired-at = "2027-02-28" },
+  { id = "CVE-2026-85091", package = "libzlib", reason = "heap overflow in the gzwrite/gz_vacate file API; Python's gzip and zlib modules use the deflate stream API", expired-at = "2027-02-28" },
+  { id = "CVE-2026-119586", package = "sqlite", reason = "command injection in the sqlite3 CLI (.recover); MSS uses the library, not the CLI", expired-at = "2027-02-28" },
+  { id = "CVE-2026-76844", package = "zlib", reason = "heap overflow in the gzwrite/gz_vacate file API; Python's gzip and zlib modules use the deflate stream API", expired-at = "2027-02-28" },
+  { id = "CVE-2026-85091", package = "zlib", reason = "heap overflow in the gzwrite/gz_vacate file API; Python's gzip and zlib modules use the deflate stream API", expired-at = "2027-02-28" },
 ]
