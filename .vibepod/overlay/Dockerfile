@@ -31,7 +31,7 @@ esac && \
 sed "s|pixi-${PIXI_ARCH}-unknown-linux-musl.tar.gz|/tmp/pixi-${PIXI_ARCH}.tar.gz|g" \
     "pixi-${PIXI_ARCH}.sha256" | sha256sum -c - && \
 mkdir -p ${PIXI_HOME}/bin && \
-tar xzf "/tmp/pixi-${PIXI_ARCH}.tar.gz" -C ${PIXI_HOME}/bin && \
+tar --no-same-owner -xzf "/tmp/pixi-${PIXI_ARCH}.tar.gz" -C ${PIXI_HOME}/bin && \
 chmod +x ${PIXI_HOME}/bin/pixi && \
 rm -f /tmp/pixi-aarch64.tar.gz /tmp/pixi-aarch64.sha256 \
       /tmp/pixi-x86_64.tar.gz /tmp/pixi-x86_64.sha256
@@ -59,5 +59,8 @@ RUN printf 'detached-environments = "/workspace/.pixi-linux-%s"\n' "$(uname -m)"
     > ${PIXI_HOME}/config.toml && \
     cat ${PIXI_HOME}/config.toml
 
-# The user of the harness needs write access to PIXI_HOME
-RUN chmod -R a+rwX ${PIXI_HOME}
+# `pixi global install` writes into PIXI_HOME and PIXI_HOME/bin, so the
+# harness user needs write access to both. The sticky bit stops that user from
+# replacing or deleting root's files there (bin/pixi stays root-owned, 755).
+# Only the directories change, so this layer doesn't copy the pixi binary.
+RUN chmod 1777 ${PIXI_HOME} ${PIXI_HOME}/bin
