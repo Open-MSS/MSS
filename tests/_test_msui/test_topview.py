@@ -205,6 +205,8 @@ class Test_MSSTopViewWindow:
         rsdock.dsbObsAngleAzimuth.setValue(70)
         QtTest.QTest.mouseClick(rsdock.cbDrawTangents, QtCore.Qt.LeftButton)
         rsdock.cbShowSolarAngle.setChecked(True)
+        rsdock.cbShowSunlight.setChecked(True)
+        rsdock.dsbSunlightHeight.setValue(12)
 
     def test_open_kml(self):
         self.window.cbTools.currentIndexChanged.emit(4)

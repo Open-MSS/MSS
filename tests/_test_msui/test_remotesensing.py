@@ -32,8 +32,9 @@ from mock import Mock
 from matplotlib.collections import LineCollection
 import pytest
 import skyfield_data
-from mslib.msui.remotesensing_dockwidget import RemoteSensingControlWidget
+from mslib.msui.remotesensing_dockwidget import RemoteSensingControlWidget, horizon_bending, sunlight_horizon
 from mslib.msui import viewplotter
+from mslib.utils.time import datetime_to_jsec
 
 
 def test_skyfield_data_ephemeris_has_not_expired():
@@ -61,6 +62,20 @@ def test_warning_about_the_used_ephemeris(qtbot, monkeypatch):
     _expire(monkeypatch, "de421.bsp")
     with pytest.warns(RuntimeWarning, match="de421.bsp"):
         qtbot.addWidget(RemoteSensingControlWidget(view=Mock()))
+
+
+def test_sunlight_horizon_at_sea_level():
+    # USNO: the top of the sun sets when its centre is 50' below the horizon, 34' of which are refraction
+    assert horizon_bending(0) == pytest.approx(34 / 60, abs=0.05)
+    assert sunlight_horizon(0) - 16 / 60 == pytest.approx(-50 / 60, abs=0.05)
+
+
+def test_sunlight_horizon_at_altitude():
+    # geometric dip of 3.93 degree plus refraction on both sides of the grazing ray
+    assert sunlight_horizon(15) == pytest.approx(-4.975, abs=0.01)
+    assert 1.0 < horizon_bending(15) < 2 * horizon_bending(0)
+    horizons = [sunlight_horizon(_h) for _h in [0, 5, 10, 15, 20, 30]]
+    assert horizons == sorted(horizons, reverse=True)
 
 
 class Test_RemoteSensingControlWidget:
@@ -234,3 +249,22 @@ class Test_RemoteSensingControlWidget:
         view_rating = calc_view_rating(obs_azi=obs_azi, obs_ele=obs_ele, sol_azi=sol_azi,
                                        sol_ele=sol_ele, height=height, difftype=difftype)
         assert round(view_rating, 2) == pytest.approx(expected_rating, rel=1e-3)
+
+    def test_compute_sunlight_lines(self):
+        """
+        Flying slowly north across the equator through sunset: red while the sun is above the horizon
+        at 15 km, then yellow, then green.
+        """
+        times = [datetime.datetime(2023, 4, 15, 18, 0), datetime.datetime(2023, 4, 15, 19, 0)]
+        result = self.remote_widget.compute_sunlight_lines(self.bmap, [(0, -5), (0, 5)], times, 15)
+        assert isinstance(result, LineCollection)
+        # 0: green, 1: yellow, 2: red
+        colours = [int(self.remote_widget.sunlight_norm(_v)) for _v in result.get_array()]
+        assert colours == sorted(colours, reverse=True)
+        assert set(colours) == {0, 1, 2}
+
+    def test_sun_top_elevation(self):
+        jsec = datetime_to_jsec(datetime.datetime(2023, 4, 15, 12, 0))
+        top = self.remote_widget.compute_sun_top_elevation(jsec, 0., 0., 15)
+        _, centre = self.remote_widget.compute_body_angle("sun", jsec, 0., 0.)
+        assert top - centre == pytest.approx(0.267, abs=0.01)
