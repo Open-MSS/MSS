@@ -498,6 +498,8 @@ class PathH_Plotter(PathPlotter):
         self.solar_lines = None
         self.show_marker = show_marker
         self.show_solar_angle = None
+        self.sunlight_lines = None
+        self.show_sunlight = None
         self.remote_sensing = None
 
     def appropriate_epsilon(self, px=5):
@@ -549,6 +551,9 @@ class PathH_Plotter(PathPlotter):
         if self.solar_lines is not None:
             self.solar_lines.remove()
             self.solar_lines = None
+        if self.sunlight_lines is not None:
+            self.sunlight_lines.remove()
+            self.sunlight_lines = None
 
         if len(waypoints_model_data) > 0:
             wp_heights = [(wpd.flightlevel * 0.03048) for wpd in waypoints_model_data]
@@ -565,6 +570,12 @@ class PathH_Plotter(PathPlotter):
                 self.solar_lines = self.remote_sensing.compute_solar_lines(
                     self.map, wp_vertices, wp_heights, wp_times, self.show_solar_angle)
                 self.ax.add_collection(self.solar_lines)
+
+            if self.show_sunlight is not None:
+                assert self.remote_sensing is not None
+                self.sunlight_lines = self.remote_sensing.compute_sunlight_lines(
+                    self.map, wp_vertices, wp_times, self.show_sunlight)
+                self.ax.add_collection(self.sunlight_lines)
 
         if self.wp_scatter is not None:
             self.wp_scatter.remove()
@@ -612,6 +623,8 @@ class PathH_Plotter(PathPlotter):
             self.ax.draw_artist(wp_label)
         if self.show_tangent_points:
             self.ax.draw_artist(self.tangent_lines)
+        if self.sunlight_lines is not None:
+            self.ax.draw_artist(self.sunlight_lines)
         if self.show_solar_angle is not None:
             self.ax.draw_artist(self.solar_lines)
         self.canvas.blit(self.ax.bbox)
@@ -623,6 +636,8 @@ class PathH_Plotter(PathPlotter):
         super().draw_callback(event)
         if self.wp_scatter:
             self.ax.draw_artist(self.wp_scatter)
+        if self.sunlight_lines is not None:
+            self.ax.draw_artist(self.sunlight_lines)
         if self.show_solar_angle:
             self.ax.draw_artist(self.solar_lines)
         if self.show_tangent_points:
@@ -655,6 +670,9 @@ class PathH_Plotter(PathPlotter):
 
     def set_solar_angle_visible(self, visible):
         self.show_solar_angle = visible
+
+    def set_sunlight_visible(self, height):
+        self.show_sunlight = height
 
     def set_remote_sensing(self, ref):
         self.remote_sensing = ref

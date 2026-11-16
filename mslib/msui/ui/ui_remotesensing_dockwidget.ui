@@ -247,6 +247,66 @@ Aircraft altitude is taken from the flight path.</string>
     </layout>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_7">
+     <item>
+      <widget class="QCheckBox" name="cbShowSunlight">
+       <property name="minimumSize">
+        <size>
+         <width>145</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Whether the top of the sun is above the horizon at the given altitude above the flight path, including atmospheric refraction (US standard atmosphere).
+red: above the horizon, yellow: up to 2° below, green: more than 2° below.</string>
+       </property>
+       <property name="text">
+        <string>show sunlight at</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="dsbSunlightHeight">
+       <property name="toolTip">
+        <string>Altitude at which sunlight is checked, independent of the flight level.</string>
+       </property>
+       <property name="suffix">
+        <string> km</string>
+       </property>
+       <property name="decimals">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <double>30.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>15.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="lbSunlightCmap">
+       <property name="text">
+        <string>red: sun above horizon, yellow: up to 2° below, green: more than 2° below</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_7">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>

@@ -26,12 +26,13 @@
 """
 import collections
 import datetime
+import functools
 import warnings
 
 from matplotlib.collections import LineCollection
 from matplotlib.colors import BoundaryNorm, ListedColormap
 import numpy as np
-from skyfield.api import Loader, Topos, utc
+from skyfield.api import Loader, Topos, utc, wgs84
 import skyfield_data
 
 from PyQt5 import QtGui, QtWidgets
@@ -39,9 +40,57 @@ from mslib.msui.qt5 import ui_remotesensing_dockwidget as ui
 from mslib.msui.utils.colordialog import CustomColorDialog
 from mslib.utils.time import jsec_to_datetime, datetime_to_jsec
 from mslib.utils.coordinate import get_distance, rotate_point, fix_angle, normalize_longitude
+from mslib.utils.thermolib import flightlevel2pressure, isa_temperature
+from mslib.utils.units import units
 
 
 EARTH_RADIUS = 6371.
+SUN_RADIUS = 696000.
+
+
+@functools.lru_cache(maxsize=1)
+def _horizon_bending_profile():
+    """
+    Bending [rad] of a light ray grazing the surface of a spherical Earth in the
+    US standard atmosphere, accumulated from the tangent point up to the
+    altitudes z [km]. The bending integral of a spherically symmetric
+    atmosphere (e.g. Kursinski et al., 1997, JGR, eq. 9) is evaluated with the
+    substitution z = s ** 2, which removes the singularity at the tangent point.
+
+    Returns: altitudes z and cumulative bending at z
+    """
+    s = np.linspace(0., np.sqrt(99.9), 2000)
+    z = s ** 2
+    pressure = flightlevel2pressure(z * units.km).to("hPa").magnitude
+    temperature = np.array([isa_temperature(_z * units.km).to("K").magnitude for _z in z])
+    n = 1. + 77.6e-6 * pressure / temperature  # refractivity of dry air
+    impact = n[0] * EARTH_RADIUS
+    integrand = np.empty_like(z)
+    integrand[1:] = (-np.gradient(np.log(n), z)[1:] * impact * 2 * s[1:] /
+                     np.sqrt((n[1:] * (EARTH_RADIUS + z[1:])) ** 2 - impact ** 2))
+    integrand[0] = integrand[1]
+    cumulative = np.concatenate([[0.], np.cumsum(0.5 * (integrand[1:] + integrand[:-1]) * np.diff(s))])
+    return z, cumulative
+
+
+def horizon_bending(height):
+    """
+    Refraction [deg] of the sunlight that grazes the surface and reaches the
+    altitude <height> [km]: bending from space down to the tangent point plus
+    bending from there up to <height>.
+    """
+    z, cumulative = _horizon_bending_profile()
+    return np.rad2deg(cumulative[-1] + np.interp(height, z, cumulative))
+
+
+def sunlight_horizon(height):
+    """
+    True (unrefracted) elevation [deg] below which the top of the sun sets for
+    an observer at altitude <height> [km]: geometric dip of the horizon plus
+    the atmospheric refraction of the grazing ray.
+    """
+    dip = np.rad2deg(np.arccos(EARTH_RADIUS / (EARTH_RADIUS + height)))
+    return -dip - horizon_bending(height)
 
 
 class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidget):
@@ -105,6 +154,13 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
             (0.65, 1.00, 0.65, 1.0)])
         self.solar_norm = BoundaryNorm(
             [0, 5, 10, 15, 25, 35, 45, 90, 135, 180], self.solar_cmap.N)
+        self.sunlight_cmap = ListedColormap([
+            (0.00, 0.70, 0.00, 1.0),
+            (1.00, 0.85, 0.00, 1.0),
+            (1.00, 0.00, 0.00, 1.0)])
+        self.sunlight_norm = BoundaryNorm([-180, -2, 0, 180], self.sunlight_cmap.N)
+        self.cbShowSunlight.stateChanged.connect(self.update_settings)
+        self.dsbSunlightHeight.valueChanged.connect(self.update_settings)
 
         self.update_settings()
 
@@ -125,6 +181,16 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         alt, az, d = astrometric.apparent().altaz()
         return az.degrees, alt.degrees
 
+    def compute_sun_top_elevation(self, jsec, lon, lat, height):
+        """
+        True (unrefracted) elevation [deg] of the top of the sun seen from
+        altitude <height> [km].
+        """
+        t = self.timescale.utc(jsec_to_datetime(jsec).replace(tzinfo=utc))
+        loc = self.planets["earth"] + wgs84.latlon(lat, lon, elevation_m=height * 1000.)
+        alt, _, distance = loc.at(t).observe(self.planets["sun"]).apparent().altaz()
+        return alt.degrees + np.rad2deg(np.arcsin(SUN_RADIUS / distance.km))
+
     def update_settings(self):
         """
         Updates settings in TopView and triggers a redraw.
@@ -137,6 +203,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
             settings["show_solar_angle"] = self.cbSolarAngleType.currentText(), self.cbSolarBody.currentText()
         else:
             settings["show_solar_angle"] = None
+        settings["show_sunlight"] = self.dsbSunlightHeight.value() if self.cbShowSunlight.isChecked() else None
 
         self.view.set_remote_sensing_appearance(settings)
 
@@ -214,36 +281,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         """
         # calculate distances and times
         body, difftype = solartype
-
-        times = [datetime_to_jsec(_wp_time) for _wp_time in wp_times]
-        x, y = list(zip(*wp_vertices))
-        wp_lons, wp_lats = bmap(x, y, inverse=True)
-        if bmap.projection == "cyl":  # hack for wraparound
-            wp_lons = normalize_longitude(wp_lons, bmap.llcrnrlon, bmap.urcrnrlon)
-        fine_lines = [bmap.gcpoints2(wp_lons[i], wp_lats[i], wp_lons[i + 1], wp_lats[i + 1], map_coords=False) for i in
-                      range(len(wp_lons) - 1)]
-        line_heights = [np.linspace(wp_heights[i], wp_heights[i + 1], num=len(fine_lines[i][0])) for i in
-                        range(len(fine_lines))]
-        line_times = [np.linspace(times[i], times[i + 1], num=len(fine_lines[i][0])) for i in
-                      range(len(fine_lines))]
-        # fine_lines = list of tuples with x-list and y-list for each segment
-        # lines = list of tuples with lon-list and lat-list for each segment
-        heights = []
-        times = []
-        for i in range(len(fine_lines) - 1):
-            heights.extend(line_heights[i][:-1])
-            times.extend(line_times[i][:-1])
-        heights.extend(line_heights[-1])
-        times.extend(line_times[-1])
-        solar_x = []
-        solar_y = []
-        for i in range(len(fine_lines) - 1):
-            solar_x.extend(fine_lines[i][0][:-1])
-            solar_y.extend(fine_lines[i][1][:-1])
-        solar_x.extend(fine_lines[-1][0])
-        solar_y.extend(fine_lines[-1][1])
-        if bmap.projection == "cyl":  # hack for wraparound
-            solar_x = normalize_longitude(solar_x, bmap.llcrnrlon, bmap.urcrnrlon)
+        solar_x, solar_y, heights, times = self._fine_path(bmap, wp_vertices, wp_heights, wp_times)
         points = []
         old_wp = None
         total_distance = 0
@@ -277,6 +315,64 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
                                      zorder=2, linewidths=3, animated=True)
         solar_lines.set_array(np.array(vals))
         return solar_lines
+
+    def compute_sunlight_lines(self, bmap, wp_vertices, wp_times, height):
+        """
+        Computes coloured overlay over the flight path that indicates whether
+        the top of the sun is above the horizon, including refraction, at the
+        altitude <height> [km] above the flight path.
+
+        Returns: LineCollection, red if the sun is above the horizon, yellow if
+                 it is up to 2 degrees below, green if it is further below
+        """
+        lons, lats, _, times = self._fine_path(bmap, wp_vertices, [0] * len(wp_vertices), wp_times)
+        horizon = sunlight_horizon(height)
+        vals = [self.compute_sun_top_elevation(times[i], lons[i], lats[i], height) - horizon
+                for i in range(len(lons) - 1)]
+        x, y = bmap(np.asarray(lons), np.asarray(lats))
+        points = np.array([x, y]).T.reshape(-1, 1, 2)
+        sunlight_lines = LineCollection(np.concatenate([points[:-1], points[1:]], axis=1),
+                                        cmap=self.sunlight_cmap, norm=self.sunlight_norm,
+                                        zorder=2, linewidths=7, animated=True)
+        sunlight_lines.set_array(np.array(vals))
+        return sunlight_lines
+
+    def _fine_path(self, bmap, wp_vertices, wp_heights, wp_times):
+        """
+        Interpolates the flight path along great circles.
+
+        Returns: longitudes, latitudes, heights, and times (jsec) of the points
+        """
+        times = [datetime_to_jsec(_wp_time) for _wp_time in wp_times]
+        x, y = list(zip(*wp_vertices))
+        wp_lons, wp_lats = bmap(x, y, inverse=True)
+        if bmap.projection == "cyl":  # hack for wraparound
+            wp_lons = normalize_longitude(wp_lons, bmap.llcrnrlon, bmap.urcrnrlon)
+        fine_lines = [bmap.gcpoints2(wp_lons[i], wp_lats[i], wp_lons[i + 1], wp_lats[i + 1], map_coords=False) for i in
+                      range(len(wp_lons) - 1)]
+        line_heights = [np.linspace(wp_heights[i], wp_heights[i + 1], num=len(fine_lines[i][0])) for i in
+                        range(len(fine_lines))]
+        line_times = [np.linspace(times[i], times[i + 1], num=len(fine_lines[i][0])) for i in
+                      range(len(fine_lines))]
+        # fine_lines = list of tuples with x-list and y-list for each segment
+        # lines = list of tuples with lon-list and lat-list for each segment
+        heights = []
+        times = []
+        for i in range(len(fine_lines) - 1):
+            heights.extend(line_heights[i][:-1])
+            times.extend(line_times[i][:-1])
+        heights.extend(line_heights[-1])
+        times.extend(line_times[-1])
+        solar_x = []
+        solar_y = []
+        for i in range(len(fine_lines) - 1):
+            solar_x.extend(fine_lines[i][0][:-1])
+            solar_y.extend(fine_lines[i][1][:-1])
+        solar_x.extend(fine_lines[-1][0])
+        solar_y.extend(fine_lines[-1][1])
+        if bmap.projection == "cyl":  # hack for wraparound
+            solar_x = normalize_longitude(solar_x, bmap.llcrnrlon, bmap.urcrnrlon)
+        return solar_x, solar_y, heights, times
 
     def tangent_point_coordinates(self, lon_lin, lat_lin, flight_alt=14, cut_height=12):
         """

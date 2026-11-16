@@ -1058,6 +1058,7 @@ class MplTopViewCanvas(MplCanvas):
         wpi_plotter.set_remote_sensing(settings["reference"])
         wpi_plotter.set_tangent_visible(settings["draw_tangents"])
         wpi_plotter.set_solar_angle_visible(settings["show_solar_angle"])
+        wpi_plotter.set_sunlight_visible(settings["show_sunlight"])
 
         self.waypoints_interactor.redraw_path()
 
