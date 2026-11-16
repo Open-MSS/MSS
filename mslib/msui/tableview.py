@@ -353,20 +353,9 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         Set the QAbstractItemModel instance that the table displays.
         """
         previous = self.waypoints_model
+        # connects the signals of _model_connections(), once per model
         super().setFlightTrackModel(model)
-        if previous is not None and previous is not self.waypoints_model:
-            # Stop listening to the flight track that is not displayed here
-            # any more, otherwise the connections pile up on every switch.
-            for signal, slot in self._model_connections(previous):
-                try:
-                    signal.disconnect(slot)
-                except (TypeError, RuntimeError):
-                    pass
         self.tableWayPoints.setModel(self.waypoints_model)
-
-        # Automatically enable or disable roundtrip when data changes
-        for signal, slot in self._model_connections(self.waypoints_model):
-            signal.connect(slot)
         self.update_roundtrip_enabled()
 
         if previous is None or previous is self.waypoints_model:

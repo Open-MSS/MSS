@@ -67,14 +67,6 @@ def automate_performance():
     find_and_click_picture('tableviewwindow-select.png', 'Select button not found')
     type_path(sample_path, clear=True)
 
-    # Changing the maximum take off weight
-    find_and_click_picture('tableviewwindow-maximum-take-off-weight-lb.png',
-                           'Max take off weight lb not found')
-    x, y = pag.position()
-    pag.click(x + 318, y, duration=2)
-    type_and_key('87000')
-    pag.sleep(2)
-
     # Changing the aircraft weight of the dummy aircraft
     find_and_click_picture('tableviewwindow-aircraft-weight-no-fuel-lb.png',
                            'Aircraft weight no fuel not found')

@@ -6,7 +6,7 @@ The range-specific data of an aircraft can be taken into account in Tableview fo
   .. video:: ../videos/mp4/tutorial_performancesettings.mp4
      :alt: This is the Performance Settings dockwidget opened in the Table View (CTRL+T) of the MSS software
            where by putting and changing some parameters, we can evaluate the performance of the aircraft.
-           Parameters like Flight Altitude, Aviation fuel, Aircraft weight, Maximum take off weight
+           Parameters like Flight Altitude, Aviation fuel, Aircraft weight
            from one point to other in flight planning, etcetera, can be evaluated.
            Click on "(select to open control)" to open the "Performance Settings" dockwidget.
            There will be different attributes in the table view which will be used to evaluate the
@@ -19,10 +19,9 @@ The range-specific data of an aircraft can be taken into account in Tableview fo
            You can see the changes in the columns of the table view regarding the performance parameters of the aircraft.
            Giving some examples, things like the change in flight time, fuel, aircraft weight, ceiling altitude,
            etc. as the flight takes off from Nagpur and reaches Delhi, can be analysed.
-           There are options in the panel like maximum take off weight and aircraft weight without fuel.
-           We can change these settings to see the how the performance data changes.
-           Like, we now changed the maximum take off weight from ninety one thousands to eighty seven thousand kilograms.
-           And the aircraft weight without fuel from fifty six thousands to forty eight thousands kilograms.
+           There is an option in the panel for the aircraft weight without fuel.
+           We can change this setting to see the how the performance data changes.
+           Like, we now changed the aircraft weight without fuel from fifty six thousands to forty eight thousands kilograms.
            Now we are going to close the Top View.
            It asks for confirmation whether we want to close it or not.
            We select yes in the confirmation dialogue and it closes.

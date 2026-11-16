@@ -34,6 +34,7 @@
     limitations under the License.
 """
 
+import copy
 import datetime
 import logging
 import math
@@ -60,6 +61,12 @@ from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 # used with a QTableWidget.
 LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE = list(range(5))
 TIME_UTC = 9
+REM_FUEL = 10
+
+# The take off times msui accepts. Far beyond, the times of the waypoints would
+# overflow datetime (year 9999).
+TAKEOFF_TIME_MIN = datetime.datetime(1900, 1, 1)
+TAKEOFF_TIME_MAX = datetime.datetime(8999, 12, 31, 23, 59, 59)
 
 
 def seconds_to_string(seconds):
@@ -366,15 +373,35 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         """
         Load settings from the file self.settingsfile.
         """
-        # Copy, load_settings_qsettings updates the given defaults in place.
-        settings = load_settings_qsettings(self.settings_tag, dict(DEFAULT_PERFORMANCE))
+        # What is stored, without the defaults, to tell the formats of earlier versions apart.
+        stored = load_settings_qsettings(self.settings_tag, {})
+        settings = dict(DEFAULT_PERFORMANCE, **stored)
         # Performance is always shown, earlier versions stored a switch for it.
         settings.pop("visible", None)
         takeoff_time = settings["takeoff_time"]
-        if not isinstance(takeoff_time, QtCore.QDateTime) or not takeoff_time.date().isValid():
+        if not isinstance(takeoff_time, QtCore.QDateTime) or not takeoff_time.date().isValid() or \
+                not TAKEOFF_TIME_MIN <= qdatetime_fields(takeoff_time) <= TAKEOFF_TIME_MAX:
             takeoff_time = DEFAULT_PERFORMANCE["takeoff_time"]
         # Earlier versions stored the take off time with local time spec.
         settings["takeoff_time"] = utc_qdatetime(qdatetime_fields(takeoff_time))
+        # The take off fuel and the empty weight are stored, earlier versions stored the take off
+        # weight instead of the fuel.
+        takeoff_weight = settings.pop("takeoff_weight", 0)
+        if "fuel" in stored:
+            # versions before the empty weight stored the take off fuel and weight
+            if "empty_weight" not in stored and takeoff_weight > 0:
+                settings["empty_weight"] = takeoff_weight - stored["fuel"]
+        elif takeoff_weight > 0:
+            settings["fuel"] = takeoff_weight - settings["empty_weight"]
+        else:
+            # weights never set: 0, the defaults of earlier versions
+            aircraft = settings["aircraft"]
+            if getattr(aircraft, "takeoff_weight", 0) > 0:
+                settings["empty_weight"] = aircraft.empty_weight
+                settings["fuel"] = aircraft.takeoff_weight - aircraft.empty_weight
+            else:
+                settings["empty_weight"] = DEFAULT_PERFORMANCE["empty_weight"]
+                settings["fuel"] = DEFAULT_PERFORMANCE["fuel"]
         self.performance_settings = settings
 
     def save_settings(self):
@@ -402,8 +429,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         if not index.isValid():
             return QtCore.Qt.ItemIsEnabled
         column = index.column()
-        # The data columns of the linear view are read only.
-        if column < LINEAR_DATA_COLUMN and TABLE_FULL[column][2]:
+        # The data columns of the linear view are read only. The remaining fuel
+        # of the first waypoint is the take off fuel.
+        if column < LINEAR_DATA_COLUMN and TABLE_FULL[column][2] or (column, index.row()) == (REM_FUEL, 0):
             return QtCore.Qt.ItemFlags(
                 int(QtCore.QAbstractTableModel.flags(self, index) |
                     QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsDragEnabled |
@@ -604,6 +632,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         corresponding QAbstractTableModel method.
 
         NOTE: Performance computations loose their validity if a change is made.
+
+        Times are UTC, as everywhere in MSS: a QDateTime gives its date and time fields,
+        whatever its time spec, or a naive datetime, or a string "YYYY-MM-DD HH:MM:SS".
         """
         if index.isValid() and 0 <= index.row() < len(self.waypoints):
             waypoint = self.waypoints[index.row()]
@@ -724,16 +755,36 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     # must not shift the flight by the rounding difference.
                     if format_utc_time(value) == format_utc_time(waypoint.utc_time):
                         return True
-                    takeoff = utc_qdatetime(value - datetime.timedelta(seconds=waypoint.cum_time))
+                    takeoff = value - datetime.timedelta(seconds=waypoint.cum_time)
+                    if not TAKEOFF_TIME_MIN <= takeoff <= TAKEOFF_TIME_MAX:
+                        raise ValueError(
+                            f"take off time {takeoff} not between {TAKEOFF_TIME_MIN} and {TAKEOFF_TIME_MAX}")
+                    # The leg times do not depend on the take off time. Computed
+                    # before anything is stored, so that a failure changes nothing.
+                    self._update_utc_times(takeoff)
                 except (ValueError, OverflowError) as ex:
                     logging.error("%s %s '%s'", type(ex), ex, value)
                     return False
-                self.performance_settings = dict(self.performance_settings, takeoff_time=takeoff)
+                self.performance_settings = dict(self.performance_settings, takeoff_time=utc_qdatetime(takeoff))
                 self.save_settings()
-                # The leg times do not depend on the take off time.
-                self._update_utc_times()
                 # The flight plan itself is unchanged.
                 self.performanceDataChanged.emit()
+                return True
+            elif column == REM_FUEL:
+                # The remaining fuel of the first waypoint is the take off fuel.
+                # Further on it depends on the weight carried, so it can't be set there.
+                if index.row() != 0:
+                    return False
+                try:
+                    fuel = variant_to_float(value)
+                    if not fuel >= 0:
+                        raise ValueError(f"negative fuel {fuel}")
+                except (TypeError, ValueError) as ex:
+                    logging.error("%s %s '%s'", type(ex), ex, value)
+                    return False
+                if fuel != self.performance_settings["fuel"]:
+                    # recomputes the flight, stores the settings, emits performanceDataChanged
+                    self.set_performance_settings(dict(self.performance_settings, fuel=fuel))
                 return True
             else:
                 if variant_to_string(value) == waypoint.comments:
@@ -753,9 +804,12 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         method.
         """
         if not waypoints:
-            waypoints = [Waypoint(0, 0, 0)] * rows
+            waypoints = [Waypoint(0, 0, 0) for _ in range(rows)]
 
         assert len(waypoints) == rows, (waypoints, rows)
+        # The model owns its waypoints: update_distances() writes the times, fuel etc. into them,
+        # which must not change e.g. another flight track they were taken from.
+        waypoints = [copy.deepcopy(waypoint) for waypoint in waypoints]
 
         savedChangeMessage = "Inserted a new waypoint."
         if hexagonCreated:
@@ -848,9 +902,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
                 wp1.leg_time = 0  # time from previous waypoint
                 wp1.cum_time = 0  # total time of flight
-                wp1.weight = self.performance_settings["takeoff_weight"]
+                wp1.weight = self.performance_settings["empty_weight"] + self.performance_settings["fuel"]
                 wp1.leg_fuel = 0
-                wp1.rem_fuel = self.performance_settings["takeoff_weight"] - self.performance_settings["empty_weight"]
+                wp1.rem_fuel = self.performance_settings["fuel"]
                 wp1.ascent_rate = 0
             else:
                 wp0 = waypoints[pos - 1]
@@ -901,13 +955,29 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         self._update_utc_times()
 
-    def _update_utc_times(self):
+    def _update_utc_times(self, takeoff_time=None):
         """
-        Set the time of all waypoints from the take off time and their flight time.
+        Set the time of all waypoints from the take off time (default: the one of the
+        performance settings) and their flight time. Changes nothing if a time can't be computed.
         """
-        takeoff_time = qdatetime_fields(self.performance_settings["takeoff_time"])
-        for waypoint in self.waypoints:
-            waypoint.utc_time = takeoff_time + datetime.timedelta(seconds=waypoint.cum_time)
+        if takeoff_time is None:
+            takeoff_time = qdatetime_fields(self.performance_settings["takeoff_time"])
+        utc_times = [takeoff_time + datetime.timedelta(seconds=waypoint.cum_time) for waypoint in self.waypoints]
+        for waypoint, utc_time in zip(self.waypoints, utc_times):
+            waypoint.utc_time = utc_time
+
+    def set_location(self, row, location, lat, lon):
+        """
+        Moves waypoint row to lat/lon and names it location, as one change of the flight plan.
+        """
+        waypoint = self.waypoints[row]
+        if (waypoint.location, waypoint.lat, waypoint.lon) == (location, lat, lon):
+            return
+        waypoint.location, waypoint.lat, waypoint.lon = location, lat, lon
+        self.changeMessageSignal.emit(f'Moved waypoint {row}')
+        self.update_distances(row)
+        self.modified = True
+        self.dataChanged.emit(self.createIndex(row, LOCATION), self.createIndex(row, LON))
 
     def invert_direction(self):
         self.beginResetModel()
@@ -928,7 +998,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     def replace_waypoints(self, new_waypoints):
         self.changeMessageSignal.emit("Imported from another flight track")
         self.beginResetModel()
-        self.waypoints = list(new_waypoints)
+        # copies, see insertRows()
+        self.waypoints = [copy.deepcopy(waypoint) for waypoint in new_waypoints]
         if len(self.waypoints) > 0:
             self.update_distances(position=0, rows=len(self.waypoints))
         self.endResetModel()
@@ -1046,48 +1117,59 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
             editor.setCalendarPopup(True)
             editor.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
             editor.setTimeSpec(QtCore.Qt.UTC)
+            # The time of this waypoint, for take off times msui accepts.
+            flight_time = datetime.timedelta(seconds=index.model().waypoint_data(index.row()).cum_time or 0)
+            editor.setDateTimeRange(utc_qdatetime(TAKEOFF_TIME_MIN + flight_time),
+                                    utc_qdatetime(TAKEOFF_TIME_MAX + flight_time))
             return editor
         else:
             # All other columns get the standard editor.
             return QtWidgets.QItemDelegate.createEditor(self, parent, option, index)
+
+    @staticmethod
+    def editor_text(editor):
+        return editor.currentText() if isinstance(editor, QtWidgets.QComboBox) else editor.text()
 
     def setEditorData(self, editor, index):
         value = index.model().data(index, QtCore.Qt.DisplayRole).value()
         if index.column() in (LOCATION,):
             i = editor.findText(value)
             if i == -1:
-                i = 0
-            editor.setCurrentIndex(i)
+                # e.g. no name: keep it, the first entry would be applied when leaving the cell
+                editor.setCurrentIndex(-1)
+                editor.setEditText(value)
+            else:
+                editor.setCurrentIndex(i)
         elif index.column() == TIME_UTC:
             # Start from the displayed time, i.e. full seconds.
             editor.setDateTime(utc_qdatetime(datetime.datetime.strptime(value, "%Y-%m-%d %H:%M:%S")))
         else:
             editor.insert(str(value))
+        # Leaving the cell commits the editor; what it was filled with is no change. Taking the
+        # displayed, i.e. rounded, value would e.g. move a waypoint or drop its name.
+        editor.setProperty("initial_text", self.editor_text(editor))
 
     def setModelData(self, editor, model, index):
         """
         For the LOCATION column: If the user selects a location from the
         combobox, get the corresponding coordinates.
         """
+        if self.editor_text(editor) == editor.property("initial_text"):
+            return
         if index.column() == LOCATION:
             loc = editor.currentText()
             locations = config_loader(dataset='locations')
             if loc in locations:
                 lat, lon = locations[loc]
-                # Don't update distances and flight performance twice, hence
-                # set update=False for LAT.
-                model.setData(index.sibling(index.row(), LAT), QtCore.QVariant(lat), update=False)
-                model.setData(index.sibling(index.row(), LON), QtCore.QVariant(lon))
             else:
-                for wp in self.parent().waypoints_model.all_waypoint_data():
-                    if loc == wp.location:
-                        lat, lon = wp.lat, wp.lon
-                        # Don't update distances and flight performance twice, hence
-                        # set update=False for LAT.
-                        model.setData(index.sibling(index.row(), LAT), QtCore.QVariant(lat), update=False)
-                        model.setData(index.sibling(index.row(), LON), QtCore.QVariant(lon))
-
-            model.setData(index, QtCore.QVariant(editor.currentText()))
+                waypoint = next((wp for wp in model.all_waypoint_data() if wp.location == loc), None)
+                if waypoint is None:
+                    # a new name for this waypoint
+                    model.setData(index, QtCore.QVariant(loc))
+                    return
+                lat, lon = waypoint.lat, waypoint.lon
+            # name and position as one change
+            model.set_location(index.row(), loc, lat, lon)
         elif index.column() == TIME_UTC:
             model.setData(index, editor.dateTime())
         else:

@@ -37,7 +37,8 @@ from mslib.msui.qt5 import ui_performance_dockwidget as ui_dw
 
 DEFAULT_PERFORMANCE = {
     "aircraft": aircraft.SimpleAircraft(aircraft.AIRCRAFT_DUMMY),
-    "takeoff_weight": aircraft.AIRCRAFT_DUMMY["takeoff_weight"],
+    # take off fuel, the take off weight is empty_weight + fuel
+    "fuel": aircraft.AIRCRAFT_DUMMY["takeoff_weight"] - aircraft.AIRCRAFT_DUMMY["empty_weight"],
     "takeoff_time": QtCore.QDateTime.currentDateTimeUtc(),
     "empty_weight": aircraft.AIRCRAFT_DUMMY["empty_weight"],
     "ceiling_alt": [410],
@@ -65,29 +66,29 @@ class MSUI_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDock
             settings_dict = DEFAULT_PERFORMANCE
         self.aircraft = settings_dict["aircraft"]
         self.lbAircraftName.setText(self.aircraft.name)
-        self.dsbTakeoffWeight.setValue(settings_dict["takeoff_weight"])
-        self.dsbEmptyWeight.setValue(
-            settings_dict.get("empty_weight", settings_dict["takeoff_weight"] - settings_dict.get("fuel", 0)))
+        self.dsbEmptyWeight.setValue(settings_dict["empty_weight"])
 
         # Connecting signals. Each update recomputes and redraws the flight
-        # track, the spin boxes have no keyboard tracking, so that typing a
+        # track, the spin box has no keyboard tracking, so that typing a
         # value emits valueChanged once, not on every key stroke.
         self.pbLoadPerformance.clicked.connect(self.load_performance)
-        self.dsbTakeoffWeight.valueChanged.connect(self.update_parent_performance)
         self.dsbEmptyWeight.valueChanged.connect(self.update_parent_performance)
 
-    def get_settings(self):
+    def get_settings(self, fuel=None):
         """
         Encapsulates GUI selections in a python dictionary.
+
+        fuel -- take off fuel, by default the one of the flight track
 
         :return:
          Dictionary of all setting information
         """
+        performance = self.parent.waypoints_model.performance_settings
         settings_dict = {
             "aircraft": self.aircraft,
-            # The takeoff time is set by editing the time column of the table view.
-            "takeoff_time": self.parent.waypoints_model.performance_settings["takeoff_time"],
-            "takeoff_weight": self.dsbTakeoffWeight.value(),
+            # The take off time and fuel are set by editing the table view.
+            "takeoff_time": performance["takeoff_time"],
+            "fuel": performance["fuel"] if fuel is None else fuel,
             "empty_weight": self.dsbEmptyWeight.value()
         }
         return settings_dict
@@ -102,31 +103,31 @@ class MSUI_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDock
         filename = get_open_filename(
             self, "Open Aircraft Performance JSON File", constants.MSUI_CONFIG_PATH,
             "Performance File (*.json)", pickertype="default")
-        if filename is not None:
-            try:
-                with open(filename) as tf:
-                    performance = json.load(tf)
-                self.aircraft = aircraft.SimpleAircraft(performance)
-                self.lbAircraftName.setText(self.aircraft.name)
-                # Apply the new aircraft once, not for each changed weight.
-                self.dsbTakeoffWeight.blockSignals(True)
-                self.dsbEmptyWeight.blockSignals(True)
-                try:
-                    self.dsbTakeoffWeight.setValue(self.aircraft.takeoff_weight)
-                    if not any(hasattr(self.aircraft, _x) for _x in ("fuel", "empty_weight")):
-                        raise KeyError("empty_weight")
-                    if hasattr(self.aircraft, "empty_weight"):
-                        self.dsbEmptyWeight.setValue(self.aircraft.empty_weight)
-                    else:
-                        self.dsbEmptyWeight.setValue(self.aircraft.takeoff_weight - self.aircraft.fuel)
-                finally:
-                    self.dsbTakeoffWeight.blockSignals(False)
-                    self.dsbEmptyWeight.blockSignals(False)
-                    self.update_parent_performance()
-
-            except KeyError as ex:
-                QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                               plain_text_as_html(self.tr(f"JSON File missing '{ex}' entry")))
-            except (FatalUserError, ValueError) as ex:
-                QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                               plain_text_as_html(self.tr(f"JSON File has Syntax Problems:\n{ex}")))
+        if filename is None:
+            return
+        try:
+            with open(filename) as tf:
+                performance = json.load(tf)
+            if not isinstance(performance, dict):
+                raise ValueError("The file holds no JSON object.")
+            # SimpleAircraft takes missing weights as 0
+            if "takeoff_weight" not in performance:
+                raise KeyError("takeoff_weight")
+            if "empty_weight" not in performance and "fuel" not in performance:
+                raise KeyError("empty_weight")
+            new_aircraft = aircraft.SimpleAircraft(performance)
+        except KeyError as ex:
+            QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
+                                           plain_text_as_html(self.tr(f"JSON File missing '{ex}' entry")))
+            return
+        except (FatalUserError, ValueError) as ex:
+            QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
+                                           plain_text_as_html(self.tr(f"JSON File has Syntax Problems:\n{ex}")))
+            return
+        self.aircraft = new_aircraft
+        self.lbAircraftName.setText(self.aircraft.name)
+        # Apply the new aircraft once, not for the changed weight as well.
+        with QtCore.QSignalBlocker(self.dsbEmptyWeight):
+            self.dsbEmptyWeight.setValue(self.aircraft.empty_weight)
+        # The take off fuel of the file's take off weight
+        self.parent.setPerformance(self.get_settings(fuel=self.aircraft.takeoff_weight - self.aircraft.empty_weight))

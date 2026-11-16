@@ -50,7 +50,7 @@ def _set(column, value):
 
 
 def _set_performance(model):
-    model.set_performance_settings(dict(model.performance_settings, takeoff_weight=1000))
+    model.set_performance_settings(dict(model.performance_settings, fuel=1000))
 
 
 def _replace(model):

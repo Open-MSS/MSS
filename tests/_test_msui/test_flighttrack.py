@@ -33,6 +33,7 @@ from PyQt5 import QtCore, QtGui
 from mslib.msui.flighttrack import (LINEAR_DATA_COLUMN, TABLE_FULL, Waypoint, WaypointsTableModel,
                                     linear_data_columns, values_at_waypoints, changed_columns,
                                     LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE, TIME_UTC)
+from mslib.msui.aircraft import AIRCRAFT_DUMMY, SimpleAircraft
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 from tests.utils import lsec_xml
 
@@ -229,7 +230,7 @@ def _set_displayed_time(model):
 
 
 def _set_performance(model):
-    model.set_performance_settings(dict(model.performance_settings, takeoff_weight=1000))
+    model.set_performance_settings(dict(model.performance_settings, fuel=1000))
 
 
 class Test_ChangeSignals:
@@ -335,3 +336,71 @@ class Test_UTC:
         assert takeoff.toString("yyyy-MM-dd HH:mm:ss") == "2030-06-01 10:00:00"
         assert "visible" not in model.performance_settings
         assert model.data(model.index(0, TIME_UTC)).value() == "2030-06-01 10:00:00"
+
+
+class Test_OwnWaypoints:
+    """
+    A flight track owns its waypoints: it writes the times, fuel etc. into them.
+    """
+
+    def _source(self):
+        return WaypointsTableModel("source", waypoints=[Waypoint(0., 0., 0.), Waypoint(10., 10., 300.)])
+
+    def test_replace_waypoints(self):
+        source = self._source()
+        target = WaypointsTableModel("target")
+        target.replace_waypoints(source.all_waypoint_data())
+        target.setData(target.index(1, LAT), 20.)
+        assert source.waypoints[1].lat == 10.
+
+    def test_insert_rows(self):
+        source = self._source()
+        target = WaypointsTableModel("target", waypoints=[Waypoint(5., 5., 0.)])
+        target.insertRows(0, rows=2, waypoints=source.all_waypoint_data())
+        target.setData(target.index(1, LAT), 20.)
+        assert source.waypoints[1].lat == 10.
+
+    def test_model_of_another_models_waypoints(self):
+        """e.g. the merge dialog of MSColab, from the selected rows"""
+        source = self._source()
+        cum_time = source.waypoints[1].cum_time
+        WaypointsTableModel("merge", waypoints=[source.waypoints[1]])
+        assert source.waypoints[1].cum_time == cum_time != 0
+
+    def test_new_rows_are_distinct(self):
+        model = WaypointsTableModel("")
+        model.insertRows(0, rows=2)
+        assert model.waypoints[0] is not model.waypoints[1]
+
+
+class Test_StoredWeights:
+    """
+    The take off fuel and the empty weight are stored; earlier versions stored the take off weight.
+    """
+
+    def _settings(self, **stored):
+        with mock.patch("mslib.msui.flighttrack.load_settings_qsettings", return_value=stored):
+            settings = WaypointsTableModel("").performance_settings
+        assert "takeoff_weight" not in settings
+        return settings["empty_weight"], settings["fuel"]
+
+    def test_current(self):
+        assert self._settings(empty_weight=50000, fuel=20000) == (50000, 20000)
+
+    def test_takeoff_weight(self):
+        assert self._settings(takeoff_weight=80000, empty_weight=50000) == (50000, 30000)
+
+    def test_takeoff_weight_only(self):
+        # as before: all the weight is fuel
+        assert self._settings(takeoff_weight=80000, empty_weight=0) == (0, 80000)
+
+    def test_versions_with_fuel_before_empty_weight(self):
+        assert self._settings(takeoff_weight=80000, fuel=20000) == (60000, 20000)
+
+    def test_weights_never_set(self):
+        assert self._settings(takeoff_weight=0, empty_weight=0) == (55000, 35000)
+        assert self._settings() == (55000, 35000)
+
+    def test_weights_never_set_with_an_aircraft(self):
+        aircraft = SimpleAircraft(dict(AIRCRAFT_DUMMY, takeoff_weight=91000, empty_weight=56000))
+        assert self._settings(aircraft=aircraft, takeoff_weight=0, empty_weight=0) == (56000, 35000)

@@ -196,7 +196,8 @@ MSS may also roughly estimate the fuel consumption and thus range of the aircraf
 neglecting weather conditions given a proper configuration file specifying the
 aircraft performance. Such a file may be loaded using the 'performance settings' button
 in Table View. The table shows the estimated time (UTC) at each waypoint. Edit the time of any
-waypoint to shift the whole flight; all other times follow.
+waypoint to shift the whole flight; all other times follow. Edit the remaining fuel of the first
+waypoint to set the take-off fuel; the fuel at the other waypoints follows from the aircraft model.
 The aircraft performance is specified using tables given in the JSON format.
 A basic configuration looks like the following file:
 
@@ -204,7 +205,8 @@ A basic configuration looks like the following file:
 
 This example file assumes a constant speed of 400 nm/h and a constant fuel consumption of
 2900 lbs/h irrespective of flight level changes. The take-off weight and the empty
-weight of the aircraft are also given, but these may also be adjusted in the GUI after loading.
+weight of the aircraft are also given: loading the file sets the take-off fuel to their difference.
+The empty weight may be adjusted in the performance settings after loading, which keeps the fuel.
 
 The columns of the cruise table are aircraft weight (lbs), aircraft altitude (feet),
 speed (nm/h), and fuel consumption (lbs/h). MSS bilinearily interpolates in aircraft

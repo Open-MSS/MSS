@@ -1406,7 +1406,7 @@ class Test_Mscolab:
                 mock.patch("mslib.msui.flighttrack.save_settings_qsettings"):
             # times and fuel are not part of the flight plan
             model.setData(model.index(0, TIME_UTC), "2030-01-01 12:00:00")
-            model.set_performance_settings(dict(model.performance_settings, takeoff_weight=1000))
+            model.set_performance_settings(dict(model.performance_settings, fuel=1000))
             save_file.assert_not_called()
             model.setData(model.index(0, LON), QtCore.QVariant(model.waypoint_data(0).lon + 1))
             save_file.assert_called_once()
