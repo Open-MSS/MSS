@@ -26,6 +26,7 @@
 """
 
 import os
+import json
 import mock
 import logging
 import pytest
@@ -35,10 +36,12 @@ import socket
 from xml.sax.saxutils import quoteattr
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.msui import flighttrack as ft
-from mslib.msui.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings
+from mslib.msui.utils.config import config_loader, modify_config_file
+from mslib.utils import FatalUserError
 import mslib.msui.wms_control as wc
 from tests.utils import shown_text
-from mslib.msui.utils.service_manager import strip_request_params
+from mslib.msui.utils import constants
+from mslib.msui.utils.service_manager import service_cache_key, strip_request_params
 
 WMS_REQUEST_TIMEOUT_MS = (config_loader(dataset="WMS_request_timeout") + 5) * 1000
 
@@ -55,27 +58,6 @@ class VSecViewMockup(mock.Mock):
     get_plot_size_in_px = mock.Mock(return_value=(200, 100))
 
 
-def test_recent_wms_urls():
-    # the single URL remembered by older msui versions
-    save_settings_qsettings("wms", {"recent_wms_url": "http://old/"})
-    assert wc.load_recent_wms_urls() == ["http://old/"]
-    for url in ["http://a/", "http://b/", "http://a/"]:
-        wc.remember_wms_url(url)
-    assert wc.load_recent_wms_urls() == ["http://a/", "http://b/", "http://old/"]
-    wc.forget_wms_url("http://b/")
-    assert wc.load_recent_wms_urls() == ["http://a/", "http://old/"]
-    save_settings_qsettings("wms", {"recent_wms_urls": ["http://single/"]})
-    assert wc.load_recent_wms_urls() == ["http://single/"]
-
-
-def test_add_wms_urls_skips_duplicates(qtbot):
-    combo = QtWidgets.QComboBox()
-    qtbot.addWidget(combo)
-    combo.addItem("http://a/")
-    wc.add_wms_urls(combo, ["http://a/", "http://b/", "http://b/"])
-    assert [combo.itemText(i) for i in range(combo.count())] == ["http://a/", "http://b/"]
-
-
 def press_in_url_list(combo, url, key=QtCore.Qt.Key_Delete):
     """Opens the list of the URL combo box, highlights url and presses key."""
     combo.showPopup()
@@ -84,18 +66,176 @@ def press_in_url_list(combo, url, key=QtCore.Qt.Key_Delete):
     combo.hidePopup()
 
 
-def test_delete_in_url_list_keeps_default_url(qtbot, tmp_path):
-    wc.remember_wms_url("http://recent/")
-    window = wc.HSecWMSControlWidget(default_WMS=["http://default/"], view=HSecViewMockup(), wms_cache=tmp_path)
-    qtbot.addWidget(window)
+def combo_urls(window):
     combo = window.multilayers.cbWMS_URL
-    combo.setEditText("http://typed/")
-    press_in_url_list(combo, "http://default/")
-    assert combo.findText("http://default/") != -1
-    press_in_url_list(combo, "http://recent/")
-    assert combo.findText("http://recent/") == -1
-    assert wc.load_recent_wms_urls() == []
-    assert combo.currentText() == "http://typed/"
+    return [combo.itemText(i) for i in range(combo.count())]
+
+
+@pytest.fixture
+def hsec_widget(qtbot, tmp_path):
+    """Returns a function creating a top view WMS control widget."""
+    def create():
+        window = wc.HSecWMSControlWidget(view=HSecViewMockup(), wms_cache=tmp_path)
+        qtbot.addWidget(window)
+        return window
+    return create
+
+
+def test_url_list_is_the_config_list(hsec_widget):
+    modify_config_file({"default_WMS": ["http://a/", "http://b/"]})
+    window = hsec_widget()
+    assert combo_urls(window) == ["http://a/", "http://b/"]
+    # the most recently used server is selected at startup
+    assert window.multilayers.cbWMS_URL.currentText() == "http://a/"
+
+
+@pytest.mark.parametrize("entered_url, url, before, after", [
+    # a new server goes on top
+    ("http://new/", "http://new/", ["http://a/", "http://b/"], ["http://new/", "http://a/", "http://b/"]),
+    # a listed server moves to the top
+    ("http://b/", "http://b/", ["http://a/", "http://b/"], ["http://b/", "http://a/"]),
+    # the address the server answered from replaces the one entered
+    ("http://b", "http://b/", ["http://a/", "http://b"], ["http://b/", "http://a/"]),
+    # also if both are listed
+    ("http://b", "http://b/", ["http://a/", "http://b", "http://b/"], ["http://b/", "http://a/"]),
+], ids=["new", "listed", "renamed", "renamed-listed"])
+def test_with_loaded_wms_url(entered_url, url, before, after):
+    assert wc.with_loaded_wms_url(before, entered_url, url) == after
+
+
+def load_stub_server(window, url):
+    """Adds a server without layers to the layer tree of window, as loading its capabilities does."""
+    window.multilayers.add_wms(mock.Mock(url=url))
+
+
+def add_url(window, url):
+    window.change_wms_urls(lambda urls: wc.with_loaded_wms_url(urls, url, url))
+
+
+def test_change_wms_urls_reads_the_file(hsec_widget):
+    modify_config_file({"default_WMS": ["http://a/"]})
+    window = hsec_widget()
+    # e.g. after an autoplot run, which reads its own configuration file
+    config_loader()["default_WMS"] = ["http://stale/"]
+    add_url(window, "http://new/")
+    assert config_loader(dataset="default_WMS") == ["http://new/", "http://a/"]
+    assert combo_urls(window) == ["http://new/", "http://a/"]
+
+
+def test_change_wms_urls_without_change_shows_the_file(hsec_widget):
+    modify_config_file({"default_WMS": ["http://a/", "http://b/"]})
+    window = hsec_widget()
+    constants.MSUI_SETTINGS.write_text(json.dumps({"default_WMS": ["http://edited/", "http://a/"]}))
+    with mock.patch("mslib.msui.wms_control.modify_config_file") as modify:
+        add_url(window, "http://edited/")
+    modify.assert_not_called()
+    assert combo_urls(window) == ["http://edited/", "http://a/"]
+
+
+def test_url_list_is_shared_by_views_of_one_kind(hsec_widget, qtbot, tmp_path):
+    modify_config_file({"default_WMS": ["http://a/", "http://b/"], "default_VSEC_WMS": ["http://a/", "http://b/"]})
+    window, other = hsec_widget(), hsec_widget()
+    side = wc.VSecWMSControlWidget(view=VSecViewMockup(), wms_cache=tmp_path)
+    qtbot.addWidget(side)
+    for view in (other, side):
+        load_stub_server(view, "http://a/")
+    other.multilayers.cbWMS_URL.setEditText("http://typed/")
+    add_url(window, "http://new/")
+    assert combo_urls(other) == ["http://new/", "http://a/", "http://b/"]
+    # the text being entered in the other view stays
+    assert other.multilayers.cbWMS_URL.currentText() == "http://typed/"
+    assert combo_urls(side) == ["http://a/", "http://b/"]
+
+    # removing a server unloads it in all views of the kind
+    other.multilayers.cbWMS_URL.setEditText("http://a/")
+    assert other.multilayers.pbViewCapabilities.isEnabled()
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes):
+        press_in_url_list(window.multilayers.cbWMS_URL, "http://a/")
+    assert "http://a/" not in other.multilayers.layers
+    assert not other.multilayers.pbViewCapabilities.isEnabled()
+    other.view_capabilities()
+    assert "http://a/" in side.multilayers.layers
+
+
+@pytest.mark.parametrize("error", [PermissionError("read-only"), FatalUserError("invalid JSON")],
+                         ids=["read-only", "invalid"])
+def test_url_list_not_saved_warns_once(hsec_widget, monkeypatch, error):
+    monkeypatch.setattr(wc, "_wms_url_save_warning_shown", False)
+    modify_config_file({"default_WMS": ["http://a/", "http://b/"]})
+    window = hsec_widget()
+    with mock.patch("mslib.msui.wms_control.modify_config_file", side_effect=error), \
+            mock.patch("PyQt5.QtWidgets.QMessageBox.warning") as warning:
+        add_url(window, "http://new/")
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes):
+            press_in_url_list(window.multilayers.cbWMS_URL, "http://a/")
+    warning.assert_called_once()
+    assert config_loader(dataset="default_WMS") == ["http://a/", "http://b/"]
+    assert combo_urls(window) == ["http://a/", "http://b/"]
+
+
+@pytest.mark.parametrize("key", [QtCore.Qt.Key_Delete, QtCore.Qt.Key_Backspace], ids=["delete", "backspace"])
+def test_delete_in_url_list(hsec_widget, key):
+    modify_config_file({"default_WMS": ["http://a/", "http://b/", "http://c/"]})
+    window = hsec_widget()
+    combo = window.multilayers.cbWMS_URL
+    combo.setCurrentIndex(combo.findText("http://b/"))
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No):
+        press_in_url_list(combo, "http://a/", key)
+    assert config_loader(dataset="default_WMS") == ["http://a/", "http://b/", "http://c/"]
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes):
+        press_in_url_list(combo, "http://a/", key)
+        assert config_loader(dataset="default_WMS") == ["http://b/", "http://c/"]
+        assert combo_urls(window) == ["http://b/", "http://c/"]
+        assert combo.currentText() == "http://b/"
+        # the selected server is not loaded again by Get Capabilities
+        press_in_url_list(combo, "http://b/", key)
+        assert combo.currentText() == ""
+    assert config_loader(dataset="default_WMS") == ["http://c/"]
+
+
+def test_delete_in_url_list_keeps_a_change_made_while_asking(hsec_widget):
+    modify_config_file({"default_WMS": ["http://a/", "http://b/"]})
+    window, other = hsec_widget(), hsec_widget()
+
+    def question(*args, **kwargs):
+        add_url(other, "http://new/")
+        return QtWidgets.QMessageBox.Yes
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.question", side_effect=question):
+        press_in_url_list(window.multilayers.cbWMS_URL, "http://a/")
+    assert config_loader(dataset="default_WMS") == ["http://new/", "http://b/"]
+
+
+def test_delete_last_url_in_url_list(hsec_widget):
+    modify_config_file({"default_WMS": ["http://a/"]})
+    window = hsec_widget()
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.question") as question:
+        press_in_url_list(window.multilayers.cbWMS_URL, "http://a/")
+    question.assert_not_called()
+    assert config_loader(dataset="default_WMS") == ["http://a/"]
+
+
+def test_cache_serves_listed_servers_only(hsec_widget, monkeypatch):
+    modify_config_file({"default_WMS": ["http://a/", "http://listed/"]})
+    window = hsec_widget()
+    cache = window.service_manager._cache
+    for url in ("http://listed/", "http://unlisted/"):
+        monkeypatch.setitem(cache, service_cache_key(url), mock.Mock(url=url))
+    with mock.patch.object(window, "activate_wms") as activate_wms, \
+            mock.patch("mslib.msui.wms_control.modify_config_file") as modify:
+        window.multilayers.cbWMS_URL.setEditText("http://unlisted/")
+        activate_wms.assert_not_called()
+        window.multilayers.cbWMS_URL.setEditText("http://listed/")
+        activate_wms.assert_called_once()
+    modify.assert_not_called()
+
+
+def test_startup_activates_the_first_server_once(qtbot, tmp_path, monkeypatch):
+    modify_config_file({"default_WMS": ["http://a/", "http://b/"]})
+    monkeypatch.setitem(wc.WMSServiceManager()._cache, service_cache_key("http://a/"), mock.Mock(url="http://a/"))
+    with mock.patch.object(wc.HSecWMSControlWidget, "activate_wms") as activate_wms:
+        window = wc.HSecWMSControlWidget(view=HSecViewMockup(), wms_cache=tmp_path)
+        qtbot.addWidget(window)
+    activate_wms.assert_called_once()
 
 
 class WMSControlWidgetSetup:
@@ -492,50 +632,35 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_metadata.call_count == 1
 
     def query_server_by_enter(self, qtbot, url):
-        """Types url and presses Enter, which inserts it into the combo box, before loading the capabilities."""
+        """Types url and presses Enter, which must not insert it into the combo box, before loading the capabilities."""
         self.window.multilayers.cbWMS_URL.setEditText("")
         QtTest.QTest.keyClicks(self.window.multilayers.cbWMS_URL, url)
         QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Return)
         with qtbot.wait_signal(self.window.cpdlg.canceled, timeout=WMS_REQUEST_TIMEOUT_MS):
             QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
-    def test_typed_url_is_remembered(self, qtbot):
-        self.query_server_by_enter(qtbot, self.url)
-        assert load_settings_qsettings("wms")["recent_wms_urls"][0] == f"{self.url}/"
-        other = wc.HSecWMSControlWidget(view=HSecViewMockup(), wms_cache=self.tempdir)
-        qtbot.addWidget(other)
-        assert other.multilayers.cbWMS_URL.findText(f"{self.url}/") != -1
-
-    def test_url_entered_again_is_listed_once(self, qtbot):
+    def test_typed_url_is_put_on_top(self, qtbot):
         # entered without the trailing slash, loaded from the URL with it
         self.query_server_by_enter(qtbot, self.url)
+        urls = config_loader(dataset="default_WMS")
+        assert urls[0] == f"{self.url}/"
+        assert self.url not in urls
+        assert combo_urls(self.window) == urls
+        assert self.window.multilayers.cbWMS_URL.currentText() == f"{self.url}/"
+
+    def test_url_entered_again_is_listed_once(self, qtbot):
         self.query_server_by_enter(qtbot, self.url)
-        combo = self.window.multilayers.cbWMS_URL
-        urls = [combo.itemText(i) for i in range(combo.count())]
+        self.query_server_by_enter(qtbot, self.url)
+        urls = combo_urls(self.window)
         assert urls.count(f"{self.url}/") == 1
         assert self.url not in urls
-        assert combo.currentText() == f"{self.url}/"
+        assert self.window.multilayers.cbWMS_URL.currentText() == f"{self.url}/"
 
-    @pytest.mark.parametrize("key", [QtCore.Qt.Key_Delete, QtCore.Qt.Key_Backspace], ids=["delete", "backspace"])
-    def test_delete_in_url_list_forgets_url(self, qtbot, key):
-        self.query_server_by_enter(qtbot, self.url)
-        url = f"{self.url}/"
-        # unloading the server keeps its URL
-        server = self.window.multilayers.listLayers.findItems(url, QtCore.Qt.MatchFixedString)[0]
-        self.window.multilayers.delete_server(server)
-        assert url in wc.load_recent_wms_urls()
-        combo = self.window.multilayers.cbWMS_URL
-        press_in_url_list(combo, url, key)
-        assert url not in wc.load_recent_wms_urls()
-        assert combo.findText(url) == -1
-
-    def test_delete_in_url_list_keeps_loaded_server_listed(self, qtbot):
-        self.query_server_by_enter(qtbot, self.url)
-        url = f"{self.url}/"
-        combo = self.window.multilayers.cbWMS_URL
-        press_in_url_list(combo, url)
-        assert url not in wc.load_recent_wms_urls()
-        assert combo.findText(url) != -1
+    def test_autoplot_url_is_listed(self, qtbot):
+        with qtbot.wait_signal(self.window.cpdlg.canceled, timeout=WMS_REQUEST_TIMEOUT_MS):
+            self.window.update_url_layer_styles(self.url, "header", "")
+        assert f"{self.url}/" in self.window.multilayers.layers
+        assert config_loader(dataset="default_WMS")[0] == f"{self.url}/"
 
 
 class Test_VSecWMSControlWidget(WMSControlWidgetSetup):

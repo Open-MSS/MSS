@@ -111,7 +111,7 @@ class Ui_MultilayersDialog(object):
         self.listLayers.headerItem().setText(3, _translate("MultilayersDialog", "Colour"))
         self.label_7.setText(_translate("MultilayersDialog", "WMS URL:"))
         self.cbWMS_URL.setToolTip(_translate("MultilayersDialog", "Enter a valid WMS URL here.\n"
-"In the opened list, Del or Backspace forgets the highlighted recently used URL."))
+"In the opened list, Del or Backspace removes the highlighted URL from the list."))
         self.cbWMS_URL.setItemText(0, _translate("MultilayersDialog", "http://localhost:8002/fc_wms"))
         self.cbWMS_URL.setItemText(1, _translate("MultilayersDialog", "http://osm.omniscale.net/proxy/service"))
         self.btGetCapabilities.setToolTip(_translate("MultilayersDialog", "Request the capabilities from the WMS server."))

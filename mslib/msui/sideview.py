@@ -348,7 +348,6 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
                 # Open a WMS control widget.
                 title = "Web Service Plot Control"
                 widget = wms.VSecWMSControlWidget(
-                    default_WMS=config_loader(dataset="default_VSEC_WMS"),
                     waypoints_model=self.waypoints_model,
                     view=self.mpl.canvas,
                     wms_cache=config_loader(dataset="wms_cache"))

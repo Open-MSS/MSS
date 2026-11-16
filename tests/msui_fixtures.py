@@ -33,7 +33,7 @@ from PyQt5 import QtWidgets
 
 # tests.constants sets MSUI_CONFIG_PATH, which mslib.msui.utils.config needs at import time
 from tests.constants import create_msui_settings_file
-from mslib.msui.utils.config import modify_config_file, read_config_file, save_settings_qsettings
+from mslib.msui.utils.config import modify_config_file, read_config_file
 
 
 class TestKeyring(keyring.backend.KeyringBackend):
@@ -70,10 +70,9 @@ def keyring_reset():
 
 @pytest.fixture(autouse=True)
 def reset_config():
-    """Reset the msui configuration file and the remembered WMS URLs used in the tests before every test."""
+    """Reset the msui configuration file used in the tests after every test."""
     create_msui_settings_file("{}")
     read_config_file()
-    save_settings_qsettings("wms", {})
 
 
 @pytest.fixture
