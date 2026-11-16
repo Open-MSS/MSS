@@ -62,17 +62,22 @@ class MSUI_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDock
         self.view = view
         self.parent = parent
 
-        if not settings_dict:
-            settings_dict = DEFAULT_PERFORMANCE
-        self.aircraft = settings_dict["aircraft"]
-        self.lbAircraftName.setText(self.aircraft.name)
-        self.dsbEmptyWeight.setValue(settings_dict["empty_weight"])
+        self.show_settings(settings_dict or DEFAULT_PERFORMANCE)
 
         # Connecting signals. Each update recomputes and redraws the flight
         # track, the spin box has no keyboard tracking, so that typing a
         # value emits valueChanged once, not on every key stroke.
         self.pbLoadPerformance.clicked.connect(self.load_performance)
         self.dsbEmptyWeight.valueChanged.connect(self.update_parent_performance)
+
+    def show_settings(self, settings_dict):
+        """
+        Shows the aircraft and empty weight of settings_dict, e.g. of the flight track that became active.
+        """
+        self.aircraft = settings_dict["aircraft"]
+        self.lbAircraftName.setText(self.aircraft.name)
+        with QtCore.QSignalBlocker(self.dsbEmptyWeight):
+            self.dsbEmptyWeight.setValue(settings_dict["empty_weight"])
 
     def get_settings(self, fuel=None):
         """
@@ -115,7 +120,13 @@ class MSUI_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDock
                 raise KeyError("takeoff_weight")
             if "empty_weight" not in performance and "fuel" not in performance:
                 raise KeyError("empty_weight")
+            for key in ("takeoff_weight", "empty_weight", "fuel"):
+                if key in performance and (isinstance(performance[key], bool) or
+                                           not isinstance(performance[key], (int, float))):
+                    raise ValueError(f"'{key}' is not a number.")
             new_aircraft = aircraft.SimpleAircraft(performance)
+            if not 0 <= new_aircraft.empty_weight <= new_aircraft.takeoff_weight:
+                raise ValueError("The empty weight must lie between 0 and the take off weight.")
         except KeyError as ex:
             QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
                                            plain_text_as_html(self.tr(f"JSON File missing '{ex}' entry")))

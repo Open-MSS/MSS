@@ -394,14 +394,17 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         elif takeoff_weight > 0:
             settings["fuel"] = takeoff_weight - settings["empty_weight"]
         else:
-            # weights never set: 0, the defaults of earlier versions
+            # take off weight never set: 0, the default of earlier versions. The fuel of
+            # the aircraft, or the default; an empty weight set by the user stays.
             aircraft = settings["aircraft"]
-            if getattr(aircraft, "takeoff_weight", 0) > 0:
-                settings["empty_weight"] = aircraft.empty_weight
-                settings["fuel"] = aircraft.takeoff_weight - aircraft.empty_weight
+            if getattr(aircraft, "takeoff_weight", 0) > 0 and \
+                    0 <= getattr(aircraft, "empty_weight", -1) <= aircraft.takeoff_weight:
+                empty_weight, fuel = aircraft.empty_weight, aircraft.takeoff_weight - aircraft.empty_weight
             else:
-                settings["empty_weight"] = DEFAULT_PERFORMANCE["empty_weight"]
-                settings["fuel"] = DEFAULT_PERFORMANCE["fuel"]
+                empty_weight, fuel = DEFAULT_PERFORMANCE["empty_weight"], DEFAULT_PERFORMANCE["fuel"]
+            if not stored.get("empty_weight", 0) > 0:
+                settings["empty_weight"] = empty_weight
+            settings["fuel"] = fuel
         self.performance_settings = settings
 
     def save_settings(self):
@@ -409,7 +412,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         Save the current settings (map appearance) to the file
         self.settingsfile.
         """
-        save_settings_qsettings(self.settings_tag, self.performance_settings)
+        settings = self.performance_settings
+        # for earlier versions of msui, which read the take off weight instead of the fuel
+        takeoff_weight = settings["empty_weight"] + settings["fuel"]
+        save_settings_qsettings(self.settings_tag, dict(settings, takeoff_weight=takeoff_weight))
 
     def set_performance_settings(self, settings):
         """
@@ -417,7 +423,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         waypoints, and store them.
         """
         self.performance_settings = settings
-        self.update_distances(0)
+        if self.waypoints:
+            self.update_distances(0)
         self.save_settings()
         self.performanceDataChanged.emit()
 
@@ -1162,7 +1169,9 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
             if loc in locations:
                 lat, lon = locations[loc]
             else:
-                waypoint = next((wp for wp in model.all_waypoint_data() if wp.location == loc), None)
+                # the position of another waypoint of that name; no name is just a name
+                waypoint = next((wp for row, wp in enumerate(model.all_waypoint_data())
+                                 if loc != "" and wp.location == loc and row != index.row()), None)
                 if waypoint is None:
                     # a new name for this waypoint
                     model.setData(index, QtCore.QVariant(loc))

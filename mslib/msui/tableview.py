@@ -357,6 +357,9 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         super().setFlightTrackModel(model)
         self.tableWayPoints.setModel(self.waypoints_model)
         self.update_roundtrip_enabled()
+        # The performance settings show those of the flight track displayed.
+        if len(self.docks) > 1 and self.docks[1] is not None:
+            self.docks[1].widget().show_settings(self.waypoints_model.performance_settings)
 
         if previous is None or previous is self.waypoints_model:
             # Adopt what the flight track already shows, another table view

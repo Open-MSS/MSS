@@ -23,8 +23,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import json
 import mock
+import os
 import pytest
 import xml.etree.ElementTree as etree
 
@@ -34,6 +34,7 @@ from mslib.msui.flighttrack import (LINEAR_DATA_COLUMN, TABLE_FULL, Waypoint, Wa
                                     linear_data_columns, values_at_waypoints, changed_columns,
                                     LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE, TIME_UTC)
 from mslib.msui.aircraft import AIRCRAFT_DUMMY, SimpleAircraft
+from mslib.msui.utils import constants
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 from tests.utils import lsec_xml
 
@@ -44,48 +45,21 @@ class Test_WaypointsTableModel_CorruptedSettings:
     Addresses issue #2885.
     """
 
-    def test_load_settings_with_corrupted_performance_settings(self, tmp_path, monkeypatch):
+    def test_load_settings_with_corrupted_performance_settings(self):
         """
-        Test that load_settings handles corrupted performance_settings gracefully.
-
-        Fixes #2885: When performance_settings is loaded as a string (corrupted data)
-        instead of a dict, the application should fall back to DEFAULT_PERFORMANCE
-        instead of crashing with a TypeError.
+        Fixes #2885: stored performance settings that are no dict (corrupted data) give
+        DEFAULT_PERFORMANCE instead of a crash with a TypeError.
         """
-        # Create a temporary settings file with corrupted performance_settings
-        temp_file = tmp_path / "corrupted_settings.json"
-        corrupted_data = {
-            "performance": {
-                "performance_settings": "corrupted_string_data"
-            }
-        }
-        temp_file.write_text(json.dumps(corrupted_data), encoding="utf-8")
-
-        # Temporarily override the settings file location
-        import mslib.msui.utils.config as config_module
-
-        def mock_read_config(tag, default, settings_file=None):
-            if tag == "performance":
-                with open(temp_file, 'r') as f:
-                    data = json.load(f)
-                    return data.get("performance", {}).get("performance_settings", default)
-            return default
-
-        monkeypatch.setattr(config_module, "read_config_file", mock_read_config)
-
-        # Create a WaypointsTableModel instance
-        model = WaypointsTableModel(name="test_track")
-
-        # This should NOT raise a TypeError anymore
-        model.load_settings()
-
-        # Verify that performance_settings is now a dict (DEFAULT_PERFORMANCE)
-        assert isinstance(model.performance_settings, dict), \
-            "performance_settings should be a dict after handling corrupted data"
-
-        # Verify it was reset to DEFAULT_PERFORMANCE
-        assert model.performance_settings == DEFAULT_PERFORMANCE, \
-            "Should fall back to DEFAULT_PERFORMANCE when data is corrupted"
+        q_settings = QtCore.QSettings(os.path.join(constants.MSUI_CONFIG_SYSPATH, "msui-core.conf"),
+                                      QtCore.QSettings.IniFormat)
+        q_settings.setValue("performance", "corrupted_string_data")
+        q_settings.sync()
+        try:
+            model = WaypointsTableModel(name="test_track")
+        finally:
+            q_settings.remove("performance")
+            q_settings.sync()
+        assert model.performance_settings == DEFAULT_PERFORMANCE
 
     def test_isinstance_check_with_various_types(self):
         """
@@ -400,6 +374,17 @@ class Test_StoredWeights:
     def test_weights_never_set(self):
         assert self._settings(takeoff_weight=0, empty_weight=0) == (55000, 35000)
         assert self._settings() == (55000, 35000)
+
+    def test_takeoff_weight_never_set_keeps_empty_weight(self):
+        assert self._settings(takeoff_weight=0, empty_weight=50000) == (50000, 35000)
+
+    def test_takeoff_weight_is_saved_for_earlier_versions(self):
+        with mock.patch("mslib.msui.flighttrack.load_settings_qsettings", return_value={}):
+            model = WaypointsTableModel("")
+        with mock.patch("mslib.msui.flighttrack.save_settings_qsettings") as save:
+            model.set_performance_settings(dict(model.performance_settings, empty_weight=50000, fuel=20000))
+        assert save.call_args[0][1]["takeoff_weight"] == 70000
+        assert "takeoff_weight" not in model.performance_settings
 
     def test_weights_never_set_with_an_aircraft(self):
         aircraft = SimpleAircraft(dict(AIRCRAFT_DUMMY, takeoff_weight=91000, empty_weight=56000))

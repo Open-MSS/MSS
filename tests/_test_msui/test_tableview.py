@@ -34,6 +34,7 @@ import pytest
 
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
+from mslib.msui.aircraft import AIRCRAFT_DUMMY, SimpleAircraft
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 import mslib.msui.tableview as tv
 from tests.utils import lsec_xml
@@ -158,15 +159,21 @@ class Test_TableView:
         assert model.performance_settings["empty_weight"] == 56000
         assert model.performance_settings["fuel"] == model.waypoints[0].rem_fuel == 35000
 
-    @pytest.mark.parametrize("missing", [("empty_weight",), ("takeoff_weight",)])
-    def test_performance_without_weights(self, tmp_path, missing):
+    @pytest.mark.parametrize("change", [
+        {"empty_weight": None}, {"takeoff_weight": None}, {"empty_weight": "56000"},
+        {"empty_weight": 95000}, {"empty_weight": -1}],
+        ids=["no-empty-weight", "no-takeoff-weight", "string", "empty-above-takeoff", "negative"])
+    def test_performance_with_bad_weights(self, tmp_path, change):
         """
-        An aircraft without the weights is rejected, as the error message says, not applied.
+        An aircraft without proper weights is rejected, as the error message says, not applied.
         """
         with open(os.path.join(os.path.dirname(__file__), "..", "data", "performance_simple.json")) as source:
             performance = json.load(source)
-        for key in missing:
-            del performance[key]
+        for key, value in change.items():
+            if value is None:
+                del performance[key]
+            else:
+                performance[key] = value
         filename = tmp_path / "performance.json"
         filename.write_text(json.dumps(performance))
         self.window.cbTools.currentIndexChanged.emit(2)
@@ -697,6 +704,29 @@ class Test_TableView:
         self._edit(1, column)
         assert vars(model.waypoints[1]) == before
         assert changes == []
+
+    def test_clear_name(self):
+        """
+        No name is just no name, not the position of another waypoint without a name.
+        """
+        model = self.window.waypoints_model
+        before = (model.waypoints[4].lat, model.waypoints[4].lon)
+        self._edit(4, ft.LOCATION, "")
+        assert (model.waypoints[4].location, model.waypoints[4].lat, model.waypoints[4].lon) == ("",) + before
+
+    @mock.patch("mslib.msui.flighttrack.save_settings_qsettings")
+    def test_performance_dock_follows_the_flight_track(self, mocksave):
+        self.window.cbTools.currentIndexChanged.emit(2)
+        dock = self.window.docks[1].widget()
+        other = ft.WaypointsTableModel("other", waypoints=[ft.Waypoint(1., 1., 0), ft.Waypoint(2., 2., 0)])
+        other.performance_settings = dict(other.performance_settings, empty_weight=40000, fuel=10000,
+                                          aircraft=SimpleAircraft(dict(AIRCRAFT_DUMMY, name="OTHER")))
+        self.window.setFlightTrackModel(other)
+        assert dock.lbAircraftName.text() == "OTHER"
+        assert dock.dsbEmptyWeight.value() == 40000
+        dock.dsbEmptyWeight.setValue(45000)
+        assert other.performance_settings["aircraft"].name == "OTHER"
+        assert (other.performance_settings["empty_weight"], other.performance_settings["fuel"]) == (45000, 10000)
 
     def test_pick_name_of_another_waypoint(self):
         model = self.window.waypoints_model
