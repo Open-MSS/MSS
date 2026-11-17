@@ -112,17 +112,21 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         """
         Updating Table View with updated performance settings.
         """
-        # The table is repainted on performanceDataChanged.
+        # The table and the dock are updated on performanceDataChanged.
         self.waypoints_model.set_performance_settings(settings)
-        self.resizeColumns()
 
     def update_performance_data(self):
         """
-        Slot called when the times or fuel of the waypoints have changed. They
-        are not part of the flight plan, hence the model does not emit
-        dataChanged() for them and the table has to be repainted here.
+        Slot called when the performance settings, times or fuel of the waypoints
+        have changed, here or in another view of the flight track. They are not
+        part of the flight plan, hence the model does not emit dataChanged() for
+        them and the table has to be repainted here.
         """
         self.tableWayPoints.viewport().update()
+        # e.g. a larger fuel needs wider columns
+        self.resizeColumns()
+        if len(self.docks) > 1 and self.docks[1] is not None:
+            self.docks[1].widget().show_settings(self.waypoints_model.performance_settings)
 
     def setLinearDataVisible(self, visible):
         """

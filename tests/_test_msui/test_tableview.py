@@ -161,21 +161,28 @@ class Test_TableView:
 
     @pytest.mark.parametrize("change", [
         {"empty_weight": None}, {"takeoff_weight": None}, {"empty_weight": "56000"},
-        {"empty_weight": 95000}, {"empty_weight": -1}],
-        ids=["no-empty-weight", "no-takeoff-weight", "string", "empty-above-takeoff", "negative"])
+        {"empty_weight": 95000}, {"empty_weight": -1}, {"takeoff_weight": 1e8, "empty_weight": 0},
+        {"climb": [[0, 0]]}, {"cruise": "abc"}, {"descent": [[["a"]]]}, "not readable"],
+        ids=["no-empty-weight", "no-takeoff-weight", "string", "empty-above-takeoff", "negative", "too-heavy",
+             "short-table-row", "table-string", "table-nested", "not-readable"])
     def test_performance_with_bad_weights(self, tmp_path, change):
         """
-        An aircraft without proper weights is rejected, as the error message says, not applied.
+        An aircraft file that can't be read, without proper weights or tables is rejected, as the
+        error message says, not applied.
         """
         with open(os.path.join(os.path.dirname(__file__), "..", "data", "performance_simple.json")) as source:
             performance = json.load(source)
-        for key, value in change.items():
-            if value is None:
-                del performance[key]
-            else:
-                performance[key] = value
         filename = tmp_path / "performance.json"
-        filename.write_text(json.dumps(performance))
+        if change == "not readable":
+            # a directory can't be opened as a file
+            filename.mkdir()
+        else:
+            for key, value in change.items():
+                if value is None:
+                    del performance[key]
+                else:
+                    performance[key] = value
+            filename.write_text(json.dumps(performance))
         self.window.cbTools.currentIndexChanged.emit(2)
         model = self.window.waypoints_model
         settings = dict(model.performance_settings)
@@ -801,3 +808,103 @@ class Test_TableView:
         assert ft.seconds_to_string(3599.5) == "01:00:00"
         assert ft.seconds_to_string(3599.4) == "00:59:59"
         assert ft.format_utc_time(datetime.datetime(2030, 1, 1, 11, 59, 59, 500000)) == "2030-01-01 12:00:00"
+
+    def test_repick_location(self):
+        """
+        Picking a waypoint's name again moves it to the first waypoint of that name, as on develop.
+        """
+        model = self.window.waypoints_model
+        model.replace_waypoints([ft.Waypoint(50., 6., 0), ft.Waypoint(52., 8., 250, location="Turn"),
+                                 ft.Waypoint(53., 10., 250, location="Turn"), ft.Waypoint(51., 12., 0)])
+        self._edit(2, ft.LOCATION, "Turn")
+        assert (model.waypoints[2].lat, model.waypoints[2].lon) == (52., 8.)
+        # the first one stays where it is
+        self._edit(1, ft.LOCATION, "Turn")
+        assert (model.waypoints[1].lat, model.waypoints[1].lon) == (52., 8.)
+
+    @mock.patch("mslib.msui.flighttrack.save_settings_qsettings")
+    def test_columns_follow_fuel(self, mocksave):
+        """
+        A fuel edit changes no flight plan, still a larger fuel may need wider columns.
+        """
+        with mock.patch.object(self.window, "resizeColumns") as resize:
+            self._edit(0, ft.REM_FUEL, "9999999")
+        resize.assert_called()
+
+
+class Test_TableViewsOfOneFlightTrack:
+    """
+    Several table views with performance settings show one flight track: whatever is changed in
+    one of them, all show the performance settings of the flight track (#3315 review).
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup(self, qtbot, tmp_path):
+        self.model = ft.WaypointsTableModel("", waypoints=[
+            ft.Waypoint(50., 6., 0), ft.Waypoint(52., 8., 250), ft.Waypoint(51., 12., 0)])
+        self.windows = [tv.MSUITableViewWindow(model=self.model) for _ in range(3)]
+        for window in self.windows:
+            window.cbTools.currentIndexChanged.emit(2)
+        performance = dict(AIRCRAFT_DUMMY, name="OTHER", takeoff_weight=80000, empty_weight=50000)
+        self.filename = tmp_path / "other.json"
+        self.filename.write_text(json.dumps(performance))
+        with mock.patch("mslib.msui.flighttrack.save_settings_qsettings"):
+            yield
+        for window in self.windows:
+            window.hide()
+
+    def docks(self):
+        return [window.docks[1].widget() for window in self.windows]
+
+    def check(self):
+        settings = self.model.performance_settings
+        for dock in self.docks():
+            assert dock.lbAircraftName.text() == settings["aircraft"].name
+            assert dock.dsbEmptyWeight.value() == settings["empty_weight"]
+        assert self.model.waypoints[0].rem_fuel == settings["fuel"]
+        assert self.model.waypoints[0].weight == settings["empty_weight"] + settings["fuel"]
+
+    def load(self, dock):
+        with mock.patch("mslib.msui.performance_settings.get_open_filename", return_value=str(self.filename)):
+            QtTest.QTest.mouseClick(dock.pbLoadPerformance, QtCore.Qt.LeftButton)
+
+    @pytest.mark.parametrize("loading, editing", [(0, 1), (1, 0), (2, 2)])
+    def test_load_in_one_edit_in_another(self, loading, editing):
+        """
+        Reimar's case: load an aircraft in one view, change the empty weight in another.
+        """
+        self.check()
+        self.load(self.docks()[loading])
+        assert self.model.performance_settings["aircraft"].name == "OTHER"
+        assert (self.model.performance_settings["empty_weight"], self.model.performance_settings["fuel"]) == \
+            (50000, 30000)
+        self.check()
+        self.docks()[editing].dsbEmptyWeight.setValue(52000)
+        assert self.model.performance_settings["aircraft"].name == "OTHER"
+        assert (self.model.performance_settings["empty_weight"], self.model.performance_settings["fuel"]) == \
+            (52000, 30000)
+        self.check()
+
+    def test_edits_in_any_view(self):
+        windows, docks = self.windows, self.docks()
+        self.load(docks[0])
+        for window, dock in zip(windows, docks):
+            dock.dsbEmptyWeight.setValue(dock.dsbEmptyWeight.value() + 1000)
+            self.check()
+            delegate = window.tableWayPoints.itemDelegate()
+            index = self.model.index(0, ft.REM_FUEL)
+            editor = delegate.createEditor(window.tableWayPoints, QtWidgets.QStyleOptionViewItem(), index)
+            delegate.setEditorData(editor, index)
+            editor.setText(str(self.model.performance_settings["fuel"] + 500))
+            delegate.setModelData(editor, self.model, index)
+            self.check()
+        assert self.model.performance_settings["aircraft"].name == "OTHER"
+        assert (self.model.performance_settings["empty_weight"], self.model.performance_settings["fuel"]) == \
+            (53000, 31500)
+
+    def test_view_opened_later(self):
+        self.load(self.docks()[0])
+        window = tv.MSUITableViewWindow(model=self.model)
+        window.cbTools.currentIndexChanged.emit(2)
+        self.windows.append(window)
+        self.check()

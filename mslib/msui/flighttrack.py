@@ -55,7 +55,7 @@ from mslib.utils import thermolib
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.msui.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
 from mslib.msui.utils.qt import variant_to_string, variant_to_float
-from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
+from mslib.msui.performance_settings import DEFAULT_PERFORMANCE, MAX_WEIGHT
 
 # Constants for identifying the table columns when the WaypointsTableModel is
 # used with a QTableWidget.
@@ -405,6 +405,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             if not stored.get("empty_weight", 0) > 0:
                 settings["empty_weight"] = empty_weight
             settings["fuel"] = fuel
+        # e.g. a take off weight below the empty weight gave a negative fuel
+        for key in ("empty_weight", "fuel"):
+            value = settings[key]
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 <= value <= MAX_WEIGHT:
+                settings[key] = DEFAULT_PERFORMANCE[key]
         self.performance_settings = settings
 
     def save_settings(self):
@@ -420,11 +425,17 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     def set_performance_settings(self, settings):
         """
         Apply new performance settings, i.e. recompute times and fuel of all
-        waypoints, and store them.
+        waypoints, and store them. Settings the computation fails with are
+        neither kept nor stored.
         """
-        self.performance_settings = settings
+        previous, self.performance_settings = self.performance_settings, settings
         if self.waypoints:
-            self.update_distances(0)
+            try:
+                self.update_distances(0)
+            except Exception:
+                self.performance_settings = previous
+                self.update_distances(0)
+                raise
         self.save_settings()
         self.performanceDataChanged.emit()
 
@@ -713,6 +724,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
                     flightlevel = variant_to_float(value)
                     pressure = float(thermolib.flightlevel2pressure(flightlevel * units.hft).magnitude)
+                    # e.g. a typed -1e400 (-inf) or -1e300 (infinite pressure)
+                    if not (math.isfinite(flightlevel) and math.isfinite(pressure)):
+                        raise ValueError(f"flight level {flightlevel} gives pressure {pressure}")
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                     return False
@@ -784,8 +798,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     return False
                 try:
                     fuel = variant_to_float(value)
-                    if not fuel >= 0:
-                        raise ValueError(f"negative fuel {fuel}")
+                    # also rejects inf and nan
+                    if not 0 <= fuel <= MAX_WEIGHT:
+                        raise ValueError(f"fuel {fuel} not between 0 and {MAX_WEIGHT}")
                 except (TypeError, ValueError) as ex:
                     logging.error("%s %s '%s'", type(ex), ex, value)
                     return False
@@ -1161,25 +1176,28 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
         For the LOCATION column: If the user selects a location from the
         combobox, get the corresponding coordinates.
         """
-        if self.editor_text(editor) == editor.property("initial_text"):
-            return
         if index.column() == LOCATION:
+            # A known name sets the position, also if it is unchanged: picking it
+            # again moves the waypoint back to that location.
             loc = editor.currentText()
             locations = config_loader(dataset='locations')
             if loc in locations:
                 lat, lon = locations[loc]
             else:
-                # the position of another waypoint of that name; no name is just a name
-                waypoint = next((wp for row, wp in enumerate(model.all_waypoint_data())
-                                 if loc != "" and wp.location == loc and row != index.row()), None)
+                # the position of the first waypoint of that name, maybe this one;
+                # no name is just a name
+                waypoint = next((wp for wp in model.all_waypoint_data() if loc != "" and wp.location == loc), None)
                 if waypoint is None:
-                    # a new name for this waypoint
+                    # a new name for this waypoint, nothing if unchanged
                     model.setData(index, QtCore.QVariant(loc))
                     return
                 lat, lon = waypoint.lat, waypoint.lon
-            # name and position as one change
+            # name and position as one change, nothing if unchanged
             model.set_location(index.row(), loc, lat, lon)
-        elif index.column() == TIME_UTC:
+            return
+        if self.editor_text(editor) == editor.property("initial_text"):
+            return
+        if index.column() == TIME_UTC:
             model.setData(index, editor.dateTime())
         else:
             QtWidgets.QItemDelegate.setModelData(self, editor, model, index)

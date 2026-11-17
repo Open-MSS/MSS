@@ -23,6 +23,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import math
 import mock
 import os
 import pytest
@@ -32,10 +33,10 @@ from PyQt5 import QtCore, QtGui
 
 from mslib.msui.flighttrack import (LINEAR_DATA_COLUMN, TABLE_FULL, Waypoint, WaypointsTableModel,
                                     linear_data_columns, values_at_waypoints, changed_columns,
-                                    LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE, TIME_UTC)
+                                    LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE, TIME_UTC, REM_FUEL)
 from mslib.msui.aircraft import AIRCRAFT_DUMMY, SimpleAircraft
 from mslib.msui.utils import constants
-from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
+from mslib.msui.performance_settings import DEFAULT_PERFORMANCE, MAX_WEIGHT
 from tests.utils import lsec_xml
 
 
@@ -389,3 +390,61 @@ class Test_StoredWeights:
     def test_weights_never_set_with_an_aircraft(self):
         aircraft = SimpleAircraft(dict(AIRCRAFT_DUMMY, takeoff_weight=91000, empty_weight=56000))
         assert self._settings(aircraft=aircraft, takeoff_weight=0, empty_weight=0) == (56000, 35000)
+
+    @pytest.mark.parametrize("stored", [
+        {"takeoff_weight": 40000, "empty_weight": 50000},
+        {"takeoff_weight": 80000, "fuel": 90000},
+        {"empty_weight": -1, "fuel": 20000},
+        {"empty_weight": 50000, "fuel": float("inf")},
+        {"empty_weight": float("nan"), "fuel": 20000},
+        {"empty_weight": 50000, "fuel": "20000"},
+    ], ids=["takeoff-below-empty", "fuel-above-takeoff", "negative", "inf", "nan", "string"])
+    def test_bad_stored_weights(self, stored):
+        """
+        A weight out of range, e.g. negative from the conversion, is replaced by the default.
+        """
+        empty_weight, fuel = self._settings(**stored)
+        assert 0 <= empty_weight <= MAX_WEIGHT and 0 <= fuel <= MAX_WEIGHT
+        assert (empty_weight, fuel) != (stored.get("empty_weight"), stored.get("fuel"))
+
+
+def test_failing_performance_settings_are_not_kept():
+    """
+    Settings the flight can't be computed with leave the flight track as it was, and are not stored.
+    """
+    model = WaypointsTableModel("", waypoints=[Waypoint(50., 6., 0), Waypoint(52., 8., 250), Waypoint(51., 12., 0)])
+    settings = model.performance_settings
+    before = [vars(waypoint).copy() for waypoint in model.waypoints]
+    with mock.patch("mslib.msui.flighttrack.save_settings_qsettings") as save:
+        with pytest.raises(ValueError):
+            model.set_performance_settings(dict(settings, fuel=float("inf")))
+    assert model.performance_settings is settings
+    assert [vars(waypoint) for waypoint in model.waypoints] == before
+    save.assert_not_called()
+
+
+# What may be typed into a table cell, e.g. 1e400 is inf.
+HOSTILE_INPUT = ["1e400", "-1e400", "inf", "-inf", "nan", "1e300", "-1e300", "1e7", "-1e7", "", "abc", "1e-400", "-0"]
+
+
+@pytest.mark.parametrize("value", HOSTILE_INPUT)
+@pytest.mark.parametrize("column", [LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE, TIME_UTC, REM_FUEL, COMMENTS])
+def test_hostile_input(column, value):
+    """
+    Anything typed into an editable cell is either rejected or gives a flight that can be computed and shown.
+    """
+    model = WaypointsTableModel("", waypoints=[Waypoint(50., 6., 0), Waypoint(52., 8., 250), Waypoint(51., 12., 0)])
+    row = 0 if column == REM_FUEL else 1
+    assert model.flags(model.index(row, column)) & QtCore.Qt.ItemIsEditable
+    settings = model.performance_settings
+    with mock.patch("mslib.msui.flighttrack.save_settings_qsettings"):
+        accepted = model.setData(model.index(row, column), value)
+    if not accepted:
+        assert model.performance_settings == settings
+    for waypoint in model.waypoints:
+        for name in ("lat", "lon", "flightlevel", "pressure", "distance_total", "rem_fuel", "weight"):
+            assert math.isfinite(getattr(waypoint, name)), (name, getattr(waypoint, name))
+    assert 0 <= model.performance_settings["fuel"] <= MAX_WEIGHT
+    for row in range(model.rowCount()):
+        for column in range(model.columnCount()):
+            model.data(model.index(row, column))
