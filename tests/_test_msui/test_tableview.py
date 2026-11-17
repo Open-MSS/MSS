@@ -673,8 +673,8 @@ class Test_TableView:
             monkeypatch.undo()
             time.tzset()
 
-    def _edit(self, row, column, text=None):
-        """Opens the editor of a cell, sets text if given, and leaves the cell."""
+    def _edit(self, row, column, text=None, enter=False):
+        """Opens the editor of a cell, sets text if given, confirms it with Enter if asked, and leaves the cell."""
         model = self.window.waypoints_model
         index = model.index(row, column)
         delegate = self.window.tableWayPoints.itemDelegate()
@@ -685,6 +685,8 @@ class Test_TableView:
                 editor.setCurrentText(text)
             else:
                 editor.setText(text)
+        if enter:
+            QtTest.QTest.keyClick(editor, QtCore.Qt.Key_Return)
         delegate.setModelData(editor, model, index)
 
     def test_unchanged_location_of_unnamed_waypoint(self):
@@ -816,11 +818,26 @@ class Test_TableView:
         model = self.window.waypoints_model
         model.replace_waypoints([ft.Waypoint(50., 6., 0), ft.Waypoint(52., 8., 250, location="Turn"),
                                  ft.Waypoint(53., 10., 250, location="Turn"), ft.Waypoint(51., 12., 0)])
-        self._edit(2, ft.LOCATION, "Turn")
+        # only passing through the cell keeps the waypoint, also a moved one
+        self._edit(2, ft.LOCATION)
+        assert (model.waypoints[2].lat, model.waypoints[2].lon) == (53., 10.)
+        self._edit(2, ft.LOCATION, "Turn", enter=True)
         assert (model.waypoints[2].lat, model.waypoints[2].lon) == (52., 8.)
         # the first one stays where it is
-        self._edit(1, ft.LOCATION, "Turn")
+        self._edit(1, ft.LOCATION, "Turn", enter=True)
         assert (model.waypoints[1].lat, model.waypoints[1].lon) == (52., 8.)
+
+    def test_repick_configured_location(self):
+        """
+        Picking a configured location again moves a waypoint of that name back to it.
+        """
+        model = self.window.waypoints_model
+        self._edit(1, ft.LOCATION, "Hamburg")
+        model.waypoints[1].lat = 53.  # e.g. from a flight track file; moving it drops the name
+        self._edit(1, ft.LOCATION)
+        assert (model.waypoints[1].location, model.waypoints[1].lat) == ("Hamburg", 53.)
+        self._edit(1, ft.LOCATION, enter=True)
+        assert (model.waypoints[1].location, model.waypoints[1].lat, model.waypoints[1].lon) == ("Hamburg", 53.55, 9.99)
 
     @mock.patch("mslib.msui.flighttrack.save_settings_qsettings")
     def test_columns_follow_fuel(self, mocksave):

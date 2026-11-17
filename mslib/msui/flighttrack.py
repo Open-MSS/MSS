@@ -1133,6 +1133,8 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
                         adds.add(wp.location)
             combobox.addItems(sorted(adds))
             combobox.setEditable(True)
+            # An entry chosen from the list or confirmed with Enter, also the unchanged one
+            combobox.activated.connect(lambda *args: combobox.setProperty("picked", True))
             return combobox
         elif index.column() == TIME_UTC:
             editor = QtWidgets.QDateTimeEdit(parent)
@@ -1178,8 +1180,11 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
         """
         if index.column() == LOCATION:
             # A known name sets the position, also if it is unchanged: picking it
-            # again moves the waypoint back to that location.
+            # again moves the waypoint back to that location. Only passing through
+            # the cell changes nothing.
             loc = editor.currentText()
+            if loc == editor.property("initial_text") and not editor.property("picked"):
+                return
             locations = config_loader(dataset='locations')
             if loc in locations:
                 lat, lon = locations[loc]
