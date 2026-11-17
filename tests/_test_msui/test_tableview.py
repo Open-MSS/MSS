@@ -162,13 +162,14 @@ class Test_TableView:
     @pytest.mark.parametrize("change", [
         {"empty_weight": None}, {"takeoff_weight": None}, {"empty_weight": "56000"},
         {"empty_weight": 95000}, {"empty_weight": -1}, {"takeoff_weight": 1e8, "empty_weight": 0},
-        {"climb": [[0, 0]]}, {"cruise": "abc"}, {"descent": [[["a"]]]}, "not readable"],
+        {"climb": [[0, 0]]}, {"cruise": "abc"}, {"descent": [[["a"]]]}, "not readable",
+        {"cruise": [[0.0, 0.0, 0.0, 2900.0]]}],
         ids=["no-empty-weight", "no-takeoff-weight", "string", "empty-above-takeoff", "negative", "too-heavy",
-             "short-table-row", "table-string", "table-nested", "not-readable"])
+             "short-table-row", "table-string", "table-nested", "not-readable", "cannot-compute"])
     def test_performance_with_bad_weights(self, tmp_path, change):
         """
-        An aircraft file that can't be read, without proper weights or tables is rejected, as the
-        error message says, not applied.
+        An aircraft file that can't be read, without proper weights or tables, or that the flight track
+        can't be computed with (e.g. no cruise speed) is rejected, as the error message says, not applied.
         """
         with open(os.path.join(os.path.dirname(__file__), "..", "data", "performance_simple.json")) as source:
             performance = json.load(source)
@@ -191,7 +192,9 @@ class Test_TableView:
             QtTest.QTest.mouseClick(self.window.docks[1].widget().pbLoadPerformance, QtCore.Qt.LeftButton)
         critical.assert_called_once()
         assert model.performance_settings == settings
-        assert self.window.docks[1].widget().lbAircraftName.text() == settings["aircraft"].name
+        dock = self.window.docks[1].widget()
+        assert (dock.lbAircraftName.text(), dock.dsbEmptyWeight.value()) == (
+            settings["aircraft"].name, settings["empty_weight"])
 
     def test_show_linear_data(self):
         """

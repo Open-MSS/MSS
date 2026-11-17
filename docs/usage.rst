@@ -198,6 +198,10 @@ aircraft performance. Such a file may be loaded using the 'performance settings'
 in Table View. The table shows the estimated time (UTC) at each waypoint. Edit the time of any
 waypoint to shift the whole flight; all other times follow. Edit the remaining fuel of the first
 waypoint to set the take-off fuel; the fuel at the other waypoints follows from the aircraft model.
+Aircraft, empty weight, take-off fuel and take-off time are one set of performance settings for all
+flight tracks, they are not stored in the flight track file. Switching to another flight track, e.g. to
+compare flights of the same day, keeps them. Viewers of an MSColab operation can't edit the table:
+they set the take-off time and fuel on a local flight track, the operation then uses them as well.
 The aircraft performance is specified using tables given in the JSON format.
 A basic configuration looks like the following file:
 

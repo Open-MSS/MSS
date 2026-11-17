@@ -26,6 +26,7 @@
 """
 
 import json
+import logging
 
 from PyQt5 import QtCore, QtWidgets
 
@@ -145,4 +146,12 @@ class MSUI_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDock
             self.dsbEmptyWeight.setValue(new_aircraft.empty_weight)
         fuel = new_aircraft.takeoff_weight - self.dsbEmptyWeight.value()
         # Applied once; all docks of the flight track show it on performanceDataChanged.
-        self.parent.setPerformance(self.get_settings(aircraft=new_aircraft, fuel=fuel))
+        try:
+            self.parent.setPerformance(self.get_settings(aircraft=new_aircraft, fuel=fuel))
+        except Exception as ex:
+            # e.g. a cruise speed of 0. The flight track keeps its settings, the dock shows them again.
+            logging.error("%s %s", type(ex), ex)
+            self.show_settings(self.parent.waypoints_model.performance_settings)
+            QtWidgets.QMessageBox.critical(
+                self, self.tr("Performance JSON Load"),
+                plain_text_as_html(self.tr(f"The flight track can't be computed with this aircraft:\n{ex}")))
