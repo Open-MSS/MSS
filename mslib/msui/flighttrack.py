@@ -371,7 +371,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
     def load_settings(self):
         """
-        Load settings from the file self.settingsfile.
+        Load the performance settings, one set for all flight tracks.
         """
         # What is stored, without the defaults, to tell the formats of earlier versions apart.
         stored = load_settings_qsettings(self.settings_tag, {})
@@ -414,13 +414,22 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
     def save_settings(self):
         """
-        Save the current settings (map appearance) to the file
-        self.settingsfile.
+        Store the performance settings, one set for all flight tracks.
         """
         settings = self.performance_settings
         # for earlier versions of msui, which read the take off weight instead of the fuel
         takeoff_weight = settings["empty_weight"] + settings["fuel"]
         save_settings_qsettings(self.settings_tag, dict(settings, takeoff_weight=takeoff_weight))
+
+    def reload_performance_settings(self):
+        """
+        The performance settings are one set for all flight tracks, stored on every change. A flight
+        track that becomes active takes the current set and recomputes its times and fuel.
+        """
+        self.load_settings()
+        if self.waypoints:
+            self.update_distances(0)
+        self.performanceDataChanged.emit()
 
     def set_performance_settings(self, settings):
         """

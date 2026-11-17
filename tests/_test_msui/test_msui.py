@@ -26,7 +26,9 @@
 """
 
 
+import datetime
 import importlib
+import json
 import mock
 import os
 import sys
@@ -39,7 +41,10 @@ from mslib import __version__
 from tests.utils import shown_text
 from tests.constants import ROOT_DIR, MSUI_CONFIG_PATH, MSUI_CONFIG_FILE_PATH
 from mslib.msui import msui
+from mslib.msui import flighttrack as ft
 from mslib.msui import msui_mainwindow as msui_mw
+from mslib.msui.aircraft import AIRCRAFT_DUMMY
+from mslib.msui.utils.config import load_settings_qsettings
 from tests.utils import ExceptionMock
 from mslib.msui.utils.config import read_config_file, config_loader
 import re
@@ -172,6 +177,57 @@ class Test_MSS_TutorialMode:
         """In tutorial_mode the dialog must be hidden immediately after show_shortcuts()."""
         self.main_window.show_shortcuts()
         assert not self.main_window.shortcuts_dlg.isVisible()
+
+
+class Test_PerformanceSettingsOfAllFlightTracks:
+    """
+    There is one set of performance settings for all flight tracks: switching between flights, e.g.
+    of the same day, keeps aircraft, weights and take off time (#3315 review).
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup(self, qtbot, tmp_path):
+        self.window = msui.MSUIMainWindow()
+        self.window.create_new_flight_track()
+        self.window.create_new_flight_track()
+        self.a, self.b = (self.window.listFlightTracks.item(i).flighttrack_model for i in range(2))
+        self._activate(self.a)
+        self.window.show()
+        QtTest.QTest.qWaitForWindowExposed(self.window)
+        self.window.actionTableView.trigger()
+        self.table = self.window.listViews.item(0).window
+        self.table.cbTools.currentIndexChanged.emit(2)
+        self.dock = self.table.docks[1].widget()
+        filename = tmp_path / "other.json"
+        filename.write_text(json.dumps(dict(AIRCRAFT_DUMMY, name="OTHER", takeoff_weight=80000, empty_weight=50000)))
+        with mock.patch("mslib.msui.performance_settings.get_open_filename", return_value=str(filename)):
+            QtTest.QTest.mouseClick(self.dock.pbLoadPerformance, QtCore.Qt.LeftButton)
+        yield
+        self.table.hide()
+        self.window.hide()
+
+    def _activate(self, model):
+        items = [self.window.listFlightTracks.item(i) for i in range(self.window.listFlightTracks.count())]
+        self.window.activate_flight_track(next(item for item in items if item.flighttrack_model is model))
+
+    def test_switch_keeps_the_settings(self):
+        self.a.setData(self.a.index(0, ft.TIME_UTC), "2030-01-01 12:00:00")
+        self.a.setData(self.a.index(0, ft.REM_FUEL), "20000")
+        self._activate(self.b)
+        settings = self.b.performance_settings
+        assert (settings["aircraft"].name, settings["empty_weight"], settings["fuel"]) == ("OTHER", 50000, 20000)
+        first = self.b.waypoints[0]
+        assert (first.utc_time, first.rem_fuel) == (datetime.datetime(2030, 1, 1, 12), 20000)
+        assert (self.dock.lbAircraftName.text(), self.dock.dsbEmptyWeight.value()) == ("OTHER", 50000)
+
+    def test_edit_after_switch_keeps_the_aircraft(self):
+        self._activate(self.b)
+        self.b.setData(self.b.index(0, ft.TIME_UTC), "2030-01-01 12:00:00")
+        assert load_settings_qsettings("performance", {})["aircraft"].name == "OTHER"
+        self.window.create_new_flight_track()
+        assert self.window.active_flight_track.performance_settings["aircraft"].name == "OTHER"
+        self._activate(self.a)
+        assert self.a.waypoints[0].utc_time == datetime.datetime(2030, 1, 1, 12)
 
 
 class Test_MSS_AboutDialog:
