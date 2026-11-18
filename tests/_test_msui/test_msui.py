@@ -139,6 +139,38 @@ def test_multiple_times_save_filename(qtbot, tmp_path):
     assert os.path.exists(filename)
 
 
+def test_config_editor_blocks_the_other_windows(qtbot):
+    """
+    The configuration editor saves all settings it shows. While it is open, msui must not change the settings
+    file underneath, e.g. add a loaded WMS server to its list, which saving would undo (#3318 review).
+    """
+    window = msui_mw.MSUIMainWindow()
+    window.create_new_flight_track()
+    window.show()
+    QtTest.QTest.qWaitForWindowExposed(window)
+    window.actionTopView.trigger()
+    top = window.listViews.item(0).window
+    QtTest.QTest.qWaitForWindowExposed(top)
+    model = window.active_flight_track
+    assert len(model.waypoints) == 2 and top.btRoundtrip.isEnabled()
+    # a click as the window system delivers it; QTest.mouseClick on a widget bypasses the modality
+    pos = top.btRoundtrip.mapTo(top, top.btRoundtrip.rect().center())
+
+    window.open_config_editor()
+    QtTest.QTest.qWaitForWindowExposed(window.config_editor)
+    assert QtWidgets.QApplication.activeModalWidget() is window.config_editor
+    QtTest.QTest.mouseClick(top.windowHandle(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pos)
+    assert len(model.waypoints) == 2
+
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+        window.config_editor.close()
+    QtWidgets.QApplication.processEvents()
+    QtTest.QTest.mouseClick(top.windowHandle(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pos)
+    assert len(model.waypoints) == 3
+    top.hide()
+    window.hide()
+
+
 class Test_MSS_TutorialMode:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot, qapp):

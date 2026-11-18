@@ -1079,10 +1079,15 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
     def remove_wms_url(self, url):
         """Removes url from the list of WMS URLs of this view kind after asking, which unloads it in its views."""
+        combo = self.multilayers.cbWMS_URL
         # the settings file can't hold an empty list: msui would ignore it and keep the old one
         if config_loader(dataset=self.wms_urls_key) == [url]:
+            combo.hidePopup()
+            QtWidgets.QMessageBox.information(
+                self.multilayers, self.tr("Web Map Service"),
+                self.tr("The last server of the list can't be removed, as the settings file can't hold an "
+                        "empty list."))
             return
-        combo = self.multilayers.cbWMS_URL
         combo.hidePopup()
         ret = QtWidgets.QMessageBox.question(
             self.multilayers, self.tr("Web Map Service"),

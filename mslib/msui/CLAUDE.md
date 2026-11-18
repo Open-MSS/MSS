@@ -51,7 +51,10 @@ SQLAlchemy; `client-without-server-stack` contract).
   `mslib/mscolab/api/schemas.py` instead — build/parse via those, don't
   hand-roll a dict for a route that already has a schema.
 - Config access via `mslib.msui.utils.config.config_loader`; per-widget Qt state
-  via `save_settings_qsettings`/`load_settings_qsettings`.
+  via `save_settings_qsettings`/`load_settings_qsettings`. Lists the user keeps,
+  like the WMS server lists (`default_WMS` etc.), are in the settings file and
+  are changed with `modify_config_file`; the configuration editor is modal, as it
+  saves all settings it shows.
 - New config keys: add the attribute on `MSUIDefaultConfig` AND, if dict/list
   shaped, the matching entry in `dict_option_structure`/`list_option_structure`
   and a line in `config_descriptions`.

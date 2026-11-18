@@ -208,9 +208,13 @@ def test_delete_in_url_list_keeps_a_change_made_while_asking(hsec_widget):
 def test_delete_last_url_in_url_list(hsec_widget):
     modify_config_file({"default_WMS": ["http://a/"]})
     window = hsec_widget()
-    with mock.patch("PyQt5.QtWidgets.QMessageBox.question") as question:
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.question") as question, \
+            mock.patch("PyQt5.QtWidgets.QMessageBox.information") as information:
         press_in_url_list(window.multilayers.cbWMS_URL, "http://a/")
     question.assert_not_called()
+    # tells why nothing happens (#3318 review)
+    information.assert_called_once()
+    assert "last server" in information.call_args[0][2]
     assert config_loader(dataset="default_WMS") == ["http://a/"]
 
 
