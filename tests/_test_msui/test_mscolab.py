@@ -864,6 +864,7 @@ class Test_Mscolab:
         assert operations.count() == count
         self.window.signal_permission_revoked.emit(op_id)
         assert op_id not in self._dock_operations(topview)
+        # with an entry left behind both raised KeyError in a slot, which pytest-qt reports as a failure
         self._activate_flight_track_at_index(0)
         self.window.mscolab.logout()
 
