@@ -170,6 +170,8 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.actionViewDescription.triggered.connect(self.view_description)
 
         self.ui.filterCategoryCb.currentIndexChanged.connect(self.operation_category_handler)
+        # connected once; add_operations_to_ui, which runs on every reload, connected it again each time
+        self.ui.listOperationsMSC.itemActivated.connect(self.set_active_op_id)
         # connect slot for handling operation options combobox
         self.ui.workLocallyCheckbox.stateChanged.connect(self.handle_work_locally_toggle)
         self.ui.serverOptionsCb.currentIndexChanged.connect(self.server_options_handler)
@@ -1447,7 +1449,6 @@ class MSUIMscolab(QtCore.QObject):
                        f'Active operation "{self.active_operation_name}" is inaccessible!', icon=1)
             self._activate_first_local_flighttrack()
 
-        self.ui.listOperationsMSC.itemActivated.connect(self.set_active_op_id)
         self.new_op_id = None
         return parsed
 

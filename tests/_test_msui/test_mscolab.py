@@ -1107,6 +1107,8 @@ class Test_Mscolab:
         updates = []
         conn.signal_operation_list_updated.connect(lambda: updates.append(1))
         receivers = conn.receivers(conn.signal_operation_list_updated)
+        operations = self.window.listOperationsMSC
+        activation_receivers = operations.receivers(operations.itemActivated)
         for name in ("renamed_once", "renamed_twice"):
             with mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=(name, True)), \
                     mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok):
@@ -1115,8 +1117,9 @@ class Test_Mscolab:
         # the update the server sends to all clients after a rename reaches this one too (a lower bound, the
         # server may send other updates as well)
         qtbot.wait_until(lambda: len(updates) >= 2)
-        # a rename adds no connection
+        # a rename and the reloads of the operation list add no connection
         assert conn.receivers(conn.signal_operation_list_updated) == receivers
+        assert operations.receivers(operations.itemActivated) == activation_receivers
 
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_description", True))
     def test_update_description(self, mocktext, qtbot):
