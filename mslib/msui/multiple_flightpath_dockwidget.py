@@ -178,6 +178,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         else:
             self.color = self.get_random_color()
         self.obb = []
+        # (signal, slot) pairs connect_mscolab_server made, logout disconnects exactly these (#3339)
+        self._mscolab_connections = []
 
         self.operations = None
         self.operation_list = False
@@ -239,9 +241,9 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     def logout(self):
         if self.operations is not None:
             self.operations.logout_mscolab()
-            self.ui.signal_listFlighttrack_doubleClicked.disconnect()
-            self.ui.signal_permission_revoked.disconnect()
-            self.ui.signal_render_new_permission.disconnect()
+            for signal, slot in self._mscolab_connections:
+                signal.disconnect(slot)
+            self._mscolab_connections = []
             self.operations = None
             self.flighttrack_list = True
             self.operation_list = False
@@ -263,22 +265,32 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                                                        self.listOperationsMSC, self.view)
         self.obb.append(self.operations)
 
-        self.ui.signal_permission_revoked.connect(lambda op_id: self.operations.permission_revoked(op_id))
-        self.ui.signal_render_new_permission.connect(lambda op_id, path: self.operations.render_permission(op_id, path))
-        # Signal emitted, on activation of operation from MSUI
-        self.ui.signal_activate_operation.connect(self.update_op_id)
-        self.ui.signal_operation_added.connect(self.add_operation_slot)
-        self.ui.signal_operation_removed.connect(self.remove_operation_slot)
+        # Recorded, so that logout disconnects exactly these: every login connects them anew (#3339).
+        self._mscolab_connections = [
+            (self.ui.signal_permission_revoked, self.permission_revoked_slot),
+            (self.ui.signal_render_new_permission, self.render_permission_slot),
+            # Signal emitted, on activation of operation from MSUI
+            (self.ui.signal_activate_operation, self.update_op_id),
+            (self.ui.signal_operation_added, self.add_operation_slot),
+            (self.ui.signal_operation_removed, self.remove_operation_slot),
+            # deactivate vice versa selection of Operation or Flight Track
+            (self.list_operation_track.itemClicked, self.operations.listOperations_itemClicked),
+            # deactivate operation or flighttrack
+            (self.listOperationsMSC.itemDoubleClicked, self.deactivate_all_flighttracks),
+            (self.ui.signal_listFlighttrack_doubleClicked, self.operations.deactivate_all_operations),
+            # Mscolab Server logout
+            (self.ui.signal_logout_mscolab, self.logout),
+        ]
+        for signal, slot in self._mscolab_connections:
+            signal.connect(slot)
 
-        # deactivate vice versa selection of Operation or Flight Track
-        self.list_operation_track.itemClicked.connect(self.operations.listOperations_itemClicked)
+    @QtCore.pyqtSlot(int)
+    def permission_revoked_slot(self, op_id):
+        self.operations.permission_revoked(op_id)
 
-        # deactivate operation or flighttrack
-        self.listOperationsMSC.itemDoubleClicked.connect(self.deactivate_all_flighttracks)
-        self.ui.signal_listFlighttrack_doubleClicked.connect(self.operations.deactivate_all_operations)
-
-        # Mscolab Server logout
-        self.ui.signal_logout_mscolab.connect(self.logout)
+    @QtCore.pyqtSlot(int, str)
+    def render_permission_slot(self, op_id, path):
+        self.operations.render_permission(op_id, path)
 
     def update(self):
         for entry in self.dict_flighttrack.values():
@@ -1076,7 +1088,9 @@ class MultipleFlightpathOperations:
         self.parent.cbSlectAll2.setChecked(False)
         self.parent.labelStatus.setText("Status: Select a flighttrack/operation")
 
-        self.list_operation_track.itemChanged.disconnect()
+        # its own connections only (#3339)
+        self.list_operation_track.itemChanged.disconnect(self.set_flag)
+        self.parent.cbSlectAll2.stateChanged.disconnect(self.selectAll)
         self.mscolab_server_url = None
         self.token = None
         self.dict_operations = {}

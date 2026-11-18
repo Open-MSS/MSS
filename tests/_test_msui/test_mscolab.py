@@ -48,6 +48,7 @@ from mslib.msui.utils.config import MSUIDefaultConfig, read_config_file, config_
 from tests.utils import create_msui_settings_file, ExceptionMock
 from mslib.msui import msui
 from mslib.msui import mscolab
+from mslib.msui import multiple_flightpath_dockwidget as mf
 from mslib.msui.mscolab_exceptions import MSColabSessionExpiredError
 
 
@@ -669,6 +670,74 @@ class Test_Mscolab:
         # verify logged in again
         qtbot.wait_until(assert_label_text)
         # ToDo verify all operations disabled again without a visual check
+
+    def _login_with_multiple_flightpath_topview(self, qtbot):
+        """Logs in, activates an operation and returns a top view with the multiple flightpath dock"""
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        self.window.actionTopView.trigger()
+        qtbot.wait_until(lambda: len(self.window.get_active_views()) == 1)
+        topview = self.window.listViews.item(0).window
+        topview.cbTools.currentIndexChanged.emit(6)
+        assert topview.docks[5] is not None
+        return topview
+
+    def _login_again(self, qtbot):
+        self.window.mscolab.logout()
+        qtbot.wait_until(lambda: self.window.usernameLabel.text() == "User")
+        self._connect_to_mscolab(qtbot)
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        qtbot.wait_until(lambda: self.window.usernameLabel.text() == self.userdata[1])
+
+    def test_multiple_flightpath_dock_connects_once_per_login(self, qtbot):
+        """
+        Every login connected the multiple flightpath dock to its top view and to the operation lists again,
+        logout disconnected only some of these: after N logins an operation activation reached the dock N times
+        (#3339)
+        """
+        topview = self._login_with_multiple_flightpath_topview(qtbot)
+        dock = topview.docks[5].widget()
+
+        def receivers():
+            signals = [getattr(topview, name) for name in (
+                "signal_activate_operation", "signal_operation_added", "signal_operation_removed",
+                "signal_logout_mscolab", "signal_permission_revoked", "signal_render_new_permission",
+                "signal_listFlighttrack_doubleClicked")]
+            return ([topview.receivers(signal) for signal in signals] +
+                    [dock.cbSlectAll2.receivers(dock.cbSlectAll2.stateChanged),
+                     dock.list_operation_track.receivers(dock.list_operation_track.itemClicked),
+                     dock.list_operation_track.receivers(dock.list_operation_track.itemChanged),
+                     self.window.listOperationsMSC.receivers(self.window.listOperationsMSC.itemDoubleClicked)])
+        after_first_login = receivers()
+        for _ in range(2):
+            self._login_again(qtbot)
+            assert receivers() == after_first_login
+        with mock.patch.object(mf.MultipleFlightpathOperations, "get_op_id") as get_op_id:
+            self._activate_operation_at_index(0)
+        assert get_op_id.call_count == 1
+
+    def test_multiple_flightpath_dock_follows_added_and_removed_operations(self, qtbot):
+        """
+        An operation created or removed while the multiple flightpath dock is open shows up in it, or
+        disappears from it, once; the dock never heard of it (#3339)
+        """
+        topview = self._login_with_multiple_flightpath_topview(qtbot)
+        self._login_again(qtbot)
+        operations = topview.docks[5].widget().list_operation_track
+
+        def names():
+            return [operations.item(i).text() for i in range(operations.count())]
+        assert names() == [self.operation_name]
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok):
+            self._create_operation_unchecked("added_while_open", "description")
+        qtbot.wait_until(lambda: "added_while_open" in names())
+        assert sorted(names()) == sorted([self.operation_name, "added_while_open"])
+        op_id = next(operations.item(i).op_id for i in range(operations.count())
+                     if operations.item(i).text() == "added_while_open")
+        self.window.mscolab.signal_operation_removed.emit(op_id)
+        assert names() == [self.operation_name]
 
     def test_marked_bold_only_in_multiple_flight_path_operations_for_active_operation(self, qtbot):
         """

@@ -244,6 +244,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.mainwindow_signal_permission_revoked = mainwindow.signal_permission_revoked
         self.mainwindow_signal_render_new_permission = mainwindow.signal_render_new_permission
         self.mainwindow_signal_activate_flighttrack = mainwindow.signal_activate_flighttrack
+        self.mainwindow_signal_operation_added = mainwindow.signal_operation_added
+        self.mainwindow_signal_operation_removed = mainwindow.signal_operation_removed
         self.mainwindow_listFlightTracks = mainwindow.listFlightTracks
         self.mainwindow_filterCategoryCb = mainwindow.filterCategoryCb
         self.mainwindow_listOperationsMSC = mainwindow.listOperationsMSC
@@ -305,8 +307,9 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             self.mainwindow_signal_activate_flighttrack.connect(self.update_active_flighttrack)
             self.mainwindow_signal_activate_operation.connect(self.update_active_operation)
 
-            self.signal_operation_added.connect(self.add_operation_slot)
-            self.signal_operation_removed.connect(self.remove_operation_slot)
+            # passed on to the multiple flightpath dock (#3339)
+            self.mainwindow_signal_operation_added.connect(self.add_operation_slot)
+            self.mainwindow_signal_operation_removed.connect(self.remove_operation_slot)
 
             self.mainwindow_signal_login_mscolab.connect(self.login)
 
