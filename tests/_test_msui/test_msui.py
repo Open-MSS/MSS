@@ -111,6 +111,26 @@ def test_config_warnings_not_shown_for_a_deleted_window(qtbot):
         assert m.call_count == 0
 
 
+@pytest.mark.parametrize("action", ["actionTopView", "actionSideView", "actionLinearView"])
+def test_autoplot_refresh_after_closing_a_view(qtbot, action):
+    """
+    The autoplot dock of a view refreshes the other views through the main window. A closed view must not be
+    reached: connected with .emit, msui crashed with a segmentation fault (#3365).
+    """
+    window = msui_mw.MSUIMainWindow()
+    window.create_new_flight_track()
+    window.show()
+    getattr(window, action).trigger()
+    getattr(window, action).trigger()
+    closed, kept = (window.listViews.item(row).window for row in range(2))
+    closed.handle_force_close()
+    qtbot.wait_until(lambda: sip.isdeleted(closed))
+    with qtbot.wait_signal(kept.refresh_signal_send):
+        window.refresh_signal_connect.emit()
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+        window.close()
+
+
 @pytest.mark.skipif(
     sys.platform.startswith("linux") and os.getenv("GITHUB_ACTIONS") == "true",
     reason="skip on GitHub Actions Linux runners because of flush and sync issue",

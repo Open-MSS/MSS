@@ -612,13 +612,12 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.mscolab.signal_unarchive_operation.connect(self.activate_operation_slot)
         self.mscolab.signal_operation_added.connect(self.add_operation_slot)
         self.mscolab.signal_operation_removed.connect(self.remove_operation_slot)
-        self.mscolab.signal_login_mscolab.connect(lambda d, t: self.signal_login_mscolab.emit(d, t))
-        self.mscolab.signal_logout_mscolab.connect(lambda: self.signal_logout_mscolab.emit())
-        self.mscolab.signal_listFlighttrack_doubleClicked.connect(
-            lambda: self.signal_listFlighttrack_doubleClicked.emit())
-        self.mscolab.signal_permission_revoked.connect(lambda op_id: self.signal_permission_revoked.emit(op_id))
-        self.mscolab.signal_render_new_permission.connect(
-            lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
+        # signal to signal, so that Qt drops the connections with either object (#3329)
+        self.mscolab.signal_login_mscolab.connect(self.signal_login_mscolab)
+        self.mscolab.signal_logout_mscolab.connect(self.signal_logout_mscolab)
+        self.mscolab.signal_listFlighttrack_doubleClicked.connect(self.signal_listFlighttrack_doubleClicked)
+        self.mscolab.signal_permission_revoked.connect(self.signal_permission_revoked)
+        self.mscolab.signal_render_new_permission.connect(self.signal_render_new_permission)
 
         self.openOperationsGb.hide()
 

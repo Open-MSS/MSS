@@ -43,7 +43,7 @@ import mslib.msui.utils.auth
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.message_type import MessageType
 from mslib.msui.flighttrack import LON, WaypointsTableModel
-from PyQt5 import QtCore, QtGui, QtTest, QtWidgets
+from PyQt5 import QtCore, QtGui, QtTest, QtWidgets, sip
 from mslib.msui.utils.config import MSUIDefaultConfig, read_config_file, config_loader, modify_config_file
 from tests.utils import create_msui_settings_file, ExceptionMock
 from mslib.msui import msui
@@ -670,9 +670,9 @@ class Test_Mscolab:
         qtbot.wait_until(assert_label_text)
         # ToDo verify all operations disabled again without a visual check
 
-    def _login_with_closed_multiple_flightpath_topview(self, qtbot):
+    def _login_with_multiple_flightpath_topview(self, qtbot):
         """
-        Logs in, activates an operation, opens a top view with the multiple flightpath dock and closes it again
+        Logs in, activates an operation and opens a top view with the multiple flightpath dock
         """
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
@@ -683,10 +683,37 @@ class Test_Mscolab:
         topview = self.window.listViews.item(0).window
         topview.cbTools.currentIndexChanged.emit(6)
         assert topview.docks[5] is not None
+        return topview
+
+    def _login_with_closed_multiple_flightpath_topview(self, qtbot):
+        """
+        As _login_with_multiple_flightpath_topview, and closes the top view again
+        """
+        topview = self._login_with_multiple_flightpath_topview(qtbot)
         topview.handle_force_close()
-        for _ in range(3):
-            QtCore.QCoreApplication.sendPostedEvents(None, QtCore.QEvent.DeferredDelete)
-            QtWidgets.QApplication.processEvents()
+        qtbot.wait_until(lambda: sip.isdeleted(topview))
+
+    def test_open_topview_forwards_mscolab_signals_to_multiple_flightpath(self, qtbot):
+        from mslib.mscolab.seed import add_operation, add_user_to_operation
+        topview = self._login_with_multiple_flightpath_topview(qtbot)
+        operations = topview.docks[5].widget().list_operation_track
+        assert operations.count() == 1
+        with self.app.app_context():
+            assert add_operation("second", "description")
+            assert add_user_to_operation(path="second", emailid=self.userdata[0])
+        op_id = self.window.mscolab.get_op_id("second")
+        with qtbot.wait_signal(topview.signal_render_new_permission) as render:
+            self.window.signal_render_new_permission.emit(op_id, "second")
+        assert render.args == [op_id, "second"]
+        assert operations.count() == 2
+        with qtbot.wait_signal(topview.signal_permission_revoked) as revoked:
+            self.window.signal_permission_revoked.emit(op_id)
+        assert revoked.args == [op_id]
+        assert operations.count() == 1
+        with qtbot.wait_signal(topview.signal_listFlighttrack_doubleClicked):
+            self.window.signal_listFlighttrack_doubleClicked.emit()
+        with qtbot.wait_signal(topview.signal_logout_mscolab):
+            self.window.mscolab.logout()
 
     def test_permission_signals_after_closing_a_topview_with_multiple_flightpath(self, qtbot):
         """
@@ -698,6 +725,7 @@ class Test_Mscolab:
         self.window.signal_render_new_permission.emit(op_id, self.operation_name)
         self.window.signal_permission_revoked.emit(op_id)
         self.window.signal_listFlighttrack_doubleClicked.emit()
+        assert self.window.get_active_views() == []
 
     def test_logout_after_closing_a_topview_with_multiple_flightpath(self, qtbot):
         """
@@ -706,7 +734,6 @@ class Test_Mscolab:
         """
         self._login_with_closed_multiple_flightpath_topview(qtbot)
         self.window.mscolab.logout()
-        QtWidgets.QApplication.processEvents()
         assert self.window.mscolab.conn is None
 
     def test_marked_bold_only_in_multiple_flight_path_operations_for_active_operation(self, qtbot):

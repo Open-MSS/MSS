@@ -284,7 +284,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         # ==========================
         # ToDo review 2026 after EOL of Win 10 if we can use parent again
         if mainwindow is not None:
-            mainwindow.refresh_signal_connect.connect(self.refresh_signal_send.emit)
+            mainwindow.refresh_signal_connect.connect(self.refresh_signal_send)
 
         # Map controls.
         self.btMapRedraw.clicked.connect(self.mpl.canvas.redraw_map)
