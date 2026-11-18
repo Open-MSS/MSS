@@ -26,6 +26,7 @@
 """
 
 
+import gc
 import importlib
 import mock
 import os
@@ -40,6 +41,7 @@ from tests.utils import shown_text
 from tests.constants import ROOT_DIR, MSUI_CONFIG_PATH, MSUI_CONFIG_FILE_PATH
 from mslib.msui import msui
 from mslib.msui import flighttrack as ft
+from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
 from mslib.msui.utils.config import read_config_file, config_loader
@@ -153,10 +155,7 @@ def test_closed_view_stays_off_the_flight_track(qtbot, action):
     view = window.listViews.item(0).window
     QtTest.QTest.qWaitForWindowExposed(view)
     view.handle_force_close()
-    for _ in range(3):
-        QtCore.QCoreApplication.sendPostedEvents(None, QtCore.QEvent.DeferredDelete)
-        QtWidgets.QApplication.processEvents()
-    assert sip.isdeleted(view)
+    qtbot.wait_until(lambda: sip.isdeleted(view))
     # deleted with its canvas, and so disconnected from the flight track
     assert sip.isdeleted(view.mpl.canvas.waypoints_interactor)
     # view is still referenced here. A slot drawing on the deleted canvas would raise RuntimeError, which
@@ -165,7 +164,26 @@ def test_closed_view_stays_off_the_flight_track(qtbot, action):
     model.setData(model.index(1, ft.LAT), 12.5)
     model.insertRows(1)
     model.invert_direction()
-    QtWidgets.QApplication.processEvents()
+    # also nothing queued that draws on it
+    qtbot.wait(100)
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+        window.close()
+
+
+def test_top_view_keeps_no_failed_path_interactor(qtbot):
+    """
+    A path interactor whose construction fails (IOError) must not stay with the canvas, still connected to the
+    flight track (#3361 review)
+    """
+    window = msui_mw.MSUIMainWindow()
+    window.create_new_flight_track()
+    window.show()
+    with mock.patch.object(mpl_pi.HPathInteractor, "redraw_path", side_effect=IOError("test")):
+        window.actionTopView.trigger()
+    view = window.listViews.item(0).window
+    gc.collect()
+    assert view.mpl.canvas.waypoints_interactor is None
+    assert view.mpl.canvas.findChildren(mpl_pi.HPathInteractor) == []
     with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
         window.close()
 

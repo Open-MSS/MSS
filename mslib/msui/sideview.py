@@ -332,9 +332,6 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
             index=ind, parent=mainwindow, config_settings=config_settings))
         self.openTool(WMS + 1)
 
-    def __del__(self):
-        del self.mpl.canvas.waypoints_interactor
-
     def update_predefined_maps(self, extra):
         pass
 
