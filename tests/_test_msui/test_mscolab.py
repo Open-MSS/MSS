@@ -37,6 +37,7 @@ import pytest
 
 from PIL import Image
 
+from mslib.mscolab.seed import add_operation, add_user_to_operation
 from tests.constants import ROOT_DIR, MSCOLAB_DATA_DIR
 from tests import constants
 import mslib.msui.utils.auth
