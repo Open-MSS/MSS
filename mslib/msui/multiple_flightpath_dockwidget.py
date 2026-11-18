@@ -768,7 +768,6 @@ class MultipleFlightpathOperations:
         self.listOperationsMSC = listOperationsMSC
 
         self.operation_added = False
-        self.operation_removed = False
         self.operation_activated = False
         self.color_change = False
 
@@ -791,8 +790,6 @@ class MultipleFlightpathOperations:
     def set_flag(self):
         if self.operation_added:
             self.operation_added = False
-        elif self.operation_removed:
-            self.operation_removed = False
         elif self.color_change:
             self.color_change = False
         else:
@@ -960,8 +957,9 @@ class MultipleFlightpathOperations:
         """
         Slot to remove operation.
         """
+        # takeItem emits no itemChanged and set_flag is disconnected here, so nothing would consume a flag:
+        # it swallowed the user's next check-box change instead (#3334)
         self.list_operation_track.itemChanged.disconnect(self.set_flag)
-        self.operation_removed = True
         for index in range(self.list_operation_track.count()):
             if self.list_operation_track.item(index).op_id == op_id:
                 if self.dict_operations[self.list_operation_track.item(index).op_id]["patch"] is None:
