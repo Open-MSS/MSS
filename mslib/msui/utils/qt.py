@@ -446,7 +446,7 @@ class Worker(QtCore.QThread):
         self.finished.connect(lambda x: self._update_gui())
         # QThread's own finished signal, which the result signal above shadows. It is emitted after run()
         # returned, so its queued call comes after the queued result (#3371).
-        QtCore.QThread.finished.__get__(self).connect(self._release)
+        super().finished.connect(self._release)
 
     def start(self, *args, **kwargs):
         # Kept while it runs; a worker that is never started isn't kept for good (#3337). QThread.start does
@@ -458,6 +458,9 @@ class Worker(QtCore.QThread):
     def _release(self):
         # Released only after its thread has ended and its result has been delivered: released while the thread
         # was still finishing, the worker could be deleted with it, losing the result or aborting the process.
+        if self.isRunning():
+            # started again in the meantime, the end of that run releases it
+            return
         self.wait()
         Worker.workers.discard(self)
 

@@ -1056,7 +1056,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.debug("stopping capabilities retrieval")
         try:
             self.capabilities_worker.quit()
-            self.capabilities_worker.disconnect()
         except TypeError:
             pass
 

@@ -30,6 +30,7 @@ import os
 import subprocess
 import sys
 import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -284,6 +285,25 @@ def test_worker_is_kept_alive_while_it_runs(qtbot):
     qtbot.wait_until(lambda: worker not in mqt.Worker.workers)
 
 
+def test_worker_started_again_before_its_release(qtbot):
+    """
+    A reused worker started again before the release of its previous run was delivered: the release waited for
+    the new run and blocked the main thread (#3371 review)
+    """
+    worker = mqt.Worker(lambda: None)
+    worker.start()
+    assert worker.wait(10000)
+    release = threading.Event()
+    worker.function = lambda: release.wait(5)
+    worker.start()
+    start = time.monotonic()
+    qtbot.wait(50)
+    assert time.monotonic() - start < 1
+    release.set()
+    assert worker.wait(10000)
+    qtbot.wait_until(lambda: worker not in mqt.Worker.workers)
+
+
 WORKER_STRESS = """
 import gc
 from PyQt5 import QtCore, QtWidgets
@@ -302,10 +322,18 @@ def batch():
     gc.collect()
 
 
+def done():
+    if len(results) == 300 and not Worker.workers:
+        app.quit()
+
+
 timer = QtCore.QTimer()
 timer.timeout.connect(batch)
 timer.start(0)
-QtCore.QTimer.singleShot(5000, app.quit)
+check = QtCore.QTimer()
+check.timeout.connect(done)
+check.start(50)
+QtCore.QTimer.singleShot(60000, app.quit)
 app.exec_()
 print(len(results), len(Worker.workers))
 """
