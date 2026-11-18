@@ -111,10 +111,6 @@ def test_config_warnings_not_shown_for_a_deleted_window(qtbot):
         assert m.call_count == 0
 
 
-@pytest.mark.skipif(
-    sys.platform.startswith("linux") and os.getenv("GITHUB_ACTIONS") == "true",
-    reason="skip on GitHub Actions Linux runners because of flush and sync issue",
-)
 def test_multiple_times_save_filename(qtbot, tmp_path):
     msui = msui_mw.MSUIMainWindow()
     msui.show()
@@ -123,20 +119,19 @@ def test_multiple_times_save_filename(qtbot, tmp_path):
     assert os.path.exists(filename) is False
     # verify that we can save the file multiple times
     msui.save_flight_track(filename)
-    assert os.path.exists(filename)
-    first_timestamp = os.stat(filename).st_mtime_ns
+    saved = Path(filename).read_text()
+    assert saved
     assert filename == msui.active_flight_track.get_filename()
-    msui.save_handler()
-
-    def assert_():
-        second_timestamp = os.stat(filename).st_mtime_ns
-        assert second_timestamp > first_timestamp
-    qtbot.wait_until(assert_)
+    # Saving is synchronous. The file is emptied instead of comparing modification times: two saves within
+    # one tick of the file system clock get the same time (#3331). The second save overwrites it, without
+    # asking for a file name.
+    Path(filename).write_text("")
+    with mock.patch("mslib.msui.msui_mainwindow.get_save_filename", side_effect=AssertionError("asked for a name")):
+        msui.save_handler()
+    assert Path(filename).read_text() == saved
 
     with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
         msui.close()
-    # check that the second save is newer than the first one
-    assert os.path.exists(filename)
 
 
 class Test_MSS_TutorialMode:
