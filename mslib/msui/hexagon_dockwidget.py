@@ -80,7 +80,8 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
         """
         Disables add and remove when multiple rows are selected
         """
-        enable = len(self.view.tableWayPoints.selectionModel().selectedRows()) <= 1
+        enable = self.view.tableWayPoints.isEnabled() and \
+            len(self.view.tableWayPoints.selectionModel().selectedRows()) <= 1
         self.pbAddHexagon.setEnabled(enable)
         self.pbRemoveHexagon.setEnabled(enable)
 

@@ -124,7 +124,35 @@ class Test_TableView:
         assert not hexagon.pbAddHexagon.isEnabled()
         self._select_rows(1, 1)
         assert self.window.btCloneWaypoint.isEnabled()
+        assert self.window.btAddWayPointToFlightTrack.isEnabled()
         assert hexagon.pbAddHexagon.isEnabled()
+        assert hexagon.pbRemoveHexagon.isEnabled()
+
+    def test_switch_keeps_the_controls_of_a_viewer_disabled(self):
+        """
+        The controls disabled for a viewer of an MSColab operation stay disabled when the table gets another
+        flight track, e.g. on a reload after a collaborator's change (#3341 review)
+        """
+        self.window.cbTools.currentIndexChanged.emit(1)
+        hexagon = self.window.docks[0].widget()
+        self.window.disable_navbar_action_buttons()
+        assert not hexagon.pbAddHexagon.isEnabled()
+        self.window.setFlightTrackModel(self._other_flight_track())
+        assert not self.window.btCloneWaypoint.isEnabled()
+        assert not self.window.btAddWayPointToFlightTrack.isEnabled()
+        assert not hexagon.pbAddHexagon.isEnabled()
+        assert not hexagon.pbRemoveHexagon.isEnabled()
+
+    def test_enabling_the_controls_respects_the_selection(self):
+        """Enabling the controls again, e.g. on a new access level, keeps Clone and Add off for several rows"""
+        self._select_rows(0, 1)
+        self.window.disable_navbar_action_buttons()
+        self.window.enable_navbar_action_buttons()
+        assert self.window.tableWayPoints.isEnabled()
+        assert not self.window.btCloneWaypoint.isEnabled()
+        assert not self.window.btAddWayPointToFlightTrack.isEnabled()
+        self._select_rows(1, 1)
+        assert self.window.btCloneWaypoint.isEnabled()
 
     def test_switch_deletes_the_old_selection_model(self):
         """The selection model of the previous flight track is deleted, not kept with the table (#3341)"""

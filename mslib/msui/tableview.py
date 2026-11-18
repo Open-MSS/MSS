@@ -57,7 +57,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
 
     name = "Table View"
 
-    # the selected rows changed, for the docks: the table's selection model is replaced with the model
+    # the selection or the model changed, for the docks: the table's selection model is replaced with the model
     waypointSelectionChanged = QtCore.pyqtSignal()
 
     def __init__(self, parent=None, model=None, _id=None, tutorial_mode=False):
@@ -162,9 +162,10 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
 
     def on_selection_changed(self, *args):
         """
-        Disables insert and clone when multiple rows are selected
+        Disables insert and clone when multiple rows are selected, or the table is disabled (e.g. for viewers
+        of an MSColab operation)
         """
-        enable = len(self.tableWayPoints.selectionModel().selectedRows()) <= 1
+        enable = self.tableWayPoints.isEnabled() and len(self.tableWayPoints.selectionModel().selectedRows()) <= 1
         self.btCloneWaypoint.setEnabled(enable)
         self.btAddWayPointToFlightTrack.setEnabled(enable)
         self.waypointSelectionChanged.emit()
