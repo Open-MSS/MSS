@@ -42,7 +42,7 @@ from tests import constants
 import mslib.msui.utils.auth
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.message_type import MessageType
-from mslib.msui.flighttrack import LON, WaypointsTableModel
+from mslib.msui.flighttrack import LON, Waypoint, WaypointsTableModel
 from PyQt5 import QtCore, QtGui, QtTest, QtWidgets
 from mslib.msui.utils.config import MSUIDefaultConfig, read_config_file, config_loader, modify_config_file
 from tests.utils import create_msui_settings_file, ExceptionMock
@@ -860,6 +860,39 @@ class Test_Mscolab:
             assert mockopen.call_count == 1
             imported_wp = self.window.mscolab.waypoints_model
             assert len(imported_wp.waypoints) == name[2]
+
+    @pytest.mark.parametrize("case", ["one waypoint", "plugin raises", "binary ftml"])
+    def test_failed_import_changes_nothing(self, qtbot, tmp_path, case):
+        """
+        A plugin import checked the operation's flight track instead of the imported one, plugin errors and
+        unreadable FTML files weren't caught: each gives "Import Failed" now, and nothing is imported (#3338)
+        """
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        mscolab = self.window.mscolab
+        model = mscolab.waypoints_model
+        xml_content = model.get_xml_content()
+        if case == "binary ftml":
+            file_path, extension = tmp_path / "import.ftml", "ftml"
+            file_path.write_bytes(b"\xff\xfe\x00binary")
+        else:
+            file_path, extension = tmp_path / "import.txt", "txt"
+            file_path.write_text("read by the plugin")
+
+        def plugin(path):
+            if case == "plugin raises":
+                raise ValueError("can't read this file")
+            return "one", [Waypoint(50., 10., 300)]
+        function = None if case == "binary ftml" else plugin
+        with mock.patch("mslib.msui.mscolab.show_popup") as popup, \
+                mock.patch.object(mscolab.conn, "save_file") as save_file:
+            mscolab.handle_import_msc(str(file_path), extension, function, "default")
+        assert [call.args[1] for call in popup.call_args_list] == ["Import Failed"]
+        save_file.assert_not_called()
+        assert mscolab.waypoints_model is model
+        assert model.get_xml_content() == xml_content
 
     def test_none_import_file(self, qtbot):
         with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=None) as mockopen:

@@ -139,6 +139,22 @@ def test_multiple_times_save_filename(qtbot, tmp_path):
     assert os.path.exists(filename)
 
 
+def test_open_ftml_that_is_no_text(qtbot, tmp_path):
+    """
+    An FTML file that isn't text gives a message, it raised UnicodeDecodeError (#3338)
+    """
+    filename = tmp_path / "binary.ftml"
+    filename.write_bytes(b"\xff\xfe\x00binary")
+    window = msui_mw.MSUIMainWindow()
+    count = window.listFlightTracks.count()
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critical:
+        window.create_new_flight_track(filename=str(filename))
+    critical.assert_called_once()
+    assert window.listFlightTracks.count() == count
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+        window.close()
+
+
 class Test_MSS_TutorialMode:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot, qapp):

@@ -1696,15 +1696,24 @@ class MSUIMscolab(QtCore.QObject):
                     show_popup(self.ui, "Import Failed", f"The file - {file_name}, does not contain valid XML")
                     return
                 model = ft.WaypointsTableModel(xml_content=xml_content)
-            except (SyntaxError, FileNotFoundError):
+            except SyntaxError:
                 show_popup(self.ui, "Import Failed", f"The file - {file_name}, does not contain valid XML")
                 return
+            # e.g. a directory, no permission to read, or a binary file (#3338)
+            except (OSError, UnicodeDecodeError) as ex:
+                show_popup(self.ui, "Import Failed", f"The file - {file_name}, could not be read: {ex}")
+                return
         else:
-            # _function = self.ui.import_plugins[file_ext[1:]]
-            _, new_waypoints = function(file_path)
-            model = ft.WaypointsTableModel(waypoints=new_waypoints)
-            xml_doc = self.waypoints_model.get_xml_doc()
-            xml_content = xml_doc.toprettyxml(indent="  ", newl="\n")
+            try:
+                _, new_waypoints = function(file_path)
+                model = ft.WaypointsTableModel(waypoints=new_waypoints)
+            # wildcard exception to be resilient against errors of the plugin, which is user code (#3338)
+            except Exception as ex:
+                logging.exception("file io plugin error: %s %s", type(ex), ex)
+                show_popup(self.ui, "Import Failed", f"The file - {file_name}, could not be imported: {ex}")
+                return
+            # the imported flight track, not the operation's
+            xml_content = model.get_xml_content()
         if not verify_waypoint_data(xml_content):
             show_popup(self.ui, "Import Failed", f"The file - {file_name}, was not imported!", 0)
             return

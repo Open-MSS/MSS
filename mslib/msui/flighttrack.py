@@ -866,7 +866,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         """
         Load a flight track from an XML file at <filename>.
         """
-        xml_content = Path(filename).read_text()
+        try:
+            xml_content = Path(filename).read_text()
+        except UnicodeDecodeError as ex:
+            # the callers report a SyntaxError as an invalid file (#3338)
+            raise SyntaxError(f"{filename} is not a text file: {ex}") from ex
         name = Path(filename).stem.replace(".ftml", "").strip()
         self.load_from_xml_data(xml_content, name)
 
