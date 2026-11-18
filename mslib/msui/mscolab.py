@@ -1345,7 +1345,8 @@ class MSUIMscolab(QtCore.QObject):
                 show_popup(self.ui, "Permission Revoked", "Access to an operation was revoked")
                 self.signal_permission_revoked.emit(op_id)
 
-            if self.active_op_id == op_id:
+            # delete_operation_from_list has already reset active_op_id (#3370)
+            if revoked_operation_currently_active:
                 self._activate_first_local_flighttrack()
 
     @QtCore.pyqtSlot(int)
@@ -1358,6 +1359,7 @@ class MSUIMscolab(QtCore.QObject):
             if operation_name is None:
                 operation_name = old_operation_name
             show_popup(self.ui, "Information", f'Active operation "{operation_name}" is inaccessible!', icon=1)
+            self._activate_first_local_flighttrack()
 
     @QtCore.pyqtSlot(int, int)
     def update_active_user_label(self, op_id, count):

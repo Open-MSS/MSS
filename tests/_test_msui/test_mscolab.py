@@ -562,6 +562,32 @@ class Test_Mscolab:
         assert self.window.mscolab.active_op_id is not None
         assert self.window.mscolab.active_operation_name == self.operation_name
 
+    @pytest.mark.parametrize("how", ["revoked", "deleted"])
+    def test_losing_the_active_operation_activates_a_local_flight_track(self, qtbot, how):
+        """
+        When the permission for the active operation is revoked, or the operation is deleted, the views show
+        the first local flight track, which becomes the active one. They showed a nameless flight track that
+        belonged to no list (#3370).
+        """
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata3[0]}})
+        self._login(qtbot, emailid=self.userdata3[0], password=self.userdata3[2])
+        self._activate_operation_at_index(0)
+        mscolab_ = self.window.mscolab
+        op_id = mscolab_.active_op_id
+        self.window.actionTableView.trigger()
+        tableview = self.window.get_active_views()[0]
+        local = self.window.listFlightTracks.item(0).flighttrack_model
+        assert tableview.waypoints_model is not local
+        with mock.patch("mslib.msui.mscolab.show_popup"):
+            if how == "revoked":
+                mscolab_.handle_revoke_permission(op_id, mscolab_.user["id"])
+            else:
+                mscolab_.handle_operation_deleted(op_id)
+        assert mscolab_.active_op_id is None
+        assert tableview.waypoints_model is local
+        assert self.window.active_flight_track is local
+
     def test_view_open(self, qtbot):
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
