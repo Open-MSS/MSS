@@ -26,7 +26,6 @@
 """
 
 
-import gc
 import importlib
 import mock
 import os
@@ -46,6 +45,7 @@ from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
 from mslib.msui.utils.config import read_config_file, config_loader
 import re
+import weakref
 
 
 def test_main():
@@ -178,12 +178,17 @@ def test_top_view_keeps_no_failed_path_interactor(qtbot):
     window = msui_mw.MSUIMainWindow()
     window.create_new_flight_track()
     window.show()
-    with mock.patch.object(mpl_pi.HPathInteractor, "redraw_path", side_effect=IOError("test")):
+    failed = []
+
+    def redraw_path(interactor, *args, **kwargs):
+        failed.append(weakref.ref(interactor))
+        raise IOError("mscolab session expired")
+    with mock.patch.object(mpl_pi.HPathInteractor, "redraw_path", redraw_path):
         window.actionTopView.trigger()
     view = window.listViews.item(0).window
-    gc.collect()
     assert view.mpl.canvas.waypoints_interactor is None
-    assert view.mpl.canvas.findChildren(mpl_pi.HPathInteractor) == []
+    # gone, and with it its connections to the flight track
+    assert failed and all(ref() is None for ref in failed)
     with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
         window.close()
 
