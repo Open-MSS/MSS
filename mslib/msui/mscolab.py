@@ -1033,8 +1033,6 @@ class MSUIMscolab(QtCore.QObject):
             self.set_operation_desc_label(self.active_operation_description)
             self.reload_operation_list()
             self.reload_windows_slot()
-            # Update other user's operation list
-            self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
 
             QMessageBox.information(
                 self.ui,

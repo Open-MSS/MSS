@@ -1094,6 +1094,30 @@ class Test_Mscolab:
         assert self.window.mscolab.active_op_id is not None
         assert self.window.mscolab.active_operation_name == "new_name"
 
+    def test_rename_operation_keeps_one_operation_list_reload(self, qtbot):
+        """
+        Every rename connected the operation list update to reload_operation_list once more, so each update
+        reloaded the list once per rename so far (#3333). The server tells all clients after a rename.
+        """
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        conn = self.window.mscolab.conn
+        updates = []
+        conn.signal_operation_list_updated.connect(lambda: updates.append(1))
+        receivers = conn.receivers(conn.signal_operation_list_updated)
+        for name in ("renamed_once", "renamed_twice"):
+            with mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=(name, True)), \
+                    mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok):
+                self.window.actionRenameOperation.trigger()
+            assert self.window.mscolab.active_operation_name == name
+        # the update the server sends to all clients after a rename reaches this one too (a lower bound, the
+        # server may send other updates as well)
+        qtbot.wait_until(lambda: len(updates) >= 2)
+        # a rename adds no connection
+        assert conn.receivers(conn.signal_operation_list_updated) == receivers
+
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_description", True))
     def test_update_description(self, mocktext, qtbot):
         self._connect_to_mscolab(qtbot)
