@@ -826,12 +826,14 @@ class PathInteractor(QtCore.QObject):
 
     # picking points
 
-    def __init__(self, plotter, waypoints=None):
+    def __init__(self, plotter, waypoints=None, parent=None):
         """The constructor initializes the path patches, overlying line
            plot and connects matplotlib signals.
         Arguments:
         ax -- matplotlib.Axes object into which the path should be drawn.
         waypoints -- flighttrack.WaypointsModel instance.
+        parent -- the canvas: Qt deletes the interactor, and so its connections to
+                  the flight track, together with it (#3342)
         mplpath -- matplotlib.path.Path instance
         facecolor -- facecolor of the patch
         edgecolor -- edgecolor of the patch
@@ -841,7 +843,7 @@ class PathInteractor(QtCore.QObject):
                   matplotlib plot() or scatter() routines for more information.
         label_waypoints -- put labels with the waypoint numbers on the waypoints.
         """
-        QtCore.QObject.__init__(self)
+        QtCore.QObject.__init__(self, parent)
         self._ind = None  # the active vertex
         self.plotter = plotter
 
@@ -948,7 +950,7 @@ class VPathInteractor(PathInteractor):
     """
     signal_get_vsec = QtCore.pyqtSignal(name="get_vsec")
 
-    def __init__(self, ax, waypoints, redraw_xaxis=None, clear_figure=None, numintpoints=101):
+    def __init__(self, ax, waypoints, redraw_xaxis=None, clear_figure=None, numintpoints=101, parent=None):
         """Constructor passes a PathV instance its parent.
 
         Arguments:
@@ -962,7 +964,7 @@ class VPathInteractor(PathInteractor):
         plotter = PathV_Plotter(ax, redraw_xaxis=redraw_xaxis, clear_figure=clear_figure, numintpoints=numintpoints)
         self.redraw_xaxis = redraw_xaxis
         self.clear_figure = clear_figure
-        super().__init__(plotter=plotter, waypoints=waypoints)
+        super().__init__(plotter=plotter, waypoints=waypoints, parent=parent)
 
     def set_line_thickness(self, thickness):
         """Set the thickness of the line representing the flight track."""
@@ -1109,7 +1111,7 @@ class LPathInteractor(PathInteractor):
     """
     signal_get_lsec = QtCore.pyqtSignal(name="get_lsec")
 
-    def __init__(self, ax, waypoints, redraw_xaxis=None, clear_figure=None, numintpoints=101):
+    def __init__(self, ax, waypoints, redraw_xaxis=None, clear_figure=None, numintpoints=101, parent=None):
         """Constructor passes a PathV instance its parent.
 
         Arguments:
@@ -1121,7 +1123,7 @@ class LPathInteractor(PathInteractor):
         redrawXAxis -- callback function to redraw the x-axis on path changes.
         """
         plotter = PathL_Plotter(ax, redraw_xaxis=redraw_xaxis, clear_figure=clear_figure, numintpoints=numintpoints)
-        super().__init__(plotter=plotter, waypoints=waypoints)
+        super().__init__(plotter=plotter, waypoints=waypoints, parent=parent)
 
     def redraw_figure(self):
         """For the linear view, changes in the horizontal or vertical position of a waypoint
@@ -1163,7 +1165,7 @@ class HPathInteractor(PathInteractor):
 
     def __init__(self, mplmap, waypoints,
                  linecolor='blue', markerfacecolor='red', show_marker=True,
-                 label_waypoints=True):
+                 label_waypoints=True, parent=None):
         """Constructor passes a PathH_GC instance its parent (horizontal path
            with waypoints connected with great circles).
 
@@ -1175,7 +1177,7 @@ class HPathInteractor(PathInteractor):
             mplmap, mplpath=PathH([[0, 0]], map=mplmap),
             linecolor=linecolor, markerfacecolor=markerfacecolor,
             label_waypoints=label_waypoints)
-        super().__init__(plotter=plotter, waypoints=waypoints)
+        super().__init__(plotter=plotter, waypoints=waypoints, parent=parent)
         self.redraw_path()
 
     def set_line_thickness(self, thickness):
