@@ -1006,6 +1006,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.mscolab.switch_to_local()
         # self.setWindowModality(QtCore.Qt.NonModal)
         self.active_flight_track = item.flighttrack_model
+        # The settings of all flight tracks, maybe changed while another one was active
+        self.active_flight_track.reload_performance_settings()
         self.update_active_flight_track()
         font = QtGui.QFont()
         for i in range(self.listFlightTracks.count()):

@@ -202,6 +202,24 @@ class Test_MSSSideViewWindow:
     def test_open_wms(self):
         self.window.cbTools.currentIndexChanged.emit(1)
 
+    def test_switch_flight_track_requests_new_path(self):
+        """
+        On a switch to another flight track the WMS control knows the new track
+        when the redraw asks it for a plot, so it requests the new path.
+        """
+        self.window.cbTools.currentIndexChanged.emit(1)
+        wms_control = self.window.docks[tv.WMS].widget()
+        other = ft.WaypointsTableModel("other")
+        other.insertRows(0, rows=2, waypoints=[ft.Waypoint(48.10, 10.27, 200),
+                                               ft.Waypoint(52.32, 9.21, 200)])
+        requested = []
+        self.window.mpl.canvas.waypoints_interactor.signal_get_vsec.connect(
+            lambda: requested.append(wms_control.waypoints_model))
+
+        self.window.setFlightTrackModel(other)
+
+        assert requested == [other]
+
     def test_mouse_over(self):
         # Test mouse over
         QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(782, 266), -1)
