@@ -240,15 +240,15 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     @QtCore.pyqtSlot()
     def logout(self):
         if self.operations is not None:
-            self.operations.logout_mscolab()
+            # disconnected first, so that a failure below leaves no connection behind
             for signal, slot in self._mscolab_connections:
                 signal.disconnect(slot)
             self._mscolab_connections = []
+            self.operations.logout_mscolab()
             self.operations = None
             self.flighttrack_list = True
             self.operation_list = False
-            for idx in range(len(self.obb)):
-                del self.obb[idx]
+            self.obb.clear()
 
     @QtCore.pyqtSlot(str, str)
     def login(self, url, token):

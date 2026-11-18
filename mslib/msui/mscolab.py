@@ -899,7 +899,9 @@ class MSUIMscolab(QtCore.QObject):
         )
         if ok:
             if entered_operation_name == self.active_operation_name:
-                req = DeleteOperationRequest(op_id=self.active_op_id)
+                # reload_operations below drops the active operation
+                op_id = self.active_op_id
+                req = DeleteOperationRequest(op_id=op_id)
                 try:
                     response = self.conn.request_post(endpoints.DELETE_OPERATION, req.to_form_data())
                 except requests.exceptions.RequestException as ex:
@@ -907,7 +909,7 @@ class MSUIMscolab(QtCore.QObject):
                 else:
                     response.raise_for_status()
                     self.reload_operations()
-                    self.signal_operation_removed.emit(self.active_op_id)
+                    self.signal_operation_removed.emit(op_id)
             else:
                 show_popup(self.ui, "Error", "Entered operation name did not match!")
 
@@ -1466,14 +1468,16 @@ class MSUIMscolab(QtCore.QObject):
             plain_text_as_html(self.tr(f"Do you want to archive this operation '{self.active_operation_name}'?")),
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if ret == QMessageBox.Yes:
-            req = UpdateOperationRequest(op_id=self.active_op_id, attribute="active", value="False")
+            # reload_operations below drops the active operation
+            op_id = self.active_op_id
+            req = UpdateOperationRequest(op_id=op_id, attribute="active", value="False")
             try:
                 response = self.conn.request_post(endpoints.UPDATE_OPERATION, req.to_form_data())
             except requests.exceptions.RequestException as ex:
                 raise MSColabConnectionError(f"Some error occurred ({ex})! Could not archive operation.")
             response.raise_for_status()
             self.reload_operations()
-            self.signal_operation_removed.emit(self.active_op_id)
+            self.signal_operation_removed.emit(op_id)
             logging.debug("activate local")
             self._activate_first_local_flighttrack()
 

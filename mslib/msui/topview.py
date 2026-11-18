@@ -312,6 +312,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             self.mainwindow_signal_operation_removed.connect(self.remove_operation_slot)
 
             self.mainwindow_signal_login_mscolab.connect(self.login)
+            self.mainwindow_signal_logout_mscolab.connect(self.logout)
 
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
@@ -342,6 +343,12 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.mscolab_server_url = mscolab_server_url
         self.token = token
         self.signal_login_mscolab.emit(mscolab_server_url, token)
+
+    @QtCore.pyqtSlot()
+    def logout(self):
+        # a multiple flightpath dock opened later must not connect with these (#3339)
+        self.mscolab_server_url = None
+        self.token = None
 
     def setup_top_view(self):
         """
