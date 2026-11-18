@@ -27,6 +27,7 @@
 
 
 import importlib
+import inspect
 import mock
 import os
 import sys
@@ -137,6 +138,16 @@ def test_multiple_times_save_filename(qtbot, tmp_path):
         msui.close()
     # check that the second save is newer than the first one
     assert os.path.exists(filename)
+
+
+@pytest.mark.parametrize("module, view", [("tableview", "MSUITableViewWindow"), ("topview", "MSUITopViewWindow"),
+                                          ("sideview", "MSUISideViewWindow"), ("linearview", "MSUILinearViewWindow")])
+def test_views_require_a_model(module, view):
+    """The views need a flight track; they declared model=None and failed somewhere inside (#3344)"""
+    view_class = getattr(importlib.import_module(f"mslib.msui.{module}"), view)
+    model = inspect.signature(view_class).parameters["model"]
+    assert model.kind == inspect.Parameter.KEYWORD_ONLY
+    assert model.default is inspect.Parameter.empty
 
 
 class Test_MSS_TutorialMode:

@@ -939,7 +939,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
                 i = 0
             editor.setCurrentIndex(i)
         else:
-            editor.insert(str(value))
+            editor.setText(str(value))
 
     def setModelData(self, editor, model, index):
         """

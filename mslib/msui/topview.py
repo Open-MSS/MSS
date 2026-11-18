@@ -226,7 +226,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     itemSecs_selected = QtCore.pyqtSignal(str)
     vtime_vals = QtCore.pyqtSignal([list])
 
-    def __init__(self, parent=None, mainwindow=None, model=None, _id=None,
+    def __init__(self, parent=None, mainwindow=None, *, model, _id=None,
                  active_flighttrack=None, mscolab_server_url=None, token=None, config_settings=None,
                  tutorial_mode=False):
         """

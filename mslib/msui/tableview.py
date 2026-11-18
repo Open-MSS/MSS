@@ -57,7 +57,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
 
     name = "Table View"
 
-    def __init__(self, parent=None, model=None, _id=None, tutorial_mode=False):
+    def __init__(self, parent=None, *, model, _id=None, tutorial_mode=False):
         """
         """
         super().__init__(parent, model, _id)

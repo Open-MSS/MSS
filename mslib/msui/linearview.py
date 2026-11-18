@@ -87,7 +87,7 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
     vtime_vals = QtCore.pyqtSignal([list])
     itemSecs_selected = QtCore.pyqtSignal(str)
 
-    def __init__(self, parent=None, mainwindow=None, model=None, _id=None, config_settings=None, tutorial_mode=False):
+    def __init__(self, parent=None, mainwindow=None, *, model, _id=None, config_settings=None, tutorial_mode=False):
         """
         Set up user interface, connect signal/slots.
         """

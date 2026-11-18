@@ -100,6 +100,24 @@ class Test_TableView:
             data = f.read()
             assert data.count("<Waypoint") == len(self.window.waypoints_model.waypoints)
 
+    def test_editor_shows_the_value_once(self):
+        """
+        Qt fills an open editor again when its cell changes, e.g. the flight level in a second table view of the
+        flight track. Filled with insert(), the editor showed the old and the new value one after another (#3344).
+        """
+        model = self.window.waypoints_model
+        table = self.window.tableWayPoints
+        index = model.index(1, ft.FLIGHTLEVEL)
+        table.setCurrentIndex(index)
+        table.edit(index)
+        QtWidgets.QApplication.processEvents()
+        editor = table.indexWidget(index) or QtWidgets.QApplication.focusWidget()
+        assert isinstance(editor, QtWidgets.QLineEdit)
+        for flightlevel in (300, 400):
+            model.setData(index, flightlevel)
+            QtWidgets.QApplication.processEvents()
+            assert editor.text() == str(model.data(index).value())
+
     def test_open_hex(self):
         """
         Tests opening the hexagon dock widget.
