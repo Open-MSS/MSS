@@ -170,7 +170,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.actionViewDescription.triggered.connect(self.view_description)
 
         self.ui.filterCategoryCb.currentIndexChanged.connect(self.operation_category_handler)
-        # connected once; add_operations_to_ui, which runs on every reload, connected it again each time
+        # connected here once, not in add_operations_to_ui, which runs on every reload
         self.ui.listOperationsMSC.itemActivated.connect(self.set_active_op_id)
         # connect slot for handling operation options combobox
         self.ui.workLocallyCheckbox.stateChanged.connect(self.handle_work_locally_toggle)
