@@ -67,15 +67,16 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
         self.setupUi(self)
         self.view = view
         if self.view:
-            self.view.tableWayPoints.selectionModel().selectionChanged.connect(self.on_selection_changed)
-            self.on_selection_changed(None)
+            # not the table's selection model: it is replaced with every flight track (#3341)
+            self.view.waypointSelectionChanged.connect(self.on_selection_changed)
+            self.on_selection_changed()
 
         self.dsbHexgaonRadius.setValue(200)
 
         self.pbAddHexagon.clicked.connect(self._add_hexagon)
         self.pbRemoveHexagon.clicked.connect(self._remove_hexagon)
 
-    def on_selection_changed(self, index):
+    def on_selection_changed(self, *args):
         """
         Disables add and remove when multiple rows are selected
         """
