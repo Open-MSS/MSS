@@ -26,6 +26,9 @@
 """
 
 import ast
+import os
+import subprocess
+import sys
 import threading
 from pathlib import Path
 
@@ -272,9 +275,52 @@ def test_worker_is_kept_alive_while_it_runs(qtbot):
         assert worker in mqt.Worker.workers
         release.set()
         assert worker.wait(10000)
-        assert worker not in mqt.Worker.workers
+        # released on the main thread, after its result was delivered
+        qtbot.wait_until(lambda: worker not in mqt.Worker.workers)
     # QThread.start's arguments are passed on
     worker.function = lambda: None
     worker.start(priority=pqt.QtCore.QThread.LowPriority)
     assert worker.wait(10000)
-    assert worker not in mqt.Worker.workers
+    qtbot.wait_until(lambda: worker not in mqt.Worker.workers)
+
+
+WORKER_STRESS = """
+import gc
+from PyQt5 import QtCore, QtWidgets
+app = QtWidgets.QApplication([])
+from mslib.msui.utils.qt import Worker
+results = []
+batches = iter(range(30))
+
+
+def batch():
+    if next(batches, None) is None:
+        timer.stop()
+        return
+    for _ in range(10):
+        Worker.create(lambda: 0, results.append)
+    gc.collect()
+
+
+timer = QtCore.QTimer()
+timer.timeout.connect(batch)
+timer.start(0)
+QtCore.QTimer.singleShot(5000, app.quit)
+app.exec_()
+print(len(results), len(Worker.workers))
+"""
+
+
+def test_worker_results_arrive_without_a_reference(tmp_path):
+    """
+    Worker.create is used without keeping the worker. It was released while its thread was still finishing:
+    its result was lost, or Qt aborted the process with "QThread: Destroyed while thread is still running"
+    (#3371). Run in a separate process, which an abort doesn't take the test run with.
+    """
+    script = tmp_path / "workers.py"
+    script.write_text(WORKER_STRESS)
+    process = subprocess.run([sys.executable, str(script)], env=dict(os.environ, QT_QPA_PLATFORM="offscreen"),
+                             capture_output=True, text=True, timeout=120)
+    assert process.returncode == 0, process.stderr[-2000:]
+    # all 300 results arrived, and no worker is kept
+    assert process.stdout.split()[-2:] == ["300", "0"]
