@@ -229,6 +229,20 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
+    def test_autoplot_row_selection_keeps_one_fetcher(self, qtbot):
+        """
+        Selecting a row of the autoplot dock requests the maps through the existing fetchers; it added a new pair
+        of fetchers on every selection, so each request went to the server once more (#3332)
+        """
+        self.query_server(qtbot, self.url)
+        url = list(self.window.multilayers.layers)[0]
+        layer = self.window.multilayers.listLayers.topLevelItem(0).child(0).text(0).split(" | ")[-1]
+        for _ in range(3):
+            with qtbot.wait_signal(self.window.image_displayed, timeout=WMS_REQUEST_TIMEOUT_MS):
+                self.window.row_is_selected(url, layer, "", "", "top")
+            assert self.window.receivers(self.window.fetch) == 1
+            assert self.window.receivers(self.window.prefetch) == 1
+
     def test_server_getmap_cached(self, qtbot):
         """
         assert that a getmap call to a WMS server displays an image
