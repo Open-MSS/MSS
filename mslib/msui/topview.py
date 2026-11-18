@@ -349,6 +349,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         # a multiple flightpath dock opened later must not connect with these (#3339)
         self.mscolab_server_url = None
         self.token = None
+        # the main window activates a local flight track (#3373)
+        self.active_op_id = None
 
     def setup_top_view(self):
         """

@@ -249,6 +249,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             self.flighttrack_list = True
             self.operation_list = False
             self.obb.clear()
+        # the main window activates a local flight track (#3373)
+        self.active_op_id = None
 
     @QtCore.pyqtSlot(str, str)
     def login(self, url, token):
@@ -964,7 +966,12 @@ class MultipleFlightpathOperations:
         """
         Slot to add operation.
         """
+        # listed already, e.g. a repeated new-permission event (#3369)
+        if op_id in self.dict_operations:
+            return
         wp_model = self.load_wps_from_server(op_id)
+        if wp_model is None:
+            return
         wp_model.name = path
         self.create_operation(op_id, wp_model)
 
@@ -976,12 +983,12 @@ class MultipleFlightpathOperations:
         self.operation_removed = True
         for index in range(self.list_operation_track.count()):
             if self.list_operation_track.item(index).op_id == op_id:
-                if self.dict_operations[self.list_operation_track.item(index).op_id]["patch"] is None:
-                    del self.dict_operations[self.list_operation_track.item(index).op_id]
-                else:
-                    self.dict_operations[self.list_operation_track.item(index).op_id]["patch"].remove()
+                if self.dict_operations[op_id]["patch"] is not None:
+                    self.dict_operations[op_id]["patch"].remove()
+                del self.dict_operations[op_id]
                 self.list_operation_track.takeItem(index)
-                self.active_op_id = None
+                if op_id == self.active_op_id:
+                    self.active_op_id = None
                 break
         self.list_operation_track.itemChanged.connect(self.set_flag)
 
@@ -993,7 +1000,7 @@ class MultipleFlightpathOperations:
         """
         Removes all operations patches from topview canvas and make flighttracks userCheckable
         """
-        for index in range(self.listOperationsMSC.count()):
+        for index in range(self.list_operation_track.count()):
             listItem = self.list_operation_track.item(index)
 
             self.parent.set_listControl(False, True)

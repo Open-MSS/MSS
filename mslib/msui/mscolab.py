@@ -1358,6 +1358,9 @@ class MSUIMscolab(QtCore.QObject):
         old_operation_name = self.active_operation_name
         old_active_id = self.active_op_id
         operation_name = self.delete_operation_from_list(op_id)
+        if operation_name is not None:
+            # still listed: deleted by someone else, the views don't know yet (#3340)
+            self.signal_operation_removed.emit(op_id)
         if op_id == old_active_id:
             if operation_name is None:
                 operation_name = old_operation_name
