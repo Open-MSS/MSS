@@ -164,7 +164,7 @@ def test_config_editor_blocks_the_other_windows(qtbot):
 
     with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
         window.config_editor.close()
-    QtWidgets.QApplication.processEvents()
+    qtbot.wait_until(lambda: QtWidgets.QApplication.activeModalWidget() is None)
     QtTest.QTest.mouseClick(top.windowHandle(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pos)
     assert len(model.waypoints) == 3
     top.hide()
