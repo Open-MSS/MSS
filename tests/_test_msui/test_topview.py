@@ -34,6 +34,7 @@ from mslib.msui import flighttrack as ft
 from mslib.msui.msui import MSUIMainWindow
 from mslib.msui.viewplotter import _DEFAULT_SETTINGS_TOPVIEW
 from mslib.msui.utils.config import config_loader
+from mslib.msui.utils.qt import Worker
 
 WMS_REQUEST_TIMEOUT_MS = (config_loader(dataset="WMS_request_timeout") + 5) * 1000
 
@@ -388,3 +389,21 @@ class Test_MSUITopViewWindow:
                                                                                      'llcrnrlon': -15.0,
                                                                                      'urcrnrlat': 65.0,
                                                                                      'urcrnrlon': 30.0}
+
+
+def test_docks_keep_no_unstarted_workers(qtbot):
+    """
+    The multiple flightpath dock and the WMS dock each create a worker that may never be started. Such workers
+    stayed in Worker.workers for good, with their docks, after the top view was closed (#3337).
+    """
+    window = MSUIMainWindow()
+    window.create_new_flight_track()
+    window.show()
+    workers = len(Worker.workers)
+    window.actionTopView.trigger()
+    topview = window.listViews.item(0).window
+    topview.cbTools.currentIndexChanged.emit(tv.MULTIPLEFLIGHTPATH + 1)
+    topview.cbTools.currentIndexChanged.emit(tv.WMS + 1)
+    assert len(Worker.workers) == workers
+    topview.handle_force_close()
+    window.hide()

@@ -26,6 +26,7 @@
 """
 
 import ast
+import threading
 from pathlib import Path
 
 import pytest
@@ -255,3 +256,25 @@ def _texts_not_shown_as_plain_text():
 
 def test_message_box_and_tooltip_texts_are_shown_as_plain_text():
     assert _texts_not_shown_as_plain_text() == []
+
+
+def test_worker_is_kept_alive_while_it_runs(qtbot):
+    """
+    A worker is kept in Worker.workers while it runs, so that Python doesn't delete a running thread. One that
+    is never started was kept for good, with whatever its function holds (#3337).
+    """
+    assert mqt.Worker(None) not in mqt.Worker.workers
+    release = threading.Event()
+    worker = mqt.Worker(lambda: release.wait(10))
+    for _ in range(2):
+        release.clear()
+        worker.start()
+        assert worker in mqt.Worker.workers
+        release.set()
+        assert worker.wait(10000)
+        assert worker not in mqt.Worker.workers
+    # QThread.start's arguments are passed on
+    worker.function = lambda: None
+    worker.start(priority=pqt.QtCore.QThread.LowPriority)
+    assert worker.wait(10000)
+    assert worker not in mqt.Worker.workers

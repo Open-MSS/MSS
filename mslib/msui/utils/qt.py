@@ -429,13 +429,12 @@ class Worker(QtCore.QThread):
     Beware not to modify the parents connections through the function.
     You may change the GUI, but it may sometimes not update until the Worker is done.
     """
-    # Static set of all workers to avoid segfaults
+    # Static set of the running workers, so that Python doesn't delete a running thread (segfault)
     workers = set()
     finished = QtCore.pyqtSignal(object)
     failed = QtCore.pyqtSignal(Exception)
 
     def __init__(self, function):
-        Worker.workers.add(self)
         super().__init__()
         self.function = function
         # pyqtSignals don't work without an application eventloop running
@@ -445,6 +444,13 @@ class Worker(QtCore.QThread):
 
         self.failed.connect(lambda e: self._update_gui())
         self.finished.connect(lambda x: self._update_gui())
+
+    def start(self, *args, **kwargs):
+        # Kept while it runs; a worker that is never started isn't kept for good (#3337). QThread.start does
+        # nothing while the thread runs, which removes the worker from the set at its end.
+        if not self.isRunning():
+            Worker.workers.add(self)
+        super().start(*args, **kwargs)
 
     def run(self):
         try:
