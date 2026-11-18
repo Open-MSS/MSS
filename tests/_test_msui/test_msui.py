@@ -130,8 +130,9 @@ def test_autoplot_refresh_after_closing_a_view(qtbot, action):
     closed, kept = (window.listViews.item(row).window for row in range(2))
     closed.handle_force_close()
     qtbot.wait_until(lambda: sip.isdeleted(closed))
+    # an autoplot change in the remaining view refreshes all views through the main window
     with qtbot.wait_signal(kept.refresh_signal_send):
-        window.refresh_signal_connect.emit()
+        kept.refresh_signal_emit.emit()
     with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
         window.close()
 

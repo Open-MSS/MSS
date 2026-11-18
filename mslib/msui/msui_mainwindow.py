@@ -1155,7 +1155,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                                                     mscolab_server_url=self.mscolab.mscolab_server_url,
                                                     token=self.mscolab.token, tutorial_mode=self.tutorial_mode,
                                                     config_settings=self.config_for_gui)
-            view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)
+            view_window.refresh_signal_emit.connect(self.refresh_signal_connect)
             view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
@@ -1163,7 +1163,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             # Side view.
             view_window = sideview.MSUISideViewWindow(mainwindow=self, model=model, tutorial_mode=self.tutorial_mode,
                                                       config_settings=self.config_for_gui)
-            view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)
+            view_window.refresh_signal_emit.connect(self.refresh_signal_connect)
             view_window.mpl.resize(layout['sideview'][0], layout['sideview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['sideview'][0], layout['sideview'][1])
@@ -1176,7 +1176,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             view_window = linearview.MSUILinearViewWindow(mainwindow=self, model=model,
                                                           tutorial_mode=self.tutorial_mode,
                                                           config_settings=self.config_for_gui)
-            view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)
+            view_window.refresh_signal_emit.connect(self.refresh_signal_connect)
             view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['linearview'][0], layout['linearview'][1])

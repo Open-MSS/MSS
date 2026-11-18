@@ -694,6 +694,10 @@ class Test_Mscolab:
         qtbot.wait_until(lambda: sip.isdeleted(topview))
 
     def test_open_topview_forwards_mscolab_signals_to_multiple_flightpath(self, qtbot):
+        """
+        The MSColab signals reach the multiple flightpath dock of an open top view through the main window and
+        the top view
+        """
         from mslib.mscolab.seed import add_operation, add_user_to_operation
         topview = self._login_with_multiple_flightpath_topview(qtbot)
         operations = topview.docks[5].widget().list_operation_track
@@ -703,15 +707,15 @@ class Test_Mscolab:
             assert add_user_to_operation(path="second", emailid=self.userdata[0])
         op_id = self.window.mscolab.get_op_id("second")
         with qtbot.wait_signal(topview.signal_render_new_permission) as render:
-            self.window.signal_render_new_permission.emit(op_id, "second")
+            self.window.mscolab.signal_render_new_permission.emit(op_id, "second")
         assert render.args == [op_id, "second"]
         assert operations.count() == 2
         with qtbot.wait_signal(topview.signal_permission_revoked) as revoked:
-            self.window.signal_permission_revoked.emit(op_id)
+            self.window.mscolab.signal_permission_revoked.emit(op_id)
         assert revoked.args == [op_id]
         assert operations.count() == 1
         with qtbot.wait_signal(topview.signal_listFlighttrack_doubleClicked):
-            self.window.signal_listFlighttrack_doubleClicked.emit()
+            self.window.mscolab.signal_listFlighttrack_doubleClicked.emit()
         with qtbot.wait_signal(topview.signal_logout_mscolab):
             self.window.mscolab.logout()
 
