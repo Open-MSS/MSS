@@ -1427,6 +1427,29 @@ class Test_Mscolab:
             mscolab_.handle_waypoints_changed(version_name="imported")
             assert save_file.call_count == 2
 
+    @mock.patch("mslib.msui.flighttrack.save_settings_qsettings")
+    def test_reload_keeps_typed_empty_weight(self, mocksave, qtbot):
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        self.window.actionTableView.trigger()
+        tableview = self.window.get_active_views()[0]
+        tableview.cbTools.currentIndexChanged.emit(2)
+        spinbox = tableview.docks[1].widget().dsbEmptyWeight
+        committed = spinbox.value()
+        spinbox.setFocus()
+        spinbox.selectAll()
+        QtTest.QTest.keyClicks(spinbox, "60000")
+        model = tableview.waypoints_model
+        # a collaborator saved a change: the operation is reloaded and the table view gets a new model
+        self.window.mscolab.conn.signal_reload.emit(self.window.mscolab.active_op_id)
+        assert tableview.waypoints_model is not model
+        assert spinbox.text() == "60000"
+        QtTest.QTest.keyClick(spinbox, QtCore.Qt.Key_Return)
+        assert spinbox.value() == 60000 != committed
+        assert tableview.waypoints_model.performance_settings["empty_weight"] == 60000
+
     def test_user_chosen_text_is_not_markup(self, qtbot):
         markup = '<b>bold</b><img src="file://attacker.example/s/x.png">'
         self._connect_to_mscolab(qtbot)
