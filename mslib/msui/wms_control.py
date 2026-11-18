@@ -555,6 +555,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             add_wms_urls(self.multilayers.cbWMS_URL, [wms_settings['recent_wms_url']])
 
         self.layerChangeInProgress = False
+        self.autoplot_row_in_progress = False
         self.save_level = None
 
         # Initialise GUI elements that control WMS parameters.
@@ -667,137 +668,132 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.update_url_layer_styles(url_name=url, layer_name=layer, style_name=styles, level=level)
             self.populate_ui(update_level=level)
         else:
-            # Get coordinate reference system and bounding box from the map
-            # object in the view.
+            # the layer of the row's server, by its exact name (#3366)
+            layer_item = next((item for item in self.multilayers.layers[url].values()
+                               if isinstance(item, Layer) and item.get_layer() == layer), None)
+            if layer_item is None:
+                logging.warning("The autoplot row's layer '%s' isn't offered by %s", layer, url)
+                return
+            self.current_sel_layer = layer_item
+            # one request for the row, not one per setting it changes (#3367)
+            self.autoplot_row_in_progress = True
+            try:
+                self._apply_autoplot_row(styles, level, view_name)
+            finally:
+                self.autoplot_row_in_progress = False
 
-            if view_name == "top":
-                crs = self.view.get_crs()
-            elif view_name == "side":
-                crs = "VERT:LOGP"
-            else:
-                crs = "LINE:1"
+    def _apply_autoplot_row(self, styles, level, view_name):
+        # Get coordinate reference system and bounding box from the map
+        # object in the view.
+
+        if view_name == "top":
+            crs = self.view.get_crs()
+        elif view_name == "side":
+            crs = "VERT:LOGP"
+        else:
+            crs = "LINE:1"
+        bbox = self.view.getBBOX()
+
+        # Determine the current size of the vertical section plot on the
+        # screen in pixels. The image will be retrieved in this size.
+        width, height = self.view.get_plot_size_in_px()
+
+        self.multilayers.threads += 1
+
+        if self.multilayers.carry_parameters["level"] in self.current_sel_layer.get_levels():
+            self.current_sel_layer.set_level(self.multilayers.carry_parameters["level"])
+        if self.multilayers.carry_parameters["itime"] in self.current_sel_layer.get_itimes():
+            self.current_sel_layer.set_itime(self.multilayers.carry_parameters["itime"])
+        if self.multilayers.carry_parameters["vtime"] in self.current_sel_layer.get_vtimes():
+            self.current_sel_layer.set_vtime(self.multilayers.carry_parameters["vtime"])
+        if self.multilayers.current_layer != self.current_sel_layer or list(
+            self.multilayers.layers[self.current_sel_layer.wms_name]
+        ).index(self.current_sel_layer.text(0)) == 2:
+            self.multilayers.current_layer = self.current_sel_layer
+            self.multilayers.listLayers.setCurrentItem(self.current_sel_layer)
+            index = self.multilayers.cbWMS_URL.findText(self.current_sel_layer.get_wms().url)
+            if index != -1 and index != self.multilayers.cbWMS_URL.currentIndex():
+                self.multilayers.cbWMS_URL.setCurrentIndex(index)
+
+        self.multilayers.threads -= 1
+        styles_name = str(styles).strip()
+        styles_name = styles_name.split()[0].strip() if styles_name else "default"
+
+        def style_changed(layer):
+            for style in self.current_sel_layer.styles:
+                this_style = str(style)
+                this_style = this_style.strip().split()[0]
+                this_style = this_style.strip()
+                if this_style.startswith(styles_name):
+                    self.current_sel_layer.style = style
+                    self.current_sel_layer.style_changed()
+                    self.multilayers.multilayer_clicked(self.current_sel_layer)
+                    self.current_sel_layer.parent.dock_widget.auto_update()
+                    break
+
+            layer.style_changed()
+            self.multilayers.multilayer_clicked(layer)
+            self.multilayers.dock_widget.auto_update()
+            self.multilayers.styles_on_change.emit(layer.style)
+
+        style_changed(self.current_sel_layer)
+
+        # the level first, so that the one request below uses it (#3367)
+        self.populate_ui(update_level=level)
+        for i in range(self.cbLevel.count()):
+            item_text = self.cbLevel.itemText(i)
+            if item_text.startswith(level):
+                self.cbLevel.setCurrentText(item_text)
+                self.level_changed()
+                break
+
+        if view_name == "top":
+            layers = [self.current_sel_layer]
+            args = []
+            for i, layer_itr in enumerate(layers):
+                transparent = self.cbTransparent.isChecked() if i == 0 else True
+                args.extend(self.retrieve_image(layer_itr, crs, bbox, None, width, height, transparent))
+
+            self.fetch.emit(args)
+        elif view_name == "side":
+            crs = "VERT:LOGP"
             bbox = self.view.getBBOX()
+
+            # Get lat/lon coordinates of flight track and convert to string for URL.
+            path_string = ""
+            for waypoint in self.waypoints_model.all_waypoint_data():
+                path_string += f"{waypoint.lat:.2f},{waypoint.lon:.2f},"
+            path_string = path_string[:-1]
 
             # Determine the current size of the vertical section plot on the
             # screen in pixels. The image will be retrieved in this size.
             width, height = self.view.get_plot_size_in_px()
+            layers = [self.current_sel_layer]
 
-            for index in range(self.multilayers.listLayers.topLevelItemCount()):
-                top_item = self.multilayers.listLayers.topLevelItem(index)
-                # Iterate over the children of the top-level item
-                for i in range(top_item.childCount()):
-                    child_item = top_item.child(i)
+            args = []
+            for i, layer in enumerate(layers):
+                transparent = self.cbTransparent.isChecked() if i == 0 else True
+                args.extend(self.retrieve_image(layer, crs, bbox, path_string, width, height, transparent))
 
-                    # Process both columns of the child item
+            self.fetch.emit(args)
+        else:
+            crs = "LINE:1"
+            bbox = self.view.getBBOX()
 
-                    for column in range(child_item.columnCount()):
+            # Get lat/lon/alt coordinates of flight track and convert to string for URL.
+            path_string = ""
+            for waypoint in self.waypoints_model.all_waypoint_data():
+                path_string += f"{waypoint.lat:.2f},{waypoint.lon:.2f},{waypoint.pressure},"
+            path_string = path_string[:-1]
 
-                        if child_item.text(column).endswith(layer):
-                            self.current_sel_layer = child_item
+            layers = [self.current_sel_layer]
 
-            self.multilayers.threads += 1
+            args = []
+            for i, layer in enumerate(layers):
+                args.extend(self.retrieve_image(layer, crs, bbox, path_string,
+                                                transparent=False, format="text/xml"))
 
-            if self.multilayers.carry_parameters["level"] in self.current_sel_layer.get_levels():
-                self.current_sel_layer.set_level(self.multilayers.carry_parameters["level"])
-            if self.multilayers.carry_parameters["itime"] in self.current_sel_layer.get_itimes():
-                self.current_sel_layer.set_itime(self.multilayers.carry_parameters["itime"])
-            if self.multilayers.carry_parameters["vtime"] in self.current_sel_layer.get_vtimes():
-                self.current_sel_layer.set_vtime(self.multilayers.carry_parameters["vtime"])
-            if self.multilayers.current_layer != self.current_sel_layer or list(
-                self.multilayers.layers[self.current_sel_layer.wms_name]
-            ).index(self.current_sel_layer.text(0)) == 2:
-                self.multilayers.current_layer = self.current_sel_layer
-                self.multilayers.listLayers.setCurrentItem(self.current_sel_layer)
-                index = self.multilayers.cbWMS_URL.findText(self.current_sel_layer.get_wms().url)
-                if index != -1 and index != self.multilayers.cbWMS_URL.currentIndex():
-                    self.multilayers.cbWMS_URL.setCurrentIndex(index)
-
-            self.multilayers.threads -= 1
-            styles_name = str(styles).strip()
-            styles_name = styles_name.split()[0].strip() if styles_name else "default"
-
-            def style_changed(layer):
-                for style in self.current_sel_layer.styles:
-                    this_style = str(style)
-                    this_style = this_style.strip().split()[0]
-                    this_style = this_style.strip()
-                    if this_style.startswith(styles_name):
-                        self.current_sel_layer.style = style
-                        self.current_sel_layer.style_changed()
-                        self.multilayers.multilayer_clicked(self.current_sel_layer)
-                        self.current_sel_layer.parent.dock_widget.auto_update()
-                        break
-
-                layer.style_changed()
-                self.multilayers.multilayer_clicked(layer)
-                self.multilayers.dock_widget.auto_update()
-                self.multilayers.styles_on_change.emit(layer.style)
-
-            style_changed(self.current_sel_layer)
-
-            if view_name == "top":
-                layers = [self.current_sel_layer]
-                args = []
-                for i, layer_itr in enumerate(layers):
-                    transparent = self.cbTransparent.isChecked() if i == 0 else True
-                    args.extend(self.retrieve_image(layer_itr, crs, bbox, None, width, height, transparent))
-
-                self.fetch.emit(args)
-            elif view_name == "side":
-                crs = "VERT:LOGP"
-                bbox = self.view.getBBOX()
-
-                # Get lat/lon coordinates of flight track and convert to string for URL.
-                path_string = ""
-                for waypoint in self.waypoints_model.all_waypoint_data():
-                    path_string += f"{waypoint.lat:.2f},{waypoint.lon:.2f},"
-                path_string = path_string[:-1]
-
-                # Determine the current size of the vertical section plot on the
-                # screen in pixels. The image will be retrieved in this size.
-                width, height = self.view.get_plot_size_in_px()
-                layers = [self.current_sel_layer]
-                # Retrieve the image.
-                if not layers:
-                    layers = [self.multilayers.get_current_layer()]
-                layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
-
-                args = []
-                for i, layer in enumerate(layers):
-                    transparent = self.cbTransparent.isChecked() if i == 0 else True
-                    args.extend(self.retrieve_image(layer, crs, bbox, path_string, width, height, transparent))
-
-                self.fetch.emit(args)
-            else:
-                crs = "LINE:1"
-                bbox = self.view.getBBOX()
-
-                # Get lat/lon/alt coordinates of flight track and convert to string for URL.
-                path_string = ""
-                for waypoint in self.waypoints_model.all_waypoint_data():
-                    path_string += f"{waypoint.lat:.2f},{waypoint.lon:.2f},{waypoint.pressure},"
-                path_string = path_string[:-1]
-
-                layers = [self.current_sel_layer]
-                # Retrieve the image.
-                if not layers:
-                    layers = [self.multilayers.get_current_layer()]
-                layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
-
-                args = []
-                for i, layer in enumerate(layers):
-                    args.extend(self.retrieve_image(layer, crs, bbox, path_string,
-                                                    transparent=False, format="text/xml"))
-
-                self.fetch.emit(args)
-
-            self.populate_ui(update_level=level)
-            for i in range(self.cbLevel.count()):
-                item_text = self.cbLevel.itemText(i)
-                if item_text.startswith(level):
-                    self.cbLevel.setCurrentText(item_text)
-                    self.level_changed()
-                    break
+            self.fetch.emit(args)
 
     def leftrow_is_selected(self, vtime):
         layer = self.multilayers.get_current_layer()
@@ -1461,7 +1457,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         performed (lock mechanism to prevent erroneous requests during
         a layer change).
         """
-        if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
+        if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress \
+                and not self.autoplot_row_in_progress:
             self.get_all_maps()
 
     def check_init_time(self, dt):

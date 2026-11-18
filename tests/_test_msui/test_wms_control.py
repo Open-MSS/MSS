@@ -229,6 +229,65 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
+    def _layer_item(self, row, server=0):
+        return self.window.multilayers.listLayers.topLevelItem(server).child(row)
+
+    @pytest.mark.parametrize("auto_update", [True, False])
+    def test_autoplot_row_selection_requests_the_map_once_at_its_level(self, qtbot, auto_update):
+        """
+        A selected autoplot row requested its map 3-4 times with auto update on, and with auto update off once,
+        but at the level the layer had before (#3367)
+        """
+        self.window.cbAutoUpdate.setChecked(auto_update)
+        self.query_server(qtbot, self.url)
+        url = list(self.window.multilayers.layers)[0]
+        # not the first layer of the list, for which multilayer_clicked requests once more, later
+        item = self._layer_item(1)
+        level = item.get_levels()[-1]
+        assert item.get_level_name() != level.split()[0]
+        requests = []
+        self.window.fetch.connect(lambda args: requests.append(args))
+        self.window.row_is_selected(url, item.get_layer(), "", level, "top")
+        qtbot.wait(1000)
+        assert len(requests) == 1
+        assert requests[0][0][1]["level"] == level.split()[0]
+        assert self.window.cbLevel.currentText() == level
+
+    def test_autoplot_row_selection_uses_the_layer_of_its_server(self, qtbot):
+        """The layer was searched on all servers, the last one with the name won (#3366)"""
+        self.window.cbAutoUpdate.setChecked(False)
+        other_url = self.url.replace("127.0.0.1", "localhost")
+        assert other_url != self.url
+        self.query_server(qtbot, self.url)
+        self.query_server(qtbot, other_url)
+        url, other = list(self.window.multilayers.layers)
+        assert other.startswith("http://localhost")
+        item = self._layer_item(1)
+        requests = []
+        self.window.fetch.connect(lambda args: requests.append(args))
+        self.window.row_is_selected(url, item.get_layer(), "", "", "top")
+        assert self.window.current_sel_layer is self.window.multilayers.layers[url][item.text(0)]
+        # the map is requested from the row's server
+        assert [args[0][0].get_wms().url for args in requests] == [url]
+
+    def test_autoplot_row_selection_of_a_missing_layer(self, qtbot):
+        """
+        A layer the server doesn't offer raised AttributeError right after loading and left the layer list
+        blocked (multilayers.threads stayed raised); later it requested the previous layer again (#3366)
+        """
+        self.window.cbAutoUpdate.setChecked(False)
+        self.query_server(qtbot, self.url)
+        url = list(self.window.multilayers.layers)[0]
+        self.window.row_is_selected(url, "no_such_layer", "", "", "top")
+        assert self.window.multilayers.threads == 0
+        item = self._layer_item(1)
+        self.window.row_is_selected(url, item.get_layer(), "", "", "top")
+        assert self.window.current_sel_layer is item
+        requests = []
+        self.window.fetch.connect(lambda args: requests.append(args))
+        self.window.row_is_selected(url, "no_such_layer", "", "", "top")
+        assert requests == []
+
     def test_autoplot_row_selection_keeps_one_fetcher(self, qtbot):
         """
         Selecting a row of the autoplot dock requests the maps through the existing fetchers; it added a new pair
