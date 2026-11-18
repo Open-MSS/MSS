@@ -1455,7 +1455,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         If the the layerChangeInProgress flag is set no update will be
         performed (lock mechanism to prevent erroneous requests during
-        a layer change).
+        a layer change), nor while an autoplot row is applied, which requests
+        its map once itself (autoplot_row_in_progress).
         """
         if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress \
                 and not self.autoplot_row_in_progress:
