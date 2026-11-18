@@ -325,6 +325,23 @@ class Test_FileManager:
             assert self.fm.save_file(operation.id, self.content1, self.user) is None
             assert self.fm.save_file(operation.id, self.content2, self.user)
 
+    @pytest.mark.parametrize("content", [
+        "<a/>",
+        XML_CONTENT_INIT.replace('flightlevel="250"', 'flightlevel="nan"', 1),
+    ], ids=["not-a-flight-track", "nan"])
+    def test_invalid_content_is_refused(self, content):
+        """
+        The server refuses content that isn't a flight track or holds values that aren't finite, instead of
+        raising or storing it (#3336)
+        """
+        assert content != XML_CONTENT_INIT
+        with self.app.test_client():
+            assert self.fm.create_operation("invalid_content", "info", self.user, content=content) is False
+            assert Operation.query.filter_by(path="invalid_content").first() is None
+            flight_path, operation = self._create_operation(flight_path="valid_content", content=self.content1)
+            assert self.fm.save_file(operation.id, content, self.user) is False
+            assert self.fm.get_file(operation.id, self.user) == self.content1
+
     def test_upload_chat_attachment(self):
         '''
         Tests the chat feature to upload files.
