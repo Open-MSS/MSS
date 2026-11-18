@@ -215,3 +215,14 @@ class Test_LinearViewWMS:
             QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         # the retrieved data is offered as a column of the table view
         assert len(self.window.waypoints_model.linear_data_columns) == 1
+
+    def test_clear_map_clears_the_data(self, qtbot):
+        """Clearing the plot also takes its data out of the table view (#3375)"""
+        self.query_server(qtbot, self.url)
+        with qtbot.wait_signal(self.wms_control.image_displayed, timeout=WMS_REQUEST_TIMEOUT_MS):
+            QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
+        model = self.window.waypoints_model
+        assert len(model.linear_data_columns) == 1
+        QtTest.QTest.mouseClick(self.wms_control.btClearMap, QtCore.Qt.LeftButton)
+        assert model.linear_data_columns == []
+        assert all(wp.linear_data == {} for wp in model.waypoints)
