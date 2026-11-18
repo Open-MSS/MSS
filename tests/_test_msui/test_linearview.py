@@ -98,6 +98,39 @@ class Test_MSSLinearViewWindow:
         assert [wp.linear_data for wp in waypoints] == [
             {}, {"Mole fraction of ozone (Linear)": 42.}, {"Mole fraction of ozone (Linear)": 13.}]
 
+    def test_close_clears_only_its_own_waypoint_data(self):
+        """
+        With two linear views of one flight track, the table shows the data of the one that plotted last.
+        Closing the other one keeps that data, closing the one that provided it clears it (#3343).
+        """
+        model = self.window.waypoints_model
+        # kept referenced: the garbage collector would delete it, and the view with it
+        mainwindow = MSUIMainWindow()
+        other = tv.MSUILinearViewWindow(model=model, parent=mainwindow)
+        other.show()
+        try:
+            QtTest.QTest.qWaitForWindowExposed(other)
+            waypoints = model.all_waypoint_data()
+            lats, lons = [wp.lat for wp in waypoints], [wp.lon for wp in waypoints]
+            self.window.mpl.canvas.draw_image([lsec_xml(
+                title="Ozone", lats=lats, lons=lons, values=("1", "2", "3"))])
+            other.mpl.canvas.draw_image([lsec_xml(
+                title="Temperature", unit="K", lats=lats, lons=lons, values=("250", "251", "252"))])
+            assert model.linear_data_columns == [("Temperature", "K")]
+
+            self.window.force_close = True
+            self.window.close()
+            assert model.linear_data_columns == [("Temperature", "K")]
+            assert [wp.linear_data for wp in waypoints] == [{"Temperature": 250.}, {"Temperature": 251.},
+                                                            {"Temperature": 252.}]
+
+            other.force_close = True
+            other.close()
+            assert model.linear_data_columns == []
+            assert [wp.linear_data for wp in waypoints] == [{}, {}, {}]
+        finally:
+            other.hide()
+
     def test_close_clears_waypoint_data(self):
         waypoints = self.window.waypoints_model.all_waypoint_data()
         self.window.mpl.canvas.draw_image([lsec_xml(
