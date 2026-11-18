@@ -117,7 +117,13 @@ class Test_TableView:
         """
         self.window.cbTools.currentIndexChanged.emit(1)
         hexagon = self.window.docks[0].widget()
+        self._select_rows(0, 1)
+        assert not self.window.btCloneWaypoint.isEnabled()
         self.window.setFlightTrackModel(self._other_flight_track())
+        # nothing is selected in the new flight track
+        assert self.window.btCloneWaypoint.isEnabled()
+        assert self.window.btAddWayPointToFlightTrack.isEnabled()
+        assert hexagon.pbAddHexagon.isEnabled()
         self._select_rows(0, 1)
         assert not self.window.btCloneWaypoint.isEnabled()
         assert not self.window.btAddWayPointToFlightTrack.isEnabled()
@@ -157,9 +163,12 @@ class Test_TableView:
     def test_switch_deletes_the_old_selection_model(self):
         """The selection model of the previous flight track is deleted, not kept with the table (#3341)"""
         old = self.window.tableWayPoints.selectionModel()
+        # kept, so that only the switch, not the deletion of the flight track, can delete the selection model
+        previous = self.window.waypoints_model
         self.window.setFlightTrackModel(self._other_flight_track())
         QtCore.QCoreApplication.sendPostedEvents(None, QtCore.QEvent.DeferredDelete)
         assert sip.isdeleted(old)
+        assert previous is not None
 
     def test_same_flight_track_keeps_the_selection(self):
         selection_model = self.window.tableWayPoints.selectionModel()
