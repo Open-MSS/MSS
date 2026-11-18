@@ -48,6 +48,7 @@ from mslib.msui.utils.config import MSUIDefaultConfig, read_config_file, config_
 from tests.utils import create_msui_settings_file, ExceptionMock
 from mslib.msui import msui
 from mslib.msui import mscolab
+from mslib.msui import wms_control
 from mslib.msui.mscolab_exceptions import MSColabSessionExpiredError
 
 
@@ -669,6 +670,86 @@ class Test_Mscolab:
         # verify logged in again
         qtbot.wait_until(assert_label_text)
         # ToDo verify all operations disabled again without a visual check
+
+    def _wms_requests_of_side_and_linear_view(self, qtbot, action):
+        """
+        Logs in, activates an operation, opens a side and a linear view with automatically updated WMS controls,
+        and returns the map requests of the views during action(). get_all_maps is replaced by a counter, as no
+        server is loaded.
+        """
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        self.window.actionSideView.trigger()
+        self.window.actionLinearView.trigger()
+        qtbot.wait_until(lambda: len(self.window.get_active_views()) == 2)
+        controls = []
+        for view in self.window.get_active_views():
+            view.cbTools.currentIndexChanged.emit(1)
+            controls.append(view.docks[0].widget())
+        requests = []
+        with mock.patch.object(wms_control.VSecWMSControlWidget, "get_all_maps",
+                               lambda wms: requests.append("vsec")), \
+                mock.patch.object(wms_control.LSecWMSControlWidget, "get_all_maps",
+                                  lambda wms: requests.append("lsec")):
+            for wms in controls:
+                wms.btGetMap.setEnabled(True)
+                wms.cbAutoUpdate.setChecked(True)
+            action()
+            for wms in controls:
+                wms.btGetMap.setEnabled(False)
+        return sorted(requests)
+
+    def test_reload_requests_each_wms_image_once(self, qtbot):
+        """
+        A reload of the operation, e.g. after a collaborator's change, gives the views the new flight track,
+        which redraws them. A second redraw requested every vertical and linear section twice (#3335).
+        """
+        assert self._wms_requests_of_side_and_linear_view(
+            qtbot, lambda: self.window.mscolab.reload_wps_from_server()) == ["lsec", "vsec"]
+
+    @pytest.mark.parametrize("asynchronously", [True, False])
+    def test_work_asynchronously_requests_each_wms_image_once(self, qtbot, asynchronously):
+        """
+        Switching "Work Asynchronously" gives the views the local copy or the server's flight track once (#3335)
+        """
+        def toggle():
+            # switching off starts from switched on: one request per view and switch
+            if not asynchronously:
+                self.window.workLocallyCheckbox.setChecked(True)
+            self.window.workLocallyCheckbox.setChecked(asynchronously)
+        requests = self._wms_requests_of_side_and_linear_view(qtbot, toggle)
+        assert requests == (["lsec", "vsec"] if asynchronously else ["lsec", "lsec", "vsec", "vsec"])
+
+    def test_reload_keeps_the_controls_of_a_viewer_disabled(self, qtbot):
+        """
+        A viewer can't change the operation. After a reload the roundtrip buttons were enabled again, and a
+        click changed the flight track until the server refused it (#3335).
+        """
+        from mslib.mscolab.seed import add_user, add_user_to_operation
+        viewer = ("viewer@viewer.org", "viewer", "viewer", "Viewer")
+        with self.app.app_context():
+            assert add_user(*viewer)
+            assert add_user_to_operation(path=self.operation_name, access_level="viewer", emailid=viewer[0])
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: viewer[0]}})
+        self._login(qtbot, emailid=viewer[0], password=viewer[2])
+        self._activate_operation_at_index(0)
+        assert self.window.mscolab.access_level == "viewer"
+        self.window.actionTopView.trigger()
+        self.window.actionTableView.trigger()
+        qtbot.wait_until(lambda: len(self.window.get_active_views()) == 2)
+        views = {view.name: view for view in self.window.get_active_views()}
+        topview, tableview = views["Top View"], views["Table View"]
+        for _ in range(2):
+            self.window.mscolab.reload_wps_from_server()
+            assert topview.waypoints_model is self.window.mscolab.waypoints_model
+            assert not topview.btRoundtrip.isEnabled()
+            assert not tableview.btRoundtrip.isEnabled()
+            assert not tableview.tableWayPoints.isEnabled()
+            assert not any(action.isEnabled() for action in topview.mpl.navbar.actions()
+                           if action.text() in ("Ins WP", "Del WP", "Mv WP"))
 
     def test_marked_bold_only_in_multiple_flight_path_operations_for_active_operation(self, qtbot):
         """

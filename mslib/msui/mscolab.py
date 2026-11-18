@@ -1091,8 +1091,9 @@ class MSUIMscolab(QtCore.QObject):
             self.ui.serverOptionsCb.hide()
             self.waypoints_model = None
             self.load_wps_from_server()
+            # reload_local_wp gives the views the local copy, a second reload requested every map again
+            self.reload_view_windows()
         self.show_operation_options()
-        self.reload_view_windows()
 
     def create_local_operation_file(self, local_dir):
         """
@@ -1296,10 +1297,7 @@ class MSUIMscolab(QtCore.QObject):
 
             # update view window nav elements if open
             for window in self.ui.get_active_views():
-                if self.access_level == "viewer":
-                    window.disable_navbar_action_buttons()
-                else:
-                    window.enable_navbar_action_buttons()
+                self._apply_access_level(window)
 
         # update chat window if open
         if self.chat_window is not None:
@@ -1521,10 +1519,7 @@ class MSUIMscolab(QtCore.QObject):
         # set new waypoints model to open views
         for window in self.ui.get_active_views():
             window.setFlightTrackModel(self.waypoints_model)
-            if self.access_level == "viewer":
-                window.disable_navbar_action_buttons()
-            else:
-                window.enable_navbar_action_buttons()
+            self._apply_access_level(window)
 
         self.ui.switch_to_mscolab()
 
@@ -1670,16 +1665,19 @@ class MSUIMscolab(QtCore.QObject):
         if self.ui.local_active:
             return
 
+        # Setting the model redraws a view; a viewer's controls stay disabled (#3335).
         for window in self.ui.get_active_views():
             window.setFlightTrackModel(self.waypoints_model)
-            if hasattr(window, 'mpl'):
-                if window.name in ("Top View", "Table View"):
-                    # Make Roundtrip Button
-                    window.btRoundtrip.setEnabled(window.is_roundtrip_possible())
-                try:
-                    window.mpl.canvas.waypoints_interactor.redraw_figure()
-                except AttributeError as err:
-                    logging.error("%s" % err)
+            self._apply_access_level(window)
+
+    def _apply_access_level(self, window):
+        """
+        Enables the controls of a view that change the flight track, or disables them for a viewer
+        """
+        if self.access_level == "viewer":
+            window.disable_navbar_action_buttons()
+        else:
+            window.enable_navbar_action_buttons()
 
     def handle_import_msc(self, file_path, extension, function, pickertype):
         logging.debug("handle_import_msc")
