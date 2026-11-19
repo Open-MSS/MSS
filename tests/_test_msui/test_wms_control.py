@@ -36,6 +36,7 @@ from xml.sax.saxutils import quoteattr
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.msui import flighttrack as ft
 from mslib.msui.utils.config import config_loader
+from mslib.msui.utils.qt import Worker
 import mslib.msui.wms_control as wc
 from tests.utils import shown_text
 from mslib.msui.utils.service_manager import strip_request_params
@@ -103,6 +104,15 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self._setup("hsec", tmp_path)
         yield
         self._teardown()
+
+    def test_capabilities_worker_is_released_after_a_cancel(self, qtbot):
+        """Cancelling disconnected the capabilities worker, also from its release: it was kept for good (#3371)"""
+        worker = self.window.capabilities_worker
+        self.window.stop_capabilities_retrieval()
+        worker.function = lambda: None
+        worker.start()
+        assert worker.wait(10000)
+        qtbot.wait_until(lambda: worker not in Worker.workers)
 
     def test_no_server(self, qtbot):
         """

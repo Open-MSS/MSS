@@ -429,13 +429,12 @@ class Worker(QtCore.QThread):
     Beware not to modify the parents connections through the function.
     You may change the GUI, but it may sometimes not update until the Worker is done.
     """
-    # Static set of all workers to avoid segfaults
+    # Static set of the running workers, so that Python doesn't delete a running thread (segfault)
     workers = set()
     finished = QtCore.pyqtSignal(object)
     failed = QtCore.pyqtSignal(Exception)
 
     def __init__(self, function):
-        Worker.workers.add(self)
         super().__init__()
         self.function = function
         # pyqtSignals don't work without an application eventloop running
@@ -445,6 +444,25 @@ class Worker(QtCore.QThread):
 
         self.failed.connect(lambda e: self._update_gui())
         self.finished.connect(lambda x: self._update_gui())
+        # QThread's own finished signal, which the result signal above shadows. It is emitted after run()
+        # returned, so its queued call comes after the queued result (#3371).
+        super().finished.connect(self._release)
+
+    def start(self, *args, **kwargs):
+        # Kept while it runs; a worker that is never started isn't kept for good (#3337). QThread.start does
+        # nothing while the thread runs.
+        if not self.isRunning():
+            Worker.workers.add(self)
+        super().start(*args, **kwargs)
+
+    def _release(self):
+        # Released only after its thread has ended and its result has been delivered: released while the thread
+        # was still finishing, the worker could be deleted with it, losing the result or aborting the process.
+        if self.isRunning():
+            # started again in the meantime, the end of that run releases it
+            return
+        self.wait()
+        Worker.workers.discard(self)
 
     def run(self):
         try:
@@ -461,10 +479,10 @@ class Worker(QtCore.QThread):
         except Exception as e:
             self.failed.emit(e)
         finally:
-            try:
-                Worker.workers.remove(self)
-            except KeyError:
-                pass
+            # Without an event loop (see __init__) the queued release is never delivered, it is released here as
+            # before (#3354 review).
+            if isinstance(self.failed, NonQtCallback):
+                Worker.workers.discard(self)
 
     @staticmethod
     def create(function, on_success=None, on_failure=None, start=True):

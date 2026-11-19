@@ -26,6 +26,11 @@
 """
 
 import ast
+import os
+import subprocess
+import sys
+import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -255,3 +260,123 @@ def _texts_not_shown_as_plain_text():
 
 def test_message_box_and_tooltip_texts_are_shown_as_plain_text():
     assert _texts_not_shown_as_plain_text() == []
+
+
+def test_worker_is_kept_alive_while_it_runs(qtbot):
+    """
+    A worker is kept in Worker.workers while it runs, so that Python doesn't delete a running thread. One that
+    is never started was kept for good, with whatever its function holds (#3337).
+    """
+    assert mqt.Worker(None) not in mqt.Worker.workers
+    release = threading.Event()
+    worker = mqt.Worker(lambda: release.wait(10))
+    for _ in range(2):
+        release.clear()
+        worker.start()
+        assert worker in mqt.Worker.workers
+        release.set()
+        assert worker.wait(10000)
+        # released on the main thread, after its result was delivered
+        qtbot.wait_until(lambda: worker not in mqt.Worker.workers)
+    # QThread.start's arguments are passed on
+    worker.function = lambda: None
+    worker.start(priority=pqt.QtCore.QThread.LowPriority)
+    assert worker.wait(10000)
+    qtbot.wait_until(lambda: worker not in mqt.Worker.workers)
+
+
+def test_worker_started_again_before_its_release(qtbot):
+    """
+    A reused worker started again before the release of its previous run was delivered: the release waited for
+    the new run and blocked the main thread (#3371 review)
+    """
+    worker = mqt.Worker(lambda: None)
+    worker.start()
+    assert worker.wait(10000)
+    release = threading.Event()
+    worker.function = lambda: release.wait(5)
+    worker.start()
+    start = time.monotonic()
+    qtbot.wait(50)
+    # the blocked release would wait for the 5 s run; the margin is for busy CI runners
+    assert time.monotonic() - start < 4
+    release.set()
+    assert worker.wait(10000)
+    qtbot.wait_until(lambda: worker not in mqt.Worker.workers)
+
+
+WORKER_STRESS = """
+import gc
+from PyQt5 import QtCore, QtWidgets
+app = QtWidgets.QApplication([])
+from mslib.msui.utils.qt import Worker
+results = []
+batches = iter(range(30))
+
+
+def batch():
+    if next(batches, None) is None:
+        timer.stop()
+        return
+    for _ in range(10):
+        Worker.create(lambda: 0, results.append)
+    gc.collect()
+
+
+def done():
+    if len(results) == 300 and not Worker.workers:
+        app.quit()
+
+
+timer = QtCore.QTimer()
+timer.timeout.connect(batch)
+timer.start(0)
+check = QtCore.QTimer()
+check.timeout.connect(done)
+check.start(50)
+QtCore.QTimer.singleShot(60000, app.quit)
+app.exec_()
+print(len(results), len(Worker.workers))
+"""
+
+
+def test_worker_results_arrive_without_a_reference(tmp_path):
+    """
+    Worker.create is used without keeping the worker. It was released while its thread was still finishing:
+    its result was lost, or Qt aborted the process with "QThread: Destroyed while thread is still running"
+    (#3371). Run in a separate process, which an abort doesn't take the test run with.
+    """
+    script = tmp_path / "workers.py"
+    script.write_text(WORKER_STRESS)
+    process = _run_script(script)
+    # all 300 results arrived, and no worker is kept
+    assert process.stdout.split()[-2:] == ["300", "0"]
+
+
+WORKER_WITHOUT_EVENT_LOOP = """
+from mslib.msui.utils.qt import Worker
+results = []
+worker = Worker.create(lambda: 42, on_success=results.append)
+worker.wait()
+print(results, worker in Worker.workers)
+"""
+
+
+def test_worker_without_an_event_loop_is_released(tmp_path):
+    """
+    A worker started before a QApplication exists has no event loop to deliver its release: it was kept for good
+    (#3354 review). Run in a separate process, without a QApplication.
+    """
+    script = tmp_path / "worker.py"
+    script.write_text(WORKER_WITHOUT_EVENT_LOOP)
+    assert _run_script(script).stdout.split() == ["[42]", "False"]
+
+
+def _run_script(script):
+    root = Path(__file__).parents[2]
+    # the script lives in tmp_path: mslib of this tree has to be on the path
+    env = dict(os.environ, QT_QPA_PLATFORM="offscreen",
+               PYTHONPATH=os.pathsep.join(filter(None, [str(root), os.environ.get("PYTHONPATH")])))
+    process = subprocess.run([sys.executable, str(script)], env=env, capture_output=True, text=True, timeout=120)
+    assert process.returncode == 0, process.stderr[-2000:]
+    return process
