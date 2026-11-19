@@ -195,14 +195,22 @@ Performance
 MSS may also roughly estimate the fuel consumption and thus range of the aircraft
 neglecting weather conditions given a proper configuration file specifying the
 aircraft performance. Such a file may be loaded using the 'performance settings' button
-in Table View. The aircraft performance is specified using tables given in the JSON format.
+in Table View. The table shows the estimated time (UTC) at each waypoint. Edit the time of any
+waypoint to shift the whole flight; all other times follow. Edit the remaining fuel of the first
+waypoint to set the take-off fuel; the fuel at the other waypoints follows from the aircraft model.
+Aircraft, empty weight, take-off fuel and take-off time are one set of performance settings for all
+flight tracks, they are not stored in the flight track file. Switching to another flight track, e.g. to
+compare flights of the same day, keeps them. Viewers of an MSColab operation can't edit the table:
+they set the take-off time and fuel on a local flight track, the operation then uses them as well.
+The aircraft performance is specified using tables given in the JSON format.
 A basic configuration looks like the following file:
 
 .. literalinclude:: samples/config/msui/performance_simple.json.sample
 
 This example file assumes a constant speed of 400 nm/h and a constant fuel consumption of
 2900 lbs/h irrespective of flight level changes. The take-off weight and the empty
-weight of the aircraft are also given, but these may also be adjusted in the GUI after loading.
+weight of the aircraft are also given: loading the file sets the take-off fuel to their difference.
+The empty weight may be adjusted in the performance settings after loading, which keeps the fuel.
 
 The columns of the cruise table are aircraft weight (lbs), aircraft altitude (feet),
 speed (nm/h), and fuel consumption (lbs/h). MSS bilinearily interpolates in aircraft
