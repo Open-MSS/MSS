@@ -1427,8 +1427,7 @@ class Test_Mscolab:
             mscolab_.handle_waypoints_changed(version_name="imported")
             assert save_file.call_count == 2
 
-    @mock.patch("mslib.msui.flighttrack.save_settings_qsettings")
-    def test_reload_keeps_typed_empty_weight(self, mocksave, qtbot):
+    def test_reload_keeps_typed_empty_weight(self, qtbot):
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
@@ -1448,6 +1447,10 @@ class Test_Mscolab:
         assert spinbox.text() == "60000"
         QtTest.QTest.keyClick(spinbox, QtCore.Qt.Key_Return)
         assert spinbox.value() == 60000 != committed
+        assert tableview.waypoints_model.performance_settings["empty_weight"] == 60000
+        # the committed weight is saved, the next reload reads it back (#3364 review)
+        self.window.mscolab.conn.signal_reload.emit(self.window.mscolab.active_op_id)
+        assert spinbox.value() == 60000
         assert tableview.waypoints_model.performance_settings["empty_weight"] == 60000
 
     def test_user_chosen_text_is_not_markup(self, qtbot):
