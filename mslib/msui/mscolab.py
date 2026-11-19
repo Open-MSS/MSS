@@ -1719,9 +1719,9 @@ class MSUIMscolab(QtCore.QObject):
         dir_path = Path(file_path).parent
         file_name = Path(file_path).name
         if function is None:
-            # read as the local import reads it: decoded as the file declares, checked and parsed once (#3372)
+            # decoded as the file declares (#3372); the operation's flight track keeps no file name
             try:
-                model = ft.WaypointsTableModel(filename=str(dir_path / file_name))
+                model = ft.WaypointsTableModel(xml_content=(dir_path / file_name).read_bytes())
             except SyntaxError:
                 show_popup(self.ui, "Import Failed", f"The file - {file_name}, does not contain valid XML")
                 return

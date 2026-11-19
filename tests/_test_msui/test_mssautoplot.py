@@ -46,6 +46,18 @@ def test_load_from_ftml():
     assert type(wp_list[0]).__name__ == 'Waypoint'
 
 
+def test_load_from_ftml_in_its_declared_encoding(tmp_path):
+    """mssautoplot read FTML files in the locale's encoding, not as declared (#3372)"""
+    path = tmp_path / "track.ftml"
+    path.write_bytes(
+        ('<?xml version="1.0" encoding="ISO-8859-1"?>\n<FlightTrack version="9"><ListOfWaypoints>'
+         '<Waypoint flightlevel="0.0" lat="50.0" location="" lon="10.0"><Comments>Höhe</Comments></Waypoint>'
+         '<Waypoint flightlevel="0.0" lat="51.0" location="" lon="11.0"><Comments></Comments></Waypoint>'
+         '</ListOfWaypoints></FlightTrack>').encode("ISO-8859-1"))
+    data_list, _ = load_from_ftml(path)
+    assert data_list[0][4] == "Höhe"
+
+
 class TestResolveFtmlPath:
     """
     The flight track of an "automated_plotting_flights" entry is stored as path + file name,

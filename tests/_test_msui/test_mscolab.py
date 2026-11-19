@@ -860,6 +860,8 @@ class Test_Mscolab:
             assert mockopen.call_count == 1
             imported_wp = self.window.mscolab.waypoints_model
             assert len(imported_wp.waypoints) == name[2]
+            # the operation's flight track, not the imported file (#3355 review)
+            assert imported_wp.get_filename() is None
 
     @pytest.mark.parametrize("case, reason", [("one waypoint", "at least two waypoints"),
                                               ("plugin raises", "KeyError: 'lat'")])

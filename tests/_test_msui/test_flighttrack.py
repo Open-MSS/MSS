@@ -197,13 +197,23 @@ def test_load_ftml_rejects_bytes_not_in_its_declared_encoding(tmp_path):
         WaypointsTableModel(filename=str(path))
 
 
+@pytest.mark.parametrize("encoding", ["bogus", "shift_jis"])
+def test_load_ftml_in_an_encoding_the_parser_lacks_is_invalid(tmp_path, encoding):
+    """The parser has no decoder for unknown and multi-byte encodings: an invalid file, no other error (#3372)"""
+    path = tmp_path / "track.ftml"
+    path.write_bytes(_ftml(encoding, comment="ascii").encode("ascii"))
+    with pytest.raises(SyntaxError):
+        WaypointsTableModel(filename=str(path))
+
+
 FTML_WRITE_SCRIPT = """
 import sys
+import types
 from unittest import mock
 import tests.constants  # noqa: F401
 from PyQt5 import QtWidgets
 app = QtWidgets.QApplication([])
-from mslib.msui import flighttrack as ft, msui_mainwindow  # noqa: E402
+from mslib.msui import constants, flighttrack as ft, msui_mainwindow, viewwindows  # noqa: E402
 saved, exported = sys.argv[1:3]
 for box in ("critical", "warning", "information"):
     # a message box would wait for a click that never comes
@@ -216,7 +226,10 @@ window.create_new_flight_track()
 window.active_flight_track.replace_waypoints(model.waypoints)
 with mock.patch("mslib.msui.msui_mainwindow.get_save_filename", return_value=exported):
     window.handle_export_local("ftml", None, "default")
-for path in (saved, exported):
+# the copy kept for the tutorials
+viewwindows.MSUIViewWindow._save_tutorial_flighttrack(types.SimpleNamespace(waypoints_model=model))
+tutorial = f"{constants.MSUI_CONFIG_PATH}/tutorial_flighttrack.ftml"
+for path in (saved, exported, tutorial):
     print(ascii(ft.WaypointsTableModel(filename=path).waypoints[0].comments))
 """
 
@@ -234,7 +247,7 @@ def test_ftml_is_written_in_utf8_whatever_the_locale(tmp_path):
     process = subprocess.run([sys.executable, "-X", "utf8=0", str(script), str(saved), str(exported)],
                              cwd=Path(__file__).parents[2], env=env, capture_output=True, text=True, timeout=120)
     assert process.returncode == 0, process.stderr[-2000:]
-    assert process.stdout.splitlines() == [ascii("nach → Ziel")] * 2
+    assert process.stdout.splitlines() == [ascii("nach → Ziel")] * 3
     for path in (saved, exported):
         assert "nach → Ziel" in path.read_bytes().decode("utf-8")
 

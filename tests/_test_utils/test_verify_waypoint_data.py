@@ -111,6 +111,11 @@ cases = [
     (flight_track_empty, False),
     (flight_track_incomplete, False),
     (flight_track_with_typo, False),
+    # bytes in an encoding the parser has no decoder for
+    (flight_track_with_waypoints.replace("utf-8", "bogus").encode("ascii"), False),
+    (flight_track_with_waypoints.replace("utf-8", "shift_jis").encode("ascii"), False),
+    # defusedxml refuses entities
+    (flight_track_with_waypoints.replace("?>", '?><!DOCTYPE FlightTrack [<!ENTITY a "b">]>', 1), False),
 ]
 
 
