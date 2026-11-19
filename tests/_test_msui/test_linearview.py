@@ -104,9 +104,7 @@ class Test_MSSLinearViewWindow:
         Closing the other one keeps that data, closing the one that provided it clears it (#3343).
         """
         model = self.window.waypoints_model
-        # kept referenced: the garbage collector would delete it, and the view with it
-        mainwindow = MSUIMainWindow()
-        other = tv.MSUILinearViewWindow(model=model, parent=mainwindow)
+        other = tv.MSUILinearViewWindow(model=model, parent=self.window.parent())
         other.show()
         try:
             QtTest.QTest.qWaitForWindowExposed(other)
@@ -129,7 +127,8 @@ class Test_MSSLinearViewWindow:
             assert model.linear_data_columns == []
             assert [wp.linear_data for wp in waypoints] == [{}, {}, {}]
         finally:
-            other.hide()
+            other.force_close = True
+            other.close()
 
     def test_close_clears_waypoint_data(self):
         waypoints = self.window.waypoints_model.all_waypoint_data()
