@@ -198,7 +198,7 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
             return
         path = os.path.join(constants.MSUI_CONFIG_PATH, "tutorial_flighttrack.ftml")
         try:
-            with open(path, "w") as file_object:
+            with open(path, "w", encoding="utf-8") as file_object:
                 file_object.write(model.get_xml_content())
         except OSError as ex:
             logging.warning("Could not write tutorial flight track (%s: %s)", type(ex), ex)

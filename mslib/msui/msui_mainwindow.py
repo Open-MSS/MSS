@@ -840,7 +840,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                     if function is None:
                         doc = self.active_flight_track.get_xml_doc()
                         path = Path(filename)
-                        with path.open('w') as file_object:
+                        with path.open('w', encoding="utf-8") as file_object:
                             doc.writexml(file_object, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
                     else:
                         function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)

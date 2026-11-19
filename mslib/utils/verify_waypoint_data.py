@@ -34,6 +34,10 @@ def verify_waypoint_data(xml_content):
         doc = defusedxml.minidom.parseString(xml_content)
     except xml.parsers.expat.ExpatError:
         return False
+    # bytes declaring an encoding the parser has no decoder for, unknown (LookupError) or multi-byte (ValueError);
+    # ValueError also covers defusedxml's refusals, e.g. of entities
+    except (LookupError, ValueError):
+        return False
 
     ft_el = doc.getElementsByTagName("FlightTrack")[0]
     waypoints = ft_el.getElementsByTagName("Waypoint")

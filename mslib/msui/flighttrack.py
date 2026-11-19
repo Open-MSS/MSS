@@ -1050,7 +1050,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         self.filename = filename
         doc = self.get_xml_doc()
-        with open(filename, "w") as file_object:
+        with open(filename, "w", encoding="utf-8") as file_object:
             doc.writexml(file_object, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
         self.name = os.path.basename(self.filename).replace(".ftml", "").strip()
 
@@ -1082,7 +1082,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         """
         Load a flight track from an XML file at <filename>.
         """
-        xml_content = Path(filename).read_text()
+        # the bytes, which the XML parser decodes as the file declares, not in the locale's encoding (#3372); bytes
+        # that aren't valid in that encoding make an invalid file (SyntaxError)
+        xml_content = Path(filename).read_bytes()
         name = Path(filename).stem.replace(".ftml", "").strip()
         self.load_from_xml_data(xml_content, name)
 

@@ -96,7 +96,8 @@ def resolve_ftml_path(filename, fpath=None, directory=None):
 def load_from_ftml(filename):
     """Load a flight track from an XML file at <filename>.
     """
-    datasource = Path(filename).read_text()
+    # decoded as the file declares, not in the locale's encoding (#3372)
+    datasource = Path(filename).read_bytes()
     wp_list = ft.load_from_xml_data(datasource)
     now = datetime.now()
     for wp in wp_list:
