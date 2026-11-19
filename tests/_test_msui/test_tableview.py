@@ -110,7 +110,8 @@ class Test_TableView:
         index = model.index(1, ft.FLIGHTLEVEL)
         table.setCurrentIndex(index)
         table.edit(index)
-        qtbot.wait_until(lambda: isinstance(QtWidgets.QApplication.focusWidget(), QtWidgets.QLineEdit))
+        qtbot.wait_until(lambda: isinstance(QtWidgets.QApplication.focusWidget(), QtWidgets.QLineEdit) and
+                         table.isAncestorOf(QtWidgets.QApplication.focusWidget()))
         editor = QtWidgets.QApplication.focusWidget()
         for flightlevel in (300, 400):
             model.setData(index, flightlevel)
