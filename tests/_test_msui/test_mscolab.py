@@ -586,7 +586,7 @@ class Test_Mscolab:
                 mscolab_.handle_operation_deleted(op_id)
         assert mscolab_.active_op_id is None
         assert tableview.waypoints_model is local
-        assert self.window.active_flight_track is local
+        assert self.window.local_active
 
     def test_view_open(self, qtbot):
         self._connect_to_mscolab(qtbot)
