@@ -234,7 +234,7 @@ class Test_CliNotify:
         watcher.on(SocketEvents.UPDATE_OPERATION_LIST, handler=lambda: updates.append(True))
         try:
             sender.emit(SocketEvents.UPDATE_OPERATION_LIST, {"token": self._token(self.userdata[0])})
-            # the events are handled in order, so the watcher would have got it by now
+            # the sockets are separate and their handlers run asynchronously: give a broadcast time to arrive
             time.sleep(1)
             assert updates == []
         finally:
