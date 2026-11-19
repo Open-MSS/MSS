@@ -1177,7 +1177,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
             # Start from the displayed time, i.e. full seconds.
             editor.setDateTime(utc_qdatetime(datetime.datetime.strptime(value, "%Y-%m-%d %H:%M:%S")))
         else:
-            editor.insert(str(value))
+            editor.setText(str(value))
         # Leaving the cell commits the editor; what it was filled with is no change. Taking the
         # displayed, i.e. rounded, value would e.g. move a waypoint or drop its name.
         editor.setProperty("initial_text", self.editor_text(editor))
