@@ -126,9 +126,6 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
 
         self.openTool(WMS + 1)
 
-    def __del__(self):
-        del self.mpl.canvas.waypoints_interactor
-
     def closeEvent(self, event):
         """
         Drop the data columns of the table view, this view is the source of

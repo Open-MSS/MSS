@@ -452,7 +452,8 @@ class MplSideViewCanvas(MplCanvas):
             self.waypoints_interactor = mpl_pi.VPathInteractor(
                 self.plotter.ax, self.waypoints_model,
                 numintpoints=config_loader(dataset="num_interpolation_points"),
-                redraw_xaxis=self.redraw_xaxis, clear_figure=self.plotter.clear_figure
+                redraw_xaxis=self.redraw_xaxis, clear_figure=self.plotter.clear_figure,
+                parent=self,
             )
             self.set_settings(None)
 
@@ -687,7 +688,8 @@ class MplLinearViewCanvas(MplCanvas):
                 self.plotter.ax, self.waypoints_model,
                 numintpoints=config_loader(dataset="num_interpolation_points"),
                 clear_figure=self.plotter.clear_figure,
-                redraw_xaxis=self.redraw_xaxis
+                redraw_xaxis=self.redraw_xaxis,
+                parent=self,
             )
             self.set_settings(None)
         self.redraw_xaxis()
@@ -906,11 +908,15 @@ class MplTopViewCanvas(MplCanvas):
             # itself to the change() signals of the flight track data model.
             settings = self.get_settings()
             try:
-                self.waypoints_interactor = mpl_pi.HPathInteractor(
+                # The canvas becomes its parent only once it is built: a failed construction must not leave an
+                # interactor connected to the flight track with the canvas.
+                interactor = mpl_pi.HPathInteractor(
                     self.plotter.map, self.waypoints_model,
                     linecolor=settings["colour_ft_vertices"],
                     markerfacecolor=settings["colour_ft_waypoints"],
                     show_marker=settings["draw_marker"])
+                interactor.setParent(self)
+                self.waypoints_interactor = interactor
                 self.set_settings(None)
             except IOError as err:
                 logging.error("%s" % err)

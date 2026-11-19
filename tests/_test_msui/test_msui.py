@@ -42,12 +42,14 @@ from tests.utils import shown_text
 from tests.constants import ROOT_DIR, MSUI_CONFIG_PATH, MSUI_CONFIG_FILE_PATH
 from mslib.msui import msui
 from mslib.msui import flighttrack as ft
+from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import msui_mainwindow as msui_mw
 from mslib.msui.aircraft import AIRCRAFT_DUMMY
 from mslib.msui.utils.config import load_settings_qsettings
 from tests.utils import ExceptionMock
 from mslib.msui.utils.config import read_config_file, config_loader
 import re
+import weakref
 
 
 def test_main():
@@ -137,6 +139,57 @@ def test_multiple_times_save_filename(qtbot, tmp_path):
 
     with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
         msui.close()
+
+
+@pytest.mark.parametrize("action", ["actionTopView", "actionSideView", "actionLinearView"])
+def test_closed_view_stays_off_the_flight_track(qtbot, action):
+    """
+    The path interactor of a top, side or linear view stayed connected to the flight track after the view was
+    closed: while something referenced the closed view, every change drew on its deleted canvas (#3342)
+    """
+    window = msui_mw.MSUIMainWindow()
+    window.create_new_flight_track()
+    window.show()
+    getattr(window, action).trigger()
+    view = window.listViews.item(0).window
+    QtTest.QTest.qWaitForWindowExposed(view)
+    view.handle_force_close()
+    qtbot.wait_until(lambda: sip.isdeleted(view))
+    # deleted with its canvas, and so disconnected from the flight track
+    assert sip.isdeleted(view.mpl.canvas.waypoints_interactor)
+    # view is still referenced here. A slot drawing on the deleted canvas would raise RuntimeError, which
+    # pytest-qt reports as a failure of this test.
+    model = window.active_flight_track
+    model.setData(model.index(1, ft.LAT), 12.5)
+    model.insertRows(1)
+    model.invert_direction()
+    # also nothing queued that draws on it
+    qtbot.wait(100)
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+        window.close()
+
+
+def test_top_view_keeps_no_failed_path_interactor(qtbot):
+    """
+    A path interactor whose construction fails (IOError) must not stay with the canvas, still connected to the
+    flight track (#3361 review)
+    """
+    window = msui_mw.MSUIMainWindow()
+    window.create_new_flight_track()
+    window.show()
+    failed = []
+
+    def redraw_path(interactor, *args, **kwargs):
+        failed.append(weakref.ref(interactor))
+        raise IOError("mscolab session expired")
+    with mock.patch.object(mpl_pi.HPathInteractor, "redraw_path", redraw_path):
+        window.actionTopView.trigger()
+    view = window.listViews.item(0).window
+    assert view.mpl.canvas.waypoints_interactor is None
+    # gone, and with it its connections to the flight track
+    assert failed and all(ref() is None for ref in failed)
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+        window.close()
 
 
 class Test_MSS_TutorialMode:
