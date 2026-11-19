@@ -117,9 +117,37 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
             self.setWindowTitle(self.windowTitle().replace(self.waypoints_model.name, model.name))
 
         self.waypoints_model = model
+        self._connect_model(model)
 
         if getattr(self, "tutorial_mode", False):
             self._track_tutorial_flighttrack(model)
+
+    # The flight track the connections of _model_connections() are made to.
+    # Not waypoints_model: __init__ sets that before the first setFlightTrackModel().
+    _connected_model = None
+
+    def _model_connections(self, model):
+        """
+        Returns the (signal, slot) pairs that connect this window to the flight track model.
+        """
+        return ()
+
+    def _connect_model(self, model):
+        """
+        Moves the connections of _model_connections() to model, once per model.
+        """
+        if model is self._connected_model:
+            return
+        if self._connected_model is not None:
+            for signal, slot in self._model_connections(self._connected_model):
+                try:
+                    signal.disconnect(slot)
+                except (TypeError, RuntimeError):
+                    pass
+        if model is not None:
+            for signal, slot in self._model_connections(model):
+                signal.connect(slot)
+        self._connected_model = model
 
     def enable_tutorial_flighttrack_save(self):
         """

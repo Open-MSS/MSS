@@ -26,6 +26,7 @@
 """
 
 import json
+import logging
 
 from PyQt5 import QtCore, QtWidgets
 
@@ -34,13 +35,16 @@ from mslib.msui import aircraft, constants
 from mslib.msui.utils.qt import get_open_filename, plain_text_as_html
 from mslib.msui.qt5 import ui_performance_dockwidget as ui_dw
 
+# The largest take off fuel or empty weight msui accepts (lb), the maximum of the
+# empty weight box. Rejects e.g. a typed 1e400 (inf).
+MAX_WEIGHT = 9999999
 
 DEFAULT_PERFORMANCE = {
     "aircraft": aircraft.SimpleAircraft(aircraft.AIRCRAFT_DUMMY),
-    "visible": False,
-    "takeoff_weight": 0,
+    # take off fuel, the take off weight is empty_weight + fuel
+    "fuel": aircraft.AIRCRAFT_DUMMY["takeoff_weight"] - aircraft.AIRCRAFT_DUMMY["empty_weight"],
     "takeoff_time": QtCore.QDateTime.currentDateTimeUtc(),
-    "empty_weight": 0,
+    "empty_weight": aircraft.AIRCRAFT_DUMMY["empty_weight"],
     "ceiling_alt": [410],
 }
 
@@ -62,38 +66,36 @@ class MSUI_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDock
         self.view = view
         self.parent = parent
 
-        if not settings_dict:
-            settings_dict = DEFAULT_PERFORMANCE
-        self.aircraft = settings_dict["aircraft"]
-        self.lbAircraftName.setText(self.aircraft.name)
-        self.cbShowPerformance.setChecked(settings_dict["visible"])
-        self.dsbTakeoffWeight.setValue(settings_dict["takeoff_weight"])
-        self.dsbEmptyWeight.setValue(
-            settings_dict.get("empty_weight", settings_dict["takeoff_weight"] - settings_dict.get("fuel", 0)))
-        self.dteTakeoffTime.setDateTime(settings_dict["takeoff_time"])
+        self.show_settings(settings_dict or DEFAULT_PERFORMANCE)
 
-        # Connecting signals
+        # Connecting signals. Each update recomputes and redraws the flight
+        # track, the spin box has no keyboard tracking, so that typing a
+        # value emits valueChanged once, not on every key stroke.
         self.pbLoadPerformance.clicked.connect(self.load_performance)
-        self.cbShowPerformance.stateChanged.connect(self.update_parent_performance)
-        self.dteTakeoffTime.dateTimeChanged.connect(self.update_parent_performance)
-        self.dsbTakeoffWeight.valueChanged.connect(self.update_parent_performance)
         self.dsbEmptyWeight.valueChanged.connect(self.update_parent_performance)
 
-    def get_settings(self):
+    def show_settings(self, settings_dict):
         """
-        Encapsulates GUI selections in a python dictionary.
+        Shows the aircraft and empty weight of settings_dict, the performance settings of the
+        flight track, whenever they change. The dock keeps no copy of them: another table view
+        of the same flight track may change them.
+        """
+        self.lbAircraftName.setText(settings_dict["aircraft"].name)
+        with QtCore.QSignalBlocker(self.dsbEmptyWeight):
+            self.dsbEmptyWeight.setValue(settings_dict["empty_weight"])
+
+    def get_settings(self, **changes):
+        """
+        The performance settings of the flight track with the empty weight of the dock and changes,
+        e.g. aircraft or fuel.
 
         :return:
          Dictionary of all setting information
         """
-        settings_dict = {
-            "aircraft": self.aircraft,
-            "visible": self.cbShowPerformance.isChecked(),
-            "takeoff_time": self.dteTakeoffTime.dateTime(),
-            "takeoff_weight": self.dsbTakeoffWeight.value(),
-            "empty_weight": self.dsbEmptyWeight.value()
-        }
-        return settings_dict
+        # The take off time and fuel are set by editing the table view.
+        settings = dict(self.parent.waypoints_model.performance_settings, empty_weight=self.dsbEmptyWeight.value())
+        settings.update(changes)
+        return settings
 
     def update_parent_performance(self):
         self.parent.setPerformance(self.get_settings())
@@ -105,25 +107,51 @@ class MSUI_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDock
         filename = get_open_filename(
             self, "Open Aircraft Performance JSON File", constants.MSUI_CONFIG_PATH,
             "Performance File (*.json)", pickertype="default")
-        if filename is not None:
-            try:
-                with open(filename) as tf:
-                    performance = json.load(tf)
-                self.aircraft = aircraft.SimpleAircraft(performance)
-                self.lbAircraftName.setText(self.aircraft.name)
-                self.dsbTakeoffWeight.setValue(self.aircraft.takeoff_weight)
-                if not any(hasattr(self.aircraft, _x) for _x in ("fuel", "empty_weight")):
-                    raise KeyError("empty_weight")
-                if hasattr(self.aircraft, "empty_weight"):
-                    self.dsbEmptyWeight.setValue(self.aircraft.empty_weight)
-                else:
-                    self.dsbEmptyWeight.setValue(self.aircraft.takeoff_weight - self.aircraft.fuel)
-
-                self.update_parent_performance()
-
-            except KeyError as ex:
-                QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                               plain_text_as_html(self.tr(f"JSON File missing '{ex}' entry")))
-            except (FatalUserError, ValueError) as ex:
-                QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                               plain_text_as_html(self.tr(f"JSON File has Syntax Problems:\n{ex}")))
+        if filename is None:
+            return
+        try:
+            with open(filename) as tf:
+                performance = json.load(tf)
+            if not isinstance(performance, dict):
+                raise ValueError("The file holds no JSON object.")
+            # SimpleAircraft takes missing weights as 0
+            if "takeoff_weight" not in performance:
+                raise KeyError("takeoff_weight")
+            if "empty_weight" not in performance and "fuel" not in performance:
+                raise KeyError("empty_weight")
+            for key in ("takeoff_weight", "empty_weight", "fuel"):
+                if key in performance and (isinstance(performance[key], bool) or
+                                           not isinstance(performance[key], (int, float))):
+                    raise ValueError(f"'{key}' is not a number.")
+            new_aircraft = aircraft.SimpleAircraft(performance)
+            if not 0 <= new_aircraft.empty_weight <= new_aircraft.takeoff_weight <= MAX_WEIGHT:
+                raise ValueError(
+                    f"The empty weight must lie between 0 and the take off weight, at most {MAX_WEIGHT}.")
+        except OSError as ex:
+            QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
+                                           plain_text_as_html(self.tr(f"JSON File could not be read:\n{ex}")))
+            return
+        except KeyError as ex:
+            QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
+                                           plain_text_as_html(self.tr(f"JSON File missing '{ex}' entry")))
+            return
+        except (FatalUserError, ValueError, TypeError) as ex:
+            # TypeError: e.g. a performance table of other than numbers
+            QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
+                                           plain_text_as_html(self.tr(f"JSON File has Syntax Problems:\n{ex}")))
+            return
+        # The box has no decimals: the fuel from the shown empty weight, so that both
+        # give the take off weight of the file.
+        with QtCore.QSignalBlocker(self.dsbEmptyWeight):
+            self.dsbEmptyWeight.setValue(new_aircraft.empty_weight)
+        fuel = new_aircraft.takeoff_weight - self.dsbEmptyWeight.value()
+        # Applied once; all docks of the flight track show it on performanceDataChanged.
+        try:
+            self.parent.setPerformance(self.get_settings(aircraft=new_aircraft, fuel=fuel))
+        except Exception as ex:
+            # e.g. a cruise speed of 0. The flight track keeps its settings, the dock shows them again.
+            logging.error("%s %s", type(ex), ex)
+            self.show_settings(self.parent.waypoints_model.performance_settings)
+            QtWidgets.QMessageBox.critical(
+                self, self.tr("Performance JSON Load"),
+                plain_text_as_html(self.tr(f"The flight track can't be computed with this aircraft:\n{ex}")))
