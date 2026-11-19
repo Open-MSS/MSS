@@ -284,7 +284,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         # ==========================
         # ToDo review 2026 after EOL of Win 10 if we can use parent again
         if mainwindow is not None:
-            mainwindow.refresh_signal_connect.connect(self.refresh_signal_send.emit)
+            mainwindow.refresh_signal_connect.connect(self.refresh_signal_send)
 
         # Map controls.
         self.btMapRedraw.clicked.connect(self.mpl.canvas.redraw_map)
@@ -358,10 +358,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         kwargs = self.changeMapSection(only_kwargs=True)
         self.mpl.canvas.init_map(**kwargs)
         self.setFlightTrackModel(self.waypoints_model)
-
-        # Automatically enable or disable roundtrip when data changes
-        self.waypoints_model.dataChanged.connect(self.update_roundtrip_enabled)
-        self.update_roundtrip_enabled()
         self.mpl.navbar.push_current()
 
         self.openTool(WMS + 1)
@@ -427,13 +423,12 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                                                             mscolab_server_url=self.mscolab_server_url,
                                                             token=self.token)
 
-                self.mainwindow_signal_logout_mscolab.connect(self.signal_logout_mscolab.emit)
-                self.mainwindow_signal_listFlighttrack_doubleClicked.connect(
-                    lambda: self.signal_listFlighttrack_doubleClicked.emit())
-                self.mainwindow_signal_permission_revoked.connect(
-                    lambda op_id: self.signal_permission_revoked.emit(op_id))
-                self.mainwindow_signal_render_new_permission.connect(
-                    lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
+                # Signal to signal, not emit or lambdas: Qt drops these connections when this window is
+                # deleted, otherwise the main window would emit into a closed top view (#3329).
+                self.mainwindow_signal_logout_mscolab.connect(self.signal_logout_mscolab)
+                self.mainwindow_signal_listFlighttrack_doubleClicked.connect(self.signal_listFlighttrack_doubleClicked)
+                self.mainwindow_signal_permission_revoked.connect(self.signal_permission_revoked)
+                self.mainwindow_signal_render_new_permission.connect(self.signal_render_new_permission)
                 if self.active_op_id is not None:
                     self.signal_activate_operation.emit(self.active_op_id)
             elif index == AUTOPLOT:
@@ -607,3 +602,12 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
     def update_roundtrip_enabled(self):
         self.btRoundtrip.setEnabled(self.is_roundtrip_possible())
+
+    def _model_connections(self, model):
+        # Automatically enable or disable roundtrip when the flight track changes
+        return tuple((signal, self.update_roundtrip_enabled) for signal in (
+            model.dataChanged, model.rowsInserted, model.rowsRemoved, model.modelReset))
+
+    def setFlightTrackModel(self, model):
+        super().setFlightTrackModel(model)
+        self.update_roundtrip_enabled()
