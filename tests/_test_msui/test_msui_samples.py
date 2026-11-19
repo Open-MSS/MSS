@@ -87,7 +87,7 @@ def test_ftml_sample():
 
 def test_performance_sample():
     aircraft = SimpleAircraft(json.loads((MSUI_SAMPLES / "performance_simple.json.sample").read_text()))
-    assert aircraft.name == "DUMMY"
+    assert aircraft.name == "SAMPLE"
     assert aircraft.empty_weight == 56000
 
 

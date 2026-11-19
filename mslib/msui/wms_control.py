@@ -791,16 +791,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
                 self.fetch.emit(args)
 
-            self.prefet = WMSMapFetcher(self.wms_cache)
-            self.prefet.moveToThread(self.thread_prefetch)
-            self.prefetch.connect(self.prefet.fetch_maps)  # implicitly uses a queued connection
-
-            self.fet = WMSMapFetcher(self.wms_cache)
-            self.fet.moveToThread(self.thread_fetch)
-            self.fetch.connect(self.fet.fetch_maps)  # implicitly uses a queued connection
-            self.fet.finished.connect(self.continue_retrieve_image)  # implicitly uses a queued connection
-            self.fet.exception.connect(self.display_exception)  # implicitly uses a queued connection
-            self.fet.started_request.connect(self.display_progress_dialog)  # implicitly uses a queued connection
             self.populate_ui(update_level=level)
             for i in range(self.cbLevel.count()):
                 item_text = self.cbLevel.itemText(i)

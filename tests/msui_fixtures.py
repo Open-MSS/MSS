@@ -32,7 +32,7 @@ import pytest
 from PyQt5 import QtWidgets
 
 # tests.constants sets MSUI_CONFIG_PATH, which mslib.msui.utils.config needs at import time
-from tests.constants import create_msui_settings_file
+from tests.constants import MSUI_CONFIG_PATH, create_msui_settings_file
 from mslib.msui.utils.config import modify_config_file, read_config_file
 
 
@@ -73,6 +73,8 @@ def reset_config():
     """Reset the msui configuration file used in the tests after every test."""
     create_msui_settings_file("{}")
     read_config_file()
+    # the widget settings (save_settings_qsettings), e.g. the performance settings of the flight tracks
+    (MSUI_CONFIG_PATH / "msui-core.conf").unlink(missing_ok=True)
 
 
 @pytest.fixture

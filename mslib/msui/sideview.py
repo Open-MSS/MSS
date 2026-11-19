@@ -322,7 +322,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         # ==========================
         # ToDo review 2026 after EOL of Win 10 if we can use parent again
         if mainwindow is not None:
-            mainwindow.refresh_signal_connect.connect(self.refresh_signal_send.emit)
+            mainwindow.refresh_signal_connect.connect(self.refresh_signal_send)
 
         # Buttons to set sideview options.
         self.btOptions.clicked.connect(self.open_settings_dialog)
@@ -422,9 +422,11 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         """
         Set the QAbstractItemModel instance that the view displays.
         """
-        super().setFlightTrackModel(model)
         if self.docks[WMS] is not None:
+            # The WMS control has to know the new flight track before the
+            # redraw below asks it for a plot, its request describes the path.
             self.docks[WMS].widget().setFlightTrackModel(model)
+        super().setFlightTrackModel(model)
 
     def open_settings_dialog(self):
         """

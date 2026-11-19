@@ -25,12 +25,16 @@
     limitations under the License.
 """
 
+import datetime
+import json
 import mock
 import os
+import time
 import pytest
 
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
+from mslib.msui.aircraft import AIRCRAFT_DUMMY, SimpleAircraft
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 import mslib.msui.tableview as tv
 from tests.utils import lsec_xml
@@ -141,24 +145,56 @@ class Test_TableView:
         Check effect of performance settings on TableView
         """
         self.window.cbTools.currentIndexChanged.emit(2)
-
-        self.window.waypoints_model.performance_settings = DEFAULT_PERFORMANCE
-        self.window.waypoints_model.update_distances(0)
-        self.window.waypoints_model.dataChanged.emit(
-            self.window.waypoints_model.index(0, 0), self.window.waypoints_model.index(0, 0))
-        self.window.resizeColumns()
-        assert self.window.waypoints_model.columnCount() == 15
-        visible = dict(DEFAULT_PERFORMANCE)
-        visible["visible"] = True
-        self.window.waypoints_model.performance_settings = visible
-        self.window.waypoints_model.update_distances(0)
-        self.window.waypoints_model.dataChanged.emit(
-            self.window.waypoints_model.index(0, 0), self.window.waypoints_model.index(0, 0))
-        self.window.resizeColumns()
-        assert self.window.waypoints_model.columnCount() == 15
-        # todo this does not check that actually something happens
+        model = self.window.waypoints_model
+        assert model.columnCount() == 15
+        changes = []
+        model.performanceDataChanged.connect(lambda: changes.append(1))
         QtTest.QTest.mouseClick(self.window.docks[1].widget().pbLoadPerformance, QtCore.Qt.LeftButton)
         assert mockopen.call_count == 1
+        # the aircraft is applied once, not for each weight of the dock
+        assert changes == [1]
+        assert model.performance_settings["aircraft"] is not DEFAULT_PERFORMANCE["aircraft"]
+        # the take off weight of the file, i.e. its fuel
+        assert model.waypoints[0].weight == 91000
+        assert model.performance_settings["empty_weight"] == 56000
+        assert model.performance_settings["fuel"] == model.waypoints[0].rem_fuel == 35000
+
+    @pytest.mark.parametrize("change", [
+        {"empty_weight": None}, {"takeoff_weight": None}, {"empty_weight": "56000"},
+        {"empty_weight": 95000}, {"empty_weight": -1}, {"takeoff_weight": 1e8, "empty_weight": 0},
+        {"climb": [[0, 0]]}, {"cruise": "abc"}, {"descent": [[["a"]]]}, "not readable",
+        {"cruise": [[0.0, 0.0, 0.0, 2900.0]]}],
+        ids=["no-empty-weight", "no-takeoff-weight", "string", "empty-above-takeoff", "negative", "too-heavy",
+             "short-table-row", "table-string", "table-nested", "not-readable", "cannot-compute"])
+    def test_performance_with_bad_weights(self, tmp_path, change):
+        """
+        An aircraft file that can't be read, without proper weights or tables, or that the flight track
+        can't be computed with (e.g. no cruise speed) is rejected, as the error message says, not applied.
+        """
+        with open(os.path.join(os.path.dirname(__file__), "..", "data", "performance_simple.json")) as source:
+            performance = json.load(source)
+        filename = tmp_path / "performance.json"
+        if change == "not readable":
+            # a directory can't be opened as a file
+            filename.mkdir()
+        else:
+            for key, value in change.items():
+                if value is None:
+                    del performance[key]
+                else:
+                    performance[key] = value
+            filename.write_text(json.dumps(performance))
+        self.window.cbTools.currentIndexChanged.emit(2)
+        model = self.window.waypoints_model
+        settings = dict(model.performance_settings)
+        with mock.patch("mslib.msui.performance_settings.get_open_filename", return_value=str(filename)), \
+                mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critical:
+            QtTest.QTest.mouseClick(self.window.docks[1].widget().pbLoadPerformance, QtCore.Qt.LeftButton)
+        critical.assert_called_once()
+        assert model.performance_settings == settings
+        dock = self.window.docks[1].widget()
+        assert (dock.lbAircraftName.text(), dock.dsbEmptyWeight.value()) == (
+            settings["aircraft"].name, settings["empty_weight"])
 
     def test_show_linear_data(self):
         """
@@ -490,18 +526,13 @@ class Test_TableView:
         """
         Copying the table to the clipboard produces CSV text with the
         columns currently shown, leaving out columns that are empty for
-        every waypoint (e.g. the performance columns hidden by default).
+        every waypoint (e.g. data columns of the linear view without data).
         Numbers use the decimal point of the active QLocale ('.' for the
         C locale used here), which also determines the field delimiter.
         """
-        self.window.waypoints_model.performance_settings = DEFAULT_PERFORMANCE
-        self.window.resizeColumns()
-
         rows = self._copy_table_to_clipboard_csv(QtCore.QLocale.c(), delimiter=",")
         header = [cell.strip() for cell in rows[0]]
-        expected_header = [
-            "Location", "Lat (+-90)", "Lon (+-180)", "Flightlevel", "Pressure (hPa)",
-            "Leg dist. (km [nm])", "Cum. dist. (km [nm])", "Comments"]
+        expected_header = [" ".join(column[0].split()) for column in ft.TABLE_FULL]
         assert header == expected_header
         assert len(rows) == 1 + len(self.window.waypoints_model.waypoints)
         assert rows[1][0] == "EDMO"
@@ -520,3 +551,380 @@ class Test_TableView:
         de_locale = QtCore.QLocale(QtCore.QLocale.German, QtCore.QLocale.Germany)
         rows = self._copy_table_to_clipboard_csv(de_locale, delimiter=";")
         assert rows[2][1:3] == ["48,1", "10,27"]
+
+    @mock.patch("mslib.msui.flighttrack.save_settings_qsettings")
+    def test_edit_time_shifts_flight(self, mocksave):
+        """
+        Editing the time of one waypoint sets the takeoff time such that the
+        waypoint is reached at that time; all other times follow.
+        """
+        default_takeoff = DEFAULT_PERFORMANCE["takeoff_time"]
+        model = self.window.waypoints_model
+        assert model.flags(model.index(2, ft.TIME_UTC)) & QtCore.Qt.ItemIsEditable
+        legs = [wp.utc_time - model.waypoints[0].utc_time for wp in model.waypoints]
+        model.modified = False
+
+        assert model.setData(model.index(2, ft.TIME_UTC), "2030-01-01 12:00:00")
+        target = datetime.datetime(2030, 1, 1, 12)
+        # QDateTime holds milliseconds only
+        ms = datetime.timedelta(milliseconds=1)
+        assert abs(model.waypoints[2].utc_time - target) < ms
+        assert model.data(model.index(2, ft.TIME_UTC)).value() == "2030-01-01 12:00:00"
+        takeoff = model.performance_settings["takeoff_time"].toPyDateTime()
+        assert abs(takeoff - (target - legs[2])) < ms
+        assert all(abs((wp.utc_time - takeoff) - leg) < ms for wp, leg in zip(model.waypoints, legs))
+        assert DEFAULT_PERFORMANCE["takeoff_time"] is default_takeoff
+
+        # a time edit is no change of the flight plan
+        assert not model.modified
+        # unparsable input is discarded
+        assert not model.setData(model.index(2, ft.TIME_UTC), "noon")
+        assert model.data(model.index(2, ft.TIME_UTC)).value() == "2030-01-01 12:00:00"
+
+    @mock.patch("mslib.msui.flighttrack.save_settings_qsettings")
+    def test_edit_time_with_editor(self, mocksave):
+        model = self.window.waypoints_model
+        index = model.index(3, ft.TIME_UTC)
+        delegate = self.window.tableWayPoints.itemDelegate()
+        editor = delegate.createEditor(self.window.tableWayPoints, QtWidgets.QStyleOptionViewItem(), index)
+        assert isinstance(editor, QtWidgets.QDateTimeEdit)
+        delegate.setEditorData(editor, index)
+        assert editor.dateTime().toString("yyyy-MM-dd HH:mm:ss") == model.data(index).value()
+        target = QtCore.QDateTime(2031, 6, 15, 8, 30, 0)
+        target.setTimeSpec(QtCore.Qt.UTC)
+        editor.setDateTime(target)
+        delegate.setModelData(editor, model, index)
+        assert model.data(index).value() == "2031-06-15 08:30:00"
+
+    def test_pick_location_changes_once(self):
+        """
+        Picking a location sets its coordinates and name, a single change of the flight track.
+        """
+        model = self.window.waypoints_model
+        index = model.index(1, ft.LOCATION)
+        changes = []
+        model.dataChanged.connect(lambda *args: changes.append(args))
+        delegate = self.window.tableWayPoints.itemDelegate()
+        editor = delegate.createEditor(self.window.tableWayPoints, QtWidgets.QStyleOptionViewItem(), index)
+        editor.setCurrentText("Hamburg")
+        delegate.setModelData(editor, model, index)
+        assert len(changes) == 1
+        assert (model.waypoints[1].location, model.waypoints[1].lat, model.waypoints[1].lon) == ("Hamburg", 53.55, 9.99)
+
+    @mock.patch("mslib.msui.flighttrack.save_settings_qsettings")
+    def test_unchanged_editor_keeps_time(self, mocksave):
+        """
+        The editor shows full seconds; committing it unchanged must not shift
+        the flight by the rounding difference.
+        """
+        model = self.window.waypoints_model
+        model.setData(model.index(1, ft.TIME_UTC), "2030-01-01 12:00:00")
+        index = model.index(3, ft.TIME_UTC)
+        assert model.waypoints[3].utc_time.microsecond != 0
+        takeoff = model.performance_settings["takeoff_time"]
+        changes = []
+        model.performanceDataChanged.connect(lambda: changes.append(1))
+        delegate = self.window.tableWayPoints.itemDelegate()
+        editor = delegate.createEditor(self.window.tableWayPoints, QtWidgets.QStyleOptionViewItem(), index)
+        delegate.setEditorData(editor, index)
+        delegate.setModelData(editor, model, index)
+        assert model.performance_settings["takeoff_time"] == takeoff
+        assert changes == []
+
+    @mock.patch("mslib.msui.flighttrack.save_settings_qsettings")
+    def test_performance_dock_keeps_edited_time(self, mocksave):
+        model = self.window.waypoints_model
+        self.window.cbTools.currentIndexChanged.emit(2)
+        model.setData(model.index(1, ft.TIME_UTC), "2030-01-01 12:00:00")
+        changes = []
+        model.performanceDataChanged.connect(lambda: changes.append(1))
+        fuel = model.performance_settings["fuel"]
+        spinbox = self.window.docks[1].widget().dsbEmptyWeight
+        spinbox.selectAll()
+        QtTest.QTest.keyClicks(spinbox, "60000")
+        assert changes == []
+        QtTest.QTest.keyClick(spinbox, QtCore.Qt.Key_Return)
+        # the flight track is updated once, not for each key stroke
+        assert changes == [1]
+        assert model.performance_settings["empty_weight"] == 60000
+        # the fuel stays, the aircraft is heavier
+        assert model.performance_settings["fuel"] == fuel
+        assert model.waypoints[0].weight == 60000 + fuel
+        assert model.data(model.index(1, ft.TIME_UTC)).value() == "2030-01-01 12:00:00"
+
+    @pytest.mark.skipif(not hasattr(time, "tzset"), reason="time.tzset is available on Unix only")
+    @mock.patch("mslib.msui.flighttrack.save_settings_qsettings")
+    def test_edit_time_in_local_dst_gap(self, mocksave, monkeypatch):
+        """
+        Times are UTC throughout; a time that does not exist in the local
+        time zone (daylight saving gap) must still round trip through the editor.
+        """
+        monkeypatch.setenv("TZ", "Europe/Berlin")
+        time.tzset()
+        try:
+            model = self.window.waypoints_model
+            index = model.index(1, ft.TIME_UTC)
+            assert model.setData(index, "2030-03-31 02:30:00")
+            assert model.data(index).value() == "2030-03-31 02:30:00"
+            delegate = self.window.tableWayPoints.itemDelegate()
+            editor = delegate.createEditor(self.window.tableWayPoints, QtWidgets.QStyleOptionViewItem(), index)
+            delegate.setEditorData(editor, index)
+            assert editor.dateTime().toString("yyyy-MM-dd HH:mm:ss") == "2030-03-31 02:30:00"
+            delegate.setModelData(editor, model, index)
+            assert model.data(index).value() == "2030-03-31 02:30:00"
+        finally:
+            monkeypatch.undo()
+            time.tzset()
+
+    def _edit(self, row, column, text=None, enter=False):
+        """Opens the editor of a cell, sets text if given, confirms it with Enter if asked, and leaves the cell."""
+        model = self.window.waypoints_model
+        index = model.index(row, column)
+        delegate = self.window.tableWayPoints.itemDelegate()
+        editor = delegate.createEditor(self.window.tableWayPoints, QtWidgets.QStyleOptionViewItem(), index)
+        delegate.setEditorData(editor, index)
+        if text is not None:
+            if isinstance(editor, QtWidgets.QComboBox):
+                editor.setCurrentText(text)
+            else:
+                editor.setText(text)
+        if enter:
+            QtTest.QTest.keyClick(editor, QtCore.Qt.Key_Return)
+        delegate.setModelData(editor, model, index)
+
+    def test_unchanged_location_of_unnamed_waypoint(self):
+        model = self.window.waypoints_model
+        before = (model.waypoints[1].location, model.waypoints[1].lat, model.waypoints[1].lon)
+        changes = []
+        model.dataChanged.connect(lambda *args: changes.append(args))
+        self._edit(1, ft.LOCATION)
+        after = (model.waypoints[1].location, model.waypoints[1].lat, model.waypoints[1].lon)
+        assert after == before == ("", 48.10, 10.27)
+        assert changes == []
+
+    @pytest.mark.parametrize("column", [ft.LAT, ft.LON, ft.FLIGHTLEVEL, ft.PRESSURE, ft.LOCATION])
+    def test_unchanged_commit_changes_nothing(self, column):
+        """
+        The table shows rounded values; leaving the editor unchanged must not move the waypoint or drop its name.
+        """
+        model = self.window.waypoints_model
+        model.setData(model.index(1, ft.LAT), 48.1234)
+        model.setData(model.index(1, ft.LOCATION), "custom")
+        before = vars(model.waypoints[1]).copy()
+        changes = []
+        model.dataChanged.connect(lambda *args: changes.append(args))
+        self._edit(1, column)
+        assert vars(model.waypoints[1]) == before
+        assert changes == []
+
+    def test_clear_name(self):
+        """
+        No name is just no name, not the position of another waypoint without a name.
+        """
+        model = self.window.waypoints_model
+        before = (model.waypoints[4].lat, model.waypoints[4].lon)
+        self._edit(4, ft.LOCATION, "")
+        assert (model.waypoints[4].location, model.waypoints[4].lat, model.waypoints[4].lon) == ("",) + before
+
+    @mock.patch("mslib.msui.flighttrack.save_settings_qsettings")
+    def test_performance_dock_follows_the_flight_track(self, mocksave):
+        self.window.cbTools.currentIndexChanged.emit(2)
+        dock = self.window.docks[1].widget()
+        other = ft.WaypointsTableModel("other", waypoints=[ft.Waypoint(1., 1., 0), ft.Waypoint(2., 2., 0)])
+        other.performance_settings = dict(other.performance_settings, empty_weight=40000, fuel=10000,
+                                          aircraft=SimpleAircraft(dict(AIRCRAFT_DUMMY, name="OTHER")))
+        self.window.setFlightTrackModel(other)
+        assert dock.lbAircraftName.text() == "OTHER"
+        assert dock.dsbEmptyWeight.value() == 40000
+        dock.dsbEmptyWeight.setValue(45000)
+        assert other.performance_settings["aircraft"].name == "OTHER"
+        assert (other.performance_settings["empty_weight"], other.performance_settings["fuel"]) == (45000, 10000)
+
+    def test_pick_name_of_another_waypoint(self):
+        model = self.window.waypoints_model
+        model.setData(model.index(2, ft.LOCATION), "custom")
+        changes = []
+        model.dataChanged.connect(lambda *args: changes.append(args))
+        self._edit(1, ft.LOCATION, "custom")
+        # one change, with the name
+        assert len(changes) == 1
+        assert (model.waypoints[1].location, model.waypoints[1].lat, model.waypoints[1].lon) == ("custom", 52.32, 9.21)
+
+    @mock.patch("mslib.msui.flighttrack.save_settings_qsettings")
+    def test_edit_takeoff_fuel(self, mocksave):
+        model = self.window.waypoints_model
+        assert model.flags(model.index(0, ft.REM_FUEL)) & QtCore.Qt.ItemIsEditable
+        assert not model.flags(model.index(1, ft.REM_FUEL)) & QtCore.Qt.ItemIsEditable
+        assert not model.setData(model.index(1, ft.REM_FUEL), "1000")
+        changes, flight_plan_changes = [], []
+        model.performanceDataChanged.connect(lambda: changes.append(1))
+        model.dataChanged.connect(lambda *args: flight_plan_changes.append(args))
+        self._edit(0, ft.REM_FUEL)
+        assert changes == []
+        self._edit(0, ft.REM_FUEL, "20000")
+        assert changes == [1]
+        assert flight_plan_changes == []
+        assert model.performance_settings["fuel"] == model.waypoints[0].rem_fuel == 20000
+        assert model.waypoints[0].weight == model.performance_settings["empty_weight"] + 20000
+        assert mocksave.call_args[0][1]["fuel"] == 20000
+        assert not model.setData(model.index(0, ft.REM_FUEL), "-1")
+        assert model.performance_settings["fuel"] == 20000
+
+    @mock.patch("mslib.msui.flighttrack.save_settings_qsettings")
+    def test_takeoff_time_limits(self, mocksave):
+        """
+        A time whose waypoint times can't be computed is rejected before it is stored.
+        """
+        model = self.window.waypoints_model
+        assert model.setData(model.index(0, ft.TIME_UTC), "8999-12-31 23:59:00")
+        takeoff = model.performance_settings["takeoff_time"]
+        saved = mocksave.call_count
+        assert not model.setData(model.index(0, ft.TIME_UTC), "9999-12-31 23:00:00")
+        assert not model.setData(model.index(0, ft.TIME_UTC), "1899-12-31 23:00:00")
+        assert model.performance_settings["takeoff_time"] == takeoff
+        assert mocksave.call_count == saved
+        # an unchanged commit of a later waypoint, near the limit, doesn't shift the flight
+        assert model.waypoints[3].utc_time.year == 9000
+        self._edit(3, ft.TIME_UTC)
+        assert model.performance_settings["takeoff_time"] == takeoff
+
+    def test_takeoff_time_out_of_range_is_reset_at_load(self):
+        broken = QtCore.QDateTime(QtCore.QDate(9999, 12, 31), QtCore.QTime(23, 0), QtCore.Qt.UTC)
+        stored = dict(DEFAULT_PERFORMANCE, takeoff_time=broken)
+        with mock.patch("mslib.msui.flighttrack.load_settings_qsettings", return_value=stored):
+            model = ft.WaypointsTableModel("", waypoints=[ft.Waypoint(0., 0., 0.), ft.Waypoint(10., 10., 300.)])
+        assert model.performance_settings["takeoff_time"] == DEFAULT_PERFORMANCE["takeoff_time"]
+
+    def test_model_connections(self):
+        """
+        The window listens to the flight track it shows, once.
+        """
+        first = self.window.waypoints_model
+        other = ft.WaypointsTableModel("other", waypoints=[ft.Waypoint(1., 1., 0)])
+        self.window.setFlightTrackModel(other)
+        self.window.setFlightTrackModel(other)
+        with mock.patch.object(self.window, "is_roundtrip_possible", return_value=True) as possible:
+            other.insertRows(1, waypoints=[ft.Waypoint(2., 2., 0)])
+            assert possible.call_count == 1
+            first.insertRows(1, waypoints=[ft.Waypoint(2., 2., 0)])
+            assert possible.call_count == 1
+
+    def test_seconds_rounded(self):
+        assert ft.seconds_to_string(3599.5) == "01:00:00"
+        assert ft.seconds_to_string(3599.4) == "00:59:59"
+        assert ft.format_utc_time(datetime.datetime(2030, 1, 1, 11, 59, 59, 500000)) == "2030-01-01 12:00:00"
+
+    def test_repick_location(self):
+        """
+        Picking a waypoint's name again moves it to the first waypoint of that name, as on develop.
+        """
+        model = self.window.waypoints_model
+        model.replace_waypoints([ft.Waypoint(50., 6., 0), ft.Waypoint(52., 8., 250, location="Turn"),
+                                 ft.Waypoint(53., 10., 250, location="Turn"), ft.Waypoint(51., 12., 0)])
+        # only passing through the cell keeps the waypoint, also a moved one
+        self._edit(2, ft.LOCATION)
+        assert (model.waypoints[2].lat, model.waypoints[2].lon) == (53., 10.)
+        self._edit(2, ft.LOCATION, "Turn", enter=True)
+        assert (model.waypoints[2].lat, model.waypoints[2].lon) == (52., 8.)
+        # the first one stays where it is
+        self._edit(1, ft.LOCATION, "Turn", enter=True)
+        assert (model.waypoints[1].lat, model.waypoints[1].lon) == (52., 8.)
+
+    def test_repick_configured_location(self):
+        """
+        Picking a configured location again moves a waypoint of that name back to it.
+        """
+        model = self.window.waypoints_model
+        self._edit(1, ft.LOCATION, "Hamburg")
+        model.waypoints[1].lat = 53.  # e.g. from a flight track file; moving it drops the name
+        self._edit(1, ft.LOCATION)
+        assert (model.waypoints[1].location, model.waypoints[1].lat) == ("Hamburg", 53.)
+        self._edit(1, ft.LOCATION, enter=True)
+        assert (model.waypoints[1].location, model.waypoints[1].lat, model.waypoints[1].lon) == ("Hamburg", 53.55, 9.99)
+
+    @mock.patch("mslib.msui.flighttrack.save_settings_qsettings")
+    def test_columns_follow_fuel(self, mocksave):
+        """
+        A fuel edit changes no flight plan, still a larger fuel may need wider columns.
+        """
+        with mock.patch.object(self.window, "resizeColumns") as resize:
+            self._edit(0, ft.REM_FUEL, "9999999")
+        resize.assert_called()
+
+
+class Test_TableViewsOfOneFlightTrack:
+    """
+    Several table views with performance settings show one flight track: whatever is changed in
+    one of them, all show the performance settings of the flight track (#3315 review).
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup(self, qtbot, tmp_path):
+        self.model = ft.WaypointsTableModel("", waypoints=[
+            ft.Waypoint(50., 6., 0), ft.Waypoint(52., 8., 250), ft.Waypoint(51., 12., 0)])
+        self.windows = [tv.MSUITableViewWindow(model=self.model) for _ in range(3)]
+        for window in self.windows:
+            window.cbTools.currentIndexChanged.emit(2)
+        performance = dict(AIRCRAFT_DUMMY, name="OTHER", takeoff_weight=80000, empty_weight=50000)
+        self.filename = tmp_path / "other.json"
+        self.filename.write_text(json.dumps(performance))
+        with mock.patch("mslib.msui.flighttrack.save_settings_qsettings"):
+            yield
+        for window in self.windows:
+            window.hide()
+
+    def docks(self):
+        return [window.docks[1].widget() for window in self.windows]
+
+    def check(self):
+        settings = self.model.performance_settings
+        for dock in self.docks():
+            assert dock.lbAircraftName.text() == settings["aircraft"].name
+            assert dock.dsbEmptyWeight.value() == settings["empty_weight"]
+        assert self.model.waypoints[0].rem_fuel == settings["fuel"]
+        assert self.model.waypoints[0].weight == settings["empty_weight"] + settings["fuel"]
+
+    def load(self, dock):
+        with mock.patch("mslib.msui.performance_settings.get_open_filename", return_value=str(self.filename)):
+            QtTest.QTest.mouseClick(dock.pbLoadPerformance, QtCore.Qt.LeftButton)
+
+    @pytest.mark.parametrize("loading, editing", [(0, 1), (1, 0), (2, 2)])
+    def test_load_in_one_edit_in_another(self, loading, editing):
+        """
+        Reimar's case: load an aircraft in one view, change the empty weight in another.
+        """
+        self.check()
+        self.load(self.docks()[loading])
+        assert self.model.performance_settings["aircraft"].name == "OTHER"
+        assert (self.model.performance_settings["empty_weight"], self.model.performance_settings["fuel"]) == \
+            (50000, 30000)
+        self.check()
+        self.docks()[editing].dsbEmptyWeight.setValue(52000)
+        assert self.model.performance_settings["aircraft"].name == "OTHER"
+        assert (self.model.performance_settings["empty_weight"], self.model.performance_settings["fuel"]) == \
+            (52000, 30000)
+        self.check()
+
+    def test_edits_in_any_view(self):
+        windows, docks = self.windows, self.docks()
+        self.load(docks[0])
+        for window, dock in zip(windows, docks):
+            dock.dsbEmptyWeight.setValue(dock.dsbEmptyWeight.value() + 1000)
+            self.check()
+            delegate = window.tableWayPoints.itemDelegate()
+            index = self.model.index(0, ft.REM_FUEL)
+            editor = delegate.createEditor(window.tableWayPoints, QtWidgets.QStyleOptionViewItem(), index)
+            delegate.setEditorData(editor, index)
+            editor.setText(str(self.model.performance_settings["fuel"] + 500))
+            delegate.setModelData(editor, self.model, index)
+            self.check()
+        assert self.model.performance_settings["aircraft"].name == "OTHER"
+        assert (self.model.performance_settings["empty_weight"], self.model.performance_settings["fuel"]) == \
+            (53000, 31500)
+
+    def test_view_opened_later(self):
+        self.load(self.docks()[0])
+        window = tv.MSUITableViewWindow(model=self.model)
+        window.cbTools.currentIndexChanged.emit(2)
+        self.windows.append(window)
+        self.check()
