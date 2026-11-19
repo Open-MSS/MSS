@@ -27,7 +27,6 @@
 
 import math
 
-import defusedxml
 import defusedxml.minidom
 import xml.parsers.expat
 
@@ -39,10 +38,18 @@ def verify_waypoint_data(xml_content):
     """
     try:
         doc = defusedxml.minidom.parseString(xml_content)
-    # ValueError includes UnicodeError, e.g. a lone surrogate; TypeError e.g. None, from a server request
-    except (xml.parsers.expat.ExpatError, defusedxml.DefusedXmlException, ValueError, TypeError):
+    # ValueError includes UnicodeError, e.g. a lone surrogate; TypeError e.g. None, from a server request;
+    # LookupError: bytes declaring an unknown encoding
+    except (xml.parsers.expat.ExpatError, defusedxml.DefusedXmlException, ValueError, TypeError, LookupError):
+        return False
+    # minidom searches elements recursively
+    try:
+        return _is_flight_track(doc)
+    except RecursionError:
         return False
 
+
+def _is_flight_track(doc):
     flight_tracks = doc.getElementsByTagName("FlightTrack")
     if not flight_tracks:
         return False

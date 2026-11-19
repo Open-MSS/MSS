@@ -134,9 +134,12 @@ def flight_track(lat="50", lon="6", flightlevel="300", comments="<Comments></Com
     '<!DOCTYPE a [<!ENTITY e "x">]><FlightTrack/>',
     "<a>\ud800</a>",
     None,
+    "<a>" * 5000 + "</a>" * 5000,
+    flight_track().replace("utf-8", "bogus").encode("ascii"),
 ] + [flight_track(**{attribute: value}) for attribute in ("lat", "lon", "flightlevel")
      for value in ("nan", "inf", "-inf", "1e400")],
-    ids=["not-a-flight-track", "no-comments", "entity", "lone-surrogate", "none"] + [
+    ids=["not-a-flight-track", "no-comments", "entity", "lone-surrogate", "none", "deeply-nested",
+         "unknown-encoding"] + [
         f"{attribute}-{value}" for attribute in ("lat", "lon", "flightlevel")
         for value in ("nan", "inf", "-inf", "1e400")])
 def test_verify_rejects_without_raising(xml_content):

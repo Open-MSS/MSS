@@ -751,7 +751,8 @@ class MSUIMscolab(QtCore.QObject):
         else:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage(
-                "The operation could not be created: its name may exist already, or its flight track is invalid.")
+                "The server refused to create the operation, e.g. its name exists already or its flight track "
+                "is invalid.")
 
     def _operations(self):
         """
