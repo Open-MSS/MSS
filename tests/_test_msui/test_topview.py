@@ -399,11 +399,14 @@ def test_docks_keep_no_unstarted_workers(qtbot):
     window = MSUIMainWindow()
     window.create_new_flight_track()
     window.show()
-    workers = len(Worker.workers)
-    window.actionTopView.trigger()
-    topview = window.listViews.item(0).window
-    topview.cbTools.currentIndexChanged.emit(tv.MULTIPLEFLIGHTPATH + 1)
-    topview.cbTools.currentIndexChanged.emit(tv.WMS + 1)
-    assert len(Worker.workers) == workers
-    topview.handle_force_close()
-    window.hide()
+    # workers of earlier tests may still end meanwhile, only new ones count
+    workers = set(Worker.workers)
+    try:
+        window.actionTopView.trigger()
+        topview = window.listViews.item(0).window
+        topview.cbTools.currentIndexChanged.emit(tv.MULTIPLEFLIGHTPATH + 1)
+        topview.cbTools.currentIndexChanged.emit(tv.WMS + 1)
+        assert Worker.workers - workers == set()
+        topview.handle_force_close()
+    finally:
+        window.hide()

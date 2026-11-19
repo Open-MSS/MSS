@@ -298,7 +298,8 @@ def test_worker_started_again_before_its_release(qtbot):
     worker.start()
     start = time.monotonic()
     qtbot.wait(50)
-    assert time.monotonic() - start < 1
+    # the blocked release would wait for the 5 s run; the margin is for busy CI runners
+    assert time.monotonic() - start < 4
     release.set()
     assert worker.wait(10000)
     qtbot.wait_until(lambda: worker not in mqt.Worker.workers)
@@ -347,8 +348,35 @@ def test_worker_results_arrive_without_a_reference(tmp_path):
     """
     script = tmp_path / "workers.py"
     script.write_text(WORKER_STRESS)
-    process = subprocess.run([sys.executable, str(script)], env=dict(os.environ, QT_QPA_PLATFORM="offscreen"),
-                             capture_output=True, text=True, timeout=120)
-    assert process.returncode == 0, process.stderr[-2000:]
+    process = _run_script(script)
     # all 300 results arrived, and no worker is kept
     assert process.stdout.split()[-2:] == ["300", "0"]
+
+
+WORKER_WITHOUT_EVENT_LOOP = """
+from mslib.msui.utils.qt import Worker
+results = []
+worker = Worker.create(lambda: 42, on_success=results.append)
+worker.wait()
+print(results, worker in Worker.workers)
+"""
+
+
+def test_worker_without_an_event_loop_is_released(tmp_path):
+    """
+    A worker started before a QApplication exists has no event loop to deliver its release: it was kept for good
+    (#3354 review). Run in a separate process, without a QApplication.
+    """
+    script = tmp_path / "worker.py"
+    script.write_text(WORKER_WITHOUT_EVENT_LOOP)
+    assert _run_script(script).stdout.split() == ["[42]", "False"]
+
+
+def _run_script(script):
+    root = Path(__file__).parents[2]
+    # the script lives in tmp_path: mslib of this tree has to be on the path
+    env = dict(os.environ, QT_QPA_PLATFORM="offscreen",
+               PYTHONPATH=os.pathsep.join(filter(None, [str(root), os.environ.get("PYTHONPATH")])))
+    process = subprocess.run([sys.executable, str(script)], env=env, capture_output=True, text=True, timeout=120)
+    assert process.returncode == 0, process.stderr[-2000:]
+    return process

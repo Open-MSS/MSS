@@ -478,6 +478,11 @@ class Worker(QtCore.QThread):
                 self.finished.emit(result)
         except Exception as e:
             self.failed.emit(e)
+        finally:
+            # Without an event loop (see __init__) the queued release is never delivered, it is released here as
+            # before (#3354 review).
+            if isinstance(self.failed, NonQtCallback):
+                Worker.workers.discard(self)
 
     @staticmethod
     def create(function, on_success=None, on_failure=None, start=True):
