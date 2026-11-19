@@ -43,7 +43,7 @@ import mslib.msui.utils.auth
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.message_type import MessageType
 from mslib.msui.flighttrack import LON, TIME_UTC, Waypoint, WaypointsTableModel
-from PyQt5 import QtCore, QtGui, QtTest, QtWidgets
+from PyQt5 import QtCore, QtGui, QtTest, QtWidgets, sip
 from mslib.msui.utils.config import MSUIDefaultConfig, read_config_file, config_loader, modify_config_file
 from tests.utils import create_msui_settings_file, ExceptionMock
 from mslib.msui import msui
@@ -669,6 +669,76 @@ class Test_Mscolab:
         # verify logged in again
         qtbot.wait_until(assert_label_text)
         # ToDo verify all operations disabled again without a visual check
+
+    def _login_with_multiple_flightpath_topview(self, qtbot):
+        """
+        Logs in, activates an operation and opens a top view with the multiple flightpath dock
+        """
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        self.window.actionTopView.trigger()
+        qtbot.wait_until(lambda: len(self.window.get_active_views()) == 1)
+        topview = self.window.listViews.item(0).window
+        topview.cbTools.currentIndexChanged.emit(6)
+        assert topview.docks[5] is not None
+        return topview
+
+    def _login_with_closed_multiple_flightpath_topview(self, qtbot):
+        """
+        As _login_with_multiple_flightpath_topview, and closes the top view again
+        """
+        topview = self._login_with_multiple_flightpath_topview(qtbot)
+        topview.handle_force_close()
+        qtbot.wait_until(lambda: sip.isdeleted(topview))
+
+    def test_open_topview_forwards_mscolab_signals_to_multiple_flightpath(self, qtbot):
+        """
+        The MSColab signals reach the multiple flightpath dock of an open top view through the main window and
+        the top view
+        """
+        from mslib.mscolab.seed import add_operation, add_user_to_operation
+        topview = self._login_with_multiple_flightpath_topview(qtbot)
+        operations = topview.docks[5].widget().list_operation_track
+        assert operations.count() == 1
+        with self.app.app_context():
+            assert add_operation("second", "description")
+            assert add_user_to_operation(path="second", emailid=self.userdata[0])
+        op_id = self.window.mscolab.get_op_id("second")
+        with qtbot.wait_signal(topview.signal_render_new_permission) as render:
+            self.window.mscolab.signal_render_new_permission.emit(op_id, "second")
+        assert render.args == [op_id, "second"]
+        assert operations.count() == 2
+        with qtbot.wait_signal(topview.signal_permission_revoked) as revoked:
+            self.window.mscolab.signal_permission_revoked.emit(op_id)
+        assert revoked.args == [op_id]
+        assert operations.count() == 1
+        with qtbot.wait_signal(topview.signal_listFlighttrack_doubleClicked):
+            self.window.mscolab.signal_listFlighttrack_doubleClicked.emit()
+        with qtbot.wait_signal(topview.signal_logout_mscolab):
+            self.window.mscolab.logout()
+
+    def test_permission_signals_after_closing_a_topview_with_multiple_flightpath(self, qtbot):
+        """
+        The top view forwards signals of the main window to its multiple flightpath dock. After the top view
+        is closed, they must not reach it (RuntimeError: wrapped C/C++ object has been deleted, #3329)
+        """
+        self._login_with_closed_multiple_flightpath_topview(qtbot)
+        op_id = self.window.mscolab.active_op_id
+        self.window.signal_render_new_permission.emit(op_id, self.operation_name)
+        self.window.signal_permission_revoked.emit(op_id)
+        self.window.signal_listFlighttrack_doubleClicked.emit()
+        assert self.window.get_active_views() == []
+
+    def test_logout_after_closing_a_topview_with_multiple_flightpath(self, qtbot):
+        """
+        A logout after a top view with the multiple flightpath dock was closed crashed msui with a segmentation
+        fault: the main window emitted into the deleted top view (#3329). Without the fix this kills the test run.
+        """
+        self._login_with_closed_multiple_flightpath_topview(qtbot)
+        self.window.mscolab.logout()
+        assert self.window.mscolab.conn is None
 
     def test_marked_bold_only_in_multiple_flight_path_operations_for_active_operation(self, qtbot):
         """

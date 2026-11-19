@@ -116,6 +116,27 @@ def test_config_warnings_not_shown_for_a_deleted_window(qtbot):
         assert m.call_count == 0
 
 
+@pytest.mark.parametrize("action", ["actionTopView", "actionSideView", "actionLinearView"])
+def test_autoplot_refresh_after_closing_a_view(qtbot, action):
+    """
+    The autoplot dock of a view refreshes the other views through the main window. A closed view must not be
+    reached: connected with .emit, msui crashed with a segmentation fault (#3365).
+    """
+    window = msui_mw.MSUIMainWindow()
+    window.create_new_flight_track()
+    window.show()
+    getattr(window, action).trigger()
+    getattr(window, action).trigger()
+    closed, kept = (window.listViews.item(row).window for row in range(2))
+    closed.handle_force_close()
+    qtbot.wait_until(lambda: sip.isdeleted(closed))
+    # an autoplot change in the remaining view refreshes all views through the main window
+    with qtbot.wait_signal(kept.refresh_signal_send):
+        kept.refresh_signal_emit.emit()
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+        window.close()
+
+
 def test_multiple_times_save_filename(qtbot, tmp_path):
     msui = msui_mw.MSUIMainWindow()
     msui.show()
