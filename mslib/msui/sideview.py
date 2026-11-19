@@ -422,9 +422,11 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         """
         Set the QAbstractItemModel instance that the view displays.
         """
-        super().setFlightTrackModel(model)
         if self.docks[WMS] is not None:
+            # The WMS control has to know the new flight track before the
+            # redraw below asks it for a plot, its request describes the path.
             self.docks[WMS].widget().setFlightTrackModel(model)
+        super().setFlightTrackModel(model)
 
     def open_settings_dialog(self):
         """

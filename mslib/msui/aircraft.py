@@ -54,15 +54,23 @@ class SimpleAircraft:
             self.empty_weight = self.takeoff_weight - data["fuel"]
         else:
             self.empty_weight = data.get("empty_weight", 0)
-        self._climb = self._setup(data["climb"])
-        self._descent = self._setup(data["descent"])
-        self._cruise = self._setup(data["cruise"])
-        self._ceiling_poly = np.asarray(data.get("ceiling", [410]))[::-1]
+        # rows of weight, altitude and the values the get_*_performance methods return
+        self._climb = self._setup(data["climb"], 5)
+        self._descent = self._setup(data["descent"], 5)
+        self._cruise = self._setup(data["cruise"], 4)
+        ceiling = np.asarray(data.get("ceiling", [410]), dtype=float)
+        if ceiling.ndim != 1 or len(ceiling) == 0 or not np.isfinite(ceiling).all():
+            raise ValueError("The ceiling must be a list of numbers!")
+        self._ceiling_poly = ceiling[::-1]
 
-    def _setup(self, data):
-        data = np.asarray(data)
-        if len(data) == 0:
-            raise ValueError("Performance data requires at least one line per table!")
+    def _setup(self, data, columns):
+        """
+        Raises ValueError or TypeError unless data is a table of numbers with that many columns.
+        """
+        data = np.asarray(data, dtype=float)
+        if data.ndim != 2 or len(data) == 0 or data.shape[1] != columns or not np.isfinite(data).all():
+            raise ValueError(f"Performance data requires tables of {columns} columns of numbers, "
+                             "at least one line per table!")
         weights = np.asarray(sorted(set(data[:, 0])))
         table = []
         for weight in weights:

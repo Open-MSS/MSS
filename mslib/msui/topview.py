@@ -358,10 +358,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         kwargs = self.changeMapSection(only_kwargs=True)
         self.mpl.canvas.init_map(**kwargs)
         self.setFlightTrackModel(self.waypoints_model)
-
-        # Automatically enable or disable roundtrip when data changes
-        self.waypoints_model.dataChanged.connect(self.update_roundtrip_enabled)
-        self.update_roundtrip_enabled()
         self.mpl.navbar.push_current()
 
         self.openTool(WMS + 1)
@@ -607,3 +603,12 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
     def update_roundtrip_enabled(self):
         self.btRoundtrip.setEnabled(self.is_roundtrip_possible())
+
+    def _model_connections(self, model):
+        # Automatically enable or disable roundtrip when the flight track changes
+        return tuple((signal, self.update_roundtrip_enabled) for signal in (
+            model.dataChanged, model.rowsInserted, model.rowsRemoved, model.modelReset))
+
+    def setFlightTrackModel(self, model):
+        super().setFlightTrackModel(model)
+        self.update_roundtrip_enabled()
