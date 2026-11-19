@@ -42,8 +42,8 @@ from tests import constants
 import mslib.msui.utils.auth
 from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.message_type import MessageType
-from mslib.msui.flighttrack import LON, WaypointsTableModel
-from PyQt5 import QtCore, QtGui, QtTest, QtWidgets
+from mslib.msui.flighttrack import LON, TIME_UTC, Waypoint, WaypointsTableModel
+from PyQt5 import QtCore, QtGui, QtTest, QtWidgets, sip
 from mslib.msui.utils.config import MSUIDefaultConfig, read_config_file, config_loader, modify_config_file
 from tests.utils import create_msui_settings_file, ExceptionMock
 from mslib.msui import msui
@@ -672,7 +672,9 @@ class Test_Mscolab:
         # ToDo verify all operations disabled again without a visual check
 
     def _login_with_multiple_flightpath_topview(self, qtbot):
-        """Logs in, activates an operation and returns a top view with the multiple flightpath dock"""
+        """
+        Logs in, activates an operation and opens a top view with the multiple flightpath dock
+        """
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
@@ -683,6 +685,61 @@ class Test_Mscolab:
         topview.cbTools.currentIndexChanged.emit(6)
         assert topview.docks[5] is not None
         return topview
+
+    def _login_with_closed_multiple_flightpath_topview(self, qtbot):
+        """
+        As _login_with_multiple_flightpath_topview, and closes the top view again
+        """
+        topview = self._login_with_multiple_flightpath_topview(qtbot)
+        topview.handle_force_close()
+        qtbot.wait_until(lambda: sip.isdeleted(topview))
+
+    def test_open_topview_forwards_mscolab_signals_to_multiple_flightpath(self, qtbot):
+        """
+        The MSColab signals reach the multiple flightpath dock of an open top view through the main window and
+        the top view
+        """
+        from mslib.mscolab.seed import add_operation, add_user_to_operation
+        topview = self._login_with_multiple_flightpath_topview(qtbot)
+        operations = topview.docks[5].widget().list_operation_track
+        assert operations.count() == 1
+        with self.app.app_context():
+            assert add_operation("second", "description")
+            assert add_user_to_operation(path="second", emailid=self.userdata[0])
+        op_id = self.window.mscolab.get_op_id("second")
+        with qtbot.wait_signal(topview.signal_render_new_permission) as render:
+            self.window.mscolab.signal_render_new_permission.emit(op_id, "second")
+        assert render.args == [op_id, "second"]
+        assert operations.count() == 2
+        with qtbot.wait_signal(topview.signal_permission_revoked) as revoked:
+            self.window.mscolab.signal_permission_revoked.emit(op_id)
+        assert revoked.args == [op_id]
+        assert operations.count() == 1
+        with qtbot.wait_signal(topview.signal_listFlighttrack_doubleClicked):
+            self.window.mscolab.signal_listFlighttrack_doubleClicked.emit()
+        with qtbot.wait_signal(topview.signal_logout_mscolab):
+            self.window.mscolab.logout()
+
+    def test_permission_signals_after_closing_a_topview_with_multiple_flightpath(self, qtbot):
+        """
+        The top view forwards signals of the main window to its multiple flightpath dock. After the top view
+        is closed, they must not reach it (RuntimeError: wrapped C/C++ object has been deleted, #3329)
+        """
+        self._login_with_closed_multiple_flightpath_topview(qtbot)
+        op_id = self.window.mscolab.active_op_id
+        self.window.signal_render_new_permission.emit(op_id, self.operation_name)
+        self.window.signal_permission_revoked.emit(op_id)
+        self.window.signal_listFlighttrack_doubleClicked.emit()
+        assert self.window.get_active_views() == []
+
+    def test_logout_after_closing_a_topview_with_multiple_flightpath(self, qtbot):
+        """
+        A logout after a top view with the multiple flightpath dock was closed crashed msui with a segmentation
+        fault: the main window emitted into the deleted top view (#3329). Without the fix this kills the test run.
+        """
+        self._login_with_closed_multiple_flightpath_topview(qtbot)
+        self.window.mscolab.logout()
+        assert self.window.mscolab.conn is None
 
     def _login_again(self, qtbot):
         self.window.mscolab.logout()
@@ -1615,18 +1672,30 @@ class Test_Mscolab:
         self._activate_operation_at_index(0)
         mscolab_ = self.window.mscolab
         model = mscolab_.waypoints_model
-        with mock.patch.object(mscolab_.conn, "save_file") as save_file:
-            # setData emits dataChanged twice, from update_distances and for the changed cell
+        with mock.patch.object(mscolab_.conn, "save_file") as save_file, \
+                mock.patch("mslib.msui.flighttrack.save_settings_qsettings"):
+            # times and fuel are not part of the flight plan
+            model.setData(model.index(0, TIME_UTC), "2030-01-01 12:00:00")
+            model.set_performance_settings(dict(model.performance_settings, fuel=1000))
+            save_file.assert_not_called()
             model.setData(model.index(0, LON), QtCore.QVariant(model.waypoint_data(0).lon + 1))
             save_file.assert_called_once()
             assert save_file.call_args.args[:2] == (mscolab_.active_op_id, model.get_xml_content())
+            for change in (lambda: model.insertRows(1, waypoints=[Waypoint(50., 10., 200.)]),
+                           lambda: model.removeRows(1),
+                           model.invert_direction):
+                save_file.reset_mock()
+                change()
+                save_file.assert_called_once()
+                assert save_file.call_args.args[1] == model.get_xml_content()
+            save_file.reset_mock()
             # a reloaded flight track, e.g. after the server refused the change, is sent again when it changes
             mscolab_.waypoints_model = WaypointsTableModel(xml_content=model.get_xml_content())
             mscolab_.handle_waypoints_changed()
-            assert save_file.call_count == 2
+            assert save_file.call_count == 1
             # a version name is always sent
             mscolab_.handle_waypoints_changed(version_name="imported")
-            assert save_file.call_count == 3
+            assert save_file.call_count == 2
 
     def test_user_chosen_text_is_not_markup(self, qtbot):
         markup = '<b>bold</b><img src="file://attacker.example/s/x.png">'

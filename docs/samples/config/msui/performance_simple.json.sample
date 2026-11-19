@@ -1,5 +1,5 @@
 {
-    "name": "DUMMY",
+    "name": "SAMPLE",
     "takeoff_weight": 91000,
     "empty_weight": 56000,
     "climb": [[0.00, 0.0, 0.0, 0.0, 0.0]],
