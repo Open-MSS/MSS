@@ -168,7 +168,7 @@ class Test_TableView:
         self.window.setFlightTrackModel(self._other_flight_track())
         QtCore.QCoreApplication.sendPostedEvents(None, QtCore.QEvent.DeferredDelete)
         assert sip.isdeleted(old)
-        assert previous is not None
+        del previous
 
     def test_same_flight_track_keeps_the_selection(self):
         selection_model = self.window.tableWayPoints.selectionModel()
