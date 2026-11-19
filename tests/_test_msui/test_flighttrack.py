@@ -243,9 +243,12 @@ def test_ftml_is_written_in_utf8_whatever_the_locale(tmp_path):
     script = tmp_path / "write.py"
     script.write_text(FTML_WRITE_SCRIPT)
     saved, exported = tmp_path / "saved.ftml", tmp_path / "exported.ftml"
-    env = dict(os.environ, LC_ALL="C", PYTHONCOERCECLOCALE="0", QT_QPA_PLATFORM="offscreen")
+    root = Path(__file__).parents[2]
+    # the script lives in tmp_path: tests and mslib of this tree have to be on the path
+    env = dict(os.environ, LC_ALL="C", PYTHONCOERCECLOCALE="0", QT_QPA_PLATFORM="offscreen",
+               PYTHONPATH=os.pathsep.join(filter(None, [str(root), os.environ.get("PYTHONPATH")])))
     process = subprocess.run([sys.executable, "-X", "utf8=0", str(script), str(saved), str(exported)],
-                             cwd=Path(__file__).parents[2], env=env, capture_output=True, text=True, timeout=120)
+                             cwd=root, env=env, capture_output=True, text=True, timeout=120)
     assert process.returncode == 0, process.stderr[-2000:]
     assert process.stdout.splitlines() == [ascii("nach → Ziel")] * 3
     for path in (saved, exported):
