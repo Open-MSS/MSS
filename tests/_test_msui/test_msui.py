@@ -26,7 +26,9 @@
 """
 
 
+import datetime
 import importlib
+import json
 import mock
 import os
 import sys
@@ -42,6 +44,8 @@ from mslib.msui import msui
 from mslib.msui import flighttrack as ft
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import msui_mainwindow as msui_mw
+from mslib.msui.aircraft import AIRCRAFT_DUMMY
+from mslib.msui.utils.config import load_settings_qsettings
 from tests.utils import ExceptionMock
 from mslib.msui.utils.config import read_config_file, config_loader
 import re
@@ -114,10 +118,6 @@ def test_config_warnings_not_shown_for_a_deleted_window(qtbot):
         assert m.call_count == 0
 
 
-@pytest.mark.skipif(
-    sys.platform.startswith("linux") and os.getenv("GITHUB_ACTIONS") == "true",
-    reason="skip on GitHub Actions Linux runners because of flush and sync issue",
-)
 def test_multiple_times_save_filename(qtbot, tmp_path):
     msui = msui_mw.MSUIMainWindow()
     msui.show()
@@ -126,20 +126,19 @@ def test_multiple_times_save_filename(qtbot, tmp_path):
     assert os.path.exists(filename) is False
     # verify that we can save the file multiple times
     msui.save_flight_track(filename)
-    assert os.path.exists(filename)
-    first_timestamp = os.stat(filename).st_mtime_ns
+    saved = Path(filename).read_text()
+    assert saved
     assert filename == msui.active_flight_track.get_filename()
-    msui.save_handler()
-
-    def assert_():
-        second_timestamp = os.stat(filename).st_mtime_ns
-        assert second_timestamp > first_timestamp
-    qtbot.wait_until(assert_)
+    # Saving is synchronous. The file is emptied instead of comparing modification times: two saves within
+    # one tick of the file system clock get the same time (#3331). The second save overwrites it, without
+    # asking for a file name.
+    Path(filename).write_text("")
+    with mock.patch("mslib.msui.msui_mainwindow.get_save_filename", side_effect=AssertionError("asked for a name")):
+        msui.save_handler()
+    assert Path(filename).read_text() == saved
 
     with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
         msui.close()
-    # check that the second save is newer than the first one
-    assert os.path.exists(filename)
 
 
 @pytest.mark.parametrize("action", ["actionTopView", "actionSideView", "actionLinearView"])
@@ -226,6 +225,57 @@ class Test_MSS_TutorialMode:
         """In tutorial_mode the dialog must be hidden immediately after show_shortcuts()."""
         self.main_window.show_shortcuts()
         assert not self.main_window.shortcuts_dlg.isVisible()
+
+
+class Test_PerformanceSettingsOfAllFlightTracks:
+    """
+    There is one set of performance settings for all flight tracks: switching between flights, e.g.
+    of the same day, keeps aircraft, weights and take off time (#3315 review).
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup(self, qtbot, tmp_path):
+        self.window = msui.MSUIMainWindow()
+        self.window.create_new_flight_track()
+        self.window.create_new_flight_track()
+        self.a, self.b = (self.window.listFlightTracks.item(i).flighttrack_model for i in range(2))
+        self._activate(self.a)
+        self.window.show()
+        QtTest.QTest.qWaitForWindowExposed(self.window)
+        self.window.actionTableView.trigger()
+        self.table = self.window.listViews.item(0).window
+        self.table.cbTools.currentIndexChanged.emit(2)
+        self.dock = self.table.docks[1].widget()
+        filename = tmp_path / "other.json"
+        filename.write_text(json.dumps(dict(AIRCRAFT_DUMMY, name="OTHER", takeoff_weight=80000, empty_weight=50000)))
+        with mock.patch("mslib.msui.performance_settings.get_open_filename", return_value=str(filename)):
+            QtTest.QTest.mouseClick(self.dock.pbLoadPerformance, QtCore.Qt.LeftButton)
+        yield
+        self.table.hide()
+        self.window.hide()
+
+    def _activate(self, model):
+        items = [self.window.listFlightTracks.item(i) for i in range(self.window.listFlightTracks.count())]
+        self.window.activate_flight_track(next(item for item in items if item.flighttrack_model is model))
+
+    def test_switch_keeps_the_settings(self):
+        self.a.setData(self.a.index(0, ft.TIME_UTC), "2030-01-01 12:00:00")
+        self.a.setData(self.a.index(0, ft.REM_FUEL), "20000")
+        self._activate(self.b)
+        settings = self.b.performance_settings
+        assert (settings["aircraft"].name, settings["empty_weight"], settings["fuel"]) == ("OTHER", 50000, 20000)
+        first = self.b.waypoints[0]
+        assert (first.utc_time, first.rem_fuel) == (datetime.datetime(2030, 1, 1, 12), 20000)
+        assert (self.dock.lbAircraftName.text(), self.dock.dsbEmptyWeight.value()) == ("OTHER", 50000)
+
+    def test_edit_after_switch_keeps_the_aircraft(self):
+        self._activate(self.b)
+        self.b.setData(self.b.index(0, ft.TIME_UTC), "2030-01-01 12:00:00")
+        assert load_settings_qsettings("performance", {})["aircraft"].name == "OTHER"
+        self.window.create_new_flight_track()
+        assert self.window.active_flight_track.performance_settings["aircraft"].name == "OTHER"
+        self._activate(self.a)
+        assert self.a.waypoints[0].utc_time == datetime.datetime(2030, 1, 1, 12)
 
 
 class Test_MSS_AboutDialog:
