@@ -652,8 +652,12 @@ class MSUIMscolab(QtCore.QObject):
             if file_path is not None:
                 file_name = Path(file_path).name
                 if file_path.endswith('ftml'):
-                    with open(Path(file_path).parent / file_name, 'r') as f:
-                        file_content = f.read()
+                    # decoded as the file declares (#3372)
+                    try:
+                        file_content = ft.WaypointsTableModel(filename=file_path).get_xml_content()
+                    except (SyntaxError, OSError) as ex:
+                        show_popup(self.ui, "Import Failed", f"The file - {file_name}, could not be read: {ex}")
+                        return
                 else:
                     function = self.ui.import_plugins[import_type][0]
                     ft_name, waypoints = function(file_path)
@@ -1113,12 +1117,21 @@ class MSUIMscolab(QtCore.QObject):
         local_dir.mkdir(parents=True, exist_ok=True)
         server_data = self.waypoints_model.get_xml_content()
 
-        with open(ftml_file, "w") as f:
+        with open(ftml_file, "w", encoding="utf-8") as f:
             f.write(server_data)
         return ftml_file
 
     def reload_local_wp(self):
-        self.waypoints_model = ft.WaypointsTableModel(filename=self.local_ftml_file, data_dir=self.data_dir)
+        try:
+            model = ft.WaypointsTableModel(filename=self.local_ftml_file, data_dir=self.data_dir)
+        # e.g. written by an older msui in the locale's encoding under encoding="utf-8" (#3372)
+        except (SyntaxError, OSError) as ex:
+            show_popup(self.ui, "Work Asynchronously",
+                       f"The local copy of the operation could not be read, it stays online: {ex}")
+            # switches back, through handle_work_locally_toggle
+            self.ui.workLocallyCheckbox.setChecked(False)
+            return
+        self.waypoints_model = model
         self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
         self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         self.reload_view_windows()
@@ -1690,17 +1703,14 @@ class MSUIMscolab(QtCore.QObject):
         dir_path = Path(file_path).parent
         file_name = Path(file_path).name
         if function is None:
+            # read as the local import reads it: decoded as the file declares, checked and parsed once (#3372)
             try:
-                xml_content = dir_path.joinpath(file_name).read_text()
-                if not verify_waypoint_data(xml_content):
-                    show_popup(self.ui, "Import Failed", f"The file - {file_name}, does not contain valid XML")
-                    return
-                model = ft.WaypointsTableModel(xml_content=xml_content)
+                model = ft.WaypointsTableModel(filename=str(dir_path / file_name))
             except SyntaxError:
                 show_popup(self.ui, "Import Failed", f"The file - {file_name}, does not contain valid XML")
                 return
-            # e.g. a directory, no permission to read, or a binary file (#3338)
-            except (OSError, UnicodeDecodeError) as ex:
+            # e.g. a directory or no permission to read (#3338)
+            except OSError as ex:
                 show_popup(self.ui, "Import Failed", f"The file - {file_name}, could not be read: {ex}")
                 return
         else:
@@ -1710,14 +1720,20 @@ class MSUIMscolab(QtCore.QObject):
             # wildcard exception to be resilient against errors of the plugin, which is user code (#3338)
             except Exception as ex:
                 logging.exception("file io plugin error: %s %s", type(ex), ex)
-                show_popup(self.ui, "Import Failed", f"The file - {file_name}, could not be imported: {ex}")
+                show_popup(self.ui, "Import Failed",
+                           f"The file - {file_name}, could not be imported: {type(ex).__name__}: {ex}")
+                return
+            if len(model.waypoints) < 2:
+                show_popup(self.ui, "Import Failed",
+                           f"The file - {file_name}, was not imported: a flight track needs at least two waypoints")
                 return
             # the imported flight track, not the operation's
-            xml_content = model.get_xml_content()
-        if not verify_waypoint_data(xml_content):
-            show_popup(self.ui, "Import Failed", f"The file - {file_name}, was not imported!", 0)
-            return
+            if not verify_waypoint_data(model.get_xml_content()):
+                show_popup(self.ui, "Import Failed", f"The file - {file_name}, was not imported!", 0)
+                return
+        model.name = self.active_operation_name
         self.waypoints_model.dataChanged.disconnect(self.handle_waypoints_changed)
+        self.waypoints_model.changeMessageSignal.disconnect(self.handle_change_message)
         self.waypoints_model = model
         self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
         # the server refuses longer version names
@@ -1743,7 +1759,8 @@ class MSUIMscolab(QtCore.QObject):
             xml_doc = self.waypoints_model.get_xml_doc()
             dir_path = Path(file_name).parent
             file_name = Path(file_name).name
-            xml_doc.writexml(open(dir_path / file_name, 'w'), indent="  ", addindent="  ", newl="\n", encoding="utf-8")
+            with open(dir_path / file_name, "w", encoding="utf-8") as file_object:
+                xml_doc.writexml(file_object, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
         else:
             name = Path(file_name).name
             function(file_name, name, self.waypoints_model.waypoints)

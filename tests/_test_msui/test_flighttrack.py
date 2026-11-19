@@ -24,6 +24,11 @@
     limitations under the License.
 """
 import json
+import pytest
+import os
+import subprocess
+import sys
+from pathlib import Path
 import xml.etree.ElementTree as etree
 
 from PyQt5 import QtCore
@@ -188,3 +193,70 @@ class Test_LinearData:
         self.model.set_linear_data_from_xml([lsec_xml()])
         assert changed == []
         assert not self.model.modified
+
+
+def _ftml(encoding_declared, comment="Höhe 25°"):
+    return (f'<?xml version="1.0" encoding="{encoding_declared}"?>\n<FlightTrack version="9"><ListOfWaypoints>'
+            f'<Waypoint flightlevel="0.0" lat="50.0" location="" lon="10.0"><Comments>{comment}</Comments></Waypoint>'
+            '<Waypoint flightlevel="0.0" lat="51.0" location="" lon="11.0"><Comments></Comments></Waypoint>'
+            '</ListOfWaypoints></FlightTrack>\n')
+
+
+@pytest.mark.parametrize("encoding", ["utf-8", "utf-16", "ISO-8859-1"])
+def test_load_ftml_in_its_declared_encoding(tmp_path, encoding):
+    """
+    FTML files are decoded as they declare, not in the locale's encoding (#3372); UTF-16 with its byte order mark
+    """
+    path = tmp_path / "track.ftml"
+    path.write_bytes(_ftml(encoding).encode(encoding))
+    assert WaypointsTableModel(filename=str(path)).waypoints[0].comments == "Höhe 25°"
+
+
+def test_load_ftml_rejects_bytes_not_in_its_declared_encoding(tmp_path):
+    """E.g. cp1252 under encoding="utf-8", as msui wrote it on a Windows machine (#3372)"""
+    path = tmp_path / "track.ftml"
+    path.write_bytes(_ftml("utf-8").encode("cp1252"))
+    with pytest.raises(SyntaxError):
+        WaypointsTableModel(filename=str(path))
+
+
+FTML_WRITE_SCRIPT = """
+import sys
+from unittest import mock
+import tests.constants  # noqa: F401
+from PyQt5 import QtWidgets
+app = QtWidgets.QApplication([])
+from mslib.msui import flighttrack as ft, msui_mainwindow  # noqa: E402
+saved, exported = sys.argv[1:3]
+for box in ("critical", "warning", "information"):
+    # a message box would wait for a click that never comes
+    setattr(QtWidgets.QMessageBox, box, staticmethod(lambda *args, **kwargs: sys.exit(f"message box: {args[1:]}")))
+comment = "nach \\u2192 Ziel"
+model = ft.WaypointsTableModel(waypoints=[ft.Waypoint(50., 10., 0, comments=comment), ft.Waypoint(51., 11., 0)])
+model.save_to_ftml(saved)
+window = msui_mainwindow.MSUIMainWindow()
+window.create_new_flight_track()
+window.active_flight_track.replace_waypoints(model.waypoints)
+with mock.patch("mslib.msui.msui_mainwindow.get_save_filename", return_value=exported):
+    window.handle_export_local("ftml", None, "default")
+for path in (saved, exported):
+    print(ascii(ft.WaypointsTableModel(filename=path).waypoints[0].comments))
+"""
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="the ASCII locale is set up for POSIX")
+def test_ftml_is_written_in_utf8_whatever_the_locale(tmp_path):
+    """
+    FTML files were written in the locale's encoding under encoding="utf-8": on a non-UTF-8 system other
+    systems couldn't read them, and a character outside the locale's encoding left a truncated file (#3372)
+    """
+    script = tmp_path / "write.py"
+    script.write_text(FTML_WRITE_SCRIPT)
+    saved, exported = tmp_path / "saved.ftml", tmp_path / "exported.ftml"
+    env = dict(os.environ, LC_ALL="C", PYTHONCOERCECLOCALE="0", QT_QPA_PLATFORM="offscreen")
+    process = subprocess.run([sys.executable, "-X", "utf8=0", str(script), str(saved), str(exported)],
+                             cwd=Path(__file__).parents[2], env=env, capture_output=True, text=True, timeout=120)
+    assert process.returncode == 0, process.stderr[-2000:]
+    assert process.stdout.splitlines() == [ascii("nach → Ziel")] * 2
+    for path in (saved, exported):
+        assert "nach → Ziel" in path.read_bytes().decode("utf-8")

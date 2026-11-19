@@ -861,6 +861,47 @@ class Test_Mscolab:
             imported_wp = self.window.mscolab.waypoints_model
             assert len(imported_wp.waypoints) == name[2]
 
+    @pytest.mark.parametrize("case, reason", [("one waypoint", "at least two waypoints"),
+                                              ("plugin raises", "KeyError: 'lat'")])
+    def test_failed_plugin_import_says_why(self, qtbot, tmp_path, case, reason):
+        """A plugin import that failed didn't say why: no reason, or only the exception's text (#3355 review)"""
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        file_path = tmp_path / "import.txt"
+        file_path.write_text("read by the plugin")
+
+        def plugin(path):
+            if case == "plugin raises":
+                raise KeyError("lat")
+            return "one", [Waypoint(50., 10., 300)]
+        with mock.patch("mslib.msui.mscolab.show_popup") as popup:
+            self.window.mscolab.handle_import_msc(str(file_path), "txt", plugin, "default")
+        assert [call.args[1] for call in popup.call_args_list] == ["Import Failed"]
+        assert reason in popup.call_args.args[2]
+
+    def test_plugin_import_names_the_track_and_lets_the_old_one_go(self, qtbot, tmp_path):
+        """
+        After a plugin import the flight track had no name, and the replaced one stayed connected to the change
+        messages (#3355 review)
+        """
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        mscolab_ = self.window.mscolab
+        old_model = mscolab_.waypoints_model
+        file_path = tmp_path / "import.txt"
+        file_path.write_text("read by the plugin")
+        with mock.patch("mslib.msui.mscolab.show_popup"), mock.patch.object(mscolab_.conn, "save_file"):
+            mscolab_.handle_import_msc(str(file_path), "txt",
+                                       lambda path: ("two", [Waypoint(50., 10., 300), Waypoint(51., 11., 300)]),
+                                       "default")
+        assert mscolab_.waypoints_model is not old_model
+        assert mscolab_.waypoints_model.name == mscolab_.active_operation_name
+        assert old_model.receivers(old_model.changeMessageSignal) == 0
+
     @pytest.mark.parametrize("case", ["one waypoint", "plugin raises", "binary ftml"])
     def test_failed_import_changes_nothing(self, qtbot, tmp_path, case):
         """
@@ -921,6 +962,29 @@ class Test_Mscolab:
         self.window.workLocallyCheckbox.setChecked(False)
         wpdata_server = self.window.mscolab.waypoints_model.waypoint_data(0)
         assert wpdata_local.lat != wpdata_server.lat
+
+    def test_work_locally_with_an_unreadable_local_copy(self, qtbot):
+        """
+        A local copy msui can't read, e.g. written in cp1252 under encoding="utf-8" by an older msui on Windows,
+        ended in the fatal error dialog with the switch to local work half done (#3372)
+        """
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        mscolab_ = self.window.mscolab
+        self.window.workLocallyCheckbox.setChecked(True)
+        local_copy = Path(mscolab_.local_ftml_file)
+        self.window.workLocallyCheckbox.setChecked(False)
+        server_model = mscolab_.waypoints_model
+        local_copy.write_bytes(local_copy.read_bytes().replace(b"<Comments>", "<Comments>H\u00f6he".encode("cp1252")))
+        with mock.patch("mslib.msui.mscolab.show_popup") as popup:
+            self.window.workLocallyCheckbox.setChecked(True)
+        assert [call.args[1] for call in popup.call_args_list] == ["Work Asynchronously"]
+        assert not self.window.workLocallyCheckbox.isChecked()
+        assert mscolab_.local_ftml_file is None
+        # the server's flight track, loaded again
+        assert mscolab_.waypoints_model.get_xml_content() == server_model.get_xml_content()
 
     def test_work_locally_shows_the_operation_name(self, qtbot):
         # the local copy is named after the operation, the views show its name, not the file's (#2508)
@@ -1000,6 +1064,22 @@ class Test_Mscolab:
         assert not self.window.workLocallyCheckbox.isChecked()
         assert self.window.mscolab.local_ftml_file is None
         assert list(tmp_path.iterdir()) == []
+
+    def test_browse_add_operation_reads_ftml_in_its_encoding(self, qtbot, tmp_path):
+        """The FTML file for a new operation was read in the locale's encoding, not the declared one (#3372)"""
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
+        self._create_user(qtbot, "something", "something@something.org", "something", "Test User")
+        path = tmp_path / "utf16.ftml"
+        path.write_bytes(WaypointsTableModel(waypoints=[Waypoint(50., 10., 0, comments="H\u00f6he"),
+                                                        Waypoint(51., 11., 0)]).get_xml_content()
+                         .replace('<?xml version="1.0" ?>', '<?xml version="1.0" encoding="utf-16"?>')
+                         .encode("utf-16"))
+        self.window.actionAddOperation.trigger()
+        with mock.patch("mslib.msui.mscolab.get_open_filename", return_value=str(path)):
+            QtTest.QTest.mouseClick(self.window.mscolab.add_proj_dialog.browse, QtCore.Qt.LeftButton)
+        content = self.window.mscolab.add_proj_dialog.f_content
+        assert WaypointsTableModel(xml_content=content).waypoints[0].comments == "H\u00f6he"
 
     @mock.patch("mslib.msui.mscolab.get_open_filename", return_value=os.path.join(sample_path, u"example.ftml"))
     def test_browse_add_operation(self, mockopen, qtbot):
