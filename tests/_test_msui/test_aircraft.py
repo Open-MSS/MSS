@@ -104,3 +104,17 @@ class Test_SimpleAircraft2:
         check(360, 0, 600, 1500)
         check(410, 0, 700, 1000)
         check(500, 0, 700, 1000)
+
+
+@pytest.mark.parametrize("change", [
+    {"climb": [[0, 0]]}, {"cruise": [[0, 0, 400, 2900, 1]]}, {"descent": [[0, 0, 0, 0, float("nan")]]},
+    {"climb": [["a", 0, 0, 0, 0]]}, {"cruise": [1, 2, 3, 4]}, {"descent": []}, {"climb": None},
+    {"cruise": [[0, 0, 400, 2900], [1, 0, 400]]}, {"ceiling": "abc"}, {"ceiling": []}],
+    ids=["short-row", "long-row", "nan", "string", "flat", "empty", "none", "ragged", "ceiling-string",
+         "ceiling-empty"])
+def test_malformed_tables_are_rejected(change):
+    """
+    The tables are checked when the aircraft is loaded, not when a flight is computed with it.
+    """
+    with pytest.raises((ValueError, TypeError)):
+        SimpleAircraft(dict(AIRCRAFT_DUMMY, **change))

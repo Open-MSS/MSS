@@ -268,6 +268,21 @@ class Test_MSSTopViewWindow:
             self.window.mpl.canvas, QtCore.Qt.LeftButton, pos=point)
         assert len(self.window.waypoints_model.waypoints) == 4
 
+    def test_roundtrip_button_follows_the_flight_track(self):
+        first = self.window.waypoints_model
+        assert self.window.btRoundtrip.isEnabled()
+        # first and last waypoint are the same, no roundtrip
+        other = ft.WaypointsTableModel("other", waypoints=[ft.Waypoint(1., 1., 0), ft.Waypoint(1., 1., 0)])
+        self.window.setFlightTrackModel(other)
+        assert not self.window.btRoundtrip.isEnabled()
+        self.window.setFlightTrackModel(other)
+        with mock.patch.object(self.window, "is_roundtrip_possible", return_value=True) as possible:
+            other.insertRows(1, waypoints=[ft.Waypoint(2., 2., 0)])
+            # connected once, to the shown flight track only
+            assert possible.call_count == 1
+            first.insertRows(1, waypoints=[ft.Waypoint(2., 2., 0)])
+            assert possible.call_count == 1
+
     def test_roundtrip(self):
         """
         Test connecting the last and first point
