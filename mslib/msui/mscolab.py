@@ -1091,8 +1091,9 @@ class MSUIMscolab(QtCore.QObject):
             self.ui.serverOptionsCb.hide()
             self.waypoints_model = None
             self.load_wps_from_server()
+            # reload_local_wp gives the views the local copy, a second reload requested every map again
+            self.reload_view_windows()
         self.show_operation_options()
-        self.reload_view_windows()
 
     def create_local_operation_file(self, local_dir):
         """
@@ -1296,10 +1297,7 @@ class MSUIMscolab(QtCore.QObject):
 
             # update view window nav elements if open
             for window in self.ui.get_active_views():
-                if self.access_level == "viewer":
-                    window.disable_navbar_action_buttons()
-                else:
-                    window.enable_navbar_action_buttons()
+                self._apply_access_level(window)
 
         # update chat window if open
         if self.chat_window is not None:
@@ -1347,7 +1345,8 @@ class MSUIMscolab(QtCore.QObject):
                 show_popup(self.ui, "Permission Revoked", "Access to an operation was revoked")
                 self.signal_permission_revoked.emit(op_id)
 
-            if self.active_op_id == op_id:
+            # delete_operation_from_list has already reset active_op_id (#3370)
+            if revoked_operation_currently_active:
                 self._activate_first_local_flighttrack()
 
     @QtCore.pyqtSlot(int)
@@ -1360,6 +1359,7 @@ class MSUIMscolab(QtCore.QObject):
             if operation_name is None:
                 operation_name = old_operation_name
             show_popup(self.ui, "Information", f'Active operation "{operation_name}" is inaccessible!', icon=1)
+            self._activate_first_local_flighttrack()
 
     @QtCore.pyqtSlot(int, int)
     def update_active_user_label(self, op_id, count):
@@ -1521,10 +1521,7 @@ class MSUIMscolab(QtCore.QObject):
         # set new waypoints model to open views
         for window in self.ui.get_active_views():
             window.setFlightTrackModel(self.waypoints_model)
-            if self.access_level == "viewer":
-                window.disable_navbar_action_buttons()
-            else:
-                window.enable_navbar_action_buttons()
+            self._apply_access_level(window)
 
         self.ui.switch_to_mscolab()
 
@@ -1686,16 +1683,19 @@ class MSUIMscolab(QtCore.QObject):
         if self.ui.local_active:
             return
 
+        # Setting the model redraws a view; a viewer's controls stay disabled (#3335).
         for window in self.ui.get_active_views():
             window.setFlightTrackModel(self.waypoints_model)
-            if hasattr(window, 'mpl'):
-                if window.name in ("Top View", "Table View"):
-                    # Make Roundtrip Button
-                    window.btRoundtrip.setEnabled(window.is_roundtrip_possible())
-                try:
-                    window.mpl.canvas.waypoints_interactor.redraw_figure()
-                except AttributeError as err:
-                    logging.error("%s" % err)
+            self._apply_access_level(window)
+
+    def _apply_access_level(self, window):
+        """
+        Enables the controls of a view that change the flight track, or disables them for a viewer
+        """
+        if self.access_level == "viewer":
+            window.disable_navbar_action_buttons()
+        else:
+            window.enable_navbar_action_buttons()
 
     def handle_import_msc(self, file_path, extension, function, pickertype):
         logging.debug("handle_import_msc")
