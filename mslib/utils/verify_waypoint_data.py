@@ -25,29 +25,47 @@
 """
 
 
+import math
+
 import defusedxml.minidom
 import xml.parsers.expat
 
 
 def verify_waypoint_data(xml_content):
+    """
+    Whether xml_content is a flight track with at least two waypoints whose positions and flight levels are
+    finite numbers. Returns False for anything else, it never raises (#3336).
+    """
     try:
         doc = defusedxml.minidom.parseString(xml_content)
-    except xml.parsers.expat.ExpatError:
+    # ValueError includes UnicodeError, e.g. a lone surrogate; TypeError e.g. None, from a server request;
+    # LookupError: bytes declaring an unknown encoding
+    except (xml.parsers.expat.ExpatError, defusedxml.DefusedXmlException, ValueError, TypeError, LookupError):
+        return False
+    # minidom searches elements recursively
+    try:
+        return _is_flight_track(doc)
+    except RecursionError:
         return False
 
-    ft_el = doc.getElementsByTagName("FlightTrack")[0]
-    waypoints = ft_el.getElementsByTagName("Waypoint")
+
+def _is_flight_track(doc):
+    flight_tracks = doc.getElementsByTagName("FlightTrack")
+    if not flight_tracks:
+        return False
+    waypoints = flight_tracks[0].getElementsByTagName("Waypoint")
     if (len(waypoints)) < 2:
         return False
 
-    for wp_el in ft_el.getElementsByTagName("Waypoint"):
+    for wp_el in waypoints:
         try:
-            wp_el.getAttribute("location")
-            float(wp_el.getAttribute("lat"))
-            float(wp_el.getAttribute("lon"))
-            float(wp_el.getAttribute("flightlevel"))
-            wp_el.getElementsByTagName("Comments")[0]
+            values = [float(wp_el.getAttribute(name)) for name in ("lat", "lon", "flightlevel")]
         except ValueError:
+            return False
+        # e.g. nan, inf or 1e400: msui can't compute or show such a flight track
+        if not all(math.isfinite(value) for value in values):
+            return False
+        if not wp_el.getElementsByTagName("Comments"):
             return False
 
     return True

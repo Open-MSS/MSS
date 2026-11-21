@@ -118,3 +118,38 @@ cases = [
 def test_verify_xml_waypoint(xml_content, verification_result):
     """Test xml verification."""
     assert verify_waypoint_data(xml_content) is verification_result
+
+
+def flight_track(lat="50", lon="6", flightlevel="300", comments="<Comments></Comments>"):
+    """Two waypoints, the first with the given attributes"""
+    return ('<?xml version="1.0" encoding="utf-8"?><FlightTrack version="9.1.0"><ListOfWaypoints>'
+            f'<Waypoint flightlevel="{flightlevel}" lat="{lat}" location="" lon="{lon}">{comments}</Waypoint>'
+            '<Waypoint flightlevel="300" lat="51" location="" lon="7"><Comments></Comments></Waypoint>'
+            '</ListOfWaypoints></FlightTrack>')
+
+
+@pytest.mark.parametrize("xml_content", [
+    "<a/>",
+    flight_track(comments=""),
+    '<!DOCTYPE a [<!ENTITY e "x">]><FlightTrack/>',
+    "<a>\ud800</a>",
+    None,
+    "<a>" * 5000 + "</a>" * 5000,
+    flight_track().replace("utf-8", "bogus").encode("ascii"),
+] + [flight_track(**{attribute: value}) for attribute in ("lat", "lon", "flightlevel")
+     for value in ("nan", "inf", "-inf", "1e400")],
+    ids=["not-a-flight-track", "no-comments", "entity", "lone-surrogate", "none", "deeply-nested",
+         "unknown-encoding"] + [
+        f"{attribute}-{value}" for attribute in ("lat", "lon", "flightlevel")
+        for value in ("nan", "inf", "-inf", "1e400")])
+def test_verify_rejects_without_raising(xml_content):
+    """
+    Content that isn't a flight track, or with values that aren't finite, is rejected, not raised on: the
+    MSColab server stored nan, and raised on the others (#3336)
+    """
+    assert verify_waypoint_data(xml_content) is False
+
+
+def test_verify_sets_no_range_limits():
+    """Only values that aren't finite are rejected, no ranges"""
+    assert verify_waypoint_data(flight_track(lat="100", lon="-700", flightlevel="1e300")) is True
