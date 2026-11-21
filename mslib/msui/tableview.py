@@ -57,6 +57,9 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
 
     name = "Table View"
 
+    # the selection or the model changed, for the docks: the table's selection model is replaced with the model
+    waypointSelectionChanged = QtCore.pyqtSignal()
+
     def __init__(self, parent=None, model=None, _id=None, tutorial_mode=False):
         """
         """
@@ -101,7 +104,6 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         self.btInvertDirection.clicked.connect(self.invertDirection)
         self.btRoundtrip.clicked.connect(self.make_roundtrip)
         self.cbShowLinearData.toggled.connect(self.setLinearDataVisible)
-        self.tableWayPoints.selectionModel().selectionChanged.connect(self.on_selection_changed)
 
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
@@ -168,13 +170,15 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
             plain_text_as_html(self.show_linear_data_tooltip if available else
                                "No linear view provides data values for this flight track"))
 
-    def on_selection_changed(self, index):
+    def on_selection_changed(self, *args):
         """
-        Disables insert and clone when multiple rows are selected
+        Disables insert and clone when multiple rows are selected, or the table is disabled (e.g. for viewers
+        of an MSColab operation)
         """
-        enable = len(self.tableWayPoints.selectionModel().selectedRows()) <= 1
+        enable = self.tableWayPoints.isEnabled() and len(self.tableWayPoints.selectionModel().selectedRows()) <= 1
         self.btCloneWaypoint.setEnabled(enable)
         self.btAddWayPointToFlightTrack.setEnabled(enable)
+        self.waypointSelectionChanged.emit()
 
     def openTool(self, index):
         """
@@ -359,7 +363,15 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         previous = self.waypoints_model
         # connects the signals of _model_connections(), once per model
         super().setFlightTrackModel(model)
+        selection_model = self.tableWayPoints.selectionModel()
         self.tableWayPoints.setModel(self.waypoints_model)
+        # Another model gets a new selection model. The old one is the table's child, it would stay with
+        # the table and the old model (#3341).
+        if self.tableWayPoints.selectionModel() is not selection_model:
+            self.tableWayPoints.selectionModel().selectionChanged.connect(self.on_selection_changed)
+            if selection_model is not None:
+                selection_model.deleteLater()
+        self.on_selection_changed()
         self.update_roundtrip_enabled()
         # The performance settings show those of the flight track displayed.
         if len(self.docks) > 1 and self.docks[1] is not None:

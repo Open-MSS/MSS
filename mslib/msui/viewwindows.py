@@ -269,12 +269,12 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
                     action.setEnabled(True)
         else:
             # Table View
-            self.btAddWayPointToFlightTrack.setEnabled(True)
-            self.btCloneWaypoint.setEnabled(True)
             self.btDeleteWayPoint.setEnabled(True)
             self.btInvertDirection.setEnabled(True)
             self.cbTools.setEnabled(True)
             self.tableWayPoints.setEnabled(True)
+            # Add and Clone depend on the selected rows (#3341)
+            self.on_selection_changed()
 
     def disable_navbar_action_buttons(self):
         """
@@ -297,12 +297,12 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
                         action.trigger()
         else:
             # Table View
-            self.btAddWayPointToFlightTrack.setEnabled(False)
-            self.btCloneWaypoint.setEnabled(False)
             self.btDeleteWayPoint.setEnabled(False)
             self.btInvertDirection.setEnabled(False)
             self.cbTools.setEnabled(False)
             self.tableWayPoints.setEnabled(False)
+            # Add and Clone, and an open hexagon dock, follow the disabled table (#3341)
+            self.on_selection_changed()
 
     def _tutorial_screen_settings(self):
         """
