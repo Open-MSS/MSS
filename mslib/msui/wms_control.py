@@ -38,7 +38,8 @@ import requests
 import traceback
 import urllib.parse
 import defusedxml.ElementTree as etree
-from mslib.msui.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings
+from mslib.msui.utils.config import config_loader, read_config_file
+from mslib.utils import FatalUserError
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 import owslib.util
@@ -59,10 +60,30 @@ from mslib.msui.utils.auth import save_password_to_keyring, get_auth_from_url_an
 from mslib.msui.utils.config import modify_config_file
 
 
-def add_wms_urls(combo_box, url_list):
-    combo_box_urls = [combo_box.itemText(_i) for _i in range(combo_box.count())]
-    for url in (_url for _url in url_list if _url not in combo_box_urls):
-        combo_box.addItem(url)
+class _WMSURLLists(QtCore.QObject):
+    """Tells all WMS control widgets that one of the lists of WMS URLs may have changed (the config key)."""
+    changed = QtCore.pyqtSignal(str)
+
+
+_wms_url_lists = _WMSURLLists()
+# the warning that the settings file could not be written is shown once per session
+_wms_url_save_warning_shown = False
+
+
+def set_combo_text(combo, text):
+    """Shows text in the editable combo box, selecting its entry if it has one."""
+    if combo.findText(text) != -1:
+        combo.setCurrentIndex(combo.findText(text))
+    else:
+        combo.setEditText(text)
+
+
+def with_loaded_wms_url(urls, entered_url, url):
+    """
+    Returns the list of WMS URLs urls with url, the URL capabilities were loaded from, on top. It replaces
+    entered_url, the URL as entered (e.g. without trailing slash, or before a redirect).
+    """
+    return [url] + [_url for _url in urls if _url not in (entered_url, url)]
 
 
 class MSUIWebMapServiceMixin:
@@ -519,12 +540,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     vtime_data = QtCore.pyqtSignal([list])
     metadata_displayed = QtCore.pyqtSignal()
 
-    def __init__(self, parent=None, default_WMS=None, wms_cache=None, view=None):
+    # the config key of the list of WMS URLs of this view, most recently used first
+    wms_urls_key = "default_WMS"
+
+    def __init__(self, parent=None, wms_cache=None, view=None):
         """
         Arguments:
         parent -- Qt widget that is parent to this widget.
-        default_WMS -- list of strings that specify WMS URLs that will be
-                       displayed in the URL combobox as default values.
         """
         super().__init__(parent)
         self.setupUi(self)
@@ -547,12 +569,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Initial list of WMS servers.
         self.multilayers.cbWMS_URL.setModel(QtGui.QStandardItemModel())
-        if default_WMS is not None:
-            add_wms_urls(self.multilayers.cbWMS_URL, default_WMS)
-        # set last connected url to editable
-        wms_settings = load_settings_qsettings('wms', {'recent_wms_url': None})
-        if wms_settings['recent_wms_url'] is not None:
-            add_wms_urls(self.multilayers.cbWMS_URL, [wms_settings['recent_wms_url']])
+        # the list holds the config list only, a server is added when its capabilities load.
+        # The servers loaded in this view are always in it.
+        self.multilayers.cbWMS_URL.setInsertPolicy(QtWidgets.QComboBox.NoInsert)
+        self.update_wms_urls(self.wms_urls_key)
+        _wms_url_lists.changed.connect(self.update_wms_urls)
+        self.url_list_view = self.multilayers.cbWMS_URL.view()
+        self.url_list_view.installEventFilter(self)
 
         self.layerChangeInProgress = False
         self.save_level = None
@@ -656,9 +679,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.expected_img = None
         self.check_for_allowed_crs = True
 
+        # selecting the most recently used server sets the edit text, which calls wms_url_changed
         if self.multilayers.cbWMS_URL.count() > 0:
             self.multilayers.cbWMS_URL.setCurrentIndex(0)
-            self.wms_url_changed(self.multilayers.cbWMS_URL.currentText())
 
     def row_is_selected(self, url, layer, styles, level, view_name):
         if url not in self.multilayers.layers:
@@ -866,8 +889,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         else:
             self.get_map([self.multilayers.get_current_layer()])
 
-    def initialise_wms(self, base_url, version="1.3.0", level=None):
+    def initialise_wms(self, base_url, version="1.3.0", level=None, entered_url=None):
         """Initialises a MSUIWebMapService object with the specified base_url.
+
+        On success, base_url replaces entered_url, the URL as entered, at the top of the list of
+        WMS URLs of this view kind.
 
         If the web server returns a '401 Unauthorized', prompt the user for
         username and password.
@@ -888,24 +914,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         def on_success(wms):
             self.cpdlg.setValue(9)
             if wms is not None:
-
-                # update the combo box, if entry requires change/insertion
-                found = False
-                current_url = self.multilayers.cbWMS_URL.currentText()
-                for count in range(self.multilayers.cbWMS_URL.count()):
-                    if self.multilayers.cbWMS_URL.itemText(count) == current_url:
-                        self.multilayers.cbWMS_URL.setItemText(count, base_url)
-                        self.multilayers.cbWMS_URL.setCurrentIndex(count)
-                        found = True
-                        break
-                    if self.multilayers.cbWMS_URL.itemText(count) == base_url:
-                        self.multilayers.cbWMS_URL.setCurrentIndex(count)
-                        found = True
-                if not found:
-                    logging.debug("inserting URL: %s", base_url)
-                    add_wms_urls(self.multilayers.cbWMS_URL, [base_url])
-                    self.multilayers.cbWMS_URL.setEditText(base_url)
-                    save_settings_qsettings('wms', {'recent_wms_url': base_url})
+                self.change_wms_urls(lambda urls: with_loaded_wms_url(urls, entered_url, base_url))
+                set_combo_text(self.multilayers.cbWMS_URL, base_url)
 
                 self.activate_wms(wms, level=level)
                 self.service_manager.cache_service(base_url, wms)
@@ -953,7 +963,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         # On a new auth password we seems to need a manual close of the progress bar
                         # and load getcapabilities
                         self.cpdlg.close()
-                        self.get_capabilities()
+                        self.get_capabilities(level=level)
                     else:
                         self.cpdlg.close()
                         return
@@ -1001,6 +1011,86 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
         return ret == QtWidgets.QMessageBox.Yes
 
+    @QtCore.pyqtSlot(str)
+    def update_wms_urls(self, key):
+        """
+        Shows the list of WMS URLs of this view kind, if key is its config key, and unloads the servers
+        not in it.
+        """
+        if key != self.wms_urls_key:
+            return
+        urls = config_loader(dataset=self.wms_urls_key)
+        combo = self.multilayers.cbWMS_URL
+        text = combo.currentText()
+        # keep the entered text and do not load another server by changing it
+        with QtCore.QSignalBlocker(combo):
+            combo.clear()
+            combo.addItems(urls)
+            set_combo_text(combo, text)
+        for url in list(self.multilayers.layers):
+            if url not in urls:
+                self.multilayers.delete_server(self.multilayers.layers[url]["header"])
+        self.multilayers.pbViewCapabilities.setEnabled(text in self.multilayers.layers)
+
+    def change_wms_urls(self, change):
+        """
+        Applies change, a function returning the new list from the current one, to the list of WMS URLs of
+        this view kind in the settings file, and shows the result in all views of the kind.
+        """
+        global _wms_url_save_warning_shown
+        try:
+            # msui's settings in memory may differ from the file, e.g. after an autoplot run
+            read_config_file()
+            urls = list(config_loader(dataset=self.wms_urls_key))
+            new_urls = change(list(urls))
+            if new_urls != urls:
+                modify_config_file({self.wms_urls_key: new_urls})
+        except (OSError, FatalUserError) as ex:
+            logging.warning("Could not save the list of WMS servers to %s: %s", constants.MSUI_SETTINGS, ex)
+            if not _wms_url_save_warning_shown:
+                _wms_url_save_warning_shown = True
+                QtWidgets.QMessageBox.warning(
+                    self.multilayers, self.tr("Web Map Service"),
+                    plain_text_as_html(f"The list of WMS servers could not be saved to\n\n{constants.MSUI_SETTINGS}"
+                                       f"\n\n{ex}\n\nThe list stays as it was."))
+            return
+        # also when nothing changed here: the file may hold a list edited by hand
+        _wms_url_lists.changed.emit(self.wms_urls_key)
+
+    def eventFilter(self, obj, event):
+        """Del or Backspace in the opened list of WMS URLs removes the highlighted URL from the list."""
+        if obj is self.url_list_view and event.type() == QtCore.QEvent.KeyPress \
+                and event.key() in (QtCore.Qt.Key_Delete, QtCore.Qt.Key_Backspace):
+            index = self.url_list_view.currentIndex()
+            if index.isValid():
+                self.remove_wms_url(index.data())
+            return True
+        return super().eventFilter(obj, event)
+
+    def remove_wms_url(self, url):
+        """Removes url from the list of WMS URLs of this view kind after asking, which unloads it in its views."""
+        combo = self.multilayers.cbWMS_URL
+        # the settings file can't hold an empty list: msui would ignore it and keep the old one
+        if config_loader(dataset=self.wms_urls_key) == [url]:
+            combo.hidePopup()
+            QtWidgets.QMessageBox.information(
+                self.multilayers, self.tr("Web Map Service"),
+                self.tr("The last server of the list can't be removed, as the settings file can't hold an "
+                        "empty list."))
+            return
+        combo.hidePopup()
+        ret = QtWidgets.QMessageBox.question(
+            self.multilayers, self.tr("Web Map Service"),
+            plain_text_as_html(f"Remove\n\n{url}\n\nfrom the list of WMS servers? "
+                               "Views using this list unload the server."),
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+        if ret != QtWidgets.QMessageBox.Yes:
+            return
+        # the list is read after asking, as another view may have changed it meanwhile
+        self.change_wms_urls(lambda urls: [_url for _url in urls if _url != url] or urls)
+        if combo.currentText() == url and combo.findText(url) == -1:
+            combo.setEditText("")
+
     def warn_about_getmap_url(self, wms):
         """
         Shows the warning of getmap_url_warning, once per session for each WMS and GetMap URL
@@ -1017,7 +1107,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
     def wms_url_changed(self, text):
         wms = self.service_manager.get_service(text)
-        if wms is not None:
+        # the cache serves listed servers only; Get Capabilities loads, and so lists, the others
+        if wms is not None and self.multilayers.cbWMS_URL.findText(wms.url) != -1:
             self.activate_wms(wms, cache=True)
 
     @QtCore.pyqtSlot(Exception)
@@ -1114,7 +1205,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 self.cpdlg.close()
                 return
             logging.debug("requesting capabilities from %s", url)
-            self.initialise_wms(url, None, level=level)
+            self.initialise_wms(url, None, level=level, entered_url=base_url)
 
         def on_failure(e):
             try:
@@ -1206,7 +1297,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
            document.
         """
         logging.debug("Opening WMS capabilities browser..")
-        wms = self.multilayers.layers[self.multilayers.cbWMS_URL.currentText()]["wms"]
+        # the server may have been unloaded since the button was enabled
+        wms = self.multilayers.layers.get(self.multilayers.cbWMS_URL.currentText(), {}).get("wms")
         if wms is not None:
             wmsbrws = wms_capabilities.WMSCapabilitiesBrowser(
                 parent=self.multilayers,
@@ -1923,11 +2015,12 @@ class VSecWMSControlWidget(WMSControlWidget):
     """Subclass of WMSControlWidget that extends the WMS client to
        handle (non-standard) vertical sections.
     """
+    wms_urls_key = "default_VSEC_WMS"
 
-    def __init__(self, parent=None, default_WMS=None, waypoints_model=None,
+    def __init__(self, parent=None, waypoints_model=None,
                  view=None, wms_cache=None):
         super().__init__(
-            parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
+            parent=parent, wms_cache=wms_cache, view=view)
         self.waypoints_model = waypoints_model
         self.btGetMap.clicked.connect(self.get_all_maps)
 
@@ -2003,9 +2096,9 @@ class HSecWMSControlWidget(WMSControlWidget):
        handle (standard) horizontal sections, i.e. maps.
     """
 
-    def __init__(self, parent=None, default_WMS=None, view=None, wms_cache=None):
+    def __init__(self, parent=None, view=None, wms_cache=None):
         super().__init__(
-            parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
+            parent=parent, wms_cache=wms_cache, view=view)
         self.btGetMap.clicked.connect(self.get_all_maps)
 
     def level_changed(self):
@@ -2059,11 +2152,12 @@ class LSecWMSControlWidget(WMSControlWidget):
     """Subclass of WMSControlWidget that extends the WMS client to
        handle (non-standard) linear sections.
     """
+    wms_urls_key = "default_LSEC_WMS"
 
-    def __init__(self, parent=None, default_WMS=None, waypoints_model=None,
+    def __init__(self, parent=None, waypoints_model=None,
                  view=None, wms_cache=None):
         super().__init__(
-            parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
+            parent=parent, wms_cache=wms_cache, view=view)
         self.waypoints_model = waypoints_model
         self.btGetMap.clicked.connect(self.get_all_maps)
 

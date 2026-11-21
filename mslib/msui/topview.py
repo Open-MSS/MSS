@@ -385,7 +385,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 # Create a new WMSDockWidget.
                 title = "Web Map Service (Top View)"
                 widget = wc.HSecWMSControlWidget(
-                    default_WMS=config_loader(dataset="default_WMS"),
                     view=self.mpl.canvas,
                     wms_cache=config_loader(dataset="wms_cache"))
                 widget.vtime_data.connect(lambda vtime: self.valid_time_vals(vtime))

@@ -151,7 +151,6 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
                 # Open a WMS control widget.
                 title = "Web Service Plot Control"
                 widget = wms.LSecWMSControlWidget(
-                    default_WMS=config_loader(dataset="default_LSEC_WMS"),
                     waypoints_model=self.waypoints_model,
                     view=self.mpl.canvas,
                     wms_cache=config_loader(dataset="wms_cache"))

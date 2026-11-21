@@ -379,9 +379,10 @@ class MSUIDefaultConfig:
         "predefined_map_sections": "Dictionary containing predefined map sections with their settings",
         "num_interpolation_points": "Number of interpolation points used for vertical cross section requests",
         "num_labels": "Number of x-axis labels in the side view",
-        "default_WMS": "List of the URLs of default WMS servers",
-        "default_VSEC_WMS": "List of the URLs of default Vertical Section WMS servers",
-        "default_LSEC_WMS": "List of the URLs of default Linear Section WMS servers",
+        "default_WMS": "The WMS servers of the top view, most recently used first; msui adds every server loaded",
+        "default_VSEC_WMS": "The WMS servers of the side view, most recently used first; msui adds every server loaded",
+        "default_LSEC_WMS": "The WMS servers of the linear view, most recently used first; msui adds every server "
+                            "loaded",
         "default_MSCOLAB": "List of the URLs of default MSColab servers",
         "MSS_auth": "Dictionary containing credentials for http auth",
         "MSCOLAB_auth_user_name": "Username used for http auth",

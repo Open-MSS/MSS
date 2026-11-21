@@ -72,6 +72,8 @@ Store this msui_settings.json in a path, e.g. "$HOME/.config/msui"
 
 The file could be loaded by the File Configuration dialog or
 by the environment variable MSUI_SETTINGS pointing to your msui_settings.json.
+While the configuration editor is open, the other msui windows are blocked: the editor saves all settings it
+shows, and msui itself changes some of them, e.g. the lists of WMS servers.
 
 **/$HOME/.config/msui/msui_settings.json**
 
@@ -123,6 +125,24 @@ address used for the maps (GetMap). msui sends the login with the map requests o
 the same scheme, host and port as the address of the capabilities. Otherwise the maps are requested without
 the login, and msui warns once per session. It also warns when the capabilities were loaded with https and
 the maps are to be requested with http.
+
+WMS server list
+~~~~~~~~~~~~~~~
+The list of WMS URLs of a view is its setting in the msui settings file (``default_WMS`` for the top view,
+``default_VSEC_WMS`` for the side view, ``default_LSEC_WMS`` for the linear view), most recently used first.
+All views of a kind show the same list, and every server loaded in a view is in its list, unless the settings file
+can't be written (see below).
+When the capabilities of a server load, also by autoplot, msui puts the server at the top of the list and saves
+it. If the server answers from another address, e.g. with a trailing slash or after a redirect, that address
+replaces the one entered, and views that loaded the server from the entered address unload it.
+At startup the first server is selected.
+
+To remove a server, open the list, highlight the URL, press Del or Backspace and confirm. All views of the kind
+unload the server. The last server of a list can't be removed, as the settings file can't hold an empty list.
+msui reads the list from the settings file before every change, so a list edited by hand is kept. Settings edited by
+hand while msui runs take effect when msui next writes the settings file, e.g. when a WMS server loads. Once msui saved
+a list, the user's settings file holds it, and changes to the default servers of later msui versions don't
+change it. If the settings file can't be written, msui warns once and the list stays as it was.
 
 
 MSUI Flight track import/export plugins

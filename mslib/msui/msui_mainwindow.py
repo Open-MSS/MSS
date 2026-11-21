@@ -1262,6 +1262,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.config_editor.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             self.config_editor.destroyed.connect(self.close_config_editor)
             self.config_editor.restartApplication.connect(self.restart_application)
+            # The editor saves all settings it shows. Blocking msui meanwhile keeps msui from changing the
+            # settings file underneath, e.g. adding a loaded WMS server to its list.
+            self.config_editor.setWindowModality(QtCore.Qt.ApplicationModal)
             self.config_editor.show()
         else:
             self.config_editor.showNormal()

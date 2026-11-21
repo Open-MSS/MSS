@@ -40,7 +40,9 @@ from PyQt5 import QtCore
 from mslib.autoplot import main as cli_tool, resolve_ftml_path
 from mslib.msui.qt5.ui_mss_autoplot import Ui_AutoplotDockWidget
 from mslib.msui.utils import constants as const
+from mslib.msui.utils.config import read_config_file
 from mslib.msui.utils.qt import get_save_filename, plain_text_as_html
+from mslib.utils import FatalUserError
 
 
 class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
@@ -237,6 +239,12 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             )
             ctx.obj = None
             return
+        finally:
+            # the autoplot run replaced msui's settings in memory by those of its configuration file
+            try:
+                read_config_file()
+            except (OSError, FatalUserError) as ex:
+                logging.error("Could not read the msui settings again after the autoplot run: %s", ex)
 
     def autoplotSecsTreeWidget_selected_row(self):
         selected_items = self.autoplotSecsTreeWidget.selectedItems()

@@ -28,8 +28,12 @@ import os
 import shutil
 from pathlib import Path
 
+import click
+import mock
+
 from mslib.msui import flighttrack as ft
 from mslib.msui.autoplot_dockwidget import AutoplotDockWidget
+from mslib.msui.utils.config import config_loader, modify_config_file, read_config_file
 
 
 class FakeView:
@@ -223,3 +227,22 @@ class TestRowToShow:
     def test_empty_rows(self):
         assert AutoplotDockWidget.flights_row_to_show([]) == []
         assert AutoplotDockWidget.flights_row_to_show(["", "", "", "", "", ""]) == ["", "", "", "", "", ""]
+
+
+def test_download_keeps_the_msui_settings():
+    """
+    The download button runs mssautoplot in msui, which reads the settings of its own configuration file.
+    msui must use its own settings afterwards, e.g. not save the default WMS servers of mssautoplot.
+    """
+    modify_config_file({"default_WMS": ["http://mine/"]})
+
+    def main(**kwargs):
+        read_config_file(path=kwargs["cpath"])
+        assert config_loader(dataset="default_WMS") != ["http://mine/"]
+    cli_tool = click.Command("mssautoplot", callback=main)
+    dock = mock.Mock(stime="", etime="", intv="", itime="", vtime="", view="Top View")
+    dock.autoplotSecsTreeWidget.topLevelItemCount.return_value = 1
+    dock.missing_flighttrack.return_value = None
+    with mock.patch("mslib.msui.autoplot_dockwidget.cli_tool", cli_tool):
+        AutoplotDockWidget.download_plots_cli(dock, {"automated_plotting_flights": []})
+    assert config_loader(dataset="default_WMS") == ["http://mine/"]
