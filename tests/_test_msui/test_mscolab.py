@@ -49,6 +49,7 @@ from tests.utils import create_msui_settings_file, ExceptionMock
 from mslib.msui import msui
 from mslib.msui import mscolab
 from mslib.msui import wms_control
+from mslib.msui import multiple_flightpath_dockwidget as mf
 from mslib.msui.mscolab_exceptions import MSColabSessionExpiredError
 
 
@@ -846,6 +847,205 @@ class Test_Mscolab:
             assert not tableview.tableWayPoints.isEnabled()
             assert not any(action.isEnabled() for action in topview.mpl.navbar.actions()
                            if action.text() in ("Ins WP", "Del WP", "Mv WP"))
+
+    def _login_again(self, qtbot):
+        self.window.mscolab.logout()
+        qtbot.wait_until(lambda: self.window.usernameLabel.text() == "User")
+        self._connect_to_mscolab(qtbot)
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        qtbot.wait_until(lambda: self.window.usernameLabel.text() == self.userdata[1])
+
+    def test_multiple_flightpath_dock_connects_once_per_login(self, qtbot):
+        """
+        Every login connected the multiple flightpath dock to its top view and to the operation lists again,
+        logout disconnected only some of these: after N logins an operation activation reached the dock N times
+        (#3339)
+        """
+        topview = self._login_with_multiple_flightpath_topview(qtbot)
+        dock = topview.docks[5].widget()
+
+        def receivers():
+            signals = [getattr(topview, name) for name in (
+                "signal_activate_operation", "signal_operation_added", "signal_operation_removed",
+                "signal_logout_mscolab", "signal_permission_revoked", "signal_render_new_permission",
+                "signal_listFlighttrack_doubleClicked")]
+            return ([topview.receivers(signal) for signal in signals] +
+                    [dock.cbSlectAll2.receivers(dock.cbSlectAll2.stateChanged),
+                     dock.list_operation_track.receivers(dock.list_operation_track.itemClicked),
+                     dock.list_operation_track.receivers(dock.list_operation_track.itemChanged),
+                     self.window.listOperationsMSC.receivers(self.window.listOperationsMSC.itemDoubleClicked)])
+        after_first_login = receivers()
+        for _ in range(2):
+            self._login_again(qtbot)
+            assert receivers() == after_first_login
+        with mock.patch.object(mf.MultipleFlightpathOperations, "get_op_id") as get_op_id:
+            self._activate_operation_at_index(0)
+        assert get_op_id.call_count == 1
+
+    def test_multiple_flightpath_dock_follows_added_and_removed_operations(self, qtbot):
+        """
+        An operation created or removed while the multiple flightpath dock is open shows up in it, or
+        disappears from it, once; the dock never heard of it (#3339)
+        """
+        topview = self._login_with_multiple_flightpath_topview(qtbot)
+        self._login_again(qtbot)
+        operations = topview.docks[5].widget().list_operation_track
+
+        def names():
+            return [operations.item(i).text() for i in range(operations.count())]
+        assert names() == [self.operation_name]
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok):
+            self._create_operation_unchecked("added_while_open", "description", category="default")
+        qtbot.wait_until(lambda: "added_while_open" in names())
+        assert sorted(names()) == sorted([self.operation_name, "added_while_open"])
+        op_id = next(operations.item(i).op_id for i in range(operations.count())
+                     if operations.item(i).text() == "added_while_open")
+        # the signal connections are direct, the dock is updated when emit returns
+        self.window.mscolab.signal_operation_removed.emit(op_id)
+        assert names() == [self.operation_name]
+
+    @pytest.mark.parametrize("action", ["delete", "archive"])
+    def test_multiple_flightpath_dock_drops_own_deleted_or_archived_operation(self, qtbot, action):
+        """
+        Deleting or archiving the active operation reloaded the operation list before telling the views which
+        operation went away, by then the active operation was None (#3339)
+        """
+        topview = self._login_with_multiple_flightpath_topview(qtbot)
+        operations = topview.docks[5].widget().list_operation_track
+
+        def names():
+            return [operations.item(i).text() for i in range(operations.count())]
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok):
+            self._create_operation_unchecked("own_operation", "description", category="default")
+        qtbot.wait_until(lambda: "own_operation" in names())
+        msc_list = self.window.listOperationsMSC
+        qtbot.wait_until(lambda: any(msc_list.item(i).operation_path == "own_operation"
+                                     for i in range(msc_list.count())))
+        self._activate_operation_at_index(
+            next(i for i in range(msc_list.count()) if msc_list.item(i).operation_path == "own_operation"))
+        assert self.window.mscolab.active_operation_name == "own_operation"
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok), \
+                mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes), \
+                mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("own_operation", True)):
+            actions = {"delete": self.window.actionDeleteOperation, "archive": self.window.actionArchiveOperation}
+            actions[action].trigger()
+            qtbot.wait_until(lambda: "own_operation" not in names())
+        assert names() == [self.operation_name]
+
+    def test_multiple_flightpath_dock_opened_while_logged_out(self, qtbot):
+        """
+        The top view kept the server's address and token after a logout: a multiple flightpath dock opened then
+        connected with them, and the next login connected it a second time (#3339)
+        """
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        self.window.actionTopView.trigger()
+        qtbot.wait_until(lambda: len(self.window.get_active_views()) == 1)
+        topview = self.window.listViews.item(0).window
+        self.window.mscolab.logout()
+        qtbot.wait_until(lambda: self.window.usernameLabel.text() == "User")
+        topview.cbTools.currentIndexChanged.emit(6)
+        dock = topview.docks[5].widget()
+        assert dock.operations is None
+        self._connect_to_mscolab(qtbot)
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        qtbot.wait_until(lambda: self.window.usernameLabel.text() == self.userdata[1])
+        assert dock.operations is not None
+        assert topview.receivers(topview.signal_activate_operation) == 1
+        self.window.mscolab.logout()
+        assert dock.operations is None
+        assert topview.receivers(topview.signal_activate_operation) == 0
+
+    def _add_operation_for_user(self, path):
+        from mslib.mscolab.seed import add_operation, add_user_to_operation
+        with self.app.app_context():
+            assert add_operation(path, "description")
+            assert add_user_to_operation(path=path, emailid=self.userdata[0])
+
+    def _dock_operations(self, topview):
+        operations = topview.docks[5].widget().list_operation_track
+        return {operations.item(i).op_id: operations.item(i) for i in range(operations.count())}
+
+    def test_multiple_flightpath_dock_drops_operation_deleted_by_another_user(self, qtbot):
+        """The server's report that another user deleted an operation reaches the dock as well (#3340)"""
+        self._add_operation_for_user("second")
+        topview = self._login_with_multiple_flightpath_topview(qtbot)
+        op_id = self.window.mscolab.get_op_id("second")
+        assert op_id in self._dock_operations(topview)
+        with mock.patch("mslib.msui.mscolab.show_popup"):
+            self.window.mscolab.conn.signal_operation_deleted.emit(op_id)
+            assert op_id not in self._dock_operations(topview)
+            # a second report for it changes nothing
+            self.window.mscolab.conn.signal_operation_deleted.emit(op_id)
+        assert list(self._dock_operations(topview)) == [self.window.mscolab.active_op_id]
+
+    def test_multiple_flightpath_dock_with_fewer_operations_than_the_main_list(self, qtbot):
+        """
+        Activating a local flight track went through the main window's operation list but indexed the dock's,
+        and raised once the main list had more operations (#3369)
+        """
+        topview = self._login_with_multiple_flightpath_topview(qtbot)
+        self._add_operation_for_user("third")
+        self.window.mscolab.reload_operations()
+        assert self.window.listOperationsMSC.count() > len(self._dock_operations(topview))
+        self._activate_flight_track_at_index(0)
+        for item in self._dock_operations(topview).values():
+            assert item.flags() & QtCore.Qt.ItemIsUserCheckable
+            assert not item.font().bold()
+
+    def test_multiple_flightpath_dock_keeps_the_active_operation_when_another_is_removed(self, qtbot):
+        """Removing an operation that isn't the active one cleared the dock's active operation (#3369)"""
+        self._add_operation_for_user("second")
+        topview = self._login_with_multiple_flightpath_topview(qtbot)
+        operations = topview.docks[5].widget().operations
+        active_op_id = self.window.mscolab.active_op_id
+        assert operations.active_op_id == active_op_id
+        op_id = self.window.mscolab.get_op_id("second")
+        self.window.mscolab.signal_operation_removed.emit(op_id)
+        assert operations.active_op_id == active_op_id
+        assert op_id not in operations.dict_operations
+
+    def test_multiple_flightpath_dock_ignores_an_operation_it_can_not_load(self, qtbot):
+        """An operation the server doesn't return raised in the dock (#3369)"""
+        topview = self._login_with_multiple_flightpath_topview(qtbot)
+        listed = list(self._dock_operations(topview))
+        self.window.mscolab.signal_operation_added.emit(99999, "unknown")
+        assert list(self._dock_operations(topview)) == listed
+
+    def test_multiple_flightpath_dock_lists_an_operation_once(self, qtbot):
+        """
+        A repeated new-permission event, e.g. for a second socket of the user, listed the operation twice; the
+        next removal left an entry behind that raised KeyError (#3369)
+        """
+        self._add_operation_for_user("second")
+        topview = self._login_with_multiple_flightpath_topview(qtbot)
+        operations = topview.docks[5].widget().list_operation_track
+        count = operations.count()
+        op_id = self.window.mscolab.get_op_id("second")
+        self.window.signal_render_new_permission.emit(op_id, "second")
+        assert operations.count() == count
+        self.window.signal_permission_revoked.emit(op_id)
+        assert op_id not in self._dock_operations(topview)
+        # with an entry left behind both raised KeyError in a slot, which pytest-qt reports as a failure
+        self._activate_flight_track_at_index(0)
+        self.window.mscolab.logout()
+
+    def test_multiple_flightpath_dock_keeps_the_local_flight_track_after_relogin(self, qtbot):
+        """
+        After a logout the top view and the dock kept the operation that was active; on the next login the
+        dock deactivated the local flight track the main window had activated (#3373)
+        """
+        topview = self._login_with_multiple_flightpath_topview(qtbot)
+        dock = topview.docks[5].widget()
+        self._login_again(qtbot)
+        assert topview.active_op_id is None
+        assert dock.active_op_id is None
+        assert dock.active_flight_track is self.window.active_flight_track
+        active = [dock.list_flighttrack.item(i) for i in range(dock.list_flighttrack.count())
+                  if dock.list_flighttrack.item(i).flighttrack_model is self.window.active_flight_track]
+        assert len(active) == 1 and active[0].font().bold()
 
     def test_marked_bold_only_in_multiple_flight_path_operations_for_active_operation(self, qtbot):
         """
