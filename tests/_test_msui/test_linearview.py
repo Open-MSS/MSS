@@ -98,6 +98,38 @@ class Test_MSSLinearViewWindow:
         assert [wp.linear_data for wp in waypoints] == [
             {}, {"Mole fraction of ozone (Linear)": 42.}, {"Mole fraction of ozone (Linear)": 13.}]
 
+    def test_close_clears_only_its_own_waypoint_data(self):
+        """
+        With two linear views of one flight track, the table shows the data of the one that plotted last.
+        Closing the other one keeps that data, closing the one that provided it clears it (#3343).
+        """
+        model = self.window.waypoints_model
+        other = tv.MSUILinearViewWindow(model=model, parent=self.window.parent())
+        other.show()
+        try:
+            QtTest.QTest.qWaitForWindowExposed(other)
+            waypoints = model.all_waypoint_data()
+            lats, lons = [wp.lat for wp in waypoints], [wp.lon for wp in waypoints]
+            self.window.mpl.canvas.draw_image([lsec_xml(
+                title="Ozone", lats=lats, lons=lons, values=("1", "2", "3"))])
+            other.mpl.canvas.draw_image([lsec_xml(
+                title="Temperature", unit="K", lats=lats, lons=lons, values=("250", "251", "252"))])
+            assert model.linear_data_columns == [("Temperature", "K")]
+
+            self.window.force_close = True
+            self.window.close()
+            assert model.linear_data_columns == [("Temperature", "K")]
+            assert [wp.linear_data for wp in waypoints] == [{"Temperature": 250.}, {"Temperature": 251.},
+                                                            {"Temperature": 252.}]
+
+            other.force_close = True
+            other.close()
+            assert model.linear_data_columns == []
+            assert [wp.linear_data for wp in waypoints] == [{}, {}, {}]
+        finally:
+            other.force_close = True
+            other.close()
+
     def test_close_clears_waypoint_data(self):
         waypoints = self.window.waypoints_model.all_waypoint_data()
         self.window.mpl.canvas.draw_image([lsec_xml(
@@ -182,3 +214,14 @@ class Test_LinearViewWMS:
             QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         # the retrieved data is offered as a column of the table view
         assert len(self.window.waypoints_model.linear_data_columns) == 1
+
+    def test_clear_map_clears_the_data(self, qtbot):
+        """Clearing the plot also takes its data out of the table view (#3375)"""
+        self.query_server(qtbot, self.url)
+        with qtbot.wait_signal(self.wms_control.image_displayed, timeout=WMS_REQUEST_TIMEOUT_MS):
+            QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
+        model = self.window.waypoints_model
+        assert len(model.linear_data_columns) == 1
+        QtTest.QTest.mouseClick(self.wms_control.btClearMap, QtCore.Qt.LeftButton)
+        assert model.linear_data_columns == []
+        assert all(wp.linear_data == {} for wp in model.waypoints)

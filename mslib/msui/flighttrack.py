@@ -39,6 +39,7 @@ import datetime
 import logging
 import math
 import os
+import weakref
 from pathlib import Path
 
 import xml.dom.minidom
@@ -352,6 +353,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         # Data columns filled by the linear view, a list of (name, unit)
         # tuples. The values themselves are stored per waypoint.
         self.linear_data_columns = []
+        # the linear view canvas that provided the data, it clears only its own (#3343); weakly
+        # referenced, so that the model doesn't keep a closed view's canvas alive
+        self._linear_data_source = None
         self.linear_data_visible = False
 
         # self.aircraft.setErrorHandling("permissive")
@@ -597,9 +601,14 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             self.endRemoveColumns()
         self.linearDataChanged.emit()
 
-    def set_linear_data(self, columns):
+    @property
+    def linear_data_source(self):
+        """The linear view canvas that provided the data, None if unknown or deleted."""
+        return None if self._linear_data_source is None else self._linear_data_source()
+
+    def set_linear_data(self, columns, source=None):
         """
-        Store the data retrieved by the linear view.
+        Store the data retrieved by the linear view, provided by source.
 
         Arguments:
         columns -- list of dictionaries with the keys "name", "unit" and
@@ -607,24 +616,31 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                    (None where no data is available). The names have to be
                    unique, they identify the columns. See
                    linear_data_columns().
+        source -- the linear view canvas that provided the data, None if unknown
         """
+        self._linear_data_source = None if source is None else weakref.ref(source)
         for i, waypoint in enumerate(self.waypoints):
             waypoint.linear_data = {
                 column["name"]: column["values"][i] for column in columns
                 if i < len(column["values"]) and column["values"][i] is not None}
         self._set_linear_data_columns([(column["name"], column["unit"]) for column in columns])
 
-    def set_linear_data_from_xml(self, xmls):
+    def set_linear_data_from_xml(self, xmls, source=None):
         """
         Store the linear section data of the given WMS responses, see
-        linear_data_columns().
+        linear_data_columns(). source is the linear view canvas that provided it.
         """
-        self.set_linear_data(linear_data_columns(xmls, self.waypoints))
+        self.set_linear_data(linear_data_columns(xmls, self.waypoints), source)
 
-    def clear_linear_data(self):
+    def clear_linear_data(self, source=None):
         """
-        Drop all data retrieved by the linear view.
+        Drop all data retrieved by the linear view, if source is None or the
+        source that provided it: another linear view may have provided the data
+        shown, which it still does (#3343).
         """
+        if source is not None and source is not self.linear_data_source:
+            return
+        self._linear_data_source = None
         for waypoint in self.waypoints:
             waypoint.linear_data = {}
         self._set_linear_data_columns([])

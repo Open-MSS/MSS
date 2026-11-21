@@ -131,12 +131,12 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
 
     def closeEvent(self, event):
         """
-        Drop the data columns of the table view, this view is the source of
+        Drop the data columns of the table view, if this view is the source of
         their values.
         """
         super().closeEvent(event)
         if event.isAccepted() and self.waypoints_model is not None:
-            self.waypoints_model.clear_linear_data()
+            self.waypoints_model.clear_linear_data(source=self.mpl.canvas)
 
     def update_predefined_maps(self, extra):
         pass
@@ -239,7 +239,7 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
             # more are outdated, the table view must not show them as if they
             # belonged to the current plot. The values of the new flight track
             # arrive with the plot that the redraw above requests.
-            previous.clear_linear_data()
+            previous.clear_linear_data(source=self.mpl.canvas)
 
     def open_settings_dialog(self):
         settings = self.getView().get_settings()

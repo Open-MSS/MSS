@@ -721,7 +721,7 @@ class MplLinearViewCanvas(MplCanvas):
         # Hand the retrieved values over to the flight track model, so that
         # other views (e.g. the table view) can show the data at a waypoint.
         if self.waypoints_model is not None:
-            self.waypoints_model.set_linear_data_from_xml(xmls)
+            self.waypoints_model.set_linear_data_from_xml(xmls, source=self)
 
     def redraw_xaxis(self):
         """Redraw the x-axis of the linear view on path changes.
