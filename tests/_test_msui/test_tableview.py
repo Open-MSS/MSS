@@ -928,3 +928,20 @@ class Test_TableViewsOfOneFlightTrack:
         window.cbTools.currentIndexChanged.emit(2)
         self.windows.append(window)
         self.check()
+
+
+def test_performance_dock_keeps_typed_text_with_a_fractional_weight(qtbot):
+    """
+    The box shows whole numbers: a stored weight with decimals, e.g. from older settings, was always taken as
+    changed, and showing the settings again replaced the text being typed (#3364 review)
+    """
+    from mslib.msui.performance_settings import MSUI_PerformanceSettingsWidget
+    settings = dict(DEFAULT_PERFORMANCE, empty_weight=55000.4)
+    dock = MSUI_PerformanceSettingsWidget(settings_dict=settings)
+    qtbot.addWidget(dock)
+    dock.show()
+    dock.dsbEmptyWeight.setFocus()
+    dock.dsbEmptyWeight.selectAll()
+    QtTest.QTest.keyClicks(dock.dsbEmptyWeight, "60000")
+    dock.show_settings(settings)
+    assert dock.dsbEmptyWeight.text() == "60000"
