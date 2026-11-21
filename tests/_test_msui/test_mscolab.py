@@ -49,6 +49,7 @@ from tests.utils import create_msui_settings_file, ExceptionMock
 from mslib.msui import msui
 from mslib.msui import mscolab
 from mslib.msui import wms_control
+from mslib.msui import multiple_flightpath_dockwidget as mf
 from mslib.msui.mscolab_exceptions import MSColabSessionExpiredError
 
 
@@ -846,6 +847,77 @@ class Test_Mscolab:
             assert not tableview.tableWayPoints.isEnabled()
             assert not any(action.isEnabled() for action in topview.mpl.navbar.actions()
                            if action.text() in ("Ins WP", "Del WP", "Mv WP"))
+
+    @pytest.mark.parametrize("revoked", ["listed", "not listed"])
+    def test_removed_operation_doesnt_swallow_the_next_check(self, qtbot, revoked):
+        """
+        After an operation was removed from the multiple flightpath dock, also one it didn't list, the next
+        check of another operation didn't draw it (#3334)
+        """
+        from mslib.mscolab.models import Operation
+        from mslib.mscolab.seed import add_operation, add_user_to_operation
+        op_ids = {}
+        with self.app.app_context():
+            for name in ("second", "third"):
+                assert add_operation(name, "description")
+                assert add_user_to_operation(path=name, emailid=self.userdata[0])
+                op_ids[name] = Operation.query.filter_by(path=name).first().id
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        self.window.actionTopView.trigger()
+        qtbot.wait_until(lambda: len(self.window.get_active_views()) == 1)
+        topview = self.window.listViews.item(0).window
+        topview.cbTools.currentIndexChanged.emit(6)
+        dock = topview.docks[5].widget()
+        operations = dock.list_operation_track
+        active_op_id = dock.operations.active_op_id
+        assert active_op_id is not None
+
+        self.window.signal_permission_revoked.emit(op_ids["third"] if revoked == "listed" else max(op_ids.values()) + 1)
+        names = [operations.item(i).text() for i in range(operations.count())]
+        assert ("third" in names) is (revoked != "listed")
+
+        second = next(operations.item(i) for i in range(operations.count()) if operations.item(i).text() == "second")
+        draw = mf.MultipleFlightpathOperations.draw_inactive_operations
+        with mock.patch.object(mf.MultipleFlightpathOperations, "draw_inactive_operations", autospec=True,
+                               side_effect=draw) as drawn:
+            second.setCheckState(QtCore.Qt.Checked)
+        assert drawn.call_count == 1
+        # its flight track is shown
+        assert dock.operations.dict_operations[second.op_id]["patch"] is not None
+        # the active operation stays active, its flight track isn't drawn a second time (#3351 review)
+        assert dock.operations.active_op_id == active_op_id
+        assert dock.operations.dict_operations[active_op_id]["patch"] is None
+
+    def test_dock_opened_before_login_doesnt_swallow_the_first_check(self, qtbot):
+        """
+        With the multiple flightpath dock open before the login, the first check of an operation didn't draw it:
+        the flag set while the operations were listed was never cleared (#3351 review)
+        """
+        from mslib.mscolab.seed import add_operation, add_user_to_operation
+        with self.app.app_context():
+            assert add_operation("second", "description")
+            assert add_user_to_operation(path="second", emailid=self.userdata[0])
+        self.window.actionTopView.trigger()
+        qtbot.wait_until(lambda: len(self.window.get_active_views()) == 1)
+        topview = self.window.listViews.item(0).window
+        topview.cbTools.currentIndexChanged.emit(6)
+        dock = topview.docks[5].widget()
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        operations = dock.list_operation_track
+        qtbot.wait_until(lambda: any(operations.item(i).text() == "second" for i in range(operations.count())))
+
+        second = next(operations.item(i) for i in range(operations.count()) if operations.item(i).text() == "second")
+        draw = mf.MultipleFlightpathOperations.draw_inactive_operations
+        with mock.patch.object(mf.MultipleFlightpathOperations, "draw_inactive_operations", autospec=True,
+                               side_effect=draw) as drawn:
+            second.setCheckState(QtCore.Qt.Checked)
+        assert drawn.call_count == 1
+        assert dock.operations.dict_operations[second.op_id]["patch"] is not None
 
     def test_marked_bold_only_in_multiple_flight_path_operations_for_active_operation(self, qtbot):
         """
