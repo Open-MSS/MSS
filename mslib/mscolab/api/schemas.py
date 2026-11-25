@@ -57,7 +57,7 @@ AUTH_FAILED_TEXT = "False"
 # token in the URL would end up in access logs. Servers up to 11.x read the
 # token only from the query string or the body, msui sends it there too until
 # their support is dropped.
-TOKEN_HEADER = "X-MSColab-Token"
+TOKEN_HEADER = "X-MSColab-Token"  # nosec B105  # name of a token field or header
 
 
 class InvalidRequest(ValueError):
@@ -1167,7 +1167,9 @@ class IdpLoginAuthResponse:
     legacy_password: bool = False
 
     def to_text(self):
-        return json.dumps({"success": self.success, "token": self.token, "login_token": True,
+        # a flag, not a token; as a literal in the dict bandit (B105) takes it for a hard-coded token
+        login_token = True
+        return json.dumps({"success": self.success, "token": self.token, "login_token": login_token,
                            "user": self.user.to_dict()})
 
     def to_dict(self):

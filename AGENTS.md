@@ -14,6 +14,7 @@ Python constraint: **< 3.12** (pinned in pixi.toml).
 pixi run -e dev lint            # flake8 over tracked .py files
 pixi run -e dev lint-imports    # architectural import contracts (setup.cfg)
 pixi run -e dev codespell       # spelling
+pixi run -e dev lint-security   # bandit over mslib, configured in [tool.bandit] of pyproject.toml (CI job bandit in lint.yml)
 pixi audit                      # known vulnerabilities in pixi.lock; needs the pixi-audit extension and PIXI_AUDIT_TOKEN, rules in [tool.pixi-audit] of pixi.toml (CI workflow audit.yml)
 pixi run -e dev test-fast       # plugins + utils + meta; no servers, fastest signal
 pixi run -e dev test-msui       # GUI suite (offscreen Qt)
@@ -59,6 +60,8 @@ CLI entrypoints (pixi env): `msui`, `mscolab`, `mswms`, `msidp`, `mssautoplot`, 
 - `tests/fixtures.py` provides the server fixtures (`mscolab_server`, `mswms_server`, `mscolab_app`, `mscolab_managers`); `tests/msui_fixtures.py` the client's (`qtbot`, `fail_if_open_message_boxes_left`, test keyring, msui config reset), loaded by the conftest.py of `_test_msui` and `_test_plugins`.
 - Qt tests require `QT_QPA_PLATFORM=offscreen` on headless machines.
 - `tests/test_meta.py` checks the tests themselves: no `QApplication.processEvents()` and no `QTest.qWait(` (wait for the result instead, e.g. `qtbot.wait_until(lambda: sip.isdeleted(view))`), and the server icons stay copies of the msui icons. Run it (`pixi run -e dev pytest -q tests/test_meta.py`) for every change and every PR review that touches `tests/` or the icons; CI runs it in `test-fast`.
+- A test for a bug must fail without the fix: run it once with the old source files put back (e.g. `git stash` or `git checkout develop -- <changed source files>`) and check that it fails for the reason of the bug. Do the same in PR reviews for the PR's new tests.
+- bandit: `pixi run -e dev lint-security` must report nothing, as the CI job `bandit` in `lint.yml` checks (single files: `pixi run -e dev bandit -c pyproject.toml <files>`). Fix a real finding. Mark a false positive on the reported line as `# nosec BXXX  # reason`: its test id, then the reason after a second `#` (bandit reads words right after the id as more test ids), never a bare `# nosec`. A hash that isn't used for security gets `usedforsecurity=False`. A marker on a value inside a literal over several lines (a dict or list) makes bandit warn for every other value of the literal, and a marker on an f-string for every other part of it; take the flagged value out into a single-line statement, and build SQL with `"...".format(...)` on a single string instead of an f-string. B101 (`assert`) is skipped until the decision for the upcoming release.
 - Keyring is mocked via `TestKeyring` in `tests/msui_fixtures.py` — no real keyring needed.
 - The client suites clean the msui config after every test via the `reset_config` autouse fixture.
 - MSColab tests fork a real Flask-SocketIO server (multiprocessing fork, random port); the fork happens only in sessions that contain tests needing it.

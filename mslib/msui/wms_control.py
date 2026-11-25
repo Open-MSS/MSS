@@ -862,8 +862,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     if not self.thread_prefetch.wait(wms_wait_ms):
                         self.thread_prefetch.terminate()
                         self.thread_prefetch.wait(1000)
-        except Exception:
-            pass
+        except RuntimeError as ex:
+            # the Qt object is already deleted while the window closes
+            logging.debug("could not stop the prefetch thread: %s", ex)
         try:
             if hasattr(self, 'thread_fetch') and self.thread_fetch is not None:
                 if self.thread_fetch.isRunning():
@@ -871,8 +872,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     if not self.thread_fetch.wait(wms_wait_ms):
                         self.thread_fetch.terminate()
                         self.thread_fetch.wait(1000)
-        except Exception:
-            pass
+        except RuntimeError as ex:
+            # the Qt object is already deleted while the window closes
+            logging.debug("could not stop the fetch thread: %s", ex)
 
     def __del__(self):
         """Destructor.
@@ -1751,7 +1753,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     def get_md5_filename(self, layer, kwargs):
         urlstr = layer.get_wms().getmap(return_only_url=True, **kwargs)
         ending = ".png" if "image" in kwargs["format"] else ".xml"
-        return os.path.join(self.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ending)
+        digest = hashlib.md5(urlstr.encode('utf-8'), usedforsecurity=False).hexdigest()
+        return os.path.join(self.wms_cache, digest + ending)
 
     def retrieve_image(self, layers=None, crs="EPSG:4326", bbox=None, path_string=None,
                        width=800, height=400, transparent=False,
@@ -1841,8 +1844,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                       "transparent": transparent}
             legend_kwargs = {"urlstr": layer.get_legend_url(), "md5_filename": None}
             if legend_kwargs["urlstr"] is not None:
-                legend_kwargs["md5_filename"] = os.path.join(
-                    self.wms_cache, hashlib.md5(legend_kwargs["urlstr"].encode('utf-8')).hexdigest() + ".png")
+                digest = hashlib.md5(legend_kwargs["urlstr"].encode('utf-8'), usedforsecurity=False).hexdigest()
+                legend_kwargs["md5_filename"] = os.path.join(self.wms_cache, digest + ".png")
 
             # If caching is enabled, get the URL and check the image cache
             # directory for the suitable image file.

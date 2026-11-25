@@ -82,7 +82,7 @@ def get_password_from_keyring(service_name=NAME, username=""):
             return None
 
 
-def save_password_to_keyring(service_name=NAME, username="", password=""):
+def save_password_to_keyring(service_name=NAME, username="", password=""):  # nosec B107  # empty default
     """
     save a username and password for a given service_name
     """

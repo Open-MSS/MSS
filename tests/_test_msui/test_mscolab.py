@@ -27,6 +27,7 @@
 import json
 import os
 import io
+import hashlib
 import sys
 from pathlib import Path
 import requests
@@ -1723,6 +1724,80 @@ class Test_Mscolab:
             self.window.mscolab.fetch_profile_image(refresh=True)
             critbox.assert_called_once()
         assert not self.window.mscolab.profile_dialog.gravatarLabel.pixmap().isNull()
+
+    @pytest.mark.parametrize("outcome, message", [
+        ("ok", "Please add your email"), ("not found", "Gravatar not found"), ("timeout", "Could not fetch Gravatar"),
+        ("no image", "Could not fetch Gravatar"), ("too large", "Could not fetch Gravatar"),
+        ("cmyk", "Please add your email"), ("tiff", "Could not fetch Gravatar"),
+        ("save fails", "Could not fetch Gravatar"), ("chunk too large", "Could not fetch Gravatar"),
+        ("broken png", "Could not fetch Gravatar")])
+    def test_fetch_gravatar_with_a_timeout(self, qtbot, monkeypatch, tmp_path, outcome, message):
+        """The Gravatar was downloaded with urlretrieve, without a timeout: a server not answering blocked msui"""
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
+        self._create_user(qtbot, "something", "something@something.org", "something", "Test User")
+        from mslib.msui.utils import constants as msui_constants
+        # a directory of its own, nothing is left for later tests
+        monkeypatch.setattr(msui_constants, "GRAVATAR_DIR_PATH", tmp_path / "gravatars")
+        self.window.mscolab.profile_action.trigger()
+        email_hash = hashlib.md5(self.window.mscolab.email.encode("utf-8").lower(), usedforsecurity=False).hexdigest()
+        cached = msui_constants.GRAVATAR_DIR_PATH / f"{email_hash}.png"
+        cached.parent.mkdir(parents=True, exist_ok=True)
+        Image.new("RGB", (4, 4), color="red").save(cached)
+        before = cached.read_bytes()
+        png = io.BytesIO()
+        Image.new("RGB", (8, 8), color="cyan").save(png, format="PNG")
+        response = mock.Mock(content=png.getvalue())
+        get = mock.Mock(return_value=response)
+        if outcome == "not found":
+            response.raise_for_status.side_effect = requests.exceptions.HTTPError("404 Not Found")
+        elif outcome == "timeout":
+            get.side_effect = requests.exceptions.ConnectTimeout()
+        elif outcome == "no image":
+            response.content = b"<html>proxy page</html>"
+        elif outcome == "cmyk":
+            # PNG can't store CMYK; saving it as the Gravatar raised OSError
+            jpeg = io.BytesIO()
+            Image.new("CMYK", (8, 8)).save(jpeg, format="JPEG")
+            response.content = jpeg.getvalue()
+        elif outcome == "tiff":
+            # a format a Gravatar doesn't come in, not opened
+            tiff = io.BytesIO()
+            Image.new("RGB", (8, 8)).save(tiff, format="TIFF")
+            response.content = tiff.getvalue()
+        # "too large": PIL refuses an image with more than twice MAX_IMAGE_PIXELS (DecompressionBombError)
+        max_pixels = 10 if outcome == "too large" else Image.MAX_IMAGE_PIXELS
+        # "save fails": e.g. a full disk while the Gravatar is written
+        save = Image.Image.save
+        if outcome == "save fails":
+            save = mock.Mock(side_effect=OSError("No space left on device"))
+        # "chunk too large": e.g. a text chunk decompressing beyond MAX_TEXT_CHUNK raises ValueError in Pillow
+        image_open = Image.open
+        if outcome == "chunk too large":
+            image_open = mock.Mock(side_effect=ValueError("Decompressed data too large"))
+        elif outcome == "broken png":
+            # an IDAT chunk shorter than its data: Pillow then reads image data as the next chunk header
+            broken = bytearray(png.getvalue())
+            idat = broken.index(b"IDAT") - 4
+            broken[idat:idat + 4] = (1).to_bytes(4, "big")
+            response.content = bytes(broken)
+            with pytest.raises(SyntaxError):
+                Image.open(io.BytesIO(response.content)).load()
+        with mock.patch.object(mscolab.requests, "get", get), mock.patch("mslib.msui.mscolab.show_popup") as popup, \
+                mock.patch.object(Image, "MAX_IMAGE_PIXELS", max_pixels), \
+                mock.patch.object(Image.Image, "save", save), mock.patch.object(Image, "open", image_open):
+            self.window.mscolab.fetch_gravatar(refresh=True)
+        get.assert_called_once()
+        assert get.call_args.kwargs["timeout"] == tuple(config_loader(dataset="MSCOLAB_timeout"))
+        popup.assert_called_once()
+        assert popup.call_args.args[2].startswith(message)
+        if outcome in ("ok", "cmyk"):
+            assert Image.open(cached).size == (8, 8)
+        else:
+            # a failed refresh keeps the cached Gravatar, also for an answer that isn't an image or a failed write
+            assert cached.read_bytes() == before
+        # no temporary file is left
+        assert [path.name for path in cached.parent.iterdir()] == [cached.name]
 
     def test_upload_and_fetch_profile_image(self, qtbot, tmp_path):
         self._connect_to_mscolab(qtbot)

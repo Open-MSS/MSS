@@ -369,7 +369,7 @@ def check_secret(name, secret, min_length, where):
     sessions, anyone who knows it can log in as any user. ADMIN_TOKEN lets local processes trigger
     socket.io events. where says where the secret is set, for the message.
     """
-    if secret is None or secret == "" or secret == b"":
+    if secret is None or secret == "" or secret == b"":  # nosec B105  # checks for an empty secret
         raise InsecureSecretError(f"{name} is not set. Set it in {where}. {SECRET_HINT}")
     if not isinstance(secret, (str, bytes)):
         raise InsecureSecretError(f"{name} must be a string. Set it in {where}. {SECRET_HINT}")

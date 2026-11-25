@@ -214,8 +214,11 @@ def has_dangling_references(conn):
     """
     if conn.dialect.name == "postgresql":
         return False
-    return any(conn.execute(sa.text(f"SELECT 1 FROM {table} WHERE {condition} LIMIT 1")).first() is not None
-               for table, _, condition, _ in DANGLING_REFERENCES)
+    for table, _, condition, _ in DANGLING_REFERENCES:
+        query = "SELECT 1 FROM {} WHERE {} LIMIT 1".format(table, condition)  # nosec B608  # from DANGLING_REFERENCES
+        if conn.execute(sa.text(query)).first() is not None:
+            return True
+    return False
 
 
 def remove_dangling_references(conn):
@@ -232,14 +235,17 @@ def remove_dangling_references(conn):
     """
     changed = 0
     for table, column, condition, message in DANGLING_REFERENCES:
-        ids = [row.id for row in conn.execute(sa.text(f"SELECT id FROM {table} WHERE {condition}"))]
+        query = "SELECT id FROM {} WHERE {}".format(table, condition)  # nosec B608  # from DANGLING_REFERENCES
+        ids = [row.id for row in conn.execute(sa.text(query))]
         if not ids:
             continue
         logging.warning("Repairing the database: " + message, ids)
         if column is None:
-            conn.execute(sa.text(f"DELETE FROM {table} WHERE {condition}"))
+            statement = "DELETE FROM {} WHERE {}".format(table, condition)  # nosec B608  # from DANGLING_REFERENCES
         else:
-            conn.execute(sa.text(f"UPDATE {table} SET {column} = NULL WHERE {condition}"))
+            # table, column and condition from DANGLING_REFERENCES
+            statement = "UPDATE {} SET {} = NULL WHERE {}".format(table, column, condition)  # nosec B608  # constants
+        conn.execute(sa.text(statement))
         changed += len(ids)
     return changed
 
@@ -328,13 +334,15 @@ def fix_postgresql_sequences(conn):
         sequence = conn.execute(sa.text("SELECT pg_get_serial_sequence(:table, 'id')"), {"table": table}).scalar()
         if sequence is None:
             continue
-        highest = conn.execute(sa.text(f'SELECT MAX(id) FROM "{table}"')).scalar()
+        query = 'SELECT MAX(id) FROM "{}"'.format(table)  # nosec B608  # table name from the catalog
+        highest = conn.execute(sa.text(query)).scalar()
         if highest is None:
             # an empty table, a sequence not used yet would otherwise start at 2
             continue
         # sequence is the quoted, schema qualified name from the catalog. Only a sequence behind is set, in one
         # statement: the server may insert at the same time, a sequence read before would then be moved back
         # last_value is the next value as long as the sequence wasn't used
-        conn.execute(sa.text(f"SELECT setval(:sequence, :highest) WHERE :highest > (SELECT CASE WHEN is_called "
-                             f"THEN last_value ELSE last_value - 1 END FROM {sequence})"),
+        current = ("SELECT CASE WHEN is_called THEN last_value ELSE last_value - 1 END "  # nosec B608  # catalog name
+                   "FROM {}").format(sequence)
+        conn.execute(sa.text("SELECT setval(:sequence, :highest) WHERE :highest > ({})".format(current)),
                      {"sequence": sequence, "highest": highest})

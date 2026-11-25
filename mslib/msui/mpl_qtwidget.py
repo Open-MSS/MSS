@@ -814,7 +814,7 @@ class MplTopViewCanvas(MplCanvas):
         for callback in callbacks:
             try:
                 callback()
-            except Exception as ex:  # nosec B110
+            except Exception as ex:
                 logging.error("redraw completion callback failed: %s", ex)
 
     def _start_redraw_worker(self, kwargs_update):

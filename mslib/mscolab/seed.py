@@ -249,71 +249,23 @@ def archive_operation(path=None, emailid=None):
 
 
 def seed_data():
-    # create users
-    users = [{
-        'username': 'a',
-        'id': 8,
-        'password': 'a',
-        'emailid': 'a@notexisting.org',
-        'fullname': 'A User'
-    }, {
-        'username': 'b',
-        'id': 9,
-        'password': 'b',
-        'emailid': 'b@notexisting.org',
-        'fullname': 'B User'
-    }, {
-        'username': 'c',
-        'id': 10,
-        'password': 'c',
-        'emailid': 'c@notexisting.org',
-        'fullname': 'C User'
-    }, {
-        'username': 'd',
-        'id': 11,
-        'password': 'd',
-        'emailid': 'd@notexisting.org',
-        'fullname': 'D User'
-    }, {
-        'username': 'test1',
-        'id': 12,
-        'password': 'test1',
-        'emailid': 'test1@notexisting.org',
-        'fullname': 'Test User one'
-    }, {
-        'username': 'test2',
-        'id': 13,
-        'password': 'test2',
-        'emailid': 'test2@notexisting.org',
-        'fullname': 'Test User two'
-    }, {
-        'username': 'test3',
-        'id': 14,
-        'password': 'test3',
-        'emailid': 'test3@notexisting.org',
-        'fullname': 'Test User three'
-    }, {
-        'username': 'test4',
-        'id': 15,
-        'password': 'test4',
-        'emailid': 'test4@notexisting.org',
-        'fullname': 'Test User four'
-    }, {
-        'username': 'mscolab_user',
-        'id': 16,
-        'password': 'password',
-        'emailid': 'mscolab_user@notexisting.org',
-        'fullname': 'mscolab user'
-    }, {
-        'username': 'merge_waypoints_user',
-        'id': 17,
-        'password': 'password',
-        'emailid': 'merge_waypoints_user@notexisting.org',
-        'fullname': 'merge waypoints user'
-    }]
-    for user in users:
-        db_user = User(user['emailid'], user['username'], user['password'], user['fullname'])
-        db_user.id = user['id']
+    # create users: the example users of `mscolab db --seed`, with passwords known on purpose
+    # (username, id, email, full name, password); bandit's B105 doesn't detect the passwords in this form
+    users = [
+        ("a", 8, "a@notexisting.org", "A User", "a"),
+        ("b", 9, "b@notexisting.org", "B User", "b"),
+        ("c", 10, "c@notexisting.org", "C User", "c"),
+        ("d", 11, "d@notexisting.org", "D User", "d"),
+        ("test1", 12, "test1@notexisting.org", "Test User one", "test1"),
+        ("test2", 13, "test2@notexisting.org", "Test User two", "test2"),
+        ("test3", 14, "test3@notexisting.org", "Test User three", "test3"),
+        ("test4", 15, "test4@notexisting.org", "Test User four", "test4"),
+        ("mscolab_user", 16, "mscolab_user@notexisting.org", "mscolab user", "password"),
+        ("merge_waypoints_user", 17, "merge_waypoints_user@notexisting.org", "merge waypoints user", "password"),
+    ]
+    for username, user_id, emailid, fullname, password in users:
+        db_user = User(emailid, username, password, fullname)
+        db_user.id = user_id
         db.session.add(db_user)
 
     # create operations

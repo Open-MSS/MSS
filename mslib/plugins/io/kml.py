@@ -27,7 +27,7 @@
 
 import codecs
 import re
-from xml.sax.saxutils import escape
+from xml.sax.saxutils import escape  # nosec B406  # only escapes text, no parsing
 
 # characters XML 1.0 doesn't allow, e.g. most control characters; a file with them can't be read
 _NOT_XML_CHARACTERS = re.compile("[^\x09\x0a\x0d\x20-\ud7ff\ue000-\ufffd\U00010000-\U0010ffff]")

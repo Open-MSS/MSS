@@ -256,9 +256,10 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         selected_access_level = str(self.addUsersPermission.currentText())
         req = BulkPermissionsRequest(op_id=self.op_id, user_ids=selected_userids, access_level=selected_access_level)
         url = urljoin(self.mscolab_server_url, endpoints.ADD_BULK_PERMISSIONS)
+        timeout = tuple(config_loader(dataset="MSCOLAB_timeout"))
         res = requests.post(
             url, data={**req.to_form_data(), "token": self.token},
-            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            timeout=timeout)
         parsed = BulkPermissionsResponse.from_text(res.text)
         if parsed is not None:
             if parsed.success:
@@ -280,9 +281,10 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         selected_access_level = str(self.modifyUsersPermission.currentText())
         req = BulkPermissionsRequest(op_id=self.op_id, user_ids=selected_userids, access_level=selected_access_level)
         url = urljoin(self.mscolab_server_url, endpoints.MODIFY_BULK_PERMISSIONS)
+        timeout = tuple(config_loader(dataset="MSCOLAB_timeout"))
         res = requests.post(
             url, data={**req.to_form_data(), "token": self.token},
-            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            timeout=timeout)
         parsed = BulkPermissionsResponse.from_text(res.text)
         if parsed is not None:
             if parsed.success:
@@ -302,9 +304,10 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
 
         req = DeleteBulkPermissionsRequest(op_id=self.op_id, user_ids=selected_userids)
         url = urljoin(self.mscolab_server_url, endpoints.DELETE_BULK_PERMISSIONS)
+        timeout = tuple(config_loader(dataset="MSCOLAB_timeout"))
         res = requests.post(
             url, data={**req.to_form_data(), "token": self.token},
-            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            timeout=timeout)
         parsed = DeleteBulkPermissionsResponse.from_text(res.text)
         if parsed is not None:
             if parsed.success:
@@ -321,9 +324,10 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         import_op_id = self.importPermissionsCB.currentData(QtCore.Qt.UserRole)
         req = ImportPermissionsRequest(current_op_id=self.op_id, import_op_id=import_op_id)
         url = urljoin(self.mscolab_server_url, endpoints.IMPORT_PERMISSIONS)
+        timeout = tuple(config_loader(dataset="MSCOLAB_timeout"))
         res = requests.post(
             url, data={**req.to_form_data(), "token": self.token},
-            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            timeout=timeout)
         parsed = ImportPermissionsResponse.from_text(res.text)
         if parsed is not None:
             if parsed.success:

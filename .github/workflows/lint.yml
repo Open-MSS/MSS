@@ -39,6 +39,20 @@ jobs:
     - name: Lint with flake8
       run: git ls-files -z '**.py' | xargs -0 pixi run -e dev flake8
 
+  bandit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
+    - uses: prefix-dev/setup-pixi@9936258fee697aff89b3fed6ca1f80a382ef694e # v0.11.3
+      with:
+        pixi-version: latest
+        cache: true
+        environments: dev
+    - name: Check with bandit
+      # configured in [tool.bandit] of pyproject.toml; a false positive is marked on its line: # nosec BXXX  # reason
+      run: pixi run -e dev lint-security
+
   import-contracts:
     runs-on: ubuntu-latest
     timeout-minutes: 10

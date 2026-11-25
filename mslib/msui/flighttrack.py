@@ -41,7 +41,7 @@ import math
 import os
 from pathlib import Path
 
-import xml.dom.minidom
+import xml.dom.minidom  # nosec B408  # only builds XML; parsing uses defusedxml
 import defusedxml.minidom
 from defusedxml import DefusedXmlException
 
@@ -1055,7 +1055,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         self.name = os.path.basename(self.filename).replace(".ftml", "").strip()
 
     def get_xml_doc(self):
-        doc = xml.dom.minidom.Document()  # nosec, we take care of writing correct XML
+        doc = xml.dom.minidom.Document()  # only writes XML; parsing uses defusedxml
         ft_el = doc.createElement("FlightTrack")
         ft_el.setAttribute("version", __version__)
         doc.appendChild(ft_el)

@@ -32,7 +32,7 @@ import os
 import shutil
 import sys
 import secrets
-import subprocess
+import subprocess  # nosec B404  # runs fixed admin commands, see below
 import git
 import flask_migrate
 from pathlib import Path
@@ -186,7 +186,7 @@ def handle_mscolab_certificate_init():
                "-nodes", "-x509", "-days", "365", "-batch", "-subj",
                "/CN=localhost", "-out", os.path.join(current_app.config['SSO_DIR'],
                                                      "crt_mscolab.crt")]
-        subprocess.run(cmd, check=True)
+        subprocess.run(cmd, check=True)  # nosec B603  # fixed admin command, list without shell
         logging.info("generated CRTs for the mscolab server.")
         return True
     except subprocess.CalledProcessError as error:
@@ -202,7 +202,7 @@ def handle_local_idp_certificate_init():
                os.path.join(current_app.config['SSO_DIR'], "key_local_idp.key"),
                "-nodes", "-x509", "-days", "365", "-batch", "-subj",
                "/CN=localhost", "-out", os.path.join(current_app.config['SSO_DIR'], "crt_local_idp.crt")]
-        subprocess.run(cmd, check=True)
+        subprocess.run(cmd, check=True)  # nosec B603  # fixed admin command, list without shell
         logging.info("generated CRTs for the local identity provider")
         return True
     except subprocess.CalledProcessError as error:
@@ -356,11 +356,11 @@ def handle_mscolab_metadata_init(repo_exists):
     try:
         command = ["python", os.path.join("mslib", "mscolab", "mscolab.py"),
                    "start"] if repo_exists else ["mscolab", "start"]
-        process = subprocess.Popen(command)
+        process = subprocess.Popen(command)  # nosec B603  # list without shell; PATH python, relative path: follow-up
         cmd_curl = ["curl", "--retry", "5", "--retry-connrefused", "--retry-delay", "3",
                     "http://localhost:8083/metadata/localhost_test_idp",
                     "-o", os.path.join(current_app.config['SSO_DIR'], "metadata_sp.xml")]
-        subprocess.run(cmd_curl, check=True)
+        subprocess.run(cmd_curl, check=True)  # nosec B603  # fixed admin command, list without shell
         process.terminate()
         logging.info('mscolab metadata file generated succesfully')
         return True
@@ -388,7 +388,7 @@ def handle_local_idp_metadata_init(repo_exists):
 
         with open(os.path.join(current_app.config['SSO_DIR'], "idp.xml"),
                   "w", encoding="utf-8") as output_file:
-            subprocess.run(cmd, stdout=output_file, check=True)
+            subprocess.run(cmd, stdout=output_file, check=True)  # nosec B603  # fixed admin command, list without shell
         logging.info("idp metadata file generated successfully")
         return True
     except subprocess.CalledProcessError as error:

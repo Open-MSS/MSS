@@ -368,7 +368,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             self.used_colors = []
             available_colors = self.custom_colors.copy()
 
-        selected_color = random.choice(available_colors)
+        selected_color = random.choice(available_colors)  # nosec B311  # random line colour, not for security
         self.used_colors.append(selected_color)
         return self.normalize_rgb(selected_color)
 

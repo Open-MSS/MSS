@@ -56,9 +56,10 @@ def mscolab_get(url, token, params=None):
     only from the query string or the body, and user_id of fetch_profile_image only from the body, so until their
     support is dropped params and token are sent in the body as well.
     """
+    timeout = tuple(config_loader(dataset="MSCOLAB_timeout"))
     return requests.get(
         url, params=params, data=(params or {}) | {"token": token}, headers={TOKEN_HEADER: token},
-        timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        timeout=timeout)
 
 
 class ConnectionManager(QtCore.QObject):
@@ -252,10 +253,11 @@ class ConnectionManager(QtCore.QObject):
         self.sio.disconnect()
 
     def request_post(self, api, data=None, files=None):
+        timeout = tuple(config_loader(dataset="MSCOLAB_timeout"))
         response = requests.post(
             urljoin(self.mscolab_server_url, api),
             data=((data if data is not None else {}) | {"token": self.token}),
-            files=files, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            files=files, timeout=timeout)
         return response
 
     def request_get(self, api, params=None):

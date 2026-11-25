@@ -33,7 +33,7 @@ import io
 import logging
 import numpy as np
 from abc import abstractmethod
-from xml.dom.minidom import getDOMImplementation
+from xml.dom.minidom import getDOMImplementation  # nosec B408  # only builds XML; parsing uses defusedxml
 import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import mpl_toolkits.axes_grid1
@@ -285,7 +285,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         # =========================================================================
         elif mime_type == "text/xml":
 
-            impl = getDOMImplementation()  # nosec, this is used to create and write a new XML document
+            impl = getDOMImplementation()  # only creates and writes a new XML document
             xmldoc = impl.createDocument(None, "MSS_VerticalSection_Data", None)
 
             # Title of this section.
