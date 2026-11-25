@@ -131,7 +131,9 @@ def _password_matches(password, password_hash, kind):
         _verified.add(key)
         return True
     if kind == "md5":
-        return hmac.compare_digest(hashlib.md5(_encode(password)).hexdigest(), password_hash.lower())
+        data = _encode(password)
+        md5 = hashlib.md5(data)  # nosec B324  # legacy MD5 entries, logged as deprecated
+        return hmac.compare_digest(md5.hexdigest(), password_hash.lower())
     return False
 
 

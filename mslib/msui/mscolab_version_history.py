@@ -195,9 +195,10 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
     def request_set_version_name(self, version_name, ch_id):
         req = SetVersionNameRequest(op_id=self.op_id, ch_id=ch_id, version_name=version_name)
         url = urljoin(self.mscolab_server_url, endpoints.SET_VERSION_NAME)
+        timeout = tuple(config_loader(dataset="MSCOLAB_timeout"))
         res = requests.post(
             url, data={**req.to_form_data(), "token": self.token},
-            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            timeout=timeout)
         return res
 
     def handle_named_version(self):
@@ -249,9 +250,10 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
         if ret == qm.Yes:
             req = UndoChangesRequest(ch_id=self.changes.currentItem().id)
             url = urljoin(self.mscolab_server_url, endpoints.UNDO_CHANGES)
+            timeout = tuple(config_loader(dataset="MSCOLAB_timeout"))
             r = requests.post(
                 url, data={**req.to_form_data(), "token": self.token},
-                timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                timeout=timeout)
             if UndoChangesResponse.from_text(r.text).success:
                 # reload windows
                 self.reloadWindows.emit()

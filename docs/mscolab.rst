@@ -45,6 +45,9 @@ Steps to Run MSColab Server
   - When you run the MSColab server for the first time after installing MSS, the database is initialized.
   - To start the server run :code:`mscolab start`.
   - If you ever want to reset or add dummy data to your database you can use the commands :code:`mscolab db --reset` and :code:`mscolab db --seed` respectively.
+    The seed data creates example users (e.g. :code:`a`, :code:`test1`, :code:`mscolab_user`) whose passwords are known
+    (their user name or :code:`password`, see :code:`mslib/mscolab/seed.py`): use it only on a server for trying things
+    out, never on one others can reach.
 
     Both commands support a :code:`--yes` (or :code:`-y`) flag to skip the interactive
     confirmation prompt. This is useful for non-interactive usage such as CI pipelines

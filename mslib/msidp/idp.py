@@ -46,7 +46,7 @@ import warnings
 
 from mslib import msidp
 from http.cookies import SimpleCookie
-from hashlib import sha1
+from hashlib import sha256
 from urllib.parse import parse_qs, urlencode
 import saml2.xmldsig as ds
 
@@ -438,7 +438,7 @@ class SSO(Service):
     @staticmethod
     def _store_request(saml_msg):
         logger.debug("_store_request: %s", saml_msg)
-        key = sha1(saml_msg["SAMLRequest"].encode()).hexdigest()
+        key = sha256(saml_msg["SAMLRequest"].encode()).hexdigest()
         # store the AuthnRequest
         IdpServerSettings_.IDP.ticket[key] = saml_msg
         return key
@@ -599,10 +599,11 @@ def username_password_authn(environ, start_response, reference, key, redirect_ur
 
     resp = Response(**kwargs)
 
+    password = ""  # nosec B105  # empty form field
     argv = {
         "action": "/verify",
         "login": "",
-        "password": "",
+        "password": password,
         "key": key,
         "authn_reference": reference,
         "redirect_uri": redirect_uri,

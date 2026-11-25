@@ -31,6 +31,7 @@
 """
 import html
 import os
+import tempfile
 import io
 import hashlib
 import logging
@@ -39,7 +40,6 @@ import requests
 import re
 import mimetypes
 import urllib.parse
-import urllib.request
 from pathlib import Path
 
 from PIL import Image, UnidentifiedImageError
@@ -419,7 +419,7 @@ class MSUIMscolab(QtCore.QObject):
 
     def fetch_gravatar(self, refresh):
         # Display default gravatar if custom profile image is not set
-        email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
+        email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower(), usedforsecurity=False).hexdigest()
         email_in_config = self.email in config_loader(dataset="gravatar_ids")
         constants.GRAVATAR_DIR_PATH.mkdir(parents=True, exist_ok=True)
         gravatar_img_path = constants.GRAVATAR_DIR_PATH / f"{email_hash}.png"
@@ -434,17 +434,41 @@ class MSUIMscolab(QtCore.QObject):
             # fetch gravatar image
             gravatar_url = f"https://www.gravatar.com/avatar/{email_hash}.png?s=80&d=404"
             try:
-                urllib.request.urlretrieve(gravatar_url, str(gravatar_img_path))
-                img = Image.open(str(gravatar_img_path))
-                img.save(str(gravatar_img_path))
-            except urllib.error.HTTPError:
+                # urlretrieve had no timeout, an unresponsive server blocked msui
+                timeout = tuple(config_loader(dataset="MSCOLAB_timeout"))
+                response = requests.get(gravatar_url, timeout=timeout)
+                response.raise_for_status()
+            except requests.exceptions.HTTPError:
                 if refresh:
                     show_popup(self.prof_diag, "Error", "Gravatar not found")
                 return
-            except urllib.error.URLError:
+            except requests.exceptions.RequestException:
                 if refresh:
                     show_popup(self.prof_diag, "Error", "Could not fetch Gravatar")
                 return
+            tmp_name = None
+            try:
+                # only formats a Gravatar comes in; e.g. EPS would run Ghostscript
+                img = Image.open(io.BytesIO(response.content), formats=["PNG", "JPEG", "GIF", "WEBP"])
+                img.load()
+                if img.mode not in ("1", "L", "LA", "I", "I;16", "P", "RGB", "RGBA"):
+                    # e.g. a CMYK JPEG; PNG can't store these modes
+                    img = img.convert("RGBA" if img.has_transparency_data else "RGB")
+                # written next to the cached Gravatar, with a name of its own, and moved over it only when complete
+                fd, tmp_name = tempfile.mkstemp(dir=gravatar_img_path.parent, prefix=".gravatar-", suffix=".png")
+                os.close(fd)
+                img.save(tmp_name, format="PNG")
+                os.replace(tmp_name, gravatar_img_path)
+            except (UnidentifiedImageError, Image.DecompressionBombError, OSError, ValueError, SyntaxError, EOFError):
+                # e.g. the page of a proxy, a huge or broken image (Pillow raises SyntaxError for a broken PNG chunk),
+                # or a full disk; a cached Gravatar stays as it is
+                if refresh:
+                    show_popup(self.prof_diag, "Error", "Could not fetch Gravatar")
+                return
+            finally:
+                # never left behind; after os.replace it is gone already
+                if tmp_name is not None and os.path.exists(tmp_name):
+                    os.remove(tmp_name)
 
         if refresh and not email_in_config:
             show_popup(
@@ -483,7 +507,7 @@ class MSUIMscolab(QtCore.QObject):
     def remove_gravatar(self):
         if self.gravatar is None:
             return
-        email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
+        email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower(), usedforsecurity=False).hexdigest()
         gravatar_img_path = constants.GRAVATAR_DIR_PATH / f"{email_hash}.png"
 
         # remove cached gravatar image if not found in config

@@ -176,6 +176,8 @@ When using for the first time you need to initialise your database. Use the comm
 to initialise it. The default database is a sqlite3 database.
 If you want to play around with example data, you can import it using `mscolab db --seed`.
 The content of the example data can be found in the file `mslib/mscolab/seed.py`.
+Its example users have known passwords (their user name or `password`): seed only a local database for development,
+never a server others can reach.
 
 To start your server use the command :code:`mscolab start`. This would start the MSColab server on port 8083.
 Going to http://localhost:8083/status should now show "MSColab server". This means your server has started successfully.
@@ -281,6 +283,13 @@ Verify Code Style
 .................
 
 A flake8 only test is done with `flake8 mslib tests`.
+
+`bandit <https://bandit.readthedocs.io/>`_ checks :code:`mslib` with :code:`pixi run -e dev lint-security`, as the CI
+job :code:`bandit` in :code:`.github/workflows/lint.yml` does; it must report nothing. Its configuration is in
+:code:`[tool.bandit]` of :code:`pyproject.toml`. Single files are checked with
+:code:`pixi run -e dev bandit -c pyproject.toml <files>`. A finding that doesn't apply is marked on the reported line
+with its test id and the reason after a second :code:`#`, e.g. :code:`# nosec B105  # name of a field, not a password`,
+never with a bare :code:`# nosec`.
 
 Coverage
 ........

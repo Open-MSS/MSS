@@ -175,7 +175,8 @@ def get_xml_data(msc_url, token, op_id):
         "op_id": op_id
     }
     url = urljoin(msc_url, "get_operation_by_id")
-    r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+    timeout = tuple(config_loader(dataset="MSCOLAB_timeout"))
+    r = requests.get(url, data=data, timeout=timeout)
     if r.text != "False":
         xml_content = json.loads(r.text)["content"]
         return xml_content
@@ -200,7 +201,8 @@ def get_op_id(msc_url, token, op_name):
         "skip_archived": skip_archived
     }
     url = urljoin(msc_url, "operations")
-    r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+    timeout = tuple(config_loader(dataset="MSCOLAB_timeout"))
+    r = requests.get(url, data=data, timeout=timeout)
     if r.text != "False":
         _json = json.loads(r.text)
         operations = _json["operations"]

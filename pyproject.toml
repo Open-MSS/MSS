@@ -36,6 +36,13 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["mslib*"]
 
+[tool.bandit]
+# generated code: the Qt UI modules and the Alembic revisions. Globs, so they match the paths on Windows too.
+# The hand-written mslib/mscolab/migrations/schema_repair.py and env.py are checked.
+exclude_dirs = ["*mslib/msui/qt5/*", "*mslib/mscolab/migrations/versions/*"]
+# the asserts in mslib stay until the decision for the upcoming release
+skips = ["B101"]
+
 [tool.codespell]
 exclude-file = "codespell-ignored-lines.txt"
 ignore-words-list = [

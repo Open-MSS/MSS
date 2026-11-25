@@ -305,7 +305,8 @@ class Test_MSS_AboutDialog:
         with urlopen(self.window.milestone_url) as f:
             text = f.read().decode("utf-8")
         expected_version = __version__
-        pattern = rf'value="is:closed milestone:{re.escape(expected_version)}"'
+        # GitHub puts a space after the query in the search field
+        pattern = rf'value="is:closed milestone:{re.escape(expected_version)}\s*"'
         assert re.search(pattern, text), f"Expected milestone format not found: {expected_version}"
 
 

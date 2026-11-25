@@ -156,7 +156,7 @@ def verify_user_http(func):
 # Purposes of the tokens of generate_confirmation_token. Each has its own salt, so a token of one purpose, e.g. the
 # email confirmation, can't be used for another, e.g. a password reset.
 EMAIL_CONFIRMATION = "email-confirmation"
-PASSWORD_RESET = "password-reset"
+PASSWORD_RESET = "password-reset"  # nosec B105  # purpose of a signed token
 _TOKEN_PURPOSES = (EMAIL_CONFIRMATION, PASSWORD_RESET)
 
 

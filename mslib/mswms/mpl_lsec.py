@@ -27,7 +27,7 @@
 # style definitions should be put in mpl_lsec_styles.py
 
 import logging
-from xml.dom.minidom import getDOMImplementation
+from xml.dom.minidom import getDOMImplementation  # nosec B408  # only builds XML; parsing uses defusedxml
 import matplotlib as mpl
 from pint import Quantity
 
@@ -92,7 +92,7 @@ class AbstractLinearSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         # Derive additional data fields and make the plot.
         self._prepare_datafields()
 
-        impl = getDOMImplementation()  # nosec, this is used to create and write a new XML document
+        impl = getDOMImplementation()  # only creates and writes a new XML document
         xmldoc = impl.createDocument(None, "MSS_LinearSection_Data", None)
 
         # Title of this section.

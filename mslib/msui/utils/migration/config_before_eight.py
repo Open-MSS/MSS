@@ -41,6 +41,9 @@ from mslib.msui.utils import constants
 from mslib.support.qt_json_view.datatypes import match_type, UrlType, StrType
 
 
+_DOCUMENTATION_REQUIRED = "Documentation Required"
+
+
 class MSUIDefaultConfig:
     """Central configuration for the Mission Support System User Interface
        Application (msui).
@@ -132,7 +135,7 @@ class MSUIDefaultConfig:
     MSCOLAB_mailid = ""
 
     # password to sign in
-    MSCOLAB_password = ""
+    MSCOLAB_password = ""  # nosec B105  # old config default, migration only
 
     # category for MSC operations
     MSCOLAB_category = "default"
@@ -302,7 +305,8 @@ class MSUIDefaultConfig:
         "default_LSEC_WMS": "Documentation Required",
         "default_MSCOLAB": "Documentation Required",
         "MSCOLAB_mailid": "Documentation Required",
-        "MSCOLAB_password": "Documentation Required",
+        # a description, not a password (bandit B105 flags a literal here)
+        "MSCOLAB_password": _DOCUMENTATION_REQUIRED,
         "MSC_login": "Documentation Required",
         "WMS_request_timeout": "Documentation Required",
         "WMS_preload": "Documentation Required",

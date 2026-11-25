@@ -510,7 +510,8 @@ class NonQtCallback:
             try:
                 cb(*args)
             except Exception:
-                pass
+                # like a Qt slot: the other callbacks still run, but the failure isn't hidden
+                logging.exception("callback %r failed", cb)
 
 
 sys.excepthook = excepthook

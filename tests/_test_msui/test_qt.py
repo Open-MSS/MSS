@@ -26,6 +26,7 @@
 """
 
 import ast
+import logging
 from pathlib import Path
 
 import pytest
@@ -255,3 +256,22 @@ def _texts_not_shown_as_plain_text():
 
 def test_message_box_and_tooltip_texts_are_shown_as_plain_text():
     assert _texts_not_shown_as_plain_text() == []
+
+
+def test_non_qt_callback_logs_a_failing_callback(caplog):
+    """
+    A failing callback of a Worker without event loop was hidden (except: pass); it is logged now, and the other
+    callbacks still run, as for Qt slots
+    """
+    signal = mqt.NonQtCallback()
+    calls = []
+
+    def fails(value):
+        raise ValueError("broken callback")
+
+    signal.connect(fails)
+    signal.connect(calls.append)
+    with caplog.at_level(logging.ERROR):
+        signal.emit(1)
+    assert calls == [1]
+    assert "broken callback" in caplog.text

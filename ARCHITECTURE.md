@@ -164,6 +164,7 @@ entry.
 | `pixi run -e dev lint` | flake8 | seconds |
 | `pixi run -e dev lint-imports` | architecture contracts | seconds |
 | `pixi run -e dev codespell` | spelling | seconds |
+| `pixi run -e dev lint-security` | bandit, must report nothing (CLAUDE.md, Testing notes) | seconds |
 | `pixi run -e dev test-fast` | api + plugins + utils + meta, no servers | ~30 s |
 | `pixi run -e dev test-api` | mscolab contract schema round-trips only | <1 s |
 | `pixi run -e dev test-mscolab` / `test-mswms` | one server suite | minutes |

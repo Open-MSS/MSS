@@ -389,9 +389,10 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             req = MessageAttachmentRequest(op_id=self.op_id, message_type=int(self.attachment_type))
             url = urljoin(self.mscolab_server_url, endpoints.MESSAGE_ATTACHMENT)
             try:
+                timeout = tuple(config_loader(dataset="MSCOLAB_timeout"))
                 response = requests.post(
                     url, data={**req.to_form_data(), "token": self.token}, files=files,
-                    timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                    timeout=timeout)
             except requests.exceptions.ConnectionError:
                 # a server may close the connection instead of answering a request above its limit
                 show_popup(self, "Error", "File size too large")

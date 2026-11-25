@@ -319,8 +319,9 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
         url_idp_login_auth = urljoin(self.mscolab_server_url, endpoints.IDP_LOGIN_AUTH)
         code = self.idpAuthPasswordLe.text().strip()
         try:
+            timeout = tuple(config_loader(dataset="MSCOLAB_timeout"))
             response = requests.post(url_idp_login_auth, json=IdpLoginAuthRequest(token=code).to_json_data(),
-                                     auth=self.auth, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                                     auth=self.auth, timeout=timeout)
         except requests.exceptions.RequestException as error:
             logging.error("unexpected error: %s %s %s", type(error), url_idp_login_auth, error)
             self.set_status("Error", f'Failed to establish a new connection to "{self.mscolab_server_url}". '
@@ -388,8 +389,9 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
         code, self.idp_link_code = self.idp_link_code, None
         url = urljoin(self.mscolab_server_url, endpoints.IDP_LINK)
         try:
+            timeout = tuple(config_loader(dataset="MSCOLAB_timeout"))
             response = requests.post(url, data=IdpLinkRequest(token=token, code=code).to_form_data(),
-                                     auth=self.auth, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                                     auth=self.auth, timeout=timeout)
             response.raise_for_status()
             linked = IdpLinkResponse.from_text(response.text).success
         except (requests.exceptions.RequestException, ValueError) as ex:

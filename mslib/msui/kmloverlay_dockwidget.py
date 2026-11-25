@@ -644,7 +644,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                         # no_network, prevents automatically loading remote documents
                         # https://gist.github.com/jack-om/f2c762f399e6ee652f05320921ece4c9
                         with source_path.open('r') as kmlf:
-                            tree = et.parse(kmlf, parser=secure_parser)  # nosec, parse using the secured parser
+                            tree = et.parse(kmlf, parser=secure_parser)  # parsed with the secured parser
                             root = tree.getroot()  # get the root of the file
                             self.remove_ns(root)  # removes <kml> and </kml>
                             element.append(copy.deepcopy(root[0]))
