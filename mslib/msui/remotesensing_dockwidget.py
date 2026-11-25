@@ -138,8 +138,8 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         self.dsbTangentHeight.valueChanged.connect(self.update_settings)
         self.dsbObsAngleAzimuth.valueChanged.connect(self.update_settings)
         self.dsbObsAngleElevation.valueChanged.connect(self.update_settings)
-        self.cbSolarBody.currentIndexChanged.connect(self.update_settings)
         self.cbSolarAngleType.currentIndexChanged.connect(self.update_settings)
+        self.cbSolarBody.currentIndexChanged.connect(self.update_settings)
         self.lbSolarCmap.setText(
             "Solar angle colours, dark to light: reds (0-15), violets (15-45), greens (45-180)")
         self.solar_cmap = ListedColormap([
@@ -200,7 +200,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
             "draw_tangents": self.cbDrawTangents.isChecked(),
         }
         if self.cbShowSolarAngle.isChecked():
-            settings["show_solar_angle"] = self.cbSolarAngleType.currentText(), self.cbSolarBody.currentText()
+            settings["show_solar_angle"] = self.cbSolarBody.currentText(), self.cbSolarAngleType.currentText()
         else:
             settings["show_solar_angle"] = None
         settings["show_sunlight"] = self.dsbSunlightHeight.value() if self.cbShowSunlight.isChecked() else None
@@ -299,10 +299,6 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
             obs_azi, obs_ele = self.compute_view_angles(
                 p0[0], p0[1], heights[i], p1[0], p1[1], heights[i + 1],
                 self.dsbObsAngleAzimuth.value(), self.dsbObsAngleElevation.value())
-            if sol_azi < 0:
-                sol_azi += 360
-            if obs_azi < 0:
-                obs_azi += 360
             rating = self.calc_view_rating(obs_azi, obs_ele, sol_azi, sol_ele, heights[i], difftype)
             vals.append(rating)
 
@@ -452,28 +448,33 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
     @staticmethod
     def calc_view_rating(obs_azi, obs_ele, sol_azi, sol_ele, height, difftype):
         """
-        Calculates the angular distance between given directions under the
-        condition that the sun is above the horizon.
+        Calculates the angular distance between the viewing direction and the
+        direction of a body (sun, moon, planet).
 
         Args:
-            obs_azi: observator azimuth angle
-            obs_ele: observator elevation angle
-            sol_azi: solar azimuth angle
-            sol_ele: solar elevation angle
-            height: altitude of observer
+            obs_azi: observer azimuth angle
+            obs_ele: observer elevation angle
+            sol_azi: azimuth angle of the body
+            sol_ele: elevation angle of the body
+            height: altitude of observer (km)
+            difftype: "total" for the angle between the directions, "total (horizon)" for the same
+                but 180 if the body is below the horizon of the observer, "azimuth" or "elevation"
+                for the absolute difference of that angle alone
 
-        Returns: angular distance or 180 degrees if sun is below horizon
+        Returns: angle in degrees between 0 and 180
         """
-        delta_azi = obs_azi - sol_azi
-        delta_ele = obs_ele - sol_ele
         if "horizon" in difftype:
             thresh = -np.rad2deg(np.arccos(EARTH_RADIUS / (height + EARTH_RADIUS))) - 3
             if sol_ele < thresh:
-                delta_ele = 180
+                return 180.
 
         if "azimuth" == difftype:
-            return np.abs(obs_azi - sol_azi)
+            return np.abs((obs_azi - sol_azi + 180) % 360 - 180)
         elif "elevation" == difftype:
             return np.abs(obs_ele - sol_ele)
         else:
-            return np.hypot(delta_azi, delta_ele)
+            # angle between the two directions on the unit sphere
+            obs_azi, obs_ele, sol_azi, sol_ele = np.deg2rad([obs_azi, obs_ele, sol_azi, sol_ele])
+            cos_angle = (np.sin(obs_ele) * np.sin(sol_ele) +
+                         np.cos(obs_ele) * np.cos(sol_ele) * np.cos(obs_azi - sol_azi))
+            return np.rad2deg(np.arccos(np.clip(cos_angle, -1, 1)))

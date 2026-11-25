@@ -52,7 +52,7 @@ def get_distance(lat0, lon0, lat1, lon1):
 
 def fix_angle(ang):
     """
-    Normalizes an angle between -180 and 180 degree.
+    Normalizes an angle between 0 and 360 degree.
     """
     while ang > 360:
         ang -= 360
