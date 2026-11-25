@@ -32,7 +32,7 @@ import os
 import time
 import pytest
 
-from PyQt5 import QtWidgets, QtCore, QtTest
+from PyQt5 import QtWidgets, QtCore, QtTest, sip
 from mslib.msui import flighttrack as ft
 from mslib.msui.aircraft import AIRCRAFT_DUMMY, SimpleAircraft
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
@@ -103,6 +103,84 @@ class Test_TableView:
         with open(ftml) as f:
             data = f.read()
             assert data.count("<Waypoint") == len(self.window.waypoints_model.waypoints)
+
+    def _select_rows(self, first, last):
+        table = self.window.tableWayPoints
+        table.clearSelection()
+        selection = QtCore.QItemSelection(table.model().index(first, 0), table.model().index(last, 0))
+        table.selectionModel().select(selection, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Rows)
+
+    def _other_flight_track(self):
+        return ft.WaypointsTableModel("other", waypoints=[
+            ft.Waypoint(50., 6., 0), ft.Waypoint(52., 8., 250), ft.Waypoint(51., 12., 0)])
+
+    def test_selection_buttons_follow_after_switch(self):
+        """
+        Clone and add are disabled while several rows are selected, the hexagon dock's add and remove as well,
+        also after a switch to another flight track: the table gets a new selection model then (#3341)
+        """
+        self.window.cbTools.currentIndexChanged.emit(1)
+        hexagon = self.window.docks[0].widget()
+        self._select_rows(0, 1)
+        assert not self.window.btCloneWaypoint.isEnabled()
+        self.window.setFlightTrackModel(self._other_flight_track())
+        # nothing is selected in the new flight track
+        assert self.window.btCloneWaypoint.isEnabled()
+        assert self.window.btAddWayPointToFlightTrack.isEnabled()
+        assert hexagon.pbAddHexagon.isEnabled()
+        self._select_rows(0, 1)
+        assert not self.window.btCloneWaypoint.isEnabled()
+        assert not self.window.btAddWayPointToFlightTrack.isEnabled()
+        assert not hexagon.pbAddHexagon.isEnabled()
+        self._select_rows(1, 1)
+        assert self.window.btCloneWaypoint.isEnabled()
+        assert self.window.btAddWayPointToFlightTrack.isEnabled()
+        assert hexagon.pbAddHexagon.isEnabled()
+        assert hexagon.pbRemoveHexagon.isEnabled()
+
+    def test_switch_keeps_the_controls_of_a_viewer_disabled(self):
+        """
+        The controls disabled for a viewer of an MSColab operation stay disabled when the table gets another
+        flight track, e.g. on a reload after a collaborator's change (#3341 review)
+        """
+        self.window.cbTools.currentIndexChanged.emit(1)
+        hexagon = self.window.docks[0].widget()
+        self.window.disable_navbar_action_buttons()
+        assert not hexagon.pbAddHexagon.isEnabled()
+        self.window.setFlightTrackModel(self._other_flight_track())
+        assert not self.window.btCloneWaypoint.isEnabled()
+        assert not self.window.btAddWayPointToFlightTrack.isEnabled()
+        assert not hexagon.pbAddHexagon.isEnabled()
+        assert not hexagon.pbRemoveHexagon.isEnabled()
+
+    def test_enabling_the_controls_respects_the_selection(self):
+        """Enabling the controls again, e.g. on a new access level, keeps Clone and Add off for several rows"""
+        self._select_rows(0, 1)
+        self.window.disable_navbar_action_buttons()
+        self.window.enable_navbar_action_buttons()
+        assert self.window.tableWayPoints.isEnabled()
+        assert not self.window.btCloneWaypoint.isEnabled()
+        assert not self.window.btAddWayPointToFlightTrack.isEnabled()
+        self._select_rows(1, 1)
+        assert self.window.btCloneWaypoint.isEnabled()
+
+    def test_switch_deletes_the_old_selection_model(self):
+        """The selection model of the previous flight track is deleted, not kept with the table (#3341)"""
+        old = self.window.tableWayPoints.selectionModel()
+        # kept, so that only the switch, not the deletion of the flight track, can delete the selection model
+        previous = self.window.waypoints_model
+        self.window.setFlightTrackModel(self._other_flight_track())
+        QtCore.QCoreApplication.sendPostedEvents(None, QtCore.QEvent.DeferredDelete)
+        assert sip.isdeleted(old)
+        del previous
+
+    def test_same_flight_track_keeps_the_selection(self):
+        selection_model = self.window.tableWayPoints.selectionModel()
+        self._select_rows(0, 1)
+        self.window.setFlightTrackModel(self.window.waypoints_model)
+        assert self.window.tableWayPoints.selectionModel() is selection_model
+        assert len(selection_model.selectedRows()) == 2
+        assert not self.window.btCloneWaypoint.isEnabled()
 
     def test_open_hex(self):
         """
