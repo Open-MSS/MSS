@@ -542,7 +542,6 @@ def _setup_managers(app):
     socketio.on_event(SocketEvents.DELETE_MESSAGE, sm.handle_message_delete)
     socketio.on_event(SocketEvents.FILE_SAVE, sm.handle_file_save)
     socketio.on_event(SocketEvents.ADD_USER_TO_OPERATION, sm.join_creator_to_operation)
-    socketio.on_event(SocketEvents.UPDATE_OPERATION_LIST, sm.update_operation_list)
     # Register the 'operation-selected' event to update active user tracking when an operation is selected
     socketio.on_event(SocketEvents.OPERATION_SELECTED, sm.handle_operation_selected)
 

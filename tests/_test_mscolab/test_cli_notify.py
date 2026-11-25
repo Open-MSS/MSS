@@ -32,6 +32,7 @@ import pytest
 import requests
 import socketio
 
+from mslib.mscolab.api import endpoints
 from mslib.mscolab.api.events import SocketEvents
 from mslib.mscolab.cli_notify import notify_socket_event
 from mslib.mscolab.seed import (add_all_users_default_operation, add_operation, add_user, add_user_to_operation,
@@ -221,6 +222,43 @@ class Test_CliNotify:
             assert updated
         finally:
             sio.disconnect()
+
+    def test_a_client_can_not_broadcast_the_operation_list_update(self):
+        """
+        The server listened for the event it broadcasts itself: any logged-in socket client could make every
+        connected client reload its operation list (#3368)
+        """
+        sender = self._connect(self.userdata[0])
+        watcher = self._connect()
+        updates = []
+        watcher.on(SocketEvents.UPDATE_OPERATION_LIST, handler=lambda: updates.append(True))
+        try:
+            sender.emit(SocketEvents.UPDATE_OPERATION_LIST, {"token": self._token(self.userdata[0])})
+            # the sockets are separate and their handlers run asynchronously: give a broadcast time to arrive
+            time.sleep(1)
+            assert updates == []
+        finally:
+            sender.disconnect()
+            watcher.disconnect()
+
+    def test_operation_update_notifies_operation_list_update(self):
+        """An operation changed by REST still makes the clients reload their operation lists"""
+        with self.app.app_context():
+            assert add_user_to_operation(path="cli_notify_op", emailid=self.userdata[0], access_level="creator")
+        watcher = self._connect()
+        updates = []
+        watcher.on(SocketEvents.UPDATE_OPERATION_LIST, handler=lambda: updates.append(True))
+        try:
+            response = requests.post(
+                f"{self.server_url}/{endpoints.UPDATE_OPERATION}",
+                data={"token": self._token(self.userdata[0]), "op_id": self.op_id, "attribute": "description",
+                      "value": "changed"},
+                timeout=5)
+            assert response.status_code == 200
+            self._wait_for(updates)
+            assert updates
+        finally:
+            watcher.disconnect()
 
     def test_internal_notify_rejects_wrong_token(self):
         response = requests.post(
