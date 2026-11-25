@@ -81,8 +81,11 @@ class MSUI_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDock
         of the same flight track may change them.
         """
         self.lbAircraftName.setText(settings_dict["aircraft"].name)
-        with QtCore.QSignalBlocker(self.dsbEmptyWeight):
-            self.dsbEmptyWeight.setValue(settings_dict["empty_weight"])
+        # setValue replaces text being typed even for the same value, e.g. on an MSColab reload; the box
+        # rounds to its decimals
+        if self.dsbEmptyWeight.value() != round(settings_dict["empty_weight"], self.dsbEmptyWeight.decimals()):
+            with QtCore.QSignalBlocker(self.dsbEmptyWeight):
+                self.dsbEmptyWeight.setValue(settings_dict["empty_weight"])
 
     def get_settings(self, **changes):
         """
