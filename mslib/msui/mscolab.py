@@ -752,7 +752,9 @@ class MSUIMscolab(QtCore.QObject):
             self.signal_operation_added.emit(op_id, path)
         else:
             self.error_dialog = QtWidgets.QErrorMessage()
-            self.error_dialog.showMessage('The path already exists')
+            self.error_dialog.showMessage(
+                "The server refused to create the operation, e.g. its name exists already or its flight track "
+                "is invalid.")
 
     def _operations(self):
         """
