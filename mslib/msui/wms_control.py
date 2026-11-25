@@ -2164,6 +2164,12 @@ class LSecWMSControlWidget(WMSControlWidget):
         self.waypoints_model = waypoints_model
         self.btGetMap.clicked.connect(self.get_all_maps)
 
+    def clear_map(self):
+        super().clear_map()
+        # the table view no longer offers the data of the cleared plot (#3375)
+        if self.view.waypoints_model is not None:
+            self.view.waypoints_model.clear_linear_data(source=self.view)
+
     def get_all_maps(self):
         if self.multilayers.cbMultilayering.isChecked():
             self.get_lsec(self.multilayers.get_active_layers())

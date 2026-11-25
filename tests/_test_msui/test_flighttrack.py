@@ -23,10 +23,12 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import gc
 import math
 import mock
 import os
 import pytest
+import weakref
 import xml.etree.ElementTree as etree
 
 from PyQt5 import QtCore, QtGui
@@ -85,6 +87,10 @@ class Test_WaypointsTableModel_CorruptedSettings:
             "Dict should pass isinstance dict check"
         assert isinstance({}, dict), \
             "Empty dict should pass isinstance dict check"
+
+
+class LinearDataSource:
+    """Stands for a linear view canvas, which can be weakly referenced"""
 
 
 class Test_LinearData:
@@ -158,6 +164,40 @@ class Test_LinearData:
         self.model.clear_linear_data()
         assert self.model.columnCount() == len(TABLE_FULL)
         assert all(waypoint.linear_data == {} for waypoint in self.model.all_waypoint_data())
+
+    def test_clear_linear_data_of_a_source(self):
+        """A source clears only the data it provided (#3343)"""
+        source, other = LinearDataSource(), LinearDataSource()
+        self.model.set_linear_data_from_xml([lsec_xml()], source=source)
+        self.model.clear_linear_data(source=other)
+        assert self.model.linear_data_columns != []
+        self.model.clear_linear_data(source=source)
+        assert self.model.linear_data_columns == []
+
+    def test_linear_data_without_a_source_replaces_the_source(self):
+        """Data stored without a source isn't cleared by the source of earlier data (#3362 review)"""
+        source = LinearDataSource()
+        self.model.set_linear_data_from_xml([lsec_xml()], source=source)
+        self.model.set_linear_data(linear_data_columns([lsec_xml()], self.waypoints))
+        self.model.clear_linear_data(source=source)
+        assert self.model.linear_data_columns != []
+
+    def test_linear_data_source_is_set_when_the_change_is_signalled(self):
+        """Receivers of linearDataChanged see the new source (#3362 review)"""
+        source, seen = LinearDataSource(), []
+        self.model.linearDataChanged.connect(
+            lambda: seen.append(self.model.linear_data_source is source))
+        self.model.set_linear_data_from_xml([lsec_xml()], source=source)
+        assert seen == [True]
+
+    def test_linear_data_source_is_not_kept_alive(self):
+        """The model doesn't keep the canvas that provided the data, and its figure, alive (#3362 review)"""
+        source = LinearDataSource()
+        reference = weakref.ref(source)
+        self.model.set_linear_data_from_xml([lsec_xml()], source=source)
+        del source
+        gc.collect()
+        assert reference() is None
 
     def test_linear_data_does_not_modify_the_flight_track(self):
         changed = []
