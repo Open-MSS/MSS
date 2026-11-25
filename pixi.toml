@@ -187,6 +187,9 @@ flake8 = "*"
 flake8-builtins = "*"
 import-linter = ">=2"
 bandit = "*"
+# comes with bandit (stevedore -> pbr -> pip); CVE-2026-24049 is fixed in 0.46.2. Without the bound, linux-aarch64
+# and win-64 kept wheel 0.45.1 (basemap 1.4.1 there requires packaging <24)
+wheel = ">=0.46.2"
 py = "*"
 
 [feature.dev.tasks]
