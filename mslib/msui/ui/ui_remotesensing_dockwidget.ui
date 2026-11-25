@@ -164,7 +164,7 @@ Aircraft altitude is taken from the flight path.</string>
         </size>
        </property>
        <property name="toolTip">
-        <string>dark green if below horizon; otherwise reds: 0,5,10,15, purples: 15,25,35,45,60, greens: 60,90,135,180</string>
+        <string>dark to light: reds: 0,5,10,15, violets: 15,25,35,45, greens: 45,90,135,180; lightest green also if below horizon (total (horizon))</string>
        </property>
        <property name="text">
         <string>show angle (degree)</string>
@@ -172,7 +172,7 @@ Aircraft altitude is taken from the flight path.</string>
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="cbSolarAngleType">
+      <widget class="QComboBox" name="cbSolarBody">
        <item>
         <property name="text">
          <string>sun</string>
@@ -185,13 +185,28 @@ Aircraft altitude is taken from the flight path.</string>
        </item>
        <item>
         <property name="text">
+         <string>mercury</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
          <string>venus</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>mars</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>jupiter barycenter</string>
         </property>
        </item>
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="cbSolarBody">
+      <widget class="QComboBox" name="cbSolarAngleType">
        <property name="minimumSize">
         <size>
          <width>170</width>

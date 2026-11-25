@@ -222,15 +222,29 @@ class Test_RemoteSensingControlWidget:
         button_color = self.remote_widget.btTangentsColour.palette().button().color()
         assert button_color.getRgbF() == expected.getRgbF()
 
-    @pytest.mark.parametrize("obs_azi, obs_ele, sol_azi, sol_ele, expected_rating", [
-        (76.00, -1.0, 240.70, 58.33, 175.06),
-        (76.11, -1.0, 239.90, 60.03, 174.79),
-        (76.50, -1.0, 236.15, 66.92, 173.5),
-    ])
-    def test_calc_view_rating(self, obs_azi, obs_ele, sol_azi, sol_ele, expected_rating):
-        height = 0.0
-        difftype = "total (horizon)"
-        calc_view_rating = self.remote_widget.calc_view_rating
-        view_rating = calc_view_rating(obs_azi=obs_azi, obs_ele=obs_ele, sol_azi=sol_azi,
-                                       sol_ele=sol_ele, height=height, difftype=difftype)
-        assert round(view_rating, 2) == pytest.approx(expected_rating, rel=1e-3)
+
+@pytest.mark.parametrize("obs_azi, obs_ele, sol_azi, sol_ele, difftype, expected", [
+    # azimuth differences wrap around north
+    (350, -1, 10, -1, "azimuth", 20),
+    (10, -1, 350, -1, "azimuth", 20),
+    (180, -1, 0, -1, "azimuth", 180),
+    (10, -1, 350, -1, "total", 20),
+    (0, -1, 360, -1, "total", 0),
+    # total is the angle between the directions, a degree of azimuth spans less of it away from the horizon
+    (90, 60, 120, 60, "total", 14.87),
+    (0, 90, 180, 90, "total", 0),
+    (0, 0, 180, 0, "total", 180),
+    (0, 30, 180, 30, "total", 120),
+    (123.4, 45.6, 123.4, 45.6, "total", 0),
+    (0, -1, 0, 10, "elevation", 11),
+    (76.00, -1.0, 240.70, 58.33, "total (horizon)", 121.41),
+    (76.11, -1.0, 239.90, 60.03, "total (horizon)", 119.65),
+    (76.50, -1.0, 236.15, 66.92, "total (horizon)", 112.55),
+    # a body below the horizon of the observer (at 10 km below -6.2 degree) is rated 180 in the horizon variant only
+    (90, -1, 260, -10, "total (horizon)", 180),
+    (90, -1, 260, -10, "total", 165.17),
+    (90, -1, 90, -5, "total (horizon)", 4),
+])
+def test_calc_view_rating_angles(obs_azi, obs_ele, sol_azi, sol_ele, difftype, expected):
+    rating = RemoteSensingControlWidget.calc_view_rating(obs_azi, obs_ele, sol_azi, sol_ele, 10., difftype)
+    assert rating == pytest.approx(expected, abs=0.01)
