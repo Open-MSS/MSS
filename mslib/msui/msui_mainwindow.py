@@ -1080,6 +1080,14 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.activate_flight_track(item)
         return item
 
+    def open_flight_tracks(self, filenames):
+        """
+        Open the flight tracks stored in <filenames> which aren't open yet, e.g. those
+        of an autoplot configuration. The active flight track stays active.
+        """
+        for filename in filenames:
+            self.open_or_activate_flight_track(filename, activate=False)
+
     def switch_to_mscolab(self):
         self.local_active = False
         font = QtGui.QFont()

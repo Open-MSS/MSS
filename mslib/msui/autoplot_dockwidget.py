@@ -50,6 +50,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
     treewidget_item_selected = QtCore.pyqtSignal(str, str, str, str)
     autoplot_treewidget_item_selected = QtCore.pyqtSignal(str, str)
     update_op_flight_treewidget = QtCore.pyqtSignal(str, str)
+    # the flight track files of a loaded configuration, to be opened in the MSUI
+    open_flighttracks = QtCore.pyqtSignal(list)
 
     def __init__(self, parent=None, parent2=None, view=None, config_settings=None):
         super().__init__()
@@ -325,6 +327,25 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
             parent.refresh_signal_emit.emit()
             self.resize_treewidgets()
+            flighttracks = self.flighttrack_files(autoplot_flights)
+            if flighttracks:
+                self.open_flighttracks.emit(flighttracks)
+
+    @classmethod
+    def flighttrack_files(cls, flights):
+        """
+        The flight track files of "automated_plotting_flights" entries which are
+        there, each once and in the order of the entries, to be opened in the MSUI.
+
+        A missing file is left out, the download of the plots tells which one is
+        missing and why.
+        """
+        files = []
+        for row in flights:
+            entry = cls.flighttrack_entry(row)
+            if entry is not None and entry not in files and Path(entry).is_file():
+                files.append(entry)
+        return files
 
     @staticmethod
     def flighttrack_entry(row):
