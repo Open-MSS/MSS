@@ -229,6 +229,26 @@ class TestRowToShow:
         assert AutoplotDockWidget.flights_row_to_show(["", "", "", "", "", ""]) == ["", "", "", "", "", ""]
 
 
+class TestFlighttrackFiles:
+    """The flight track files of a loaded configuration, opened in the MSUI (#3215)."""
+    def test_each_file_once_in_the_order_of_the_entries(self, tmp_path):
+        first, second = tmp_path / "first.ftml", tmp_path / "second.ftml"
+        first.write_text("")
+        second.write_text("")
+        flights = [["b", "", "", str(second), "", ""],
+                   ["a", "", "", str(first), "", ""],
+                   ["c", "", "", str(second), "", ""]]
+        assert AutoplotDockWidget.flighttrack_files(flights) == [str(second), str(first)]
+
+    def test_missing_files_are_left_out(self, tmp_path):
+        flights = [["a", "", "", str(tmp_path / "missing.ftml"), "", ""]]
+        assert AutoplotDockWidget.flighttrack_files(flights) == []
+
+    def test_operations_and_empty_entries_are_left_out(self):
+        flights = [["operation", "", "", "operation", "", ""], ["", "", "", "", "", ""], []]
+        assert AutoplotDockWidget.flighttrack_files(flights) == []
+
+
 def test_download_keeps_the_msui_settings():
     """
     The download button runs mssautoplot in msui, which reads the settings of its own configuration file.
