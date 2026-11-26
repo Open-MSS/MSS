@@ -13,7 +13,9 @@
     Needs the pixi extension pixi-sbom: pixi global install "pixi-sbom==1.15.0"
 
     The SBOMs describe the checkout the script is in; the version is only their label. A release version (e.g.
-    12.0.0) is refused unless the checkout is its tag and pixi.toml, pixi.lock and pyproject.toml are unchanged.
+    12.0.0) is refused unless the checkout is its tag without changes to tracked files. Any other label (letters,
+    digits, no ".", e.g. a commit hash) names SBOMs of a checkout that is no release, without a conda-forge purl.
+    The files are written once all environments have passed; they replace the SBOMs of the same label.
 
     Each package is described by the lock environment that is solved like it (pixi.toml, [environments]): the
     packages locked for the release. CI doesn't test every environment on every platform, and an installation from
@@ -72,11 +74,14 @@ TEST_FEATURES = ("test", "qttest", "ncotest")
 SUPPLIER = {"name": "Open-MSS", "url": ["https://github.com/Open-MSS/MSS"]}
 # a release version, as the workflow sbom.yml checks a tag
 RELEASE = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+[A-Za-z0-9.]*")
-# what the SBOMs are made of
-SOURCES = ("pixi.toml", "pixi.lock", "pyproject.toml")
+# any other label, e.g. a commit hash: no ".", so that it can't pass for a release version (v12.0.0), and no "-",
+# which separates the parts of the file names
+OTHER_LABEL = re.compile(r"[A-Za-z0-9]+")
 SCOPE = ("The pixi.lock environment {environment} of MSS {version} on {platform}, as locked for the release, "
          "without its test dependencies. An installation from conda-forge is solved on its own and can get other "
          "versions.")
+SCOPE_OTHER = ("The pixi.lock environment {environment} of the MSS checkout {version} on {platform}, no release, "
+               "without its test dependencies.")
 
 
 def dependency_names(table):
@@ -137,7 +142,8 @@ def check_exclusion(complete, written, excluded, label):
     depends on it, e.g. after a lock update, and with it what only excluded packages need. The shipped packages are
     those reached from the root without passing through an excluded one; none of them may depend on an excluded
     package. A component that is not reached from the root at all is not dropped. The written SBOM has to hold
-    exactly the components of the complete one without the excluded and the dropped ones.
+    exactly the components of the complete one without the excluded and the dropped ones, compared by bom-ref (two
+    components can have one name). Returns the excluded names that are components of this SBOM.
     """
     names = {component["bom-ref"]: component["name"] for component in complete["components"]}
     root = complete["metadata"]["component"]["bom-ref"]
@@ -163,11 +169,12 @@ def check_exclusion(complete, written, excluded, label):
     if needed:
         sys.exit(f"SBOM of {label}: shipped packages need the excluded {', '.join(needed)}")
     dropped = blocked | (reached(set()) - shipped)
-    expected = {name for ref, name in names.items() if ref not in dropped}
-    got = {component["name"] for component in written["components"]}
-    if expected != got:
-        sys.exit(f"SBOM of {label}: the exclusion differs from the dependency graph: "
-                 f"{', '.join(sorted(expected ^ got))}")
+    expected = set(names) - dropped
+    got = {component["bom-ref"]: component["name"] for component in written["components"]}
+    if expected != set(got):
+        differing = sorted(f"{names.get(ref) or got[ref]} ({ref})" for ref in expected ^ set(got))
+        sys.exit(f"SBOM of {label}: the exclusion differs from the dependency graph: {', '.join(differing)}")
+    return {exclusion_name(names[ref]) for ref in blocked}
 
 
 def remove_component(document, name, label):
@@ -201,23 +208,30 @@ def remove_component(document, name, label):
 
 
 def describe_release(document, package, version, environment, platform, license_id):
-    """Names the package, its release, supplier and license on the root instead of the workspace (MSS, no version)"""
+    """
+    Names the package, its release, supplier and license on the root instead of the workspace (MSS, no version)
+
+    Only a release version gets the purl of the conda-forge package; any other label is no package there.
+    """
+    release = RELEASE.fullmatch(version)
     # unique for every document, also for the same package of another release
     document["serialNumber"] = uuid.uuid4().urn
     metadata = document["metadata"]
     metadata["authors"] = [{"name": SUPPLIER["name"]}]
     metadata["supplier"] = SUPPLIER
-    metadata["component"].update({
+    component = metadata["component"]
+    component.pop("purl", None)
+    component.update({
         "type": "library" if package in LIBRARIES else "application",
         "name": package,
         "version": version,
-        "purl": f"pkg:conda/{package}@{version}?channel=conda-forge",
         "supplier": SUPPLIER,
         "licenses": [{"license": {"id": license_id}}],
     })
-    metadata.setdefault("properties", []).append(
-        {"name": "open-mss:scope",
-         "value": SCOPE.format(environment=environment, version=version, platform=platform)})
+    if release:
+        component["purl"] = f"pkg:conda/{package}@{version}?channel=conda-forge"
+    scope = (SCOPE if release else SCOPE_OTHER).format(environment=environment, version=version, platform=platform)
+    metadata.setdefault("properties", []).append({"name": "open-mss:scope", "value": scope})
     return document
 
 
@@ -231,24 +245,34 @@ def git(*arguments):
     return answer.stdout.strip() if answer.returncode == 0 else None
 
 
+def version_label(value):
+    """The version argument: a release version (X.Y.Z, as its tag), or another label of letters and digits"""
+    if not (RELEASE.fullmatch(value) or OTHER_LABEL.fullmatch(value)):
+        raise argparse.ArgumentTypeError(f"{value!r} is neither a release version (e.g. 12.0.0, as its tag) nor "
+                                         f"another label of letters and digits (e.g. a commit hash)")
+    return value
+
+
 def check_release_checkout(version):
-    """Stops if version is a release version and the checkout is not its tag, or its SBOM sources are changed"""
+    """Stops if version is a release version and the checkout is not its tag, or has changes to tracked files"""
     if not RELEASE.fullmatch(version):
         return
     checkout = f"{version} is a release version: run in a clean checkout of its tag (git checkout {version})"
     head = git("rev-parse", "HEAD")
     if head is None or git("rev-parse", "--verify", "--quiet", f"refs/tags/{version}^{{commit}}") != head:
         sys.exit(f"{checkout}, the checkout is not the tag {version}")
-    changed = git("status", "--porcelain", "--", *SOURCES)
+    # also the script itself, e.g. its TEST_FEATURES
+    changed = git("status", "--porcelain", "--untracked-files=no")
     if changed is None or changed:
-        sys.exit(f"{checkout}, changed: {changed}")
+        sys.exit(f"{checkout}, changed:\n{changed}")
 
 
 def main():
     # the usage part of the docstring, without its title and the license
     usage = textwrap.dedent(__doc__.split("This file is part of MSS.")[0]).strip().split("\n", 2)[2].strip()
     parser = argparse.ArgumentParser(description=usage, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("version", help="release version, e.g. 12.0.0")
+    parser.add_argument("version", type=version_label,
+                        help="release version, e.g. 12.0.0, or another label, e.g. a commit hash")
     parser.add_argument("output", type=pathlib.Path, help="output directory")
     args = parser.parse_args()
 
@@ -270,13 +294,7 @@ def main():
         sys.exit(f"pixi.toml has no environment {', '.join(missing)}")
     platforms = set(pixi["workspace"]["platforms"])
 
-    args.output.mkdir(parents=True, exist_ok=True)
-    # no SBOM of an earlier run is left beside the new ones; other files stay
-    packages = "|".join(re.escape(package) for package in PACKAGES.values())
-    own = re.compile(rf"({packages})-[^-]+-[a-z]+-[a-z0-9]+\.cdx\.json")
-    for old in args.output.glob("*.cdx.json"):
-        if own.fullmatch(old.name):
-            old.unlink()
+    results = {}
     with tempfile.TemporaryDirectory() as work:
         for environment, package in PACKAGES.items():
             excluded = excluded_packages(pixi, environment)
@@ -292,24 +310,39 @@ def main():
                            "--primary-purl", "conda", "--pypi-mapping", "lock", *options, "--output", str(output)]
                 subprocess.run(command, check=True)  # nosec B603 B607  # fixed arguments
             files = sorted(directory.glob("sbom-*.cdx.json"))
-            written = set()
+            written, matched = set(), set()
             for file in files:
                 document = json.loads(file.read_text(encoding="utf-8"))
                 complete = json.loads((complete_directory / file.name).read_text(encoding="utf-8"))
                 properties = {item["name"]: item["value"] for item in document["metadata"].get("properties", [])}
                 platform = properties["pixi:platform"]
                 label = f"{package} (environment {environment}) on {platform}"
-                check_exclusion(complete, document, set(excluded), label)
+                matched |= check_exclusion(complete, document, set(excluded), label)
                 document = remove_component(document, pyproject["project"]["name"], label)
                 written.add(platform)
                 describe_release(document, package, args.version, environment, platform,
                                  pyproject["project"]["license"])
-                target = args.output / f"{package}-{args.version}-{platform}.cdx.json"
-                target.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
+                results[f"{package}-{args.version}-{platform}.cdx.json"] = json.dumps(document, indent=2) + "\n"
             if written != platforms:
                 sys.exit(f"environment {environment}: SBOMs for {', '.join(sorted(written)) or 'no platform'}, "
                          f"the workspace has {', '.join(sorted(platforms))}")
+            # --exclude ignores a name that matches no package, which then stays in the SBOM as shipped
+            unmatched = sorted(set(excluded) - matched)
+            if unmatched:
+                sys.exit(f"environment {environment}: the test dependency {', '.join(unmatched)} is no package of the "
+                         f"lock on any platform; is it locked under another name?")
             print(f"{package}: {len(files)} platforms")
+
+    # written only now, so that a failed run leaves the SBOMs of an earlier one; those of the same label are
+    # replaced, other files stay
+    args.output.mkdir(parents=True, exist_ok=True)
+    packages = "|".join(re.escape(package) for package in PACKAGES.values())
+    own = re.compile(rf"({packages})-{re.escape(args.version)}-[a-z]+-[a-z0-9]+\.cdx\.json")
+    for old in args.output.glob("*.cdx.json"):
+        if own.fullmatch(old.name):
+            old.unlink()
+    for name, text in results.items():
+        (args.output / name).write_text(text, encoding="utf-8")
 
 
 if __name__ == "__main__":

@@ -93,6 +93,7 @@ jobs:
         if [ -n "$TAG" ]; then
           version=$TAG
         else
+          # SBOMs of the checked-out commit (of a pull request: its merge commit), marked as no release
           version=${SHA::8}
         fi
         pixi exec --spec "python>=3.11" python .github/scripts/release_sboms.py "$version" "sbom/mss-$version-sbom"
