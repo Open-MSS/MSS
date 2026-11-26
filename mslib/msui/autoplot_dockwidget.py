@@ -82,7 +82,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         parent.vtime_vals.connect(lambda vtime_vals: self.update_stime_etime(vtime_vals))
 
         self.autoplotSecsTreeWidget.itemSelectionChanged.connect(self.autoplotSecsTreeWidget_selected_row)
-        self.autoplotTreeWidget.itemSelectionChanged.connect(self.autoplotTreeWidget_selected_row)
+        self.autoplotTreeWidget.itemSelectionChanged.connect(
+            lambda: self.autoplotTreeWidget_selected_row(config_settings))
 
         # Add to TreeWidget
         if self.view == "Top View":
@@ -256,7 +257,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
             self.treewidget_item_selected.emit(url, layer, styles, level)
 
-    def autoplotTreeWidget_selected_row(self):
+    def autoplotTreeWidget_selected_row(self, config_settings):
         if self.autoplotSecsTreeWidget.topLevelItemCount() == 0:
             QMessageBox.information(
                 self,
@@ -266,14 +267,15 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             return
         selected_items = self.autoplotTreeWidget.selectedItems()
         if selected_items:
+            index = self.autoplotTreeWidget.indexOfTopLevelItem(selected_items[0])
             flight = selected_items[0].text(0)
-            filename = selected_items[0].text(3)
+            filepath = config_settings["automated_plotting_flights"][index][3]
             section = selected_items[0].text(1)
             vtime = selected_items[0].text(5)
-            if flight != "" and flight == filename:
+            if flight != "" and flight == filepath:
                 self.update_op_flight_treewidget.emit("operation", flight)
             elif flight != "":
-                self.update_op_flight_treewidget.emit("flight", flight)
+                self.update_op_flight_treewidget.emit("flight", filepath)
             self.autoplot_treewidget_item_selected.emit(section, vtime)
 
     def update_stime_etime(self, vtime_data):
@@ -488,11 +490,12 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             else:
                 if filename != parent2.mscolab.active_operation_name:
                     filename = self.flighttrack_filename(parent, filename)
-            item = QTreeWidgetItem(
-                self.flights_row_to_show([flight, sections, vertical, filename, itime, vtime]))
+            row = [flight, sections, vertical, filename, itime, vtime]
+            # before the row is selected: the selection reads its entry
+            config_settings["automated_plotting_flights"].append(row)
+            item = QTreeWidgetItem(self.flights_row_to_show(row))
             self.autoplotTreeWidget.addTopLevelItem(item)
             self.autoplotTreeWidget.setCurrentItem(item)
-            config_settings["automated_plotting_flights"].append([flight, sections, vertical, filename, itime, vtime])
             parent.refresh_signal_emit.emit()
         if treewidget.objectName() == "autoplotSecsTreeWidget":
             if url == "":
