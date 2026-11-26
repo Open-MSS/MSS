@@ -43,6 +43,7 @@
 """
 import argparse
 import json
+import os
 import pathlib
 import re
 import subprocess  # nosec B404  # runs pixi and git with a fixed argument list
@@ -135,15 +136,17 @@ def exclusion_name(name):
 
 def check_exclusion(complete, written, excluded, label):
     """
-    Stops if the exclusion dropped a package that a shipped package needs
+    Stops if a shipped package needs an excluded one; returns the excluded names found and the orphans
 
-    complete is the SBOM of the same environment and platform without exclusions, written the one with them, label
-    names both in a message. pixi-sbom's --exclude drops an excluded name everywhere, also where a runtime package
-    depends on it, e.g. after a lock update, and with it what only excluded packages need. The shipped packages are
-    those reached from the root without passing through an excluded one; none of them may depend on an excluded
-    package. A component that is not reached from the root at all is not dropped. The written SBOM has to hold
-    exactly the components of the complete one without the excluded and the dropped ones, compared by bom-ref (two
-    components can have one name). Returns the excluded names that are components of this SBOM.
+    complete is the SBOM of the same environment and platform without exclusions, written the one with --exclude
+    and --keep-orphans, label names both in a message. pixi-sbom's --exclude drops an excluded name everywhere, also
+    where a runtime package depends on it, e.g. after a lock update. Its own pruning of what only excluded packages
+    need ignores the root's edges (in mswms it drops werkzeug, a declared dependency, with flask), so the orphans
+    are computed here: the shipped packages are those reached from the root without passing through an excluded
+    one, the orphans those reached only through one. A component that is not reached from the root at all stays.
+    None of the shipped packages may depend on an excluded package, and the written SBOM has to hold exactly the
+    components of the complete one without the excluded ones, compared by bom-ref (two components can have one
+    name).
     """
     names = {component["bom-ref"]: component["name"] for component in complete["components"]}
     root = complete["metadata"]["component"]["bom-ref"]
@@ -168,21 +171,41 @@ def check_exclusion(complete, written, excluded, label):
                      for parent in shipped for ref in edges.get(parent, []) if ref in blocked})
     if needed:
         sys.exit(f"SBOM of {label}: shipped packages need the excluded {', '.join(needed)}")
-    dropped = blocked | (reached(set()) - shipped)
-    expected = set(names) - dropped
+    expected = set(names) - blocked
     got = {component["bom-ref"]: component["name"] for component in written["components"]}
     if expected != set(got):
         differing = sorted(f"{names.get(ref) or got[ref]} ({ref})" for ref in expected ^ set(got))
         sys.exit(f"SBOM of {label}: the exclusion differs from the dependency graph: {', '.join(differing)}")
-    return {exclusion_name(names[ref]) for ref in blocked}
+    return {exclusion_name(names[ref]) for ref in blocked}, reached(set()) - shipped - blocked
+
+
+def remove_orphans(document, orphans, label):
+    """Removes the components orphans, which only excluded packages needed, with their dependency entries"""
+    document["components"] = [component for component in document["components"]
+                              if component["bom-ref"] not in orphans]
+    dependencies = []
+    for entry in document.get("dependencies", []):
+        if entry["ref"] in orphans:
+            continue
+        if "dependsOn" in entry:
+            entry["dependsOn"] = [ref for ref in entry["dependsOn"] if ref not in orphans]
+        dependencies.append(entry)
+    document["dependencies"] = dependencies
+    refs = {component["bom-ref"] for component in document["components"]}
+    refs.add(document["metadata"]["component"]["bom-ref"])
+    dangling = sorted({ref for entry in dependencies for ref in [entry["ref"], *entry.get("dependsOn", [])]} - refs)
+    if dangling:
+        sys.exit(f"SBOM of {label}: dependencies on refs that are no component: {', '.join(dangling)}")
+    return document
 
 
 def remove_component(document, name, label):
     """
     Removes the component name and hangs what it depends on under the root; label names the SBOM in a message
 
-    For the repository itself (open-mss, installed editable): pixi-sbom's --exclude also drops what is reached only
-    through it, in the msapi environment e.g. python with openssl and the other base packages.
+    For the repository itself (open-mss, installed editable): what it depends on is what the package ships. pixi-sbom's
+    --exclude would also drop what is reached only through it, in the msapi environment e.g. python with openssl and
+    the other base packages.
     """
     refs = {component["bom-ref"] for component in document["components"]
             if normalized(component["name"]) == normalized(name)}
@@ -226,7 +249,8 @@ def describe_release(document, package, version, environment, platform, license_
         "name": package,
         "version": version,
         "supplier": SUPPLIER,
-        "licenses": [{"license": {"id": license_id}}],
+        # pyproject's license is an SPDX expression (PEP 639), also when it is a single id
+        "licenses": [{"expression": license_id}],
     })
     if release:
         component["purl"] = f"pkg:conda/{package}@{version}?channel=conda-forge"
@@ -235,14 +259,19 @@ def describe_release(document, package, version, environment, platform, license_
     return document
 
 
-def git(*arguments):
-    """The output of a git command in the repository, None if it fails"""
+def git(*arguments, check=True):
+    """The output of a git command in the repository; with check=False None if it fails, else it stops with git's
+    error"""
     command = ["git", "-C", str(REPOSITORY), *arguments]
     try:
         answer = subprocess.run(command, capture_output=True, text=True)  # nosec B603 B607  # fixed arguments
     except FileNotFoundError:
         sys.exit("needs git")
-    return answer.stdout.strip() if answer.returncode == 0 else None
+    if answer.returncode == 0:
+        return answer.stdout.strip()
+    if check:
+        sys.exit(f"git {' '.join(arguments)}: {answer.stderr.strip() or f'exit status {answer.returncode}'}")
+    return None
 
 
 def version_label(value):
@@ -259,11 +288,11 @@ def check_release_checkout(version):
         return
     checkout = f"{version} is a release version: run in a clean checkout of its tag (git checkout {version})"
     head = git("rev-parse", "HEAD")
-    if head is None or git("rev-parse", "--verify", "--quiet", f"refs/tags/{version}^{{commit}}") != head:
+    if git("rev-parse", "--verify", "--quiet", f"refs/tags/{version}^{{commit}}", check=False) != head:
         sys.exit(f"{checkout}, the checkout is not the tag {version}")
     # also the script itself, e.g. its TEST_FEATURES
     changed = git("status", "--porcelain", "--untracked-files=no")
-    if changed is None or changed:
+    if changed:
         sys.exit(f"{checkout}, changed:\n{changed}")
 
 
@@ -300,7 +329,9 @@ def main():
             excluded = excluded_packages(pixi, environment)
             directory = pathlib.Path(work, environment)
             complete_directory = pathlib.Path(work, f"{environment}-complete")
-            for output, options in ((directory, [option for name in excluded for option in ("--exclude", name)]),
+            exclude = [option for name in excluded for option in ("--exclude", name)]
+            # the orphans are removed by remove_orphans, see check_exclusion
+            for output, options in ((directory, [*exclude, "--keep-orphans"] if exclude else []),
                                     (complete_directory, [])):
                 command = ["pixi", "sbom", "--no-config", "--lockfile", str(REPOSITORY / "pixi.lock"),
                            "-e", environment, "--all-platforms", "--format", "cyclonedx", "--spec-version", "1.6",
@@ -317,7 +348,9 @@ def main():
                 properties = {item["name"]: item["value"] for item in document["metadata"].get("properties", [])}
                 platform = properties["pixi:platform"]
                 label = f"{package} (environment {environment}) on {platform}"
-                matched |= check_exclusion(complete, document, set(excluded), label)
+                found, orphans = check_exclusion(complete, document, set(excluded), label)
+                matched |= found
+                document = remove_orphans(document, orphans, label)
                 document = remove_component(document, pyproject["project"]["name"], label)
                 written.add(platform)
                 describe_release(document, package, args.version, environment, platform,
@@ -333,16 +366,19 @@ def main():
                          f"lock on any platform; is it locked under another name?")
             print(f"{package}: {len(files)} platforms")
 
-    # written only now, so that a failed run leaves the SBOMs of an earlier one; those of the same label are
-    # replaced, other files stay
+    # written only now and beside the output first, so that a failed run leaves the SBOMs of an earlier one; those
+    # of the same label are replaced, other files stay
     args.output.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=args.output) as staging:
+        for name, text in results.items():
+            pathlib.Path(staging, name).write_text(text, encoding="utf-8")
+        for name in results:
+            os.replace(pathlib.Path(staging, name), args.output / name)
     packages = "|".join(re.escape(package) for package in PACKAGES.values())
     own = re.compile(rf"({packages})-{re.escape(args.version)}-[a-z]+-[a-z0-9]+\.cdx\.json")
     for old in args.output.glob("*.cdx.json"):
-        if own.fullmatch(old.name):
+        if own.fullmatch(old.name) and old.name not in results:
             old.unlink()
-    for name, text in results.items():
-        (args.output / name).write_text(text, encoding="utf-8")
 
 
 if __name__ == "__main__":
