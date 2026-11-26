@@ -716,6 +716,15 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         setattr(self, action_name, action)
 
     def update_treewidget_op_fl(self, op_fl, flight):
+        """
+        Activate the operation or flight track of a selected autoplot row.
+
+        <flight> is the operation path, or the flight track file of the row:
+        the flight track stored there is activated, opened first when it isn't open.
+        A flight track which was never saved has no file yet, its row names
+        "<name>.ftml" only, without a directory: that one is found by its name, the
+        current directory may hold another file of that name.
+        """
         if op_fl == "operation":
             for index in range(self.listOperationsMSC.count()):
                 item = self.listOperationsMSC.item(index)
@@ -723,11 +732,15 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                     item = self.listOperationsMSC.item(index)
                     self.mscolab.set_active_op_id(item)
                     break
+        elif Path(flight).expanduser().is_absolute():
+            self.open_or_activate_flight_track(flight)
         else:
+            name = Path(flight).name
+            if name.endswith(".ftml"):
+                name = name[:-len(".ftml")]
             for index in range(self.listFlightTracks.count()):
                 item = self.listFlightTracks.item(index)
-                if flight == item.text():
-                    item = self.listFlightTracks.item(index)
+                if name == item.text():
                     self.activate_flight_track(item)
                     break
 
