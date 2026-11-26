@@ -12,6 +12,9 @@
 
     Needs the pixi extension pixi-sbom: pixi global install "pixi-sbom==1.15.0"
 
+    The SBOMs describe the checkout the script is in; the version is only their label. A release version (e.g.
+    12.0.0) is refused unless the checkout is its tag and pixi.toml, pixi.lock and pyproject.toml are unchanged.
+
     Each package is described by the lock environment that is solved like it (pixi.toml, [environments]): the
     packages locked for the release. CI doesn't test every environment on every platform, and an installation from
     conda-forge is solved on its own and can get other versions. The package environments also hold the test
@@ -40,9 +43,10 @@ import argparse
 import json
 import pathlib
 import re
-import subprocess  # nosec B404  # runs pixi with a fixed argument list
+import subprocess  # nosec B404  # runs pixi and git with a fixed argument list
 import sys
 import tempfile
+import textwrap
 import tomllib
 import uuid
 
@@ -66,6 +70,10 @@ PIXI_SBOM_VERSION = "1.15.0"
 RUNTIME_FEATURES = ("utils", "api", "werkzeug", "server", "saml", "mswms", "mscolab", "msidp", "msui")
 TEST_FEATURES = ("test", "qttest", "ncotest")
 SUPPLIER = {"name": "Open-MSS", "url": ["https://github.com/Open-MSS/MSS"]}
+# a release version, as the workflow sbom.yml checks a tag
+RELEASE = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+[A-Za-z0-9.]*")
+# what the SBOMs are made of
+SOURCES = ("pixi.toml", "pixi.lock", "pyproject.toml")
 SCOPE = ("The pixi.lock environment {environment} of MSS {version} on {platform}, as locked for the release, "
          "without its test dependencies. An installation from conda-forge is solved on its own and can get other "
          "versions.")
@@ -94,11 +102,10 @@ def excluded_packages(pixi, environment):
     if unknown:
         sys.exit(f"environment {environment}: feature {', '.join(unknown)} is neither in RUNTIME_FEATURES nor in "
                  f"TEST_FEATURES of {pathlib.Path(__file__).name}")
-    # compared as pixi-sbom's --exclude matches: case-insensitive, "-" and "_" alike
-    runtime = {normalized(name) for name in dependency_names(pixi)}
+    runtime = {exclusion_name(name) for name in dependency_names(pixi)}
     test = set()
     for feature in features:
-        names = {normalized(name) for name in dependency_names(pixi["feature"][feature])}
+        names = {exclusion_name(name) for name in dependency_names(pixi["feature"][feature])}
         (test if feature in TEST_FEATURES else runtime).update(names)
     both = sorted(test & runtime)
     if both:
@@ -111,41 +118,61 @@ def normalized(name):
     return re.sub(r"[-_.]+", "-", name).lower()
 
 
-def check_exclusion(complete, written, excluded):
+def exclusion_name(name):
+    """
+    A name as pixi-sbom 1.15.0's --exclude compares it: case-insensitive, "-" and "_" alike, but not "."
+
+    --exclude backports-tarfile keeps backports.tarfile, so a test dependency is passed and compared in this form,
+    not as PEP 503 normalizes it.
+    """
+    return name.lower().replace("_", "-")
+
+
+def check_exclusion(complete, written, excluded, label):
     """
     Stops if the exclusion dropped a package that a shipped package needs
 
-    complete is the SBOM of the same environment and platform without exclusions, written the one with them.
-    pixi-sbom's --exclude drops a name everywhere, also where a runtime package depends on it, e.g. after a lock
-    update. The shipped packages are those reached from the root without passing through an excluded one; none of
-    them may depend on an excluded package, and they have to be exactly the packages of the written SBOM.
+    complete is the SBOM of the same environment and platform without exclusions, written the one with them, label
+    names both in a message. pixi-sbom's --exclude drops an excluded name everywhere, also where a runtime package
+    depends on it, e.g. after a lock update, and with it what only excluded packages need. The shipped packages are
+    those reached from the root without passing through an excluded one; none of them may depend on an excluded
+    package. A component that is not reached from the root at all is not dropped. The written SBOM has to hold
+    exactly the components of the complete one without the excluded and the dropped ones.
     """
     names = {component["bom-ref"]: component["name"] for component in complete["components"]}
-    blocked = {ref for ref, name in names.items() if normalized(name) in excluded}
-    edges = {entry["ref"]: entry.get("dependsOn", []) for entry in complete.get("dependencies", [])}
     root = complete["metadata"]["component"]["bom-ref"]
-    shipped, todo = set(), list(edges.get(root, []))
-    while todo:
-        ref = todo.pop()
-        if ref in shipped or ref in blocked:
-            continue
-        shipped.add(ref)
-        todo.extend(edges.get(ref, []))
+    edges = {entry["ref"]: entry.get("dependsOn", []) for entry in complete.get("dependencies", [])}
+    unknown = sorted({ref for refs in edges.values() for ref in refs if ref not in names})
+    if unknown:
+        sys.exit(f"SBOM of {label}: dependencies on refs that are no component: {', '.join(unknown)}")
+    blocked = {ref for ref, name in names.items() if exclusion_name(name) in excluded}
+
+    def reached(stop):
+        found, todo = set(), list(edges.get(root, []))
+        while todo:
+            ref = todo.pop()
+            if ref in found or ref in stop:
+                continue
+            found.add(ref)
+            todo.extend(edges.get(ref, []))
+        return found
+
+    shipped = reached(blocked)
     needed = sorted({f"{names[ref]} (needed by {names[parent]})"
                      for parent in shipped for ref in edges.get(parent, []) if ref in blocked})
     if needed:
-        sys.exit(f"SBOM of {written['metadata']['component']['name']}: shipped packages need the excluded "
-                 f"{', '.join(needed)}")
-    expected = {names[ref] for ref in shipped}
+        sys.exit(f"SBOM of {label}: shipped packages need the excluded {', '.join(needed)}")
+    dropped = blocked | (reached(set()) - shipped)
+    expected = {name for ref, name in names.items() if ref not in dropped}
     got = {component["name"] for component in written["components"]}
     if expected != got:
-        sys.exit(f"SBOM of {written['metadata']['component']['name']}: the exclusion differs from the dependency "
-                 f"graph: {', '.join(sorted(expected ^ got))}")
+        sys.exit(f"SBOM of {label}: the exclusion differs from the dependency graph: "
+                 f"{', '.join(sorted(expected ^ got))}")
 
 
-def remove_component(document, name):
+def remove_component(document, name, label):
     """
-    Removes the component name and hangs what it depends on under the root
+    Removes the component name and hangs what it depends on under the root; label names the SBOM in a message
 
     For the repository itself (open-mss, installed editable): pixi-sbom's --exclude also drops what is reached only
     through it, in the msapi environment e.g. python with openssl and the other base packages.
@@ -153,7 +180,7 @@ def remove_component(document, name):
     refs = {component["bom-ref"] for component in document["components"]
             if normalized(component["name"]) == normalized(name)}
     if not refs:
-        sys.exit(f"no component {name} in the SBOM of {document['metadata']['component']['name']}")
+        sys.exit(f"no component {name} in the SBOM of {label}")
     document["components"] = [component for component in document["components"] if component["bom-ref"] not in refs]
     depends_on = {}
     for entry in document.get("dependencies", []):
@@ -194,8 +221,33 @@ def describe_release(document, package, version, environment, platform, license_
     return document
 
 
+def git(*arguments):
+    """The output of a git command in the repository, None if it fails"""
+    command = ["git", "-C", str(REPOSITORY), *arguments]
+    try:
+        answer = subprocess.run(command, capture_output=True, text=True)  # nosec B603 B607  # fixed arguments
+    except FileNotFoundError:
+        sys.exit("needs git")
+    return answer.stdout.strip() if answer.returncode == 0 else None
+
+
+def check_release_checkout(version):
+    """Stops if version is a release version and the checkout is not its tag, or its SBOM sources are changed"""
+    if not RELEASE.fullmatch(version):
+        return
+    checkout = f"{version} is a release version: run in a clean checkout of its tag (git checkout {version})"
+    head = git("rev-parse", "HEAD")
+    if head is None or git("rev-parse", "--verify", "--quiet", f"refs/tags/{version}^{{commit}}") != head:
+        sys.exit(f"{checkout}, the checkout is not the tag {version}")
+    changed = git("status", "--porcelain", "--", *SOURCES)
+    if changed is None or changed:
+        sys.exit(f"{checkout}, changed: {changed}")
+
+
 def main():
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    # the usage part of the docstring, without its title and the license
+    usage = textwrap.dedent(__doc__.split("This file is part of MSS.")[0]).strip().split("\n", 2)[2].strip()
+    parser = argparse.ArgumentParser(description=usage, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("version", help="release version, e.g. 12.0.0")
     parser.add_argument("output", type=pathlib.Path, help="output directory")
     args = parser.parse_args()
@@ -210,6 +262,7 @@ def main():
         sys.exit(f"needs the pixi extension pixi-sbom: {install}")
     if answer.stdout.split()[-1:] != [PIXI_SBOM_VERSION]:
         sys.exit(f"needs pixi-sbom {PIXI_SBOM_VERSION}, found {answer.stdout.strip()}: {install}")
+    check_release_checkout(args.version)
     pyproject = tomllib.loads((REPOSITORY / "pyproject.toml").read_text(encoding="utf-8"))
     pixi = tomllib.loads((REPOSITORY / "pixi.toml").read_text(encoding="utf-8"))
     missing = sorted(set(PACKAGES) - set(pixi["environments"]))
@@ -243,10 +296,11 @@ def main():
             for file in files:
                 document = json.loads(file.read_text(encoding="utf-8"))
                 complete = json.loads((complete_directory / file.name).read_text(encoding="utf-8"))
-                check_exclusion(complete, document, set(excluded))
-                document = remove_component(document, pyproject["project"]["name"])
                 properties = {item["name"]: item["value"] for item in document["metadata"].get("properties", [])}
                 platform = properties["pixi:platform"]
+                label = f"{package} (environment {environment}) on {platform}"
+                check_exclusion(complete, document, set(excluded), label)
+                document = remove_component(document, pyproject["project"]["name"], label)
                 written.add(platform)
                 describe_release(document, package, args.version, environment, platform,
                                  pyproject["project"]["license"])

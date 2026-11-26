@@ -519,7 +519,9 @@ For a new minor/patch release
   the release (``pixi.lock`` of the tag, without test dependencies), each with the third-party
   dependencies of its package, not the other ``mss-*`` packages. For a release that has none yet (from 12.0.0 on),
   run the workflow by hand with its tag. The asset is added after publishing; with immutable releases switched on
-  for the repository GitHub would refuse it. Locally, with the extension ``pixi global install "pixi-sbom==1.15.0"``:
+  for the repository GitHub would refuse it. Locally, with the extension ``pixi global install "pixi-sbom==1.15.0"``,
+  in a clean checkout of the tag (``git checkout X.Y.Z``; the script describes the checkout it is in, ``X.Y.Z`` is
+  only the label, and it refuses a release version on another revision):
   ``pixi exec --spec "python>=3.11" python .github/scripts/release_sboms.py X.Y.Z <directory>``
 * create a release on anaconda conda-forge
 * announce on:
@@ -549,7 +551,9 @@ Creating a new major release
   the release (``pixi.lock`` of the tag, without test dependencies), each with the third-party
   dependencies of its package, not the other ``mss-*`` packages. For a release that has none yet (from 12.0.0 on),
   run the workflow by hand with its tag. The asset is added after publishing; with immutable releases switched on
-  for the repository GitHub would refuse it. Locally, with the extension ``pixi global install "pixi-sbom==1.15.0"``:
+  for the repository GitHub would refuse it. Locally, with the extension ``pixi global install "pixi-sbom==1.15.0"``,
+  in a clean checkout of the tag (``git checkout X.Y.Z``; the script describes the checkout it is in, ``X.Y.Z`` is
+  only the label, and it refuses a release version on another revision):
   ``pixi exec --spec "python>=3.11" python .github/scripts/release_sboms.py X.Y.Z <directory>``
 * create a release on anaconda conda-forge
 * announce on:

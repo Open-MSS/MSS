@@ -5,6 +5,8 @@ name: sbom
 # as the asset mss-<version>-sbom.zip; workflow_dispatch adds them to the release of an existing tag from 12.0.0 on
 # (it replaces the asset). A pull request or a push to develop or stable that changes what they are built from only
 # builds them, as a workflow artifact, so that a change of pixi.lock that breaks them shows up before the release.
+# If the upload fails, the release can be left without the asset (--clobber deletes the old one first): run the
+# workflow by hand with the tag.
 
 on:
   release:
@@ -40,14 +42,17 @@ on:
 permissions:
   contents: read
 
+# one run per release at a time, so that two uploads of the same asset don't overlap
+concurrency:
+  group: sbom-${{ github.event.release.tag_name || inputs.tag || github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
       TAG: ${{ github.event.release.tag_name || inputs.tag }}
-    outputs:
-      version: ${{ steps.sboms.outputs.version }}
     steps:
     - name: Check the tag
       if: env.TAG != ''
@@ -63,6 +68,16 @@ jobs:
         # pull request, which check out their commit
         ref: ${{ env.TAG && format('refs/tags/{0}', env.TAG) || '' }}
         persist-credentials: false
+    - name: Check the commit of the tag
+      if: github.event_name == 'release'
+      env:
+        SHA: ${{ github.sha }}
+      run: |
+        # the commit the tag pointed to when the release was published, not a tag moved since
+        if [ "$(git rev-parse HEAD)" != "$SHA" ]; then
+          echo "::error::the tag $TAG has moved from $SHA to $(git rev-parse HEAD)"
+          exit 1
+        fi
     - uses: prefix-dev/setup-pixi@9936258fee697aff89b3fed6ca1f80a382ef694e # v0.11.3
       with:
         pixi-version: latest
@@ -89,7 +104,8 @@ jobs:
         path: sbom/mss-${{ steps.sboms.outputs.version }}-sbom.zip
         if-no-files-found: error
 
-  # only this job can write to the repository; it checks nothing out and runs no third-party code
+  # only this job can write to the repository; it checks nothing out, runs no third-party code and takes the
+  # release from the event, not from the build job, which runs third-party code
   release:
     needs: build
     if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
@@ -101,9 +117,10 @@ jobs:
     steps:
     - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
       with:
-        name: mss-${{ needs.build.outputs.version }}-sbom
+        # the build job has checked the tag
+        name: mss-${{ github.event.release.tag_name || inputs.tag }}-sbom
     - name: Attach the SBOMs to the release
       env:
         GH_TOKEN: ${{ github.token }}
-        VERSION: ${{ needs.build.outputs.version }}
+        VERSION: ${{ github.event.release.tag_name || inputs.tag }}
       run: gh release upload "$VERSION" "mss-$VERSION-sbom.zip" --clobber --repo "$GITHUB_REPOSITORY"
