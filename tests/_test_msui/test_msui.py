@@ -282,6 +282,16 @@ class Test_FlightTracksOfAutoplot:
         assert self.files() == [None]
         assert self.window.active_flight_track is self.unsaved
 
+    def test_file_which_is_not_text_between_two_flight_tracks(self):
+        """A file which can't be decoded gives one message, the other flight tracks are opened."""
+        binary = self.tmp_path / "binary.ftml"
+        binary.write_bytes(b"<\xff\xfe>")
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critical:
+            self.window.open_flight_tracks([str(self.ftml), str(binary), str(self.other)])
+        critical.assert_called_once()
+        assert self.files() == [None, str(self.ftml), str(self.other)]
+        assert self.window.active_flight_track is self.unsaved
+
     def test_row_of_a_file(self):
         self.window.update_treewidget_op_fl("flight", str(self.ftml))
         assert self.files() == [None, str(self.ftml)]
@@ -343,6 +353,17 @@ class Test_FlightTracksOfAutoplot:
         assert self.files() == [None]
         dock.autoplotTreeWidget.setCurrentItem(dock.autoplotTreeWidget.topLevelItem(0))
         assert self.window.active_flight_track.get_filename() == str(self.ftml)
+
+    def test_incomplete_rows(self):
+        """A row without a file changes no flight track, one with a name only finds it by its name."""
+        dock = self.open_autoplot("actionTopView", "topview")
+        self.window.open_or_activate_flight_track(self.ftml, activate=False)
+        self.load_configuration(dock, [[], ["example"]])
+        dock.autoplotTreeWidget.setCurrentItem(dock.autoplotTreeWidget.topLevelItem(0))
+        assert self.window.active_flight_track is self.unsaved
+        dock.autoplotTreeWidget.setCurrentItem(dock.autoplotTreeWidget.topLevelItem(1))
+        assert self.window.active_flight_track.get_filename() == str(self.ftml)
+        assert self.files() == [None, str(self.ftml)]
 
     def test_add_a_row(self):
         """A new row is selected when it is added, its entry is in the configuration already."""

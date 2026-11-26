@@ -271,13 +271,16 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         if selected_items:
             index = self.autoplotTreeWidget.indexOfTopLevelItem(selected_items[0])
             flight = selected_items[0].text(0)
-            filepath = config_settings["automated_plotting_flights"][index][3]
+            # a configuration may hold incomplete rows, e.g. [], as flighttrack_entry() knows
+            row = config_settings["automated_plotting_flights"][index]
+            filepath = row[3] if len(row) > 3 else ""
             section = selected_items[0].text(1)
             vtime = selected_items[0].text(5)
             if flight != "" and flight == filepath:
                 self.update_op_flight_treewidget.emit("operation", flight)
             elif flight != "":
-                self.update_op_flight_treewidget.emit("flight", filepath)
+                # a row without a file: its flight track is found by its name
+                self.update_op_flight_treewidget.emit("flight", filepath or flight)
             self.autoplot_treewidget_item_selected.emit(section, vtime)
 
     def update_stime_etime(self, vtime_data):
