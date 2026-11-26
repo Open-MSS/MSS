@@ -972,8 +972,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             if function is None:
                 try:
                     waypoints_model = ft.WaypointsTableModel(filename=str(filename))
-                # UnicodeError: a file which isn't text, e.g. a binary file
-                except (SyntaxError, OSError, UnicodeError) as ex:
+                # UnicodeError: a file which isn't text, e.g. a binary file;
+                # ValueError: a flight level which can't be converted to pressure (100 km and above)
+                except (SyntaxError, OSError, UnicodeError, ValueError) as ex:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("Problem while opening flight track FTML:"),
                         plain_text_as_html(self.tr(f"ERROR: {type(ex)} {ex}")))

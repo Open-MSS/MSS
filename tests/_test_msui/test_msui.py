@@ -292,6 +292,17 @@ class Test_FlightTracksOfAutoplot:
         assert self.files() == [None, str(self.ftml), str(self.other)]
         assert self.window.active_flight_track is self.unsaved
 
+    def test_flight_level_out_of_range_between_two_flight_tracks(self):
+        """A flight level of 100 km and above gives one message, the other flight tracks are opened."""
+        high = self.tmp_path / "high.ftml"
+        high.write_text(self.ftml.read_text().replace('flightlevel="350"', 'flightlevel="4000"', 1))
+        assert 'flightlevel="4000"' in high.read_text()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critical:
+            self.window.open_flight_tracks([str(self.ftml), str(high), str(self.other)])
+        critical.assert_called_once()
+        assert self.files() == [None, str(self.ftml), str(self.other)]
+        assert self.window.active_flight_track is self.unsaved
+
     def test_row_of_a_file(self):
         self.window.update_treewidget_op_fl("flight", str(self.ftml))
         assert self.files() == [None, str(self.ftml)]
