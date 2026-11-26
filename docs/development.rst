@@ -515,8 +515,8 @@ For a new minor/patch release
 
 * write a release information on https://github.com/Open-MSS/MSS/releases
 * publishing the release starts the workflow ``sbom``, which attaches the SBOMs of the conda packages for all
-  platforms as ``mss-X.Y.Z-sbom.zip``; check that the asset is there. They describe the environments locked and
-  tested for the release (``pixi.lock`` of the tag, without test dependencies), each with the third-party
+  platforms as ``mss-X.Y.Z-sbom.zip``; check that the asset is there. They describe the environments locked for
+  the release (``pixi.lock`` of the tag, without test dependencies), each with the third-party
   dependencies of its package, not the other ``mss-*`` packages. For a release that has none yet (from 12.0.0 on),
   run the workflow by hand with its tag. The asset is added after publishing; with immutable releases switched on
   for the repository GitHub would refuse it. Locally, with the extension ``pixi global install "pixi-sbom==1.15.0"``:
@@ -545,8 +545,8 @@ Creating a new major release
 
 * write a release information on https://github.com/Open-MSS/MSS/releases
 * publishing the release starts the workflow ``sbom``, which attaches the SBOMs of the conda packages for all
-  platforms as ``mss-X.Y.Z-sbom.zip``; check that the asset is there. They describe the environments locked and
-  tested for the release (``pixi.lock`` of the tag, without test dependencies), each with the third-party
+  platforms as ``mss-X.Y.Z-sbom.zip``; check that the asset is there. They describe the environments locked for
+  the release (``pixi.lock`` of the tag, without test dependencies), each with the third-party
   dependencies of its package, not the other ``mss-*`` packages. For a release that has none yet (from 12.0.0 on),
   run the workflow by hand with its tag. The asset is added after publishing; with immutable releases switched on
   for the repository GitHub would refuse it. Locally, with the extension ``pixi global install "pixi-sbom==1.15.0"``:
