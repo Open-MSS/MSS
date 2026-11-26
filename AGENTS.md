@@ -16,7 +16,8 @@ pixi run -e dev lint-imports    # architectural import contracts (setup.cfg)
 pixi run -e dev codespell       # spelling
 pixi run -e dev lint-security   # bandit over mslib, configured in [tool.bandit] of pyproject.toml (CI job bandit in lint.yml)
 pixi audit                      # known vulnerabilities in pixi.lock; needs the pixi-audit extension and PIXI_AUDIT_TOKEN, rules in [tool.pixi-audit] of pixi.toml (CI workflow audit.yml)
-pixi run -e dev test-fast       # plugins + utils + meta; no servers, fastest signal
+pixi exec --spec "python>=3.11" python .github/scripts/release_sboms.py <version> <dir>  # SBOMs of the conda packages for all platforms from pixi.lock; needs the pixi-sbom extension (CI workflow sbom.yml, attaches them to a published release)
+pixi run -e dev test-fast       # api + plugins + utils + meta; no servers, fastest signal
 pixi run -e dev test-msui       # GUI suite (offscreen Qt)
 pixi run -e dev test-mscolab    # collaboration-server suite
 pixi run -e dev test-mswms      # WMS-server suite

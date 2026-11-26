@@ -1,0 +1,100 @@
+name: sbom
+
+# SBOMs (CycloneDX) of the MSS conda packages for all platforms, from the pixi.lock of a release, with pixi-sbom
+# (.github/scripts/release_sboms.py): the packages locked and tested for the release. A published release gets them
+# as the asset mss-<version>-sbom.zip; workflow_dispatch adds them to the release of an existing tag from 12.0.0 on
+# (it replaces the asset). A pull request or a push to develop or stable that changes what they are built from only
+# builds them, as a workflow artifact, so that a change of pixi.lock that breaks them shows up before the release.
+
+on:
+  release:
+    types:
+    - published
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag of an existing release from 12.0.0 on, e.g. 12.0.0'
+        required: true
+        type: string
+  push:
+    branches:
+    - develop
+    - stable
+    paths:
+    - .github/workflows/sbom.yml
+    - .github/scripts/release_sboms.py
+    - pixi.toml
+    - pixi.lock
+    - pyproject.toml
+  pull_request:
+    branches:
+    - develop
+    - stable
+    paths:
+    - .github/workflows/sbom.yml
+    - .github/scripts/release_sboms.py
+    - pixi.toml
+    - pixi.lock
+    - pyproject.toml
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    outputs:
+      version: ${{ steps.sboms.outputs.version }}
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
+      with:
+        # the pixi.lock of the release; empty for a pull request, which checks out its merge commit
+        ref: ${{ github.event.release.tag_name || inputs.tag }}
+        persist-credentials: false
+    - uses: prefix-dev/setup-pixi@9936258fee697aff89b3fed6ca1f80a382ef694e # v0.11.3
+      with:
+        pixi-version: latest
+        # pixi-sbom reads pixi.lock, no environment is installed
+        run-install: false
+    - name: Install pixi-sbom
+      run: pixi global install "pixi-sbom==1.15.0"
+    - name: Write the SBOMs
+      id: sboms
+      env:
+        SHA: ${{ github.sha }}
+      run: |
+        if [ -n "$TAG" ]; then
+          version=$TAG
+        else
+          version=${SHA::8}
+        fi
+        pixi exec --spec "python>=3.11" python .github/scripts/release_sboms.py "$version" "sbom/mss-$version-sbom"
+        (cd sbom && zip -qr "mss-$version-sbom.zip" "mss-$version-sbom")
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: mss-${{ steps.sboms.outputs.version }}-sbom
+        path: sbom/mss-${{ steps.sboms.outputs.version }}-sbom.zip
+        if-no-files-found: error
+
+  # only this job can write to the repository; it checks nothing out and runs no third-party code
+  release:
+    needs: build
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      # gh release upload
+      contents: write
+    steps:
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        name: mss-${{ needs.build.outputs.version }}-sbom
+    - name: Attach the SBOMs to the release
+      env:
+        GH_TOKEN: ${{ github.token }}
+        VERSION: ${{ needs.build.outputs.version }}
+      run: gh release upload "$VERSION" "mss-$VERSION-sbom.zip" --clobber --repo "$GITHUB_REPOSITORY"
