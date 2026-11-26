@@ -1033,6 +1033,40 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         item = self.listFlightTracks.currentItem()
         self.activate_flight_track(item)
 
+    def find_flight_track(self, filename):
+        """
+        The item of the open flight track stored in <filename>, None when no open
+        flight track is stored there.
+
+        The file decides, not the name: a flight track loaded from a file is named
+        after the file, the autoplot configuration names it as it likes.
+        """
+        path = Path(filename).expanduser().resolve()
+        for i in range(self.listFlightTracks.count()):
+            item = self.listFlightTracks.item(i)
+            stored = item.flighttrack_model.get_filename()
+            if stored and Path(stored).expanduser().resolve() == path:
+                return item
+        return None
+
+    def open_or_activate_flight_track(self, filename, activate=True):
+        """
+        The item of the flight track stored in <filename>: the open one, otherwise
+        the file is opened and added to the list of flight tracks. With <activate>
+        the flight track becomes the active one. None when the file can't be read,
+        create_new_flight_track() has told the user why then.
+        """
+        item = self.find_flight_track(filename)
+        if item is None:
+            count = self.listFlightTracks.count()
+            self.create_new_flight_track(filename=str(Path(filename).expanduser().resolve()), activate=False)
+            if self.listFlightTracks.count() == count:
+                return None
+            item = self.listFlightTracks.item(count)
+        if activate:
+            self.activate_flight_track(item)
+        return item
+
     def switch_to_mscolab(self):
         self.local_active = False
         font = QtGui.QFont()
