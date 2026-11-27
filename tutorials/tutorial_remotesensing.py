@@ -169,19 +169,20 @@ def _show_solar_angle(os_screen_region):
     x, y = find_and_click_picture('topviewwindow-show-angle-degree.png',
                                   'Show angle in degrees not found',
                                   region=os_screen_region)
-    for _ in range(2):
+    # moon, then venus (mercury is between them)
+    for presses in (1, 2):
         pag.click(x + 100, y, duration=1)
-        pag.press('down', interval=1)
+        pag.press('down', presses=presses, interval=1)
         pag.sleep(1)
         pag.press(ENTER, interval=1)
         pag.sleep(2)
     for _ in range(3):
-        pag.click(x + 200, y, duration=1)
+        pag.click(x + 300, y, duration=1)
         pag.press('down', interval=1)
         pag.sleep(1)
         pag.press(ENTER, interval=1)
         pag.sleep(2)
-    pag.click(x + 200, y, duration=1)
+    pag.click(x + 300, y, duration=1)
     pag.press('up', presses=3, interval=1)
     pag.sleep(1)
     pag.press(ENTER, interval=1)

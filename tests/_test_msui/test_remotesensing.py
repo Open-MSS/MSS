@@ -206,6 +206,20 @@ class Test_RemoteSensingControlWidget:
         result = result.compute_solar_lines(self.bmap, self.coordinates, self.heights, self.times, self.solar_type)
         assert isinstance(result, LineCollection)
 
+    @pytest.mark.parametrize("difftype, expected", [
+        ("azimuth", [27.33, 29.12]),
+        ("total", [28.96, 30.82]),
+        ("total (horizon)", [28.96, 30.82]),
+    ])
+    def test_compute_solar_lines_around_north(self, difftype, expected):
+        # midnight sun at 75N: the sun is east of north (azimuth 13.5), the view along the track
+        # west of north (azimuth 346); the angle between them is about 30 degree, not 330
+        self.remote_widget.dsbObsAngleAzimuth.setValue(0)
+        wp_vertices = list(zip(*self.bmap([0., -1.], [75., 76.])))
+        times = [datetime.datetime(2023, 6, 21, 1), datetime.datetime(2023, 6, 21, 1, 15)]
+        result = self.remote_widget.compute_solar_lines(self.bmap, wp_vertices, [10., 10.], times, ("sun", difftype))
+        assert list(result.get_array()) == pytest.approx(expected, abs=0.01)
+
     def test_tangent_point_coordinates(self):
         tangent_point_coordinates = self.remote_widget.tangent_point_coordinates
         coordinates = tangent_point_coordinates(lon_lin=self.lon_lin, lat_lin=self.lat_lin, cut_height=self.cut_height)
