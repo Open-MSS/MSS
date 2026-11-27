@@ -171,7 +171,7 @@ def _show_solar_angle(os_screen_region):
                                   region=os_screen_region)
     # moon, then venus (mercury is between them)
     for presses in (1, 2):
-        pag.click(x + 100, y, duration=1)
+        pag.click(x + 150, y, duration=1)
         pag.press('down', presses=presses, interval=1)
         pag.sleep(1)
         pag.press(ENTER, interval=1)
