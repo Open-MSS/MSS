@@ -1,0 +1,127 @@
+name: sbom
+
+# SBOMs (CycloneDX) of the MSS conda packages for all platforms, from the pixi.lock of a release, with pixi-sbom
+# (.github/scripts/release_sboms.py): the packages locked for the release. A published release gets them
+# as the asset mss-<version>-sbom.zip; workflow_dispatch adds them to the release of an existing tag from 12.0.0 on
+# (it replaces the asset). A pull request or a push to develop or stable that changes what they are built from only
+# builds them, as a workflow artifact, so that a change of pixi.lock that breaks them shows up before the release.
+# If the upload fails, the release can be left without the asset (--clobber deletes the old one first): run the
+# workflow by hand with the tag.
+
+on:
+  release:
+    types:
+    - published
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag of an existing release from 12.0.0 on, e.g. 12.0.0'
+        required: true
+        type: string
+  push:
+    branches:
+    - develop
+    - stable
+    paths:
+    - .github/workflows/sbom.yml
+    - .github/scripts/release_sboms.py
+    - pixi.toml
+    - pixi.lock
+    - pyproject.toml
+  pull_request:
+    branches:
+    - develop
+    - stable
+    paths:
+    - .github/workflows/sbom.yml
+    - .github/scripts/release_sboms.py
+    - pixi.toml
+    - pixi.lock
+    - pyproject.toml
+
+permissions:
+  contents: read
+
+# one run per release at a time, so that two uploads of the same asset don't overlap
+concurrency:
+  group: sbom-${{ github.event.release.tag_name || inputs.tag || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+    - name: Check the tag
+      if: env.TAG != ''
+      run: |
+        # a release version, also as part of file names and of the artifact name
+        if ! [[ "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+[A-Za-z0-9.]*$ ]]; then
+          echo "::error::'$TAG' is not the tag of a release, e.g. 12.0.0"
+          exit 1
+        fi
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
+      with:
+        # the pixi.lock of the release, as a tag (a branch of the same name is not taken); empty for a push or a
+        # pull request, which check out their commit
+        ref: ${{ env.TAG && format('refs/tags/{0}', env.TAG) || '' }}
+        persist-credentials: false
+    - name: Check the commit of the tag
+      if: github.event_name == 'release'
+      env:
+        SHA: ${{ github.sha }}
+      run: |
+        # the commit the tag pointed to when the release was published, not a tag moved since
+        if [ "$(git rev-parse HEAD)" != "$SHA" ]; then
+          echo "::error::the tag $TAG has moved from $SHA to $(git rev-parse HEAD)"
+          exit 1
+        fi
+    - uses: prefix-dev/setup-pixi@9936258fee697aff89b3fed6ca1f80a382ef694e # v0.11.3
+      with:
+        pixi-version: latest
+        # pixi-sbom reads pixi.lock, no environment is installed
+        run-install: false
+    - name: Install pixi-sbom
+      run: pixi global install "pixi-sbom==1.15.0"
+    - name: Write the SBOMs
+      id: sboms
+      env:
+        SHA: ${{ github.sha }}
+      run: |
+        if [ -n "$TAG" ]; then
+          version=$TAG
+        else
+          # SBOMs of the checked-out commit (of a pull request: its merge commit), marked as no release
+          version=${SHA::8}
+        fi
+        pixi exec --spec "python>=3.11" python .github/scripts/release_sboms.py "$version" "sbom/mss-$version-sbom"
+        (cd sbom && zip -qr "mss-$version-sbom.zip" "mss-$version-sbom")
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: mss-${{ steps.sboms.outputs.version }}-sbom
+        path: sbom/mss-${{ steps.sboms.outputs.version }}-sbom.zip
+        if-no-files-found: error
+
+  # only this job can write to the repository; it checks nothing out, runs no third-party code and takes the
+  # release from the event, not from the build job, which runs third-party code
+  release:
+    needs: build
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      # gh release upload
+      contents: write
+    steps:
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        # the build job has checked the tag
+        name: mss-${{ github.event.release.tag_name || inputs.tag }}-sbom
+    - name: Attach the SBOMs to the release
+      env:
+        GH_TOKEN: ${{ github.token }}
+        VERSION: ${{ github.event.release.tag_name || inputs.tag }}
+      run: gh release upload "$VERSION" "mss-$VERSION-sbom.zip" --clobber --repo "$GITHUB_REPOSITORY"
