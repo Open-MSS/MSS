@@ -52,7 +52,7 @@ from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 from mslib.msui.utils.qt import get_open_filenames, get_save_filename, show_popup, plain_text_as_html
 from mslib.msui.utils.config import read_config_file, config_loader
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PyQt5 import QtGui, QtCore, QtWidgets, sip
 from mslib.utils import release_info
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -87,7 +87,6 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
 
     # Class variable to assign a unique ID to each view.
     opened_views = 0
-    open_views = []
 
     def __init__(self, view_window, parent=None, viewsChanged=None, mscolab=False,
                  _type=QtWidgets.QListWidgetItem.UserType):
@@ -103,18 +102,18 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
         self.window = view_window
         self.parent = parent
         self.viewsChanged = viewsChanged
-        QActiveViewsListWidgetItem.open_views.append(view_window)
 
     def view_destroyed(self):
         """Slot that removes this QListWidgetItem from the parent (the
-           QListWidget) if the corresponding view has been deleted.
+           QListWidget) if the corresponding view has been closed or deleted.
+
+           Connected to both viewCloses and destroyed of the view, so it runs
+           twice for a normally closed view; only the first call does anything.
+           The item itself is gone already when the QListWidget was cleared.
         """
-        if self.parent is not None:
-            self.parent.takeItem(self.parent.row(self))
-            for index, window in enumerate(QActiveViewsListWidgetItem.open_views):
-                if window.identifier == self.window.identifier:
-                    del QActiveViewsListWidgetItem.open_views[index]
-                    break
+        if sip.isdeleted(self) or self.listWidget() is None:
+            return
+        self.listWidget().takeItem(self.listWidget().row(self))
         if self.viewsChanged is not None:
             self.viewsChanged.emit()
 
@@ -1198,6 +1197,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             # listitem = QActiveViewsListWidgetItem(view_window, self.listViews, self.viewsChanged, mscolab)
             listitem = QActiveViewsListWidgetItem(view_window, self.listViews, self.viewsChanged)
             view_window.viewCloses.connect(listitem.view_destroyed)
+            # a view can also be deleted without being closed
+            view_window.destroyed.connect(listitem.view_destroyed)
             self.listViews.setCurrentItem(listitem)
             # self.active_view_windows.append(view_window)
             # disable navbar actions in the view for viewer
@@ -1213,10 +1214,12 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             view_window.showNormal()
 
     def get_active_views(self):
-        active_view_windows = []
-        for i in range(self.listViews.count()):
-            active_view_windows.append(self.listViews.item(i).window)
-        return active_view_windows
+        """
+        Returns the view windows that are still open.
+
+        Closed or deleted views remove their entry via viewCloses/destroyed (see create_view).
+        """
+        return [self.listViews.item(i).window for i in range(self.listViews.count())]
 
     def activate_sub_window(self, item):
         """When the user clicks on one of the open view or tool windows, this
@@ -1230,8 +1233,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         item.window.activateWindow()
 
     def restart_application(self):
-        while self.listViews.count() > 0:
-            self.listViews.item(0).window.handle_force_close()
+        for window in self.get_active_views():
+            window.handle_force_close()
         self.listViews.clear()
         self.remove_plugins()
         if self.mscolab.token is not None:
