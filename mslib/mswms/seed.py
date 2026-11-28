@@ -69,13 +69,13 @@ sea_ice_area_fraction
 dimensionless
   0.5 0.3
 msg_brightness_temperature_108
-nW.cm.m^-2.sr^-1
-  100 20
+K
+  265 20
 atmosphere_boundary_layer_thickness
 m
   1000 400
 emac_column_density
-dimensionless
+kg/m^2
  0.25 0.2
 vertically_integrated_probability_of_wcb_occurrence
 dimensionless

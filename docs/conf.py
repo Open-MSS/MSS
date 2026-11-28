@@ -115,8 +115,8 @@ on_rtd = os.environ.get('READTHEDOCS') == 'True'
 # ones.
 extensions = ['sphinx_rtd_theme', 'sphinxcontrib.video']
 
-# raise a warning when a secondary source is missing.
-video_enforce_extra_source = True
+# the tutorials exist only as mp4, which all browsers play; no warning for a missing secondary source
+video_enforce_extra_source = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -124,7 +124,7 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 # source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = {'.rst': 'restructuredtext'}
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
@@ -166,7 +166,8 @@ today_fmt = '%Y-%m-%d'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+# .pixi*: a pixi environment in docs/ holds .rst files of other packages; html: the output of a local build
+exclude_patterns = ['_build', 'html', 'Thumbs.db', '.DS_Store', '.pixi', '.pixi-*']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -202,9 +203,7 @@ todo_include_todos = False
 # a list of builtin themes.
 html_theme = 'sphinx_rtd_theme'
 
-if not on_rtd:  # only import and set the theme if we're building docs locally
-    import sphinx_rtd_theme
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+if not on_rtd:  # only set the style if we're building docs locally
     html_style = 'css/mss.css'
 else:
     htmls_static_path = ['_static']

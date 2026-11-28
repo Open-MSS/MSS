@@ -229,7 +229,7 @@ by `pg_dump <https://www.postgresql.org/docs/current/app-pgdump.html>`_ using a 
 
 
 Database Migration from Version 8 or 9
-.................................
+......................................
 
 From v10 onwards MSColab uses `Flask-Migrate <https://flask-migrate.readthedocs.io/en/latest/>` to automatically deal with database migrations.
 To upgrade from v8 or v9 a recreation of the database and subsequent copy of existing data is necessary.

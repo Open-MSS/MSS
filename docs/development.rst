@@ -383,17 +383,19 @@ Command-Line Commands for Keyring
 
    **Example:**
 
-  - Case 1: Standard Service Name
-   .. code-block:: bash
+   - Case 1: Standard Service Name
 
-       keyring set http://localhost:8083 myname@mydomain
+     .. code-block:: bash
 
-  - Case 2: Custom Authentication Service
-   .. code-block:: bash
+        keyring set http://localhost:8083 myname@mydomain
 
-       keyring set MSCOLAB_AUTH_http://localhost:8083 mscolab
+   - Case 2: Custom Authentication Service
 
-  - The command will securely prompt you to input a password (e.g., `example_password`).
+     .. code-block:: bash
+
+        keyring set MSCOLAB_AUTH_http://localhost:8083 mscolab
+
+   - The command will securely prompt you to input a password (e.g., `example_password`).
 
 2. **Get a Password**
 
@@ -406,14 +408,16 @@ Command-Line Commands for Keyring
    **Example:**
 
    - Case 1: Standard Service Name
-   .. code-block:: bash
 
-       keyring get http://localhost:8083 myname@mydomain
+     .. code-block:: bash
+
+        keyring get http://localhost:8083 myname@mydomain
 
    - Case 2: Custom Authentication Service
-   .. code-block:: bash
 
-       keyring get MSCOLAB_AUTH_http://localhost:8083 mscolab
+     .. code-block:: bash
+
+        keyring get MSCOLAB_AUTH_http://localhost:8083 mscolab
 
    **Output:**
 
@@ -431,15 +435,17 @@ Command-Line Commands for Keyring
 
    **Example:**
 
-  - Case 1: Standard Service Name
-   .. code-block:: bash
+   - Case 1: Standard Service Name
 
-       keyring del http://localhost:8083 myname@mydomain
+     .. code-block:: bash
 
-  - Case 2: Custom Authentication Service
-   .. code-block:: bash
+        keyring del http://localhost:8083 myname@mydomain
 
-       keyring del MSCOLAB_AUTH_http://localhost:8083 mscolab
+   - Case 2: Custom Authentication Service
+
+     .. code-block:: bash
+
+        keyring del MSCOLAB_AUTH_http://localhost:8083 mscolab
 
    To confirm the deletion, attempt to retrieve the password:
 
