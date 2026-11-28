@@ -240,6 +240,25 @@ class Test_FileManager:
             assert ren_operation.id == operation.id
             assert ren_operation.path == rename_to
 
+    @pytest.mark.parametrize("attribute, value", [("id", "4711"), ("unknown", "x"), ("permissions", "x"),
+                                                  ("last_used", "2020-01-01"), ("__class__", "x")])
+    def test_update_operation_changes_only_the_allowed_attributes(self, attribute, value):
+        # #3392: the attribute comes from the request of the route update_operation
+        with self.app.test_client():
+            flight_path, operation = self._create_operation(flight_path="operation3c")
+            last_used = operation.last_used
+            assert self.fm.update_operation(operation.id, attribute, value, self.user) is False
+            operation = Operation.query.filter_by(id=operation.id).first()
+            assert operation.path == flight_path
+            assert operation.last_used == last_used
+
+    def test_update_operation_sets_last_used_as_datetime(self):
+        with self.app.test_client():
+            flight_path, operation = self._create_operation(flight_path="operation3d")
+            last_used = datetime.datetime(2020, 1, 1, tzinfo=datetime.timezone.utc)
+            assert self.fm.update_operation(operation.id, "last_used", last_used, self.user) is True
+            assert Operation.query.filter_by(id=operation.id).first().last_used == last_used
+
     def test_delete_operation(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path='operation4')
