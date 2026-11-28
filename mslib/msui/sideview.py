@@ -369,6 +369,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
                     lambda url, layer, style, level: self.tree_item_select(url, layer, style, level))
                 widget.update_op_flight_treewidget.connect(
                     lambda opfl, flight: parent.update_treewidget_op_fl(opfl, flight))
+                widget.open_flighttracks.connect(lambda files: parent.open_flight_tracks(files))
             else:
                 raise IndexError("invalid control index")
             # Create the actual dock widget containing <widget>.

@@ -208,6 +208,195 @@ def test_open_ftml_that_is_no_flight_track(qtbot, tmp_path):
         window.close()
 
 
+AUTOPLOT_VIEWS = [("actionTopView", "topview"), ("actionSideView", "sideview"), ("actionLinearView", "linearview")]
+
+
+class Test_FlightTracksOfAutoplot:
+    """
+    The flight tracks of an autoplot configuration are opened in the MSUI, and selecting a row of the
+    autoplot flights activates the flight track of its file, also when it isn't open yet (#3215).
+    """
+    sample_ftml = os.path.join(os.path.dirname(__file__), "..", "data", "example.ftml")
+
+    @pytest.fixture(autouse=True)
+    def setup(self, qtbot, tmp_path):
+        self.qtbot = qtbot
+        self.tmp_path = tmp_path
+        self.ftml = tmp_path / "example.ftml"
+        self.ftml.write_bytes(Path(self.sample_ftml).read_bytes())
+        (tmp_path / "sub").mkdir()
+        self.other = tmp_path / "sub" / "other.ftml"
+        self.other.write_bytes(Path(self.sample_ftml).read_bytes())
+        self.window = msui_mw.MSUIMainWindow()
+        self.window.create_new_flight_track()
+        self.window.show()
+        self.unsaved = self.window.active_flight_track
+        self.view = None
+        yield
+        if self.view is not None:
+            view = self.view
+            view.handle_force_close()
+            qtbot.wait_until(lambda: sip.isdeleted(view))
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.window.close()
+
+    def files(self):
+        return [self.window.listFlightTracks.item(i).flighttrack_model.get_filename()
+                for i in range(self.window.listFlightTracks.count())]
+
+    def open_autoplot(self, action, module):
+        """The autoplot dockwidget of a new view of <module>, opened by <action>."""
+        autoplot = importlib.import_module(f"mslib.msui.{module}").AUTOPLOT
+        getattr(self.window, action).trigger()
+        self.view = self.window.listViews.item(0).window
+        self.view.cbTools.setCurrentIndex(autoplot + 1)
+        return self.view.docks[autoplot].widget()
+
+    def load_configuration(self, dock, flights):
+        config = self.tmp_path / "mssautoplot.json"
+        secs = [["http://localhost/", "layer", "", "600.0"]]
+        config.write_text(json.dumps({"automated_plotting_flights": flights, "automated_plotting_hsecs": secs,
+                                      "automated_plotting_vsecs": secs, "automated_plotting_lsecs": secs}))
+        with mock.patch("mslib.msui.autoplot_dockwidget.QFileDialog.getOpenFileName",
+                        return_value=(str(config), "")):
+            dock.configure_from_path(self.view, self.window.config_for_gui)
+
+    def test_open_or_activate_by_file(self):
+        item = self.window.open_or_activate_flight_track(self.ftml)
+        assert self.window.active_flight_track is item.flighttrack_model
+        assert item.flighttrack_model.get_filename() == str(self.ftml)
+        self.window.activate_flight_track(self.window.listFlightTracks.item(0))
+        # another spelling of the same file: the open flight track
+        same = self.window.open_or_activate_flight_track(self.tmp_path / "sub" / ".." / "example.ftml")
+        assert same is item
+        assert self.window.active_flight_track is item.flighttrack_model
+        self.window.activate_flight_track(self.window.listFlightTracks.item(0))
+        assert self.window.open_or_activate_flight_track(self.other, activate=False) is not None
+        assert self.window.active_flight_track is self.unsaved
+        assert self.files() == [None, str(self.ftml), str(self.other)]
+
+    def test_missing_file(self):
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critical:
+            assert self.window.open_or_activate_flight_track(self.tmp_path / "missing.ftml") is None
+        critical.assert_called_once()
+        assert self.files() == [None]
+        assert self.window.active_flight_track is self.unsaved
+
+    def test_file_which_is_not_text_between_two_flight_tracks(self):
+        """A file which can't be decoded gives one message, the other flight tracks are opened."""
+        binary = self.tmp_path / "binary.ftml"
+        binary.write_bytes(b"<\xff\xfe>")
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critical:
+            self.window.open_flight_tracks([str(self.ftml), str(binary), str(self.other)])
+        critical.assert_called_once()
+        assert self.files() == [None, str(self.ftml), str(self.other)]
+        assert self.window.active_flight_track is self.unsaved
+
+    def test_flight_level_out_of_range_between_two_flight_tracks(self):
+        """A flight level of 100 km and above gives one message, the other flight tracks are opened."""
+        high = self.tmp_path / "high.ftml"
+        high.write_text(self.ftml.read_text().replace('flightlevel="350"', 'flightlevel="4000"', 1))
+        assert 'flightlevel="4000"' in high.read_text()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critical:
+            self.window.open_flight_tracks([str(self.ftml), str(high), str(self.other)])
+        critical.assert_called_once()
+        assert self.files() == [None, str(self.ftml), str(self.other)]
+        assert self.window.active_flight_track is self.unsaved
+
+    def test_row_of_a_file(self):
+        self.window.update_treewidget_op_fl("flight", str(self.ftml))
+        assert self.files() == [None, str(self.ftml)]
+        opened = self.window.active_flight_track
+        assert opened.get_filename() == str(self.ftml)
+        self.window.activate_flight_track(self.window.listFlightTracks.item(0))
+        self.window.update_treewidget_op_fl("flight", str(self.ftml))
+        assert self.window.active_flight_track is opened
+        assert self.files() == [None, str(self.ftml)]
+
+    def test_row_of_a_flight_track_which_was_never_saved(self, monkeypatch):
+        """Its row names "<name>.ftml" without a directory: found by its name, no file is opened."""
+        self.window.open_or_activate_flight_track(self.ftml)
+        # a file of that name in the current directory is not opened
+        monkeypatch.chdir(self.tmp_path)
+        self.window.update_treewidget_op_fl("flight", "example.ftml")
+        assert self.files() == [None, str(self.ftml)]
+        self.window.update_treewidget_op_fl("flight", f"{self.unsaved.name}.ftml")
+        assert self.window.active_flight_track is self.unsaved
+        assert self.files() == [None, str(self.ftml)]
+
+    @pytest.mark.parametrize("action, module", AUTOPLOT_VIEWS)
+    def test_configuration_opens_its_flight_tracks(self, action, module):
+        (self.tmp_path / "broken.ftml").write_text("<a/>")
+        flights = [["flight1", "07 Europe (cyl)", "", "example.ftml", "", ""],
+                   ["example", "00 global (cyl)", "", "example.ftml", "", ""],
+                   ["other", "00 global (cyl)", "", "sub/other.ftml", "", ""],
+                   ["missing", "00 global (cyl)", "", "missing.ftml", "", ""],
+                   ["broken", "00 global (cyl)", "", "broken.ftml", "", ""],
+                   ["", "", "", "", "", ""]]
+        dock = self.open_autoplot(action, module)
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critical:
+            self.load_configuration(dock, flights)
+        assert self.files() == [None, str(self.ftml), str(self.other)]
+        # broken.ftml
+        critical.assert_called_once()
+        assert self.window.active_flight_track is self.unsaved
+        # loaded again: nothing is opened twice
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.critical"):
+            self.load_configuration(dock, flights)
+        assert self.files() == [None, str(self.ftml), str(self.other)]
+
+    @pytest.mark.parametrize("action, module", AUTOPLOT_VIEWS)
+    def test_row_activates_the_flight_track_of_its_file(self, action, module):
+        """The name of a row isn't the name of its flight track, the file decides."""
+        dock = self.open_autoplot(action, module)
+        self.load_configuration(dock, [["flight1", "07 Europe (cyl)", "", "example.ftml", "", ""],
+                                       ["other", "00 global (cyl)", "", "sub/other.ftml", "", ""]])
+        dock.autoplotTreeWidget.setCurrentItem(dock.autoplotTreeWidget.topLevelItem(0))
+        assert self.window.active_flight_track.get_filename() == str(self.ftml)
+        dock.autoplotTreeWidget.setCurrentItem(dock.autoplotTreeWidget.topLevelItem(1))
+        assert self.window.active_flight_track.get_filename() == str(self.other)
+        assert self.files() == [None, str(self.ftml), str(self.other)]
+
+    def test_row_activates_a_flight_track_which_was_closed(self):
+        dock = self.open_autoplot("actionTopView", "topview")
+        self.load_configuration(dock, [["flight1", "07 Europe (cyl)", "", "example.ftml", "", ""]])
+        self.window.listFlightTracks.takeItem(1)
+        assert self.files() == [None]
+        dock.autoplotTreeWidget.setCurrentItem(dock.autoplotTreeWidget.topLevelItem(0))
+        assert self.window.active_flight_track.get_filename() == str(self.ftml)
+
+    def test_incomplete_rows(self):
+        """A row without a file changes no flight track, one with a name only finds it by its name."""
+        dock = self.open_autoplot("actionTopView", "topview")
+        self.window.open_or_activate_flight_track(self.ftml, activate=False)
+        self.load_configuration(dock, [[], ["example"]])
+        dock.autoplotTreeWidget.setCurrentItem(dock.autoplotTreeWidget.topLevelItem(0))
+        assert self.window.active_flight_track is self.unsaved
+        dock.autoplotTreeWidget.setCurrentItem(dock.autoplotTreeWidget.topLevelItem(1))
+        assert self.window.active_flight_track.get_filename() == str(self.ftml)
+        assert self.files() == [None, str(self.ftml)]
+
+    def test_add_a_row(self):
+        """A new row is selected when it is added, its entry is in the configuration already."""
+        dock = self.open_autoplot("actionTopView", "topview")
+        self.load_configuration(dock, [])
+        # a new flight track is added without a flight track
+        dock.addToAutoplotButton.click()
+        # one which was never saved, but renamed, with its name
+        self.unsaved.name = "renamed"
+        self.window.listFlightTracks.item(0).setText("renamed")
+        dock.addToAutoplotButton.click()
+        self.window.open_or_activate_flight_track(self.ftml)
+        dock.addToAutoplotButton.click()
+        flights = self.window.config_for_gui["automated_plotting_flights"]
+        assert [row[3] for row in flights] == ["", "renamed.ftml", str(self.ftml)]
+        assert self.window.active_flight_track.get_filename() == str(self.ftml)
+        assert self.files() == [None, str(self.ftml)]
+        # its row activates it by its name
+        dock.autoplotTreeWidget.setCurrentItem(dock.autoplotTreeWidget.topLevelItem(1))
+        assert self.window.active_flight_track is self.unsaved
+
+
 class Test_MSS_TutorialMode:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot, qapp):

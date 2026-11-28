@@ -440,6 +440,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                     lambda section, vtime: self.treePlot_item_select(section, vtime))
                 widget.update_op_flight_treewidget.connect(
                     lambda opfl, flight: parent.update_treewidget_op_fl(opfl, flight))
+                widget.open_flighttracks.connect(lambda files: parent.open_flight_tracks(files))
             else:
                 raise IndexError("invalid control index")
 

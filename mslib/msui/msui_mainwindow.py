@@ -716,6 +716,15 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         setattr(self, action_name, action)
 
     def update_treewidget_op_fl(self, op_fl, flight):
+        """
+        Activate the operation or flight track of a selected autoplot row.
+
+        <flight> is the operation path, or the flight track file of the row:
+        the flight track stored there is activated, opened first when it isn't open.
+        A flight track which was never saved has no file yet, its row names
+        "<name>.ftml" only, without a directory: that one is found by its name, the
+        current directory may hold another file of that name.
+        """
         if op_fl == "operation":
             for index in range(self.listOperationsMSC.count()):
                 item = self.listOperationsMSC.item(index)
@@ -723,11 +732,15 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                     item = self.listOperationsMSC.item(index)
                     self.mscolab.set_active_op_id(item)
                     break
+        elif Path(flight).expanduser().is_absolute():
+            self.open_or_activate_flight_track(flight)
         else:
+            name = Path(flight).name
+            if name.endswith(".ftml"):
+                name = name[:-len(".ftml")]
             for index in range(self.listFlightTracks.count()):
                 item = self.listFlightTracks.item(index)
-                if flight == item.text():
-                    item = self.listFlightTracks.item(index)
+                if name == item.text():
                     self.activate_flight_track(item)
                     break
 
@@ -959,7 +972,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             if function is None:
                 try:
                     waypoints_model = ft.WaypointsTableModel(filename=str(filename))
-                except (SyntaxError, OSError, IOError) as ex:
+                # UnicodeError: a file which isn't text, e.g. a binary file;
+                # ValueError: a flight level which can't be converted to pressure (100 km and above)
+                except (SyntaxError, OSError, UnicodeError, ValueError) as ex:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("Problem while opening flight track FTML:"),
                         plain_text_as_html(self.tr(f"ERROR: {type(ex)} {ex}")))
@@ -1032,6 +1047,48 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     def activate_selected_flight_track(self):
         item = self.listFlightTracks.currentItem()
         self.activate_flight_track(item)
+
+    def find_flight_track(self, filename):
+        """
+        The item of the open flight track stored in <filename>, None when no open
+        flight track is stored there.
+
+        The file decides, not the name: a flight track loaded from a file is named
+        after the file, the autoplot configuration names it as it likes.
+        """
+        path = Path(filename).expanduser().resolve()
+        for i in range(self.listFlightTracks.count()):
+            item = self.listFlightTracks.item(i)
+            stored = item.flighttrack_model.get_filename()
+            if stored and Path(stored).expanduser().resolve() == path:
+                return item
+        return None
+
+    def open_or_activate_flight_track(self, filename, activate=True):
+        """
+        The item of the flight track stored in <filename>: the open one, otherwise
+        the file is opened and added to the list of flight tracks. With <activate>
+        the flight track becomes the active one. None when the file can't be read,
+        create_new_flight_track() has told the user why then.
+        """
+        item = self.find_flight_track(filename)
+        if item is None:
+            count = self.listFlightTracks.count()
+            self.create_new_flight_track(filename=str(Path(filename).expanduser().resolve()), activate=False)
+            if self.listFlightTracks.count() == count:
+                return None
+            item = self.listFlightTracks.item(count)
+        if activate:
+            self.activate_flight_track(item)
+        return item
+
+    def open_flight_tracks(self, filenames):
+        """
+        Open the flight tracks stored in <filenames> which aren't open yet, e.g. those
+        of an autoplot configuration. The active flight track stays active.
+        """
+        for filename in filenames:
+            self.open_or_activate_flight_track(filename, activate=False)
 
     def switch_to_mscolab(self):
         self.local_active = False
