@@ -263,7 +263,7 @@ config:
             height: "100"
         authn_requests_signed: true
         want_response_signed: true
-         want_assertions_signed: true
+        want_assertions_signed: true
         allow_unknown_attributes: true
         # only responses to a login request of this server, see mslib.mscolab.auth.OutstandingSamlRequests
         allow_unsolicited: false
@@ -320,7 +320,7 @@ config:
   #           height: "100"
   #       authn_requests_signed: true
   #       want_response_signed: true
-  #        want_assertions_signed: true
+  #       want_assertions_signed: true
   #       allow_unknown_attributes: true
   #       allow_unsolicited: false
   #       endpoints:
