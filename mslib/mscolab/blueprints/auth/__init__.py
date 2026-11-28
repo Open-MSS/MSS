@@ -177,6 +177,12 @@ def init_saml(state):
                                 "every SAML login by it is refused. Set 'user_id_attribute' in "
                                 "setup_saml2_backend.py, see docs/sso_via_saml_mscolab.rst",
                                 idp_config['idp_identity_name'])
+        if not getattr(idp_config['idp_data']['saml2client'], "want_assertions_signed", False):
+            # pysaml2 ignores keys it doesn't know, e.g. the misspelled want_assertion_signed (#3390)
+            logging.warning("The IdP %s may send assertions that aren't signed: set 'want_assertions_signed: true' "
+                            "in mss_saml2_backend.yaml; a yaml generated before 12.0.0 has the misspelled "
+                            "'want_assertion_signed', which has no effect. See docs/sso_via_saml_mscolab.rst",
+                            idp_config['idp_identity_name'])
         for index, path in enumerate(endpoints_):
             # as configured, also with a trailing slash: the metadata tells the IdP this URL
             app.add_url_rule(f"/{path.lstrip('/')}", f"saml_acs_{idp_config['idp_identity_name']}_{index}",
