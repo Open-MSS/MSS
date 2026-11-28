@@ -768,7 +768,6 @@ class MultipleFlightpathOperations:
         self.listOperationsMSC = listOperationsMSC
 
         self.operation_added = False
-        self.operation_removed = False
         self.operation_activated = False
         self.color_change = False
 
@@ -784,15 +783,14 @@ class MultipleFlightpathOperations:
             self.create_operation(op_id, wp_model)
 
         # This needs to be done after operations are loaded
-        # Connect signals and slots
+        # Connect signals and slots; set_flag wasn't connected yet to consume the flag
+        self.operation_added = False
         self.list_operation_track.itemChanged.connect(self.set_flag)
         self.parent.cbSlectAll2.stateChanged.connect(self.selectAll)
 
     def set_flag(self):
         if self.operation_added:
             self.operation_added = False
-        elif self.operation_removed:
-            self.operation_removed = False
         elif self.color_change:
             self.color_change = False
         else:
@@ -961,7 +959,6 @@ class MultipleFlightpathOperations:
         Slot to remove operation.
         """
         self.list_operation_track.itemChanged.disconnect(self.set_flag)
-        self.operation_removed = True
         for index in range(self.list_operation_track.count()):
             if self.list_operation_track.item(index).op_id == op_id:
                 if self.dict_operations[self.list_operation_track.item(index).op_id]["patch"] is None:
@@ -969,7 +966,8 @@ class MultipleFlightpathOperations:
                 else:
                     self.dict_operations[self.list_operation_track.item(index).op_id]["patch"].remove()
                 self.list_operation_track.takeItem(index)
-                self.active_op_id = None
+                if op_id == self.active_op_id:
+                    self.active_op_id = None
                 break
         self.list_operation_track.itemChanged.connect(self.set_flag)
 
