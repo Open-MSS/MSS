@@ -194,7 +194,7 @@ Please refer the yaml file template (`mss_saml2_backend.yaml.sample`) in the dir
              height: "100"
          authn_requests_signed: true
          want_response_signed: true
-         want_assertion_signed: true
+         want_assertions_signed: true
          allow_unknown_attributes: true
          allow_unsolicited: false
          endpoints:
@@ -267,7 +267,11 @@ login started at the IdP (IdP-initiated) doesn't work. The requests are stored i
 the server accepts the response. Anyone can start a login, so the server keeps at most 1000 unfinished ones; further
 logins are refused with "503 Service Unavailable" until some of them expire. With ``ENABLE_BASIC_HTTP_AUTHENTICATION``
 the browser needs the basic authentication of the server to start a login, and msui to exchange the code, as for a
-password login. An assertion that isn't signed counts only if the signed response around it comes from the same IdP.
+password login. The IdP has to sign its assertions, not only the response around them (``want_assertions_signed:
+true``, e.g. "Sign assertions" in Keycloak). ``want_assertion_signed`` without the second "s", as in the yaml that
+``mscolab sso_conf`` generated before 12.0.0, has no effect; the server warns at its start about an IdP that may send
+unsigned assertions. Only with ``want_assertions_signed: false`` does an assertion that isn't signed count, and then
+only if the signed response around it comes from the same IdP.
 msui 12.0.0 also logs in by SAML to servers before 12.0.0; msui before 12.0.0 can't log in by SAML to a 12.0.0
 server.
 
@@ -385,6 +389,11 @@ Create a client specifically for SAML
             http://127.0.0.1:8083/*
 
             http://localhost:8083/*
+
+
+    In the settings of the client, also switch on `Sign assertions` (`Sign documents` is on by default). The MSColab
+    server refuses assertions that aren't signed (``want_assertions_signed: true``), and every login ends with
+    "403 Forbidden".
 
 
     Generate keys and certificates
@@ -578,7 +587,7 @@ Configuration mss_saml2_backend.yaml file
                         height: "100"
                     authn_requests_signed: true
                     want_response_signed: true
-                    want_assertion_signed: true
+                    want_assertions_signed: true
                     allow_unknown_attributes: true
                     allow_unsolicited: false
                     endpoints:

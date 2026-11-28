@@ -28,6 +28,7 @@
 import base64
 import datetime
 import json
+import logging
 import re
 import shutil
 from pathlib import Path
@@ -35,15 +36,18 @@ from urllib.parse import parse_qs, urlparse
 
 import mock
 import pytest
+import yaml
 from saml2 import BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
 from saml2.client import Saml2Client
-from saml2.config import IdPConfig, SPConfig
+from saml2.config import IdPConfig, SPEC, SPConfig
 from saml2.metadata import create_metadata_string
 from saml2.saml import NAMEID_FORMAT_PERSISTENT, NAMEID_FORMAT_TRANSIENT, NameID, AUTHN_PASSWORD
 from saml2.server import Server
 
 from mslib.mscolab import auth
+from mslib.mscolab.blueprints.auth import init_saml
 from mslib.mscolab.conf import setup_saml2_backend
+from mslib.mscolab.mscolab import handle_mscolab_backend_yaml_init
 from mslib.mscolab.models import db, IdpIdentity, SamlLogin, User
 from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.server import create_server_app
@@ -89,7 +93,7 @@ def _sp_config(key_file, cert_file, idp_metadata=None):
             "endpoints": {"assertion_consumer_service": [(ACS_URL, BINDING_HTTP_POST)]},
             "authn_requests_signed": True,
             "want_response_signed": True,
-            "want_assertion_signed": True,
+            "want_assertions_signed": True,
             "allow_unknown_attributes": True,
             # as in the configurations before 12.0.0: the server must refuse unsolicited responses anyway
             "allow_unsolicited": True,
@@ -200,6 +204,45 @@ def _exchange(client, code):
 
 def _authorized(client, token):
     return client.get("/test_authorized", query_string={"token": token}).text == "True"
+
+
+def _sp_services(backend_yaml):
+    """The service.sp sections of the IdPs of an mss_saml2_backend.yaml"""
+    config = yaml.safe_load(backend_yaml)["config"]
+    return [idp["service"]["sp"] for idp in config.values() if isinstance(idp, dict) and "service" in idp]
+
+
+def test_saml_backend_yaml_asks_for_signed_assertions(mscolab_app, tmp_path):
+    # #3390: pysaml2 ignores keys it doesn't know, the misspelled want_assertion_signed let unsigned assertions count
+    with mscolab_app.app_context(), mock.patch.dict(mscolab_app.config, {"SSO_DIR": str(tmp_path)}):
+        assert handle_mscolab_backend_yaml_init()
+    sample = Path(__file__).resolve().parents[2] / "docs" / "samples" / "config" / "mscolab" / \
+        "mss_saml2_backend.yaml.sample"
+    for path in (tmp_path / "mss_saml2_backend.yaml", sample):
+        services = _sp_services(path.read_text(encoding="utf-8"))
+        assert services, path
+        for service in services:
+            # the keys pysaml2 reads from service.sp
+            assert set(service) <= set(SPEC["sp"]), (path, set(service) - set(SPEC["sp"]))
+            assert service["want_assertions_signed"] is True, path
+
+
+def test_server_warns_about_unsigned_assertions(caplog):
+    # e.g. a yaml generated before 12.0.0, with the misspelled want_assertion_signed (#3390)
+    client = mock.Mock(want_assertions_signed=False)
+    client.config.getattr.return_value = NAMEID_FORMAT_PERSISTENT
+    idp_config = {"idp_identity_name": IDP_NAME,
+                  "idp_data": {"assertion_consumer_endpoints": [], "saml2client": client}}
+    state = mock.Mock()
+    state.app.config = {"USE_SAML2": True}
+    with mock.patch.object(setup_saml2_backend, "CONFIGURED_IDPS", [idp_config]), \
+            caplog.at_level(logging.WARNING):
+        init_saml(state)
+        assert f"The IdP {IDP_NAME} may send assertions that aren't signed" in caplog.text
+        caplog.clear()
+        client.want_assertions_signed = True
+        init_saml(state)
+        assert "assertions that aren't signed" not in caplog.text
 
 
 def test_saml_routes_need_use_saml2(mscolab_app):
