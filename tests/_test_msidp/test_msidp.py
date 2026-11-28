@@ -23,6 +23,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import argparse
 import base64
 import logging
 import shutil
@@ -167,6 +168,37 @@ def test_passwords_and_session_ids_are_not_logged(server, caplog):
     assert f"Logged in {USER}" in caplog.text
     assert PASSWORD not in caplog.text
     assert uid not in caplog.text
+
+
+def _get(path):
+    """The status and the body of a GET request, called directly so that the path stays as sent (also "..")"""
+    statuses = []
+    body = idp.application(dict(ENVIRON, REQUEST_METHOD="GET", PATH_INFO=path),
+                           lambda status, headers: statuses.append(status))
+    return statuses[0], body if isinstance(body, str) else b"".join(body).decode()
+
+
+def test_no_files_are_served_from_the_configuration_path(server, tmp_path):
+    # #3391: the static route read files beside the -p path, e.g. of a sibling directory with the same prefix
+    static = tmp_path / "idp" / "static"
+    static.mkdir(parents=True)
+    (static / "main.css").write_text("public")
+    (tmp_path / "idp-secret").mkdir()
+    (tmp_path / "idp-secret" / "key.pem").write_text("SECRET")
+    with mock.patch.object(idp.IdpServerSettings_, "args", argparse.Namespace(path=str(tmp_path / "idp"))):
+        for path in ("/static/../../idp-secret/key.pem", "/static/main.css"):
+            status, body = _get(path)
+            assert status.startswith("404"), (path, status)
+            assert "SECRET" not in body and "public" not in body
+
+
+def test_metadata_error_gives_not_found(server):
+    args = argparse.Namespace(path="", config="idp_conf", valid=None, cert=None, keyfile=None, id=None, name=None,
+                              sign=False)
+    with mock.patch.object(idp.IdpServerSettings_, "args", args), \
+            mock.patch.object(idp, "create_metadata_string", side_effect=ValueError("broken")):
+        status, _ = _get("/idp.xml")
+    assert status.startswith("404")
 
 
 @pytest.mark.skipif(shutil.which("xmlsec1") is None, reason="idp_conf needs xmlsec1")

@@ -1025,26 +1025,7 @@ def metadata(environ, start_response):
         start_response("200 OK", [("Content-Type", "text/xml")])
         return [metadata]
     except Exception as ex:
-        logger.error("An error occurred while creating metadata: %s", ex.message)
-        return not_found(environ, start_response)
-
-
-def staticfile(environ, start_response):
-    try:
-        path = IdpServerSettings_.args.path[:]
-        if path is None or len(path) == 0:
-            path = os.path.dirname(os.path.abspath(__file__))
-        if path[-1] != "/":
-            path += "/"
-        path += environ.get("PATH_INFO", "").lstrip("/")
-        path = os.path.realpath(path)
-        if not path.startswith(IdpServerSettings_.args.path):
-            resp = Unauthorized()
-            return resp(environ, start_response)
-        start_response("200 OK", [("Content-Type", "text/xml")])
-        return open(path).read()
-    except Exception as ex:
-        logger.error("An error occurred while creating metadata: %s", ex.message)
+        logger.error("An error occurred while creating metadata: %s", ex)
         return not_found(environ, start_response)
 
 
@@ -1098,8 +1079,7 @@ def application(environ, start_response):
                 return func()
             return callback(environ, start_response, user)
 
-    if re.search(r"static/.*", path) is not None:
-        return staticfile(environ, start_response)
+    # no static files: msidp has none, and serving them from the -p path read files outside it (#3391)
     return not_found(environ, start_response)
 
 
