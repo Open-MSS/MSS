@@ -598,6 +598,29 @@ class Test_WMS:
         assert os.path.exists(os.path.join(docsdir, "code"))
         assert os.path.exists(os.path.join(docsdir, "plots.html"))
 
+    def test_gallery_closes_the_datasets(self, gallery_paths):
+        # #3397: open datasets were closed only at the shutdown of the interpreter ("Error in sys.excepthook")
+        drivers = mslib.mswms.wms.server.lsec_drivers
+        mslib.mswms.wms.server.generate_gallery(create=True, plot_list=[[drivers,
+                                                                         mslib.mswms.wms.server.lsec_layer_registry]])
+        assert drivers and all(driver.dataset is None for driver in drivers.values())
+
+    def test_gallery_warns_only_if_no_requested_level_fits(self, gallery_paths, caplog):
+        # #3397: the levels of the docs gallery are meant for different layers, each one finds some of them
+        dataset = "ecmwf_EUR_LL015"
+        registry = {dataset: {"PLDiv01": mslib.mswms.wms.server.hsec_layer_registry[dataset]["PLDiv01"]}}
+        plot_list = [[mslib.mswms.wms.server.hsec_drivers, registry]]
+        static, _ = gallery_paths
+        with caplog.at_level(logging.WARNING):
+            mslib.mswms.wms.server.generate_gallery(create=True, plot_list=plot_list, levels="3,200")
+        assert "not present" not in caplog.text
+        assert [name for name in os.listdir(os.path.join(static, "plots")) if "200.0" in name]
+        assert not [name for name in os.listdir(os.path.join(static, "plots")) if "-3.0" in name]
+        caplog.clear()
+        with caplog.at_level(logging.WARNING):
+            mslib.mswms.wms.server.generate_gallery(create=True, plot_list=plot_list, levels="3,4")
+        assert "None of the requested levels 3,4 present for ecmwf_EUR_LL015 PLDiv01" in caplog.text
+
 
 def _with_valid_times(layer, valid_times):
     """the driver of <layer> as if the data had the valid times of <valid_times> for these standard names"""

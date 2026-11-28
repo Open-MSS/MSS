@@ -192,7 +192,10 @@ class Test_VSec:
         assert noframe != img
 
     def test_VS_EMACEyja_Style_01(self):
-        img = self.plot(mpl_vsec_styles.VS_EMACEyja_Style_01(driver=self.vsec))
+        # #3397: no ash (0) on the log scale gave "Log scale: values of z <= 0 have been masked"
+        with warnings.catch_warnings():
+            warnings.filterwarnings("error", message="Log scale", category=UserWarning)
+            img = self.plot(mpl_vsec_styles.VS_EMACEyja_Style_01(driver=self.vsec))
         assert img is not None
         noframe = self.plot(mpl_vsec_styles.VS_EMACEyja_Style_01(driver=self.vsec), noframe=True)
         assert noframe != img
@@ -437,7 +440,10 @@ class Test_HSec:
         assert noframe != img
 
     def test_HS_EQPTStyle_PL_01(self):
-        img = self.plot(mpl_hsec_styles.HS_EQPTStyle_PL_01(driver=self.hsec), level=300)
+        # #3397: the demodata has q = 0 at 300 hPa, which gave log(0) and an overflow in metpy
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", RuntimeWarning)
+            img = self.plot(mpl_hsec_styles.HS_EQPTStyle_PL_01(driver=self.hsec), level=300)
         assert img is not None
         noframe = self.plot(mpl_hsec_styles.HS_EQPTStyle_PL_01(driver=self.hsec), level=300, noframe=True)
         assert noframe != img

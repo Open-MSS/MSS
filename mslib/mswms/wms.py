@@ -386,12 +386,17 @@ class WMSServer:
                                                            (levels.split(",") if (levels != "all" and levels != "") else
                                                             elevations if levels == "all" else [elevation])] or [None]
 
+                                        # the requested levels can be meant for different layers (e.g. pressure
+                                        # and potential vorticity levels), so only a layer with none of them warns
+                                        present = [float(elev) for elev in elevations]
+                                        if present and not any(level in present for level in rendered_levels):
+                                            logging.warning("None of the requested levels %s present for %s %s! "
+                                                            "Levels present: %s", levels, dataset, plot_object.name,
+                                                            elevations)
                                         for level in sorted(rendered_levels):
-                                            if level and elevations and level \
-                                                    not in [float(elev) for elev in elevations]:
-                                                logging.warning("Requested level %s not present for "
-                                                                "%s %s! Levels present: "
-                                                                "%s", level, dataset, plot_object.name, elevations)
+                                            if level and present and level not in present:
+                                                logging.debug("Requested level %s not present for %s %s",
+                                                              level, dataset, plot_object.name)
                                                 continue
                                             elif not elevations:
                                                 level = None
@@ -432,6 +437,9 @@ class WMSServer:
                         except Exception as e:
                             traceback.print_exc()
                             logging.error("%s %s %s", plot_object.name, type(e), e)
+                    # its NetCDF datasets would stay open until the interpreter shuts down, too late to close
+                    # them cleanly; a later request opens them again
+                    plot_driver.close()
 
             write_html(tmp_path, sphinx, plot_types=plot_types)
             if generate_code:

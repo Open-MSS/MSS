@@ -1298,7 +1298,8 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
         curtain_p = self.data["air_pressure"]
         curtain_t = self.data["air_temperature"]
         curtain_pt = self.data["air_potential_temperature"]
-        curtain_cc = self.data["emac_R12"] * 1.e4
+        # no ash (0) can't be drawn with the log scale; masked here, matplotlib would mask it with a warning
+        curtain_cc = np.ma.masked_less_equal(self.data["emac_R12"] * 1.e4, 0)
 
         # Contour spacing for temperature lines.
         delta_t = 2 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 4
