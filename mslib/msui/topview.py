@@ -244,6 +244,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.mainwindow_signal_permission_revoked = mainwindow.signal_permission_revoked
         self.mainwindow_signal_render_new_permission = mainwindow.signal_render_new_permission
         self.mainwindow_signal_activate_flighttrack = mainwindow.signal_activate_flighttrack
+        self.mainwindow_signal_operation_added = mainwindow.signal_operation_added
+        self.mainwindow_signal_operation_removed = mainwindow.signal_operation_removed
         self.mainwindow_listFlightTracks = mainwindow.listFlightTracks
         self.mainwindow_filterCategoryCb = mainwindow.filterCategoryCb
         self.mainwindow_listOperationsMSC = mainwindow.listOperationsMSC
@@ -305,10 +307,12 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             self.mainwindow_signal_activate_flighttrack.connect(self.update_active_flighttrack)
             self.mainwindow_signal_activate_operation.connect(self.update_active_operation)
 
-            self.signal_operation_added.connect(self.add_operation_slot)
-            self.signal_operation_removed.connect(self.remove_operation_slot)
+            # passed on to the multiple flightpath dock (#3339)
+            self.mainwindow_signal_operation_added.connect(self.add_operation_slot)
+            self.mainwindow_signal_operation_removed.connect(self.remove_operation_slot)
 
             self.mainwindow_signal_login_mscolab.connect(self.login)
+            self.mainwindow_signal_logout_mscolab.connect(self.logout)
 
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
@@ -339,6 +343,14 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.mscolab_server_url = mscolab_server_url
         self.token = token
         self.signal_login_mscolab.emit(mscolab_server_url, token)
+
+    @QtCore.pyqtSlot()
+    def logout(self):
+        # a multiple flightpath dock opened later must not connect with these (#3339)
+        self.mscolab_server_url = None
+        self.token = None
+        # the main window activates a local flight track (#3373)
+        self.active_op_id = None
 
     def setup_top_view(self):
         """
