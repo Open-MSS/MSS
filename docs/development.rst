@@ -148,6 +148,68 @@ You can also use pixi's "run" subcommand to directly run a command in the develo
     pixi run -e dev msui
 
 
+Working with an AI coding agent in VibePod
+------------------------------------------
+
+|Built with VibePod|
+
+.. |Built with VibePod| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/VibePod/vibepod-cli/main/.github/badges/vibepod.json
+   :target: https://vibepod.dev
+
+`VibePod <https://vibepod.dev>`_ runs an AI coding agent (e.g. Claude Code, Gemini CLI, Codex or pi) in a Docker or
+Podman container. The agent sees only the directory it is started in, shared with the container as ``/workspace``,
+and its network traffic goes through a proxy container of VibePod. MSS comes with a project overlay for it, so the
+agent can use pixi as described above.
+
+Requirements: Python 3.10 or later and a running Docker or Podman. Install VibePod e.g. with::
+
+    pixi global install vibepod
+
+(or ``pip install vibepod``, ``uv tool install vibepod``, ``brew install vibepod/vibepod/vibepod``).
+
+Preferably use your container engine in a rootless mode, which gives more security: the container runs under your
+user account, and root inside the container is your unprivileged user on the host. An agent that gets out of the
+container has only your rights, not those of root.
+
+Then start an agent in your clone::
+
+    cd MSS
+    vp run claude
+
+The overlay
+...........
+
+VibePod builds the agent's image with the fragment ``.vibepod/overlay/Dockerfile`` of the repository on top of its
+own image. It
+
+* installs pixi into ``/opt/pixi`` and checks the checksum of the download,
+* keeps the environments of the container in ``/workspace/.pixi-linux-<architecture>`` (pixi's
+  ``detached-environments``), so a ``.pixi`` of your host, e.g. with macOS binaries, is neither used nor overwritten;
+  both are ignored by git,
+* lets the agent install tools with ``pixi global install`` (e.g. the pixi extensions for ``pixi audit``).
+
+The image is built on the first ``vp run`` and reused while the overlay doesn't change. After a change of the overlay,
+or to get a newer pixi, rebuild it with ``vp run claude --rebuild-overlay``; ``--no-overlay`` starts the agent once
+without it, and ``vp list`` shows the overlay images. Tools installed with ``pixi global install`` are part of the
+container, not of the repository: install them again after a rebuild. A change of the overlay changes the environment
+of everyone who uses it, so review it like code.
+
+Inside the container
+....................
+
+The commands of this guide work as on your host, e.g. ``pixi run -e dev test-fast``; the first one installs the
+environment into ``/workspace/.pixi-linux-<architecture>``.
+
+The proxy checks HTTPS traffic with a certificate of its own. pixi, curl and Python requests use it, git doesn't; give
+it to git per command::
+
+    GIT_SSL_CAINFO=/etc/vibepod-proxy-ca/mitmproxy-ca-cert.pem git fetch https://github.com/Open-MSS/MSS.git develop
+
+The agent works in your clone itself: ``/workspace`` is the directory you started it in, not a copy. Every change of
+the agent is there at once, and you can follow it on your host at any time with ``git status``, ``git diff`` etc.
+The container has no SSH keys, so a remote with an SSH URL doesn't work in it: commit and push from your host.
+
+
 Setup MSWMS server
 ------------------
 

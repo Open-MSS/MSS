@@ -3,7 +3,7 @@
 
 Mission Support System's Documentation
 ======================================
-|Conda Version| |DOI| |JuRSE Code Pick| |GitHub Issues| |Coverage Status| |Conda Platforms| |Conda Recipe| |Conda Downloads|
+|Conda Version| |Built with VibePod| |DOI| |JuRSE Code Pick| |GitHub Issues| |Coverage Status| |Conda Platforms| |Conda Recipe| |Conda Downloads|
 
 .. |Conda Version| image:: https://img.shields.io/conda/vn/conda-forge/mss.svg
    :target: https://anaconda.org/conda-forge/mss
@@ -11,6 +11,8 @@ Mission Support System's Documentation
    :target: https://github.com/Open-MSS/MSS/issues
 .. |Coverage Status| image:: https://coveralls.io/repos/github/Open-MSS/MSS/badge.svg?branch=develop
    :target: https://coveralls.io/github/Open-MSS/MSS?branch=develop
+.. |Built with VibePod| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/VibePod/vibepod-cli/main/.github/badges/vibepod.json
+   :target: https://vibepod.dev
 .. |DOI| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.6572620.svg
    :target: https://doi.org/10.5281/zenodo.6572620
 .. |JuRSE Code Pick| image:: https://img.shields.io/badge/JuRSE_Code_Pick-July_2024-blue
