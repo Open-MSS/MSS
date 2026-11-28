@@ -101,6 +101,8 @@ def eqpt_approx(p, t, q):
     """
 
     import metpy.calc as mpcalc
+    # without water vapour (q <= 0) there is no dew point: NaN, not log(0) and an overflow in metpy
+    q = np.where(np.asarray(q) > 0, q, np.nan)
     return mpcalc.equivalent_potential_temperature(
         units.Pa * p, units.K * t,
         mpcalc.dewpoint_from_specific_humidity(units.Pa * p, units.K * t, q)).to("K").m

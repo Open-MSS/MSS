@@ -96,6 +96,20 @@ def test_isa_temperature():
         thermolib.isa_temperature(100000 * units.m)
 
 
+def test_eqpt_approx_without_water_vapour():
+    # #3397: q = 0 gave log(0) and an overflow in metpy, with RuntimeWarnings
+    import warnings
+    import metpy.calc as mpcalc
+    p, t, q = np.array([30000., 30000.]), np.array([230., 230.]), np.array([0., 1e-4])
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        eqpt = thermolib.eqpt_approx(p, t, q)
+    assert np.isnan(eqpt[0])
+    expected = mpcalc.equivalent_potential_temperature(
+        units.Pa * p[1], units.K * t[1], mpcalc.dewpoint_from_specific_humidity(units.Pa * p[1], units.K * t[1], q[1]))
+    assert eqpt[1] == pytest.approx(expected.to("K").m)
+
+
 class TestConverter:
     def test_convert_pressure_to_vertical_axis_measure(self):
         assert thermolib.convert_pressure_to_vertical_axis_measure('pressure', 10000) == 100

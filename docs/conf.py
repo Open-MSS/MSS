@@ -17,6 +17,7 @@ import setuptools
 import requests
 import zipfile
 import shutil
+import tempfile
 import importlib
 from pathlib import Path
 
@@ -68,16 +69,17 @@ if os.environ.get("GALLERY", "True") != "False":
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
     from mslib.mswms.seed import DataFiles
 
-    mswms_data_dir = Path(os.path.expanduser("~"), "mss") / "testdata"
-    if not mswms_data_dir.exists():
-        mswms_data_dir.mkdir(parents=True)
+    # a temporary directory of this build for the demodata and its mswms_settings.py, fresh each time, so the
+    # user's ~/mss stays untouched; the gallery itself is written to docs/gallery
+    demodata_dir = Path(tempfile.mkdtemp(prefix="mss-docs-"))
+    mswms_data_dir = demodata_dir / "testdata"
+    mswms_data_dir.mkdir()
 
-    examples = DataFiles(mswms_data_dir=mswms_data_dir,
-                         mswms_server_config_dir=Path(os.path.expanduser("~"), "mss"))
+    examples = DataFiles(mswms_data_dir=mswms_data_dir, mswms_server_config_dir=demodata_dir)
     examples.create_server_config(detailed_information=True)
     examples.create_data()
 
-    sys.path.insert(0, os.path.join(os.path.expanduser("~"), "mss"))
+    sys.path.insert(0, str(demodata_dir))
 
     import mslib.mswms.wms
     import mslib.mswms.gallery_builder
@@ -96,6 +98,8 @@ if os.environ.get("GALLERY", "True") != "False":
     # Generate all other plots
     mslib.mswms.wms.server.generate_gallery(sphinx=True, generate_code=True, all_plots=True, levels="3,4,200,300",
                                             vtimes="2012-10-18T00:00:00,2012-10-19T00:00:00")
+    # only the temporary demodata, not needed after the gallery was generated
+    shutil.rmtree(demodata_dir, ignore_errors=True)
 
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
