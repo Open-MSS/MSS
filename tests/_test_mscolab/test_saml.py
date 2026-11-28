@@ -89,7 +89,7 @@ def _sp_config(key_file, cert_file, idp_metadata=None):
             "endpoints": {"assertion_consumer_service": [(ACS_URL, BINDING_HTTP_POST)]},
             "authn_requests_signed": True,
             "want_response_signed": True,
-            "want_assertion_signed": True,
+            " want_assertions_signed": True,
             "allow_unknown_attributes": True,
             # as in the configurations before 12.0.0: the server must refuse unsolicited responses anyway
             "allow_unsolicited": True,

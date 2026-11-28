@@ -349,7 +349,7 @@ def saml_identity(authn_response, idp_data, attributes):
 
     The issuer is the entity id of the IdP that signed the assertion: the metadata of one configured IdP can hold
     several, e.g. of a federation. The issuer of the response around it may be unsigned. An unsigned assertion
-    (want_assertion_signed: false) counts only if the signed response has the same issuer: pysaml2 checks the
+    ( want_assertions_signed: false) counts only if the signed response has the same issuer: pysaml2 checks the
     signature of an assertion or response that has one, so only a signature ties the issuer to its key. The subject
     is the value of the attribute idp_data['user_id_attribute'] in attributes, see saml_attributes, or the NameID if
     that isn't set and the NameID is persistent. A transient NameID changes with every login, an email address can
