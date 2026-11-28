@@ -10,7 +10,7 @@ Our main objective here is to find out the disturbance in visibility due to ligh
 
 The solar angle colour in dark to light is 0 to 15 for RED and 15 to 45 for violet and 45 to 180 for green.
 
-We can show angles relative to SUN, VENUS, and MOON.
+We can show angles relative to SUN, MOON, MERCURY, VENUS, MARS, and JUPITER.
 
 TOTAL HORIZON  is the light of the surroundings of the flight.
 

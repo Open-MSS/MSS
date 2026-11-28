@@ -14,7 +14,7 @@ In order to be able to take into account the viewing angle and solar level for m
            Our main objective here is to find out the disturbance in visibility due to light source
            from any illuminating object like sun.
            The solar angle colour in dark to light is 0 to 15 for RED and 15 to 45 for violet and 45 to 180 for green.
-           We can show angles relative to "sun", "venus" and"moon".
+           We can show angles relative to "sun", "moon", "mercury", "venus", "mars" and "jupiter barycenter".
            "total (horizon)"  is the light of the surroundings of the flight.
            We will add some WAY POINTS numbered as 2,3,4,5.
            After clicking on "show agle (degree)", the flight track's colour has changed to green or light green.
