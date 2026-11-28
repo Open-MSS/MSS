@@ -1071,6 +1071,18 @@ class Test_Server:
             data = response.data.decode('utf-8')
             assert data == "True"
 
+    def test_update_operation_refuses_other_attributes(self):
+        # #3392
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            for attribute, value in (("id", "4711"), ("last_used", "2020-01-01"), ("unknown", "x")):
+                response = test_client.post('/update_operation', data={"token": token, "op_id": operation.id,
+                                                                       "attribute": attribute, "value": value})
+                assert response.status_code == 200
+                assert response.data.decode('utf-8') == "False"
+            assert Operation.query.filter_by(id=operation.id).first().path == operation.path
+
     def test_get_operation_details(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:

@@ -49,6 +49,8 @@ from mslib.mscolab.api.attachments import file_extension, normalized_extensions
 ASSIGNABLE_ACCESS_LEVELS = ("admin", "collaborator", "viewer")
 # may change the flight track and its versions
 WRITE_ACCESS_LEVELS = ("creator", "admin", "collaborator")
+# the attributes of an operation update_operation changes; last_used only as a datetime, set by the server itself
+UPDATABLE_OPERATION_ATTRIBUTES = ("path", "description", "category", "active", "last_used")
 
 
 class FileManager:
@@ -429,9 +431,14 @@ class FileManager:
     def update_operation(self, op_id, attribute, value, user):
         """
         op_id: operation id
-        attribute: attribute to be changed, eg path
+        attribute: attribute to be changed, one of UPDATABLE_OPERATION_ATTRIBUTES
         user: logged in user
         """
+        if attribute not in UPDATABLE_OPERATION_ATTRIBUTES or \
+                (attribute == "last_used" and not isinstance(value, datetime.datetime)):
+            # e.g. id or a relationship, sent to the route update_operation
+            logging.warning("refusing to change %r of operation %s", attribute, op_id)
+            return False
         if not self.is_admin(user.id, op_id) and not self.is_creator(user.id, op_id):
             return False
         operation = Operation.query.filter_by(id=op_id).first()
